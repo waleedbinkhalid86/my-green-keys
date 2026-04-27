@@ -191,9 +191,10 @@ export default function HomePage() {
 
             {/* Links */}
             <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
-              {["Features", "Modules", "Schools", "Pricing"].map((l) => (
+              {["Features", "Modules", "Schools"].map((l) => (
                 <a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>
               ))}
+              <a href="/pricing" className="nav-link">Pricing</a>
             </div>
 
             {/* Actions */}
