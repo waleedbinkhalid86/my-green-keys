@@ -2,15 +2,5 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "env.production": {
-    "NODE_ENV": "production"
-  },
-  "public": true,
-  "regions": [
-    "iad1"
-  ]
+  "framework": "nextjs"
 }
