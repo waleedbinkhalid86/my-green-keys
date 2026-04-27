@@ -198,8 +198,8 @@ export default function HomePage() {
 
             {/* Actions */}
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <a href="#" className="nav-link hidden md:block">Log In</a>
-              <a href="#" className="btn-primary" style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem" }}>Start Free Trial</a>
+              <a href="/login" className="nav-link hidden md:block">Log In</a>
+              <a href="/signup" className="btn-primary" style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem" }}>Start Free Trial</a>
             </div>
           </div>
         </Inner>
