@@ -259,7 +259,7 @@ export default function AdminPanel() {
                       </thead>
                       <tbody>
                         {allUsers.slice(0, 5).map((user) => (
-                          <tr key={user.id} style={{ borderBottomColor: '#2d3e52' }} className="border-b hover:bg-opacity-50" style={{ backgroundColor: '#0f1419' }}>
+                          <tr key={user.id} className="border-b hover:bg-opacity-50" style={{ borderBottomColor: '#2d3e52', backgroundColor: '#0f1419' }}>
                             <td className="px-4 py-2 text-gray-200">{user.name}</td>
                             <td className="px-4 py-2 text-gray-400">{user.type}</td>
                             <td className="px-4 py-2 text-gray-400">{user.joined}</td>

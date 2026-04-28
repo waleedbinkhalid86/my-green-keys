@@ -1,13 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import { lessons, phases, type Lesson } from "@/data/lessons";
 import "../globals.css";
-
-const LESSON_SENTENCES = [
-  "save our planet one key at a time",
-  "green keys help us type and learn",
-  "plant a tree and help earth breathe",
-  "clean the ocean protect sea life",
-];
 
 const FINGER_MAP: Record<string, string> = {
   // Left pinky
@@ -120,7 +114,7 @@ interface LessonStats {
 }
 
 export default function LessonPage() {
-  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [currentLessonId, setCurrentLessonId] = useState(1);
   const [userInput, setUserInput] = useState("");
   const [stats, setStats] = useState<LessonStats>({
     wpm: 0,
@@ -136,6 +130,7 @@ export default function LessonPage() {
   const [highlightKey, setHighlightKey] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showLessonMap, setShowLessonMap] = useState(false);
   const [showTypingRulesModal, setShowTypingRulesModal] = useState(false);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
@@ -146,27 +141,50 @@ export default function LessonPage() {
   const shakeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const messageTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  const currentSentence = LESSON_SENTENCES[currentSentenceIndex];
+  // Get current lesson data
+  const currentLesson = lessons.find(l => l.id === currentLessonId) || lessons[0];
+  const currentPhase = phases.find(p => p.id === currentLesson.phase);
 
-  // Initialize user profile from localStorage
+  // Initialize from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("userProfile");
-    if (saved) {
-      const profile = JSON.parse(saved);
-      setUserProfile(profile);
+    const savedProfile = localStorage.getItem("userProfile");
+    const savedLessonId = localStorage.getItem("currentLessonId");
+    
+    if (savedProfile) {
+      setUserProfile(JSON.parse(savedProfile));
     } else {
       setShowWelcomeModal(true);
     }
+    
+    if (savedLessonId) {
+      setCurrentLessonId(parseInt(savedLessonId));
+    }
   }, []);
+
+  // Save current lesson to localStorage
+  useEffect(() => {
+    localStorage.setItem("currentLessonId", currentLessonId.toString());
+  }, [currentLessonId]);
 
   // Initialize typing
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [currentSentenceIndex]);
+    // Reset stats for new lesson
+    setUserInput("");
+    setStats({
+      wpm: 0,
+      accuracy: 100,
+      streak: 0,
+      ecoWords: 0,
+      startTime: null,
+    });
+    setIsComplete(false);
+    setStars(0);
+  }, [currentLessonId]);
 
-  // Calculate WPM and accuracy
+  // Calculate WPM and accuracy against the sentence
   useEffect(() => {
     if (userInput.length === 0) return;
 
@@ -178,7 +196,7 @@ export default function LessonPage() {
 
     let correctChars = 0;
     for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === currentSentence[i]) correctChars++;
+      if (userInput[i] === currentLesson.sentence[i]) correctChars++;
     }
     const accuracy = Math.round((correctChars / userInput.length) * 100);
 
@@ -188,20 +206,20 @@ export default function LessonPage() {
       accuracy,
       startTime: prev.startTime || startTime,
     }));
-  }, [userInput, stats.startTime, currentSentence]);
+  }, [userInput, stats.startTime, currentLesson]);
 
   // Calculate streak
   useEffect(() => {
     let streak = 0;
     for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === currentSentence[i]) {
+      if (userInput[i] === currentLesson.sentence[i]) {
         streak++;
       } else {
         break;
       }
     }
     setStats((prev) => ({ ...prev, streak }));
-  }, [userInput, currentSentence]);
+  }, [userInput, currentLesson]);
 
   // Handle typing input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,7 +228,7 @@ export default function LessonPage() {
 
     // Check if typed character matches
     if (value.length > userInput.length) {
-      const expectedChar = currentSentence[userInput.length];
+      const expectedChar = currentLesson.sentence[userInput.length];
       if (lastChar !== expectedChar) {
         setShakeKey(lastChar);
         shakeTimeoutRef.current = setTimeout(() => setShakeKey(null), 300);
@@ -250,8 +268,8 @@ export default function LessonPage() {
     }
 
     // Highlight next key
-    if (value.length < currentSentence.length) {
-      setHighlightKey(currentSentence[value.length]);
+    if (value.length < currentLesson.sentence.length) {
+      setHighlightKey(currentLesson.sentence[value.length]);
     } else {
       setHighlightKey(null);
     }
@@ -259,29 +277,31 @@ export default function LessonPage() {
     setUserInput(value);
 
     // Check if lesson complete
-    if (value === currentSentence) {
+    if (value === currentLesson.sentence) {
       setIsComplete(true);
       // Calculate stars
       let earnedStars = 1;
       if (stats.accuracy >= 90) earnedStars++;
-      if (stats.wpm >= 20) earnedStars++;
+      if (stats.wpm >= (currentLesson.targetWPM || 20)) earnedStars++;
       setStars(earnedStars);
     }
   };
 
   const handleNextLesson = () => {
-    setCurrentSentenceIndex((prev) => (prev + 1) % LESSON_SENTENCES.length);
-    setUserInput("");
-    setIsComplete(false);
-    setStats({
-      wpm: 0,
-      accuracy: 100,
-      streak: 0,
-      ecoWords: 0,
-      startTime: null,
-    });
-    setStars(0);
-    setMessages([]);
+    if (currentLessonId < 100) {
+      setCurrentLessonId(currentLessonId + 1);
+    }
+  };
+
+  const handlePrevLesson = () => {
+    if (currentLessonId > 1) {
+      setCurrentLessonId(currentLessonId - 1);
+    }
+  };
+
+  const handleSelectLesson = (lessonId: number) => {
+    setCurrentLessonId(lessonId);
+    setShowLessonMap(false);
   };
 
   const handleReset = () => {
@@ -299,7 +319,8 @@ export default function LessonPage() {
     if (inputRef.current) inputRef.current.focus();
   };
 
-  const progressPercent = (userInput.length / currentSentence.length) * 100;
+  const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
+  const lessonProgress = ((currentLessonId - 1) / 100) * 100;
 
   const handleWelcomeSubmit = () => {
     if (welcomeData.name && welcomeData.gender) {
@@ -438,7 +459,7 @@ export default function LessonPage() {
         justifyContent: "space-between",
         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: "300px" }}>
           <button
             onClick={() => window.history.back()}
             style={{
@@ -451,23 +472,31 @@ export default function LessonPage() {
           >
             ←
           </button>
-          <span style={{ fontSize: "16px", fontWeight: 600 }}>Lesson 3 - Home Row Keys</span>
+          <div>
+            <div style={{ fontSize: "14px", opacity: 0.8 }}>Lesson {currentLessonId} of 100</div>
+            <div style={{ fontSize: "16px", fontWeight: 600 }}>{currentLesson.title}</div>
+          </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          {currentPhase && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "20px", marginBottom: "4px" }}>{currentPhase.icon}</div>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>{currentPhase.name}</div>
+            </div>
+          )}
           <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: getThemeColor(), fontWeight: 700, fontSize: "18px" }}>{stats.wpm}</div>
+            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.wpm}</div>
             <div style={{ fontSize: "11px", opacity: 0.8 }}>WPM</div>
           </div>
           <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: getThemeColor(), fontWeight: 700, fontSize: "18px" }}>{stats.accuracy}%</div>
+            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.accuracy}%</div>
             <div style={{ fontSize: "11px", opacity: 0.8 }}>Accuracy</div>
           </div>
           <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: getThemeColor(), fontWeight: 700, fontSize: "18px" }}>{stats.streak}</div>
+            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.streak}</div>
             <div style={{ fontSize: "11px", opacity: 0.8 }}>Streak</div>
           </div>
-          <div style={{ fontSize: "20px", letterSpacing: "4px" }}>★★★</div>
           {userProfile && (
             <div style={{ fontSize: "14px", fontWeight: 600 }}>
               Hi {userProfile.name}! 👋
@@ -485,19 +514,19 @@ export default function LessonPage() {
         <div
           style={{
             height: "100%",
-            background: getThemeColor(),
-            width: `${progressPercent}%`,
-            transition: "width 0.1s ease",
+            background: "linear-gradient(90deg, #4CAF50 0%, #2196F3 100%)",
+            width: `${lessonProgress}%`,
+            transition: "width 0.3s ease",
           }}
         />
         <div
           style={{
             position: "absolute",
             top: "-8px",
-            left: `${progressPercent}%`,
+            left: `${lessonProgress}%`,
             transform: "translateX(-50%)",
             fontSize: "16px",
-            transition: "left 0.1s ease",
+            transition: "left 0.3s ease",
           }}
         >
           🌿
@@ -513,24 +542,34 @@ export default function LessonPage() {
         justifyContent: "space-between",
         borderBottom: "1px solid #e0e0e0",
       }}>
-        <span style={{
-          background: "#E8F5E9",
-          color: "#4CAF50",
-          padding: "4px 12px",
-          borderRadius: "12px",
-          fontSize: "12px",
-          fontWeight: 600,
-        }}>
-          Eco Typing · Planet Theme
-        </span>
-        <span style={{ color: "#666", fontSize: "14px" }}>Type the text below</span>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{
+            background: currentLesson.module === "eco" ? "#E8F5E9" : 
+                       currentLesson.module === "health" ? "#E3F2FD" :
+                       currentLesson.module === "manners" ? "#FCE4EC" : "#F5F5F5",
+            color: currentLesson.module === "eco" ? "#4CAF50" : 
+                   currentLesson.module === "health" ? "#2196F3" :
+                   currentLesson.module === "manners" ? "#E91E63" : "#666",
+            padding: "4px 12px",
+            borderRadius: "12px",
+            fontSize: "12px",
+            fontWeight: 600,
+          }}>
+            {currentLesson.module === "eco" ? "🌍 Eco" : 
+             currentLesson.module === "health" ? "💪 Health" :
+             currentLesson.module === "manners" ? "🤝 Manners" : "⌨️ Typing"}
+          </span>
+          <span style={{ color: "#666", fontSize: "14px" }}>
+            New Keys: {currentLesson.newKeys.join(", ")}
+          </span>
+        </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button
-            onClick={() => setShowTypingRulesModal(true)}
+            onClick={() => setShowLessonMap(true)}
             style={{
               background: "white",
-              border: `2px solid ${getThemeColor()}`,
-              color: getThemeColor(),
+              border: "2px solid #4CAF50",
+              color: "#4CAF50",
               padding: "6px 12px",
               borderRadius: "6px",
               fontSize: "12px",
@@ -540,18 +579,17 @@ export default function LessonPage() {
             }}
             onMouseOver={(e) => {
               const target = e.target as HTMLButtonElement;
-              target.style.background = getThemeColor();
+              target.style.background = "#4CAF50";
               target.style.color = "white";
             }}
             onMouseOut={(e) => {
               const target = e.target as HTMLButtonElement;
               target.style.background = "white";
-              target.style.color = getThemeColor();
+              target.style.color = "#4CAF50";
             }}
           >
-            📏 Typing Rules
+            📚 Lesson Map
           </button>
-          <span style={{ fontSize: "18px" }}>👆</span>
         </div>
       </div>
 
@@ -598,95 +636,64 @@ export default function LessonPage() {
         }}>
           🍃
         </div>
-
-        <style>{`
-          @keyframes sway {
-            0%, 100% { transform: rotate(-1deg); }
-            50% { transform: rotate(1deg); }
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-        `}</style>
       </div>
 
       {/* MAIN CONTENT */}
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px" }}>
-        {/* TEXT DISPLAY BOX */}
+        {/* DRILL AND SENTENCE BOX */}
         <div style={{
           background: "white",
-          padding: "40px",
+          padding: "24px",
           borderRadius: "8px",
           marginBottom: "24px",
           boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          fontFamily: "Roboto Mono, monospace",
-          fontSize: "22px",
-          lineHeight: 1.8,
-          minHeight: "100px",
         }}>
-          {currentSentence.split("").map((char, index) => {
-            let color = "#999"; // Grey - not yet typed
-            if (index < userInput.length) {
-              color = userInput[index] === char ? "#4CAF50" : "#f44336"; // Green correct, Red error
-            }
-            const isCurrentPos = index === userInput.length;
-            const style: React.CSSProperties = {
-              color,
-              fontWeight: userInput[index] === char ? 600 : 400,
-              display: "inline",
-              position: "relative",
-            };
-            if (isCurrentPos) {
-              style.borderBottom = "2px solid #2196F3";
-              style.animation = "blink 1s infinite";
-            }
-            if (userInput[index] !== char && index < userInput.length) {
-              style.background = "rgba(244, 67, 54, 0.2)";
-            }
-            return <span key={index} style={style}>{char}</span>;
-          })}
-        </div>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "#666", marginBottom: "6px" }}>DRILL TEXT</div>
+            <div style={{
+              fontFamily: "Roboto Mono, monospace",
+              fontSize: "16px",
+              lineHeight: 1.6,
+              color: "#999",
+              background: "#f5f5f5",
+              padding: "12px",
+              borderRadius: "4px",
+            }}>
+              {currentLesson.drill}
+            </div>
+          </div>
 
-        {/* LESSON SELECTOR */}
-        <div style={{
-          display: "flex",
-          gap: "12px",
-          marginBottom: "24px",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}>
-          {LESSON_SENTENCES.map((sentence, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                if (!isComplete) {
-                  setCurrentSentenceIndex(index);
-                  setUserInput("");
-                  setStats({
-                    wpm: 0,
-                    accuracy: 100,
-                    streak: 0,
-                    ecoWords: 0,
-                    startTime: null,
-                  });
+          <div style={{ marginBottom: "0" }}>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "#666", marginBottom: "6px" }}>SENTENCE</div>
+            <div style={{
+              fontFamily: "Roboto Mono, monospace",
+              fontSize: "22px",
+              lineHeight: 1.8,
+              minHeight: "60px",
+            }}>
+              {currentLesson.sentence.split("").map((char, index) => {
+                let color = "#999"; // Grey - not yet typed
+                if (index < userInput.length) {
+                  color = userInput[index] === char ? "#4CAF50" : "#f44336"; // Green correct, Red error
                 }
-              }}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "20px",
-                border: currentSentenceIndex === index ? "2px solid #4CAF50" : "1px solid #ddd",
-                background: currentSentenceIndex === index ? "#E8F5E9" : "white",
-                color: currentSentenceIndex === index ? "#4CAF50" : "#666",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {sentence}
-            </button>
-          ))}
+                const isCurrentPos = index === userInput.length;
+                const style: React.CSSProperties = {
+                  color,
+                  fontWeight: userInput[index] === char ? 600 : 400,
+                  display: "inline",
+                  position: "relative",
+                };
+                if (isCurrentPos) {
+                  style.borderBottom = "2px solid #2196F3";
+                  style.animation = "blink 1s infinite";
+                }
+                if (userInput[index] !== char && index < userInput.length) {
+                  style.background = "rgba(244, 67, 54, 0.2)";
+                }
+                return <span key={index} style={style}>{char}</span>;
+              })}
+            </div>
+          </div>
         </div>
 
         {/* TYPING INPUT */}
@@ -703,11 +710,71 @@ export default function LessonPage() {
             fontFamily: "Roboto Mono, monospace",
             border: "2px solid #4CAF50",
             borderRadius: "8px",
-            marginBottom: "32px",
+            marginBottom: "24px",
             boxSizing: "border-box",
           }}
           disabled={isComplete}
+          autoFocus
         />
+
+        {/* NAVIGATION BUTTONS */}
+        <div style={{
+          display: "flex",
+          gap: "12px",
+          marginBottom: "24px",
+          justifyContent: "center",
+        }}>
+          <button
+            onClick={handlePrevLesson}
+            disabled={currentLessonId === 1}
+            style={{
+              padding: "12px 24px",
+              background: currentLessonId === 1 ? "#ccc" : "white",
+              border: currentLessonId === 1 ? "1px solid #ddd" : "2px solid #4CAF50",
+              color: currentLessonId === 1 ? "#999" : "#4CAF50",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: currentLessonId === 1 ? "not-allowed" : "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            ← Previous Lesson
+          </button>
+          <button
+            onClick={() => setShowLessonMap(true)}
+            style={{
+              padding: "12px 24px",
+              background: "white",
+              border: "2px solid #2196F3",
+              color: "#2196F3",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            📚 See All {lessons.length} Lessons
+          </button>
+          <button
+            onClick={handleNextLesson}
+            disabled={currentLessonId === 100}
+            style={{
+              padding: "12px 24px",
+              background: currentLessonId === 100 ? "#ccc" : "#4CAF50",
+              border: "none",
+              color: "white",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Next Lesson →
+          </button>
+        </div>
 
         {/* VIRTUAL KEYBOARD */}
         <div style={{
@@ -987,13 +1054,160 @@ export default function LessonPage() {
                   fontSize: "16px",
                   fontWeight: 700,
                   color: "white",
-                  cursor: "pointer",
+                  cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
                 }}
+                disabled={currentLessonId === 100}
               >
-                Next Lesson
+                {currentLessonId === 100 ? "🏆 You\'ve Graduated!" : "Next Lesson →"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* LESSON MAP MODAL */}
+      {showLessonMap && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1002,
+        }}>
+          <div style={{
+            background: "white",
+            padding: "40px",
+            borderRadius: "16px",
+            maxWidth: "900px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
+            animation: "slideUp 0.4s ease",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+              <h2 style={{
+                fontSize: "28px",
+                fontWeight: 800,
+                color: "#4CAF50",
+                margin: 0,
+              }}>
+                📚 All 100 Lessons
+              </h2>
+              <button
+                onClick={() => setShowLessonMap(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#999",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* PHASES */}
+            {phases.map((phase) => {
+              const phraseLessons = lessons.filter(l => l.phase === phase.id);
+              return (
+                <div key={phase.id} style={{ marginBottom: "32px" }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "16px",
+                    paddingBottom: "12px",
+                    borderBottom: `2px solid ${phase.color}`,
+                  }}>
+                    <div style={{ fontSize: "32px" }}>{phase.icon}</div>
+                    <div>
+                      <div style={{ fontSize: "18px", fontWeight: 700, color: phase.color }}>
+                        {phase.name}
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#666" }}>
+                        {phase.description}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LESSONS GRID */}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: "12px",
+                  }}>
+                    {phraseLessons.map((lesson) => (
+                      <button
+                        key={lesson.id}
+                        onClick={() => handleSelectLesson(lesson.id)}
+                        style={{
+                          padding: "12px 16px",
+                          background: currentLessonId === lesson.id ? phase.color : "white",
+                          border: currentLessonId === lesson.id ? "none" : `1px solid #ddd`,
+                          borderRadius: "8px",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          color: currentLessonId === lesson.id ? "white" : "#333",
+                        }}
+                        onMouseOver={(e) => {
+                          const target = e.target as HTMLButtonElement;
+                          if (currentLessonId !== lesson.id) {
+                            target.style.background = "#f5f5f5";
+                            target.style.borderColor = phase.color;
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          const target = e.target as HTMLButtonElement;
+                          if (currentLessonId !== lesson.id) {
+                            target.style.background = "white";
+                            target.style.borderColor = "#ddd";
+                          }
+                        }}
+                      >
+                        <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
+                          Lesson {lesson.id}
+                        </div>
+                        <div style={{ fontSize: "12px", opacity: 0.8, lineHeight: 1.3 }}>
+                          {lesson.title}
+                        </div>
+                        {lesson.targetWPM && (
+                          <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                            Goal: {lesson.targetWPM} WPM
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            <button
+              onClick={() => setShowLessonMap(false)}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "#4CAF50",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: 700,
+                color: "white",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                marginTop: "24px",
+              }}
+            >
+              Got it! Let's Type! 🌿
+            </button>
           </div>
         </div>
       )}
@@ -1165,7 +1379,7 @@ export default function LessonPage() {
               <h2 style={{
                 fontSize: "28px",
                 fontWeight: 800,
-                color: getThemeColor(),
+                color: "#4CAF50",
                 margin: 0,
               }}>
                 Typing Rules 📏
@@ -1191,7 +1405,7 @@ export default function LessonPage() {
                   padding: "16px",
                   borderRadius: "8px",
                   marginBottom: "12px",
-                  borderLeft: `4px solid ${getThemeColor()}`,
+                  borderLeft: `4px solid #4CAF50`,
                 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
                     <div style={{ fontSize: "24px", minWidth: "32px" }}>{rule.icon}</div>
@@ -1199,7 +1413,7 @@ export default function LessonPage() {
                       <div style={{
                         fontSize: "16px",
                         fontWeight: 700,
-                        color: getThemeColor(),
+                        color: "#4CAF50",
                         marginBottom: "4px",
                       }}>
                         Rule {index + 1} - {rule.title}
@@ -1222,7 +1436,7 @@ export default function LessonPage() {
               style={{
                 width: "100%",
                 padding: "14px",
-                background: getThemeColor(),
+                background: "#4CAF50",
                 border: "none",
                 borderRadius: "8px",
                 fontSize: "16px",
