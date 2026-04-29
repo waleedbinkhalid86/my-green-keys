@@ -22,6 +22,22 @@ body {
   overflow-x: hidden;
 }
 
+/* Reduce motion/animation load on mobile */
+@media (prefers-reduced-motion: reduce) {
+  .leaf,
+  .firefly,
+  .cloud {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Clouds are pretty, but can crowd small screens */
+  .cloud {
+    display: none;
+  }
+}
+
 /* ── Keyframes ── */
 
 @keyframes sway {

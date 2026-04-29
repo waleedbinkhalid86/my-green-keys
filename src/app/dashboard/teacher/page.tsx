@@ -153,7 +153,7 @@ export default function TeacherDashboard() {
             🏆 Class Leaderboard — Top Typists
           </h2>
           <div className="overflow-x-auto rounded-lg border" style={{ borderColor: '#e5e7eb' }}>
-            <table className="w-full">
+            <table className="w-full min-w-[720px]">
               <thead style={{ backgroundColor: '#f3f4f6' }}>
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rank</th>
@@ -226,7 +226,7 @@ export default function TeacherDashboard() {
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg border" style={{ borderColor: '#e5e7eb' }}>
-            <table className="w-full">
+            <table className="w-full min-w-[900px]">
               <thead style={{ backgroundColor: '#f3f4f6' }}>
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>

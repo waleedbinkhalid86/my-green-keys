@@ -175,6 +175,8 @@ function Flower({ style, color = "#FF6B6B", delay = "0s" }: { style: React.CSSPr
 ════════════════════════════════════════════════════════════════════════════ */
 
 export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
   return (
     <>
       {/* ── NAV ─────────────────────────────────────────────────────── */}
@@ -201,8 +203,43 @@ export default function HomePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <a href="/login" className="nav-link hidden md:block">Log In</a>
               <a href="/signup" className="btn-primary" style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem" }}>Start Free Trial</a>
+              <button
+                type="button"
+                className="md:hidden inline-flex items-center justify-center rounded-lg px-3 py-2 text-white/90 hover:text-white hover:bg-white/10"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                ☰
+              </button>
             </div>
           </div>
+
+          {/* Mobile menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden pb-4">
+              <div className="mt-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
+                <div className="flex flex-col gap-3">
+                  {["Features", "Modules", "Schools"].map((l) => (
+                    <a
+                      key={l}
+                      href={`#${l.toLowerCase()}`}
+                      className="nav-link"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {l}
+                    </a>
+                  ))}
+                  <a href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Pricing
+                  </a>
+                  <a href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Log In
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </Inner>
       </nav>
 
@@ -223,10 +260,12 @@ export default function HomePage() {
         {/* Sun */}
         <div className="animate-sun-pulse" style={{ position: "absolute", top: 72, right: "9%", width: 96, height: 96, background: "radial-gradient(circle,#FFEB3B 38%,#FDD835 65%,transparent 100%)", borderRadius: "50%" }} />
 
-        {/* Clouds */}
-        <CloudShape style={{ top: 88,  left: 0,    width: 200, height: 70,  animationDuration: "30s", animationDelay: "0s"  }} />
-        <CloudShape style={{ top: 128, left: 0,    width: 145, height: 50,  animationDuration: "38s", animationDelay: "11s" }} />
-        <CloudShape style={{ top: 70,  left: 0,    width: 240, height: 80,  animationDuration: "46s", animationDelay: "20s" }} />
+        {/* Clouds (hidden on very small screens) */}
+        <div className="hidden sm:block">
+          <CloudShape style={{ top: 88,  left: 0,    width: 200, height: 70,  animationDuration: "30s", animationDelay: "0s"  }} />
+          <CloudShape style={{ top: 128, left: 0,    width: 145, height: 50,  animationDuration: "38s", animationDelay: "11s" }} />
+          <CloudShape style={{ top: 70,  left: 0,    width: 240, height: 80,  animationDuration: "46s", animationDelay: "20s" }} />
+        </div>
 
         {/* Fireflies */}
         {([
@@ -265,7 +304,10 @@ export default function HomePage() {
         </div>
 
         {/* Hero copy */}
-        <div style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", paddingBottom: 220, maxWidth: 820, margin: "0 auto" }}>
+        <div
+          className="pb-28 sm:pb-56"
+          style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 820, margin: "0 auto" }}
+        >
           <div
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,

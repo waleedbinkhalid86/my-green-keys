@@ -410,9 +410,9 @@ export default function SignupPage() {
           </div>
         )}
         <div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
             gap: "16px",
             marginBottom: "40px",
           }}

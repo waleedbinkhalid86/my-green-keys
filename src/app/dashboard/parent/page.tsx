@@ -487,7 +487,10 @@ export default function ParentDashboard() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5"
+                style={{ display: "grid", gap: 16, marginBottom: 20 }}
+              >
                 <div>
                   <label style={{ display: "block", marginBottom: 8, fontSize: "0.95rem", fontWeight: 600, color: "#2c3e50" }}>Difficulty</label>
                   <select
@@ -826,7 +829,10 @@ export default function ParentDashboard() {
           <section>
             <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#2c3e50", marginBottom: 24 }}>💳 Subscription & Billing</h2>
             <div style={{ background: "#f5f7fa", padding: 32, borderRadius: 12, border: "1px solid #e0e0e0" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginBottom: 32 }}>
+              <div
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 mb-8"
+                style={{ display: "grid", gap: 40, marginBottom: 32 }}
+              >
                 <div>
                   <p style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Current plan</p>
                   <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#2c3e50", marginBottom: 16 }}>Family Plan</div>

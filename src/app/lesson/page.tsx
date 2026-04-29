@@ -905,23 +905,27 @@ export default function LessonPage() {
         </div>
 
         {/* VIRTUAL KEYBOARD */}
-        <div style={{
-          background: "white",
-          padding: "24px",
-          borderRadius: "8px",
-          marginBottom: "24px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-        }}>
-          {KEYBOARD_LAYOUT.map((row) => (
-            <div
-              key={row.row}
-              style={{
-                display: "flex",
-                gap: "6px",
-                marginBottom: "8px",
-                justifyContent: "center",
-              }}
-            >
+        <div
+          className="overflow-x-auto"
+          style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "8px",
+            marginBottom: "24px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div className="min-w-[520px]">
+            {KEYBOARD_LAYOUT.map((row) => (
+              <div
+                key={row.row}
+                style={{
+                  display: "flex",
+                  gap: "6px",
+                  marginBottom: "8px",
+                  justifyContent: "center",
+                }}
+              >
               {row.keys.map((key) => {
                 const fingerType = FINGER_MAP[key] || "other";
                 const isHighlighted = highlightKey === key;
@@ -967,8 +971,8 @@ export default function LessonPage() {
                   </div>
                 );
               })}
-            </div>
-          ))}
+              </div>
+            ))}
 
           {/* SPACEBAR */}
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -991,22 +995,26 @@ export default function LessonPage() {
               SPACE
             </button>
           </div>
-          <div style={{ fontSize: "10px", color: "#999", marginTop: "4px", textAlign: "center" }}>
-            Spacebar
+            <div style={{ fontSize: "10px", color: "#999", marginTop: "4px", textAlign: "center" }}>
+              Spacebar
+            </div>
           </div>
         </div>
 
         {/* HAND VISUALIZATION */}
-        <div style={{
-          background: "white",
-          padding: "24px",
-          borderRadius: "8px",
-          marginBottom: "24px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          display: "flex",
-          gap: "40px",
-          justifyContent: "center",
-        }}>
+        <div
+          className="flex flex-col sm:flex-row"
+          style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "8px",
+            marginBottom: "24px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            display: "flex",
+            gap: "24px",
+            justifyContent: "center",
+          }}
+        >
           {renderHandSVG("left")}
           {renderHandSVG("right")}
         </div>
@@ -1086,12 +1094,14 @@ export default function LessonPage() {
             </h2>
 
             {/* STATS */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: "16px",
-              marginBottom: "32px",
-            }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+              style={{
+                display: "grid",
+                gap: "16px",
+                marginBottom: "32px",
+              }}
+            >
               <div style={{
                 background: "#F5F5F5",
                 padding: "16px",
