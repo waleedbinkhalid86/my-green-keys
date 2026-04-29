@@ -1,8 +1,10 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
 
-type AccountType = "child" | "parent" | "teacher" | null;
+type AccountType = "student" | "parent" | "teacher" | null;
 
 interface FormData {
   fullName: string;
@@ -11,21 +13,24 @@ interface FormData {
   password: string;
   confirmPassword: string;
   age: string;
+  gender: string;
   childName: string;
   childAge: string;
+  childGender: string;
   schoolName: string;
   numStudents: string;
   promoCode: string;
 }
 
-const VALID_PROMO_CODES: Record<string, { discount: string; message: string }> = {
-  GREENSTART: { discount: "30%", message: "30% off applied!" },
-  FAMILY2024: { discount: "2 months", message: "2 months free applied!" },
-  SCHOOL100: { discount: "20%", message: "20% off school package applied!" },
-  BACK2SCHOOL: { discount: "50%", message: "50% off applied!" },
+const VALID_PROMO_CODES: Record<string, { discount: string; message: string; discountPercent: number }> = {
+  GREENSTART: { discount: "30%", message: "30% off applied!", discountPercent: 30 },
+  FAMILY2024: { discount: "2 months", message: "2 months free applied!", discountPercent: 0 },
+  SCHOOL100: { discount: "20%", message: "20% off school package applied!", discountPercent: 20 },
+  BACK2SCHOOL: { discount: "50%", message: "50% off applied!", discountPercent: 50 },
 };
 
 export default function SignupPage() {
+  const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -34,8 +39,10 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
     age: "",
+    gender: "",
     childName: "",
     childAge: "",
+    childGender: "",
     schoolName: "",
     numStudents: "",
     promoCode: "",
@@ -47,11 +54,14 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleAccountTypeSelect = (type: AccountType) => {
     setAccountType(type);
     setErrors({});
     setPromoStatus(null);
+    setSuccessMessage("");
   };
 
   const handleInputChange = (
@@ -99,6 +109,12 @@ export default function SignupPage() {
       newErrors.fullName = "Full name is required";
     }
 
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email address";
+    }
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
@@ -109,36 +125,38 @@ export default function SignupPage() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (accountType === "child") {
+    if (accountType === "student") {
       if (!formData.username.trim()) {
         newErrors.username = "Username is required";
       }
       if (!formData.age || parseInt(formData.age) < 6) {
         newErrors.age = "Age must be at least 6";
       }
-    } else if (accountType === "parent") {
-      if (!formData.email.trim()) {
-        newErrors.email = "Email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Invalid email address";
+      if (!formData.gender) {
+        newErrors.gender = "Please select your gender";
       }
+    } else if (accountType === "parent") {
       if (!formData.childName.trim()) {
         newErrors.childName = "Child's name is required";
       }
       if (!formData.childAge || parseInt(formData.childAge) < 6) {
         newErrors.childAge = "Child's age must be at least 6";
       }
-    } else if (accountType === "teacher") {
-      if (!formData.email.trim()) {
-        newErrors.email = "Email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Invalid email address";
+      if (!formData.childGender) {
+        newErrors.childGender = "Please select child's gender";
       }
+      if (!formData.gender) {
+        newErrors.gender = "Please select your gender";
+      }
+    } else if (accountType === "teacher") {
       if (!formData.schoolName.trim()) {
         newErrors.schoolName = "School name is required";
       }
       if (!formData.numStudents || parseInt(formData.numStudents) < 1) {
         newErrors.numStudents = "Number of students must be at least 1";
+      }
+      if (!formData.gender) {
+        newErrors.gender = "Please select your gender";
       }
     }
 
@@ -146,11 +164,131 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log("Form submitted:", { accountType, formData });
-      alert(`Account created for ${accountType}!`);
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setSuccessMessage("");
+
+    try {
+      const supabase = createClient();
+
+      // Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (authError) {
+        if (authError.message.includes("already registered")) {
+          setErrors({ email: "This email is already registered. Please log in instead." });
+        } else {
+          setErrors({ form: authError.message });
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (!authData.user) {
+        setErrors({ form: "Failed to create account" });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create profile in database
+      const profileData = {
+        id: authData.user.id,
+        full_name: formData.fullName,
+        email: formData.email,
+        account_type: accountType,
+        gender: formData.gender,
+      };
+
+      if (accountType === "student") {
+        Object.assign(profileData, { age: parseInt(formData.age) });
+      } else if (accountType === "parent") {
+        Object.assign(profileData, { age: parseInt(formData.age) });
+      } else if (accountType === "teacher") {
+        Object.assign(profileData, { school_name: formData.schoolName });
+      }
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([profileData]);
+
+      if (profileError) {
+        setErrors({ form: "Failed to create profile: " + profileError.message });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create subscription for new user
+      const discountPercent = formData.promoCode && VALID_PROMO_CODES[formData.promoCode]
+        ? VALID_PROMO_CODES[formData.promoCode].discountPercent
+        : 0;
+
+      const { error: subscriptionError } = await supabase
+        .from("subscriptions")
+        .insert([
+          {
+            user_id: authData.user.id,
+            plan_type: "free",
+            status: "active",
+            promo_code: formData.promoCode || null,
+            discount_percent: discountPercent,
+          },
+        ]);
+
+      if (subscriptionError) {
+        console.error("Subscription creation warning:", subscriptionError);
+        // Don't fail the signup if subscription fails
+      }
+
+      // Create child record if parent
+      if (accountType === "parent") {
+        const { error: childError } = await supabase
+          .from("children")
+          .insert([
+            {
+              parent_id: authData.user.id,
+              full_name: formData.childName,
+              age: parseInt(formData.childAge),
+              gender: formData.childGender,
+            },
+          ]);
+
+        if (childError) {
+          console.error("Child creation warning:", childError);
+          // Don't fail the signup if child creation fails
+        }
+      }
+
+      setSuccessMessage(
+        "Account created successfully! Redirecting you to your dashboard..."
+      );
+
+      // Redirect based on account type
+      setTimeout(() => {
+        const redirectPath = {
+          student: "/lesson",
+          parent: "/dashboard/parent",
+          teacher: "/dashboard/teacher",
+        }[accountType!] || "/lesson";
+        
+        router.push(redirectPath);
+      }, 2000);
+    } catch (error) {
+      setErrors({
+        form: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -226,7 +364,39 @@ export default function SignupPage() {
           Choose your account type to get started
         </p>
 
-        {/* ACCOUNT TYPE SELECTOR */}
+        {/* ERROR MESSAGE */}
+        {errors.form && (
+          <div
+            style={{
+              background: "#ffebee",
+              border: "1px solid #ef5350",
+              color: "#c62828",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              marginBottom: "24px",
+              fontSize: "14px",
+            }}
+          >
+            {errors.form}
+          </div>
+        )}
+
+        {/* SUCCESS MESSAGE */}
+        {successMessage && (
+          <div
+            style={{
+              background: "#e8f5e9",
+              border: "1px solid #4caf50",
+              color: "#2e7d32",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              marginBottom: "24px",
+              fontSize: "14px",
+            }}
+          >
+            {successMessage}
+          </div>
+        )}
         <div
           style={{
             display: "grid",
@@ -236,7 +406,7 @@ export default function SignupPage() {
           }}
         >
           {[
-            { type: "child" as const, icon: "👦", label: "Child/Student", desc: "I want to learn typing" },
+            { type: "student" as const, icon: "👦", label: "Student", desc: "I want to learn typing" },
             { type: "parent" as const, icon: "👨‍👩‍👧", label: "Parent", desc: "I want to track my child" },
             { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher/School", desc: "I manage a classroom" },
           ].map((option) => (
@@ -318,6 +488,7 @@ export default function SignupPage() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
+                  disabled={isLoading}
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -329,6 +500,7 @@ export default function SignupPage() {
                     outline: "none",
                     transition: "border 0.2s ease",
                     boxSizing: "border-box",
+                    opacity: isLoading ? 0.6 : 1,
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = "#4CAF50";
@@ -346,8 +518,99 @@ export default function SignupPage() {
                 )}
               </div>
 
-              {/* CHILD ACCOUNT FIELDS */}
-              {accountType === "child" && (
+              {/* EMAIL */}
+              <div style={{ marginBottom: "24px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#2c3e50",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    fontSize: "14px",
+                    border: errors.email
+                      ? "2px solid #f44336"
+                      : "2px solid #e0e0e0",
+                    borderRadius: "8px",
+                    outline: "none",
+                    transition: "border 0.2s ease",
+                    boxSizing: "border-box",
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#4CAF50";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = errors.email
+                      ? "#f44336"
+                      : "#e0e0e0";
+                  }}
+                />
+                {errors.email && (
+                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
+                    {errors.email}
+                  </div>
+                )}
+              </div>
+
+              {/* GENDER */}
+              <div style={{ marginBottom: "24px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#2c3e50",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Gender
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    fontSize: "14px",
+                    border: errors.gender
+                      ? "2px solid #f44336"
+                      : "2px solid #e0e0e0",
+                    borderRadius: "8px",
+                    outline: "none",
+                    transition: "border 0.2s ease",
+                    boxSizing: "border-box",
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                >
+                  <option value="">Select gender</option>
+                  <option value="boy">Boy</option>
+                  <option value="girl">Girl</option>
+                </select>
+                {errors.gender && (
+                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
+                    {errors.gender}
+                  </div>
+                )}
+              </div>
+
+              {/* STUDENT ACCOUNT FIELDS */}
+              {accountType === "student" && (
                 <>
                   <div style={{ marginBottom: "24px" }}>
                     <label
@@ -365,6 +628,7 @@ export default function SignupPage() {
                       name="age"
                       value={formData.age}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -376,6 +640,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                     >
                       <option value="">Select age</option>
@@ -409,6 +674,7 @@ export default function SignupPage() {
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -420,6 +686,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "#4CAF50";
@@ -452,51 +719,6 @@ export default function SignupPage() {
                         marginBottom: "8px",
                       }}
                     >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.email
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.email
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.email && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.email}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
                       Child's Name
                     </label>
                     <input
@@ -504,6 +726,7 @@ export default function SignupPage() {
                       name="childName"
                       value={formData.childName}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -515,6 +738,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "#4CAF50";
@@ -548,6 +772,7 @@ export default function SignupPage() {
                       name="childAge"
                       value={formData.childAge}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -559,6 +784,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                     >
                       <option value="">Select age</option>
@@ -571,6 +797,48 @@ export default function SignupPage() {
                     {errors.childAge && (
                       <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
                         {errors.childAge}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: "24px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        color: "#2c3e50",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Child's Gender
+                    </label>
+                    <select
+                      name="childGender"
+                      value={formData.childGender}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        fontSize: "14px",
+                        border: errors.childGender
+                          ? "2px solid #f44336"
+                          : "2px solid #e0e0e0",
+                        borderRadius: "8px",
+                        outline: "none",
+                        transition: "border 0.2s ease",
+                        boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
+                      }}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="boy">Boy</option>
+                      <option value="girl">Girl</option>
+                    </select>
+                    {errors.childGender && (
+                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
+                        {errors.childGender}
                       </div>
                     )}
                   </div>
@@ -590,51 +858,6 @@ export default function SignupPage() {
                         marginBottom: "8px",
                       }}
                     >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.email
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.email
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.email && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.email}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
                       School Name
                     </label>
                     <input
@@ -642,6 +865,7 @@ export default function SignupPage() {
                       name="schoolName"
                       value={formData.schoolName}
                       onChange={handleInputChange}
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -653,6 +877,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "#4CAF50";
@@ -687,7 +912,7 @@ export default function SignupPage() {
                       name="numStudents"
                       value={formData.numStudents}
                       onChange={handleInputChange}
-                      min="1"
+                      disabled={isLoading}
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -699,6 +924,7 @@ export default function SignupPage() {
                         outline: "none",
                         transition: "border 0.2s ease",
                         boxSizing: "border-box",
+                        opacity: isLoading ? 0.6 : 1,
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "#4CAF50";
@@ -717,7 +943,7 @@ export default function SignupPage() {
                   </div>
                 </>
               )}
-
+              
               {/* PASSWORD */}
               <div style={{ marginBottom: "24px" }}>
                 <label
@@ -737,6 +963,7 @@ export default function SignupPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                     style={{
                       width: "100%",
                       padding: "12px",
@@ -749,6 +976,7 @@ export default function SignupPage() {
                       transition: "border 0.2s ease",
                       boxSizing: "border-box",
                       paddingRight: "40px",
+                      opacity: isLoading ? 0.6 : 1,
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = "#4CAF50";
@@ -803,6 +1031,7 @@ export default function SignupPage() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    disabled={isLoading}
                     style={{
                       width: "100%",
                       padding: "12px",
@@ -815,6 +1044,7 @@ export default function SignupPage() {
                       transition: "border 0.2s ease",
                       boxSizing: "border-box",
                       paddingRight: "40px",
+                      opacity: isLoading ? 0.6 : 1,
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = "#4CAF50";
@@ -850,115 +1080,115 @@ export default function SignupPage() {
                 )}
               </div>
 
-              {/* PROMO CODE - Parent and Teacher only */}
-              {(accountType === "parent" || accountType === "teacher") && (
-                <div style={{ marginBottom: "24px" }}>
-                  <label
+              {/* PROMO CODE */}
+              <div style={{ marginBottom: "24px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "#2c3e50",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Promo Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="promoCode"
+                  value={formData.promoCode}
+                  onChange={handlePromoCodeChange}
+                  disabled={isLoading}
+                  placeholder="Enter promo code"
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    fontSize: "14px",
+                    border: "2px solid #e0e0e0",
+                    borderRadius: "8px",
+                    outline: "none",
+                    transition: "border 0.2s ease",
+                    boxSizing: "border-box",
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#4CAF50";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e0e0e0";
+                  }}
+                />
+                {promoStatus && (
+                  <div
                     style={{
-                      display: "block",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      color: "#2c3e50",
-                      marginBottom: "8px",
+                      fontSize: "12px",
+                      color: promoStatus.valid ? "#4CAF50" : "#f44336",
+                      marginTop: "4px",
                     }}
                   >
-                    Promo code (optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="promoCode"
-                    value={formData.promoCode}
-                    onChange={handlePromoCodeChange}
-                    placeholder="Enter promo code"
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      fontSize: "14px",
-                      border:
-                        promoStatus === null
-                          ? "2px solid #e0e0e0"
-                          : promoStatus.valid
-                          ? "2px solid #4CAF50"
-                          : "2px solid #f44336",
-                      borderRadius: "8px",
-                      outline: "none",
-                      transition: "border 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      if (promoStatus === null) {
-                        e.target.style.borderColor = "#4CAF50";
-                      }
-                    }}
-                    onBlur={(e) => {
-                      if (promoStatus === null) {
-                        e.target.style.borderColor = "#e0e0e0";
-                      }
-                    }}
-                  />
-                  {promoStatus && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: promoStatus.valid ? "#4CAF50" : "#f44336",
-                        marginTop: "4px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {promoStatus.message}
-                    </div>
-                  )}
-                </div>
-              )}
+                    {promoStatus.message}
+                  </div>
+                )}
+              </div>
 
-              {/* CREATE ACCOUNT BUTTON */}
+              {/* SIGN UP BUTTON */}
               <button
                 type="submit"
+                disabled={isLoading}
                 style={{
                   width: "100%",
                   padding: "14px",
-                  background: "#4CAF50",
+                  background: isLoading ? "#bbb" : "#4CAF50",
                   color: "white",
                   fontSize: "16px",
                   fontWeight: 700,
                   border: "none",
                   borderRadius: "8px",
-                  cursor: "pointer",
+                  cursor: isLoading ? "not-allowed" : "pointer",
                   transition: "background 0.2s ease",
-                  marginBottom: "16px",
+                  opacity: isLoading ? 0.7 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#45a049";
+                  if (!isLoading) {
+                    e.currentTarget.style.background = "#45a049";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#4CAF50";
+                  if (!isLoading) {
+                    e.currentTarget.style.background = "#4CAF50";
+                  }
                 }}
               >
-                Create Account
+                {isLoading ? "Creating Account..." : "Create Account"}
               </button>
+            </div>
 
-              {/* GOOGLE SIGNUP */}
-              <button
-                type="button"
-                disabled
+            {/* LOGIN LINK */}
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: "24px",
+                fontSize: "14px",
+                color: "#666",
+              }}
+            >
+              Already have an account?{" "}
+              <a
+                href="/login"
                 style={{
-                  width: "100%",
-                  padding: "14px",
-                  background: "#f5f5f5",
-                  color: "#999",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  cursor: "not-allowed",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
+                  color: "#4CAF50",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = "underline";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = "none";
                 }}
               >
-                <span style={{ opacity: 0.5 }}>🔐</span> Sign up with Google (coming soon)
-              </button>
+                Log in here
+              </a>
             </div>
           </form>
         )}

@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
 
 type AccountType = "student" | "parent" | "teacher";
@@ -10,6 +12,7 @@ interface LoginForm {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("student");
   const [formData, setFormData] = useState<LoginForm>({
     emailOrUsername: "",
@@ -18,6 +21,7 @@ export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,8 +41,7 @@ export default function LoginPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.emailOrUsername.trim()) {
-      newErrors.emailOrUsername =
-        accountType === "student" ? "Username is required" : "Email is required";
+      newErrors.emailOrUsername = "Email is required";
     }
 
     if (!formData.password) {
@@ -49,11 +52,68 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log("Login submitted:", { accountType, formData, rememberMe });
-      alert(`Logged in as ${accountType}!`);
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const supabase = createClient();
+
+      // Sign in with email and password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.emailOrUsername,
+        password: formData.password,
+      });
+
+      if (authError) {
+        if (authError.message.includes("Invalid login credentials") || authError.message.includes("Email not confirmed")) {
+          setErrors({ form: "Invalid email or password. Please try again or sign up for a new account." });
+        } else {
+          setErrors({ form: authError.message });
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (!authData.user) {
+        setErrors({ form: "Failed to authenticate" });
+        setIsLoading(false);
+        return;
+      }
+
+      // Get user profile to determine account type and redirect
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        setErrors({ form: "Failed to retrieve user profile" });
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect based on account type
+      const accountTypeRedirectMap: Record<string, string> = {
+        student: "/lesson",
+        parent: "/dashboard/parent",
+        teacher: "/dashboard/teacher",
+      };
+      
+      const redirectPath = accountTypeRedirectMap[profile.account_type] || "/lesson";
+
+      router.push(redirectPath);
+    } catch (error) {
+      setErrors({
+        form: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
+      setIsLoading(false);
     }
   };
 
@@ -129,49 +189,22 @@ export default function LoginPage() {
           Welcome back to My Green Keys
         </p>
 
-        {/* ACCOUNT TYPE TABS */}
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            marginBottom: "32px",
-            borderBottom: "2px solid #e0e0e0",
-          }}
-        >
-          {[
-            { type: "student" as const, label: "Student" },
-            { type: "parent" as const, label: "Parent" },
-            { type: "teacher" as const, label: "Teacher" },
-          ].map((option) => (
-            <button
-              key={option.type}
-              onClick={() => {
-                setAccountType(option.type);
-                setErrors({});
-                setFormData({ emailOrUsername: "", password: "" });
-              }}
-              style={{
-                padding: "12px 24px",
-                background: "none",
-                border: "none",
-                fontSize: "14px",
-                fontWeight: 600,
-                color:
-                  accountType === option.type
-                    ? "#4CAF50"
-                    : "#999",
-                cursor: "pointer",
-                borderBottom:
-                  accountType === option.type
-                    ? "3px solid #4CAF50"
-                    : "none",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        {/* ERROR MESSAGE */}
+        {errors.form && (
+          <div
+            style={{
+              background: "#ffebee",
+              border: "1px solid #ef5350",
+              color: "#c62828",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              marginBottom: "24px",
+              fontSize: "14px",
+            }}
+          >
+            {errors.form}
+          </div>
+        )}
 
         {/* LOGIN FORM */}
         <form onSubmit={handleSubmit}>
@@ -184,7 +217,7 @@ export default function LoginPage() {
               boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             }}
           >
-            {/* EMAIL/USERNAME FIELD */}
+            {/* EMAIL FIELD */}
             <div style={{ marginBottom: "24px" }}>
               <label
                 style={{
@@ -195,18 +228,15 @@ export default function LoginPage() {
                   marginBottom: "8px",
                 }}
               >
-                {accountType === "student" ? "Username" : "Email"}
+                Email
               </label>
               <input
-                type={accountType === "student" ? "text" : "email"}
+                type="email"
                 name="emailOrUsername"
                 value={formData.emailOrUsername}
                 onChange={handleInputChange}
-                placeholder={
-                  accountType === "student"
-                    ? "Enter your username"
-                    : "Enter your email"
-                }
+                disabled={isLoading}
+                placeholder="Enter your email"
                 style={{
                   width: "100%",
                   padding: "12px",
@@ -218,6 +248,7 @@ export default function LoginPage() {
                   outline: "none",
                   transition: "border 0.2s ease",
                   boxSizing: "border-box",
+                  opacity: isLoading ? 0.6 : 1,
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = "#4CAF50";
@@ -254,6 +285,7 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  disabled={isLoading}
                   placeholder="Enter your password"
                   style={{
                     width: "100%",
@@ -267,6 +299,7 @@ export default function LoginPage() {
                     transition: "border 0.2s ease",
                     boxSizing: "border-box",
                     paddingRight: "40px",
+                    opacity: isLoading ? 0.6 : 1,
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = "#4CAF50";
@@ -342,26 +375,32 @@ export default function LoginPage() {
             {/* LOG IN BUTTON */}
             <button
               type="submit"
+              disabled={isLoading}
               style={{
                 width: "100%",
                 padding: "14px",
-                background: "#4CAF50",
+                background: isLoading ? "#bbb" : "#4CAF50",
                 color: "white",
                 fontSize: "16px",
                 fontWeight: 700,
                 border: "none",
                 borderRadius: "8px",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 transition: "background 0.2s ease",
+                opacity: isLoading ? 0.7 : 1,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#45a049";
+                if (!isLoading) {
+                  e.currentTarget.style.background = "#45a049";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#4CAF50";
+                if (!isLoading) {
+                  e.currentTarget.style.background = "#4CAF50";
+                }
               }}
             >
-              Log In
+              {isLoading ? "Logging In..." : "Log In"}
             </button>
           </div>
 

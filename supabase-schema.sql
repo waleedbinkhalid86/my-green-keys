@@ -1,0 +1,141 @@
+-- Create profiles table
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name text,
+  email text,
+  account_type text, -- 'student', 'parent', 'teacher'
+  gender text, -- 'boy', 'girl'
+  age integer,
+  school_name text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Create children table
+CREATE TABLE IF NOT EXISTS children (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  full_name text,
+  age integer,
+  gender text,
+  username text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Create student_progress table
+CREATE TABLE IF NOT EXISTS student_progress (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  lesson_id integer,
+  completed boolean DEFAULT false,
+  wpm integer,
+  accuracy decimal,
+  time_spent integer, -- seconds
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Create custom_lessons table
+CREATE TABLE IF NOT EXISTS custom_lessons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_by uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  title text,
+  content text,
+  difficulty text,
+  assigned_to uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Create eco_photos table
+CREATE TABLE IF NOT EXISTS eco_photos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  action_type text, -- 'watering_plants', 'planting_tree', 'water_for_birds'
+  photo_url text,
+  status text DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+  points_awarded integer DEFAULT 0,
+  submitted_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  reviewed_at timestamp with time zone
+);
+
+-- Create subscriptions table
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  plan_type text, -- 'free', 'family', 'school_starter', 'school_growth'
+  status text DEFAULT 'active', -- 'active', 'cancelled', 'expired'
+  promo_code text,
+  discount_percent integer DEFAULT 0,
+  started_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  expires_at timestamp with time zone
+);
+
+-- Create promo_codes table
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text UNIQUE,
+  discount_type text, -- 'percentage', 'fixed', 'free_months'
+  discount_value integer,
+  applies_to text, -- 'all', 'family', 'school'
+  usage_limit integer,
+  usage_count integer DEFAULT 0,
+  expires_at timestamp with time zone,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Create indexes for better query performance
+CREATE INDEX idx_profiles_account_type ON profiles(account_type);
+CREATE INDEX idx_children_parent_id ON children(parent_id);
+CREATE INDEX idx_student_progress_student_id ON student_progress(student_id);
+CREATE INDEX idx_student_progress_lesson_id ON student_progress(lesson_id);
+CREATE INDEX idx_custom_lessons_created_by ON custom_lessons(created_by);
+CREATE INDEX idx_custom_lessons_assigned_to ON custom_lessons(assigned_to);
+CREATE INDEX idx_eco_photos_student_id ON eco_photos(student_id);
+CREATE INDEX idx_eco_photos_status ON eco_photos(status);
+CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
+CREATE INDEX idx_subscriptions_plan_type ON subscriptions(plan_type);
+CREATE INDEX idx_promo_codes_code ON promo_codes(code);
+
+-- Enable Row Level Security
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE children ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_lessons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE eco_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for profiles
+CREATE POLICY "Users can view their own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Create RLS policies for children
+CREATE POLICY "Parents can view their own children" ON children
+  FOR SELECT USING (auth.uid() = parent_id);
+
+CREATE POLICY "Parents can insert their own children" ON children
+  FOR INSERT WITH CHECK (auth.uid() = parent_id);
+
+-- Create RLS policies for student_progress
+CREATE POLICY "Students can view their own progress" ON student_progress
+  FOR SELECT USING (auth.uid() = student_id);
+
+CREATE POLICY "Teachers can view student progress" ON student_progress
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.account_type = 'teacher'
+    )
+  );
+
+-- Create RLS policies for eco_photos
+CREATE POLICY "Students can view their own photos" ON eco_photos
+  FOR SELECT USING (auth.uid() = student_id);
+
+CREATE POLICY "Students can submit photos" ON eco_photos
+  FOR INSERT WITH CHECK (auth.uid() = student_id);
