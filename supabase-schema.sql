@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   gender text, -- 'boy', 'girl'
   age integer,
   school_name text,
+  eco_points integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
@@ -139,3 +140,33 @@ CREATE POLICY "Students can view their own photos" ON eco_photos
 
 CREATE POLICY "Students can submit photos" ON eco_photos
   FOR INSERT WITH CHECK (auth.uid() = student_id);
+
+-- NOTE: Parent approval flow requires parents to see and review pending photos.
+-- This policy is intentionally broad for MVP; tighten by relating parents to students.
+CREATE POLICY "Parents can view pending eco photos" ON eco_photos
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.account_type = 'parent'
+    )
+  );
+
+CREATE POLICY "Parents can review eco photos" ON eco_photos
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.account_type = 'parent'
+    )
+  );
+
+-- Parents need to award points (profiles.eco_points) to students.
+CREATE POLICY "Parents can update eco points" ON profiles
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid()
+      AND p.account_type = 'parent'
+    )
+  );

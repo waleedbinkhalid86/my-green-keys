@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // Custom Icons
 const LeafIcon = () => (
@@ -58,10 +59,11 @@ interface CustomLesson {
 
 interface PendingPhoto {
   id: string;
-  childName: string;
+  studentId: string;
+  photoUrl: string;
   actionType: string;
   dateSubmitted: string;
-  approved: boolean;
+  pointsAwarded: number;
 }
 
 const SAMPLE_CHILDREN: Child[] = [
@@ -111,12 +113,60 @@ export default function ParentDashboard() {
   const [lessonDifficulty, setLessonDifficulty] = useState("Beginner");
   const [customLessons, setCustomLessons] = useState<CustomLesson[]>([]);
   const [promoCode, setPromoCode] = useState("");
-  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([
-    { id: "1", childName: "Sarah", actionType: "Watering plants 💧", dateSubmitted: "2024-04-27", approved: false },
-    { id: "2", childName: "Omar", actionType: "Recycling 🔄", dateSubmitted: "2024-04-27", approved: false },
-  ]);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const [ecoError, setEcoError] = useState<string>("");
+  const [ecoSuccess, setEcoSuccess] = useState<string>("");
+  const [ecoLoading, setEcoLoading] = useState<boolean>(true);
+  const [ecoApprovingId, setEcoApprovingId] = useState<string | null>(null);
 
   const selectedChild = SAMPLE_CHILDREN.find(c => c.id === selectedChildId) || SAMPLE_CHILDREN[0];
+
+  const actionLabel = useMemo(() => {
+    const map: Record<string, string> = {
+      planting_tree: "🌱 Planting a tree",
+      watering_plants: "💧 Watering plants",
+      water_for_birds: "🐦 Water on roof for birds",
+    };
+    return (actionType: string) => map[actionType] || actionType;
+  }, []);
+
+  useEffect(() => {
+    const loadPending = async () => {
+      setEcoLoading(true);
+      setEcoError("");
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("eco_photos")
+          .select("id, student_id, action_type, photo_url, submitted_at, points_awarded, status")
+          .eq("status", "pending")
+          .order("submitted_at", { ascending: false });
+
+        if (error) throw error;
+
+        setPendingPhotos(
+          (data || []).map((row) => ({
+            id: row.id as string,
+            studentId: row.student_id as string,
+            photoUrl: (row.photo_url as string) || "",
+            actionType: (row.action_type as string) || "",
+            dateSubmitted: row.submitted_at
+              ? new Date(row.submitted_at as string).toLocaleString()
+              : "",
+            pointsAwarded: (row.points_awarded as number) || 0,
+          }))
+        );
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load pending photos.";
+        setEcoError(message);
+      } finally {
+        setEcoLoading(false);
+      }
+    };
+
+    void loadPending();
+  }, []);
 
   const handleSaveLesson = () => {
     if (lessonName && lessonText) {
@@ -135,12 +185,72 @@ export default function ParentDashboard() {
     }
   };
 
-  const handleApprovePhoto = (photoId: string) => {
-    setPendingPhotos(pendingPhotos.filter(p => p.id !== photoId));
+  const handleApprovePhoto = async (photo: PendingPhoto) => {
+    setEcoError("");
+    setEcoSuccess("");
+    setEcoApprovingId(photo.id);
+    try {
+      const supabase = createClient();
+
+      const { error: updatePhotoError } = await supabase
+        .from("eco_photos")
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+          points_awarded: photo.pointsAwarded,
+        })
+        .eq("id", photo.id);
+
+      if (updatePhotoError) throw updatePhotoError;
+
+      // Award points to the student (requires profiles.eco_points column).
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("eco_points")
+        .eq("id", photo.studentId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const current = (profile as unknown as { eco_points?: number }).eco_points || 0;
+      const { error: awardError } = await supabase
+        .from("profiles")
+        .update({ eco_points: current + photo.pointsAwarded })
+        .eq("id", photo.studentId);
+
+      if (awardError) throw awardError;
+
+      setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+      setEcoSuccess("Approved! Eco points awarded to the student 🌿");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to approve photo.";
+      setEcoError(message);
+    } finally {
+      setEcoApprovingId(null);
+    }
   };
 
-  const handleRejectPhoto = (photoId: string) => {
-    setPendingPhotos(pendingPhotos.filter(p => p.id !== photoId));
+  const handleRejectPhoto = async (photo: PendingPhoto) => {
+    setEcoError("");
+    setEcoSuccess("");
+    setEcoApprovingId(photo.id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("eco_photos")
+        .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+        .eq("id", photo.id);
+      if (error) throw error;
+      setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+      setEcoSuccess("Rejected. The student can submit a new photo if needed.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to reject photo.";
+      setEcoError(message);
+    } finally {
+      setEcoApprovingId(null);
+    }
   };
 
   const handleDeleteLesson = (lessonId: string) => {
@@ -481,8 +591,46 @@ export default function ParentDashboard() {
           {/* ECO PHOTO APPROVALS */}
           <section style={{ marginBottom: 60 }}>
             <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#2c3e50", marginBottom: 24 }}>🌿 Eco action photos waiting for approval</h2>
+
+            {ecoError && (
+              <div
+                style={{
+                  background: "#ffebee",
+                  border: "1px solid #ef5350",
+                  color: "#c62828",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  marginBottom: 16,
+                  fontSize: "0.95rem",
+                  fontWeight: 600,
+                }}
+              >
+                {ecoError}
+              </div>
+            )}
+
+            {ecoSuccess && (
+              <div
+                style={{
+                  background: "#e8f5e9",
+                  border: "1px solid #4caf50",
+                  color: "#2e7d32",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  marginBottom: 16,
+                  fontSize: "0.95rem",
+                  fontWeight: 700,
+                }}
+              >
+                {ecoSuccess}
+              </div>
+            )}
             
-            {pendingPhotos.length === 0 ? (
+            {ecoLoading ? (
+              <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
+                Loading pending photos...
+              </div>
+            ) : pendingPhotos.length === 0 ? (
               <div style={{ background: "#E8F5E9", padding: 40, borderRadius: 12, textAlign: "center", border: "1px solid #4CAF50" }}>
                 <div style={{ fontSize: "2rem", marginBottom: 12 }}>✓</div>
                 <p style={{ color: "#4CAF50", fontWeight: 600, fontSize: "1.1rem" }}>No pending photos</p>
@@ -492,54 +640,61 @@ export default function ParentDashboard() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
                 {pendingPhotos.map(photo => (
                   <div key={photo.id} style={{ background: "#f5f7fa", borderRadius: 12, border: "1px solid #e0e0e0", overflow: "hidden" }}>
-                    {/* Photo Placeholder */}
-                    <div style={{ width: "100%", height: 200, background: "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "3rem" }}>
-                      🌍
-                    </div>
+                    {/* Photo */}
+                    {photo.photoUrl ? (
+                      <img
+                        src={photo.photoUrl}
+                        alt="Eco action submission"
+                        style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: 200, background: "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "3rem" }}>
+                        🌍
+                      </div>
+                    )}
 
                     {/* Photo Info */}
                     <div style={{ padding: 16 }}>
-                      <div style={{ fontSize: "0.9rem", color: "#999", marginBottom: 12 }}>
-                        <strong>{photo.childName}</strong> submitted
-                      </div>
                       <div style={{ fontSize: "1rem", fontWeight: 700, color: "#2c3e50", marginBottom: 8 }}>
-                        {photo.actionType}
+                        {actionLabel(photo.actionType)}
                       </div>
                       <div style={{ fontSize: "0.85rem", color: "#999", marginBottom: 16 }}>
-                        {photo.dateSubmitted}
+                        {photo.dateSubmitted} • <strong style={{ color: "#4CAF50" }}>+{photo.pointsAwarded} points</strong>
                       </div>
 
                       {/* Action Buttons */}
                       <div style={{ display: "flex", gap: 12 }}>
                         <button
-                          onClick={() => handleApprovePhoto(photo.id)}
+                          onClick={() => handleApprovePhoto(photo)}
+                          disabled={ecoApprovingId === photo.id}
                           style={{
                             flex: 1,
                             padding: "10px",
-                            background: "#4CAF50",
+                            background: ecoApprovingId === photo.id ? "#bbb" : "#4CAF50",
                             color: "white",
                             border: "none",
                             borderRadius: 6,
                             fontWeight: 700,
-                            cursor: "pointer",
+                            cursor: ecoApprovingId === photo.id ? "not-allowed" : "pointer",
                             transition: "background 0.2s",
                           }}
                           onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }}
                           onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}
                         >
-                          ✅ Approve
+                          ✅ {ecoApprovingId === photo.id ? "Working..." : "Approve"}
                         </button>
                         <button
-                          onClick={() => handleRejectPhoto(photo.id)}
+                          onClick={() => handleRejectPhoto(photo)}
+                          disabled={ecoApprovingId === photo.id}
                           style={{
                             flex: 1,
                             padding: "10px",
-                            background: "#FFCDD2",
-                            color: "#c62828",
+                            background: ecoApprovingId === photo.id ? "#eee" : "#FFCDD2",
+                            color: ecoApprovingId === photo.id ? "#999" : "#c62828",
                             border: "none",
                             borderRadius: 6,
                             fontWeight: 700,
-                            cursor: "pointer",
+                            cursor: ecoApprovingId === photo.id ? "not-allowed" : "pointer",
                             transition: "background 0.2s",
                           }}
                           onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#EF9A9A"; }}

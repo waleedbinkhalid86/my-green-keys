@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
+import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
 
 const FINGER_MAP: Record<string, string> = {
@@ -113,6 +114,18 @@ interface LessonStats {
   startTime: number | null;
 }
 
+type EcoActionType = "planting_tree" | "watering_plants" | "water_for_birds";
+
+const ECO_ACTIONS: Array<{
+  type: EcoActionType;
+  label: string;
+  points: number;
+}> = [
+  { type: "planting_tree", label: "🌱 Planting a tree", points: 500 },
+  { type: "watering_plants", label: "💧 Watering plants", points: 300 },
+  { type: "water_for_birds", label: "🐦 Water on roof for birds", points: 400 },
+];
+
 export default function LessonPage() {
   const [currentLessonId, setCurrentLessonId] = useState(1);
   const [userInput, setUserInput] = useState("");
@@ -132,6 +145,12 @@ export default function LessonPage() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showLessonMap, setShowLessonMap] = useState(false);
   const [showTypingRulesModal, setShowTypingRulesModal] = useState(false);
+  const [showEcoUploadModal, setShowEcoUploadModal] = useState(false);
+  const [ecoSelectedAction, setEcoSelectedAction] = useState<EcoActionType | null>(null);
+  const [ecoFile, setEcoFile] = useState<File | null>(null);
+  const [ecoSubmitting, setEcoSubmitting] = useState(false);
+  const [ecoMessage, setEcoMessage] = useState<string>("");
+  const [ecoError, setEcoError] = useState<string>("");
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -317,6 +336,81 @@ export default function LessonPage() {
     setStars(0);
     setMessages([]);
     if (inputRef.current) inputRef.current.focus();
+  };
+
+  const handleSubmitEcoPhoto = async () => {
+    setEcoError("");
+    setEcoMessage("");
+
+    if (!ecoSelectedAction) {
+      setEcoError("Please choose an eco action.");
+      return;
+    }
+    if (!ecoFile) {
+      setEcoError("Please upload a photo.");
+      return;
+    }
+
+    const action = ECO_ACTIONS.find((a) => a.type === ecoSelectedAction);
+    if (!action) {
+      setEcoError("Invalid eco action.");
+      return;
+    }
+
+    setEcoSubmitting(true);
+    try {
+      const supabase = createClient();
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setEcoError("You must be logged in to submit a photo.");
+        return;
+      }
+
+      const studentId = userData.user.id;
+      const safeName = ecoFile.name.replace(/[^\w.\-]+/g, "_");
+      const objectPath = `${studentId}/${Date.now()}-${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("eco-photos")
+        .upload(objectPath, ecoFile, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: ecoFile.type || undefined,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("eco-photos")
+        .getPublicUrl(objectPath);
+
+      const photoUrl = publicUrlData.publicUrl;
+
+      const { error: insertError } = await supabase.from("eco_photos").insert([
+        {
+          student_id: studentId,
+          action_type: action.type,
+          photo_url: photoUrl,
+          status: "pending",
+          points_awarded: action.points,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      setEcoMessage("Photo submitted! Waiting for parent approval 🌿");
+      setEcoFile(null);
+      setEcoSelectedAction(null);
+      setShowEcoUploadModal(false);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to submit photo.";
+      setEcoError(message);
+    } finally {
+      setEcoSubmitting(false);
+    }
   };
 
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
@@ -589,6 +683,26 @@ export default function LessonPage() {
             }}
           >
             📚 Lesson Map
+          </button>
+          <button
+            onClick={() => {
+              setEcoError("");
+              setEcoMessage("");
+              setShowEcoUploadModal(true);
+            }}
+            style={{
+              background: "#4CAF50",
+              border: "none",
+              color: "white",
+              padding: "6px 12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            📸 Submit Eco Photo
           </button>
         </div>
       </div>
@@ -1447,6 +1561,186 @@ export default function LessonPage() {
               }}
             >
               Got it! Let's Type! 🌿
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ECO PHOTO UPLOAD MODAL */}
+      {showEcoUploadModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1003,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "28px",
+              borderRadius: "16px",
+              width: "min(560px, 92vw)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
+              animation: "slideUp 0.25s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "16px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 800,
+                  color: "#2c3e50",
+                  margin: 0,
+                }}
+              >
+                Submit an eco action photo 🌿
+              </h2>
+              <button
+                onClick={() => setShowEcoUploadModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "22px",
+                  cursor: "pointer",
+                  color: "#999",
+                }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {ecoError && (
+              <div
+                style={{
+                  background: "#ffebee",
+                  border: "1px solid #ef5350",
+                  color: "#c62828",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  marginBottom: "12px",
+                  fontSize: "13px",
+                }}
+              >
+                {ecoError}
+              </div>
+            )}
+
+            {ecoMessage && (
+              <div
+                style={{
+                  background: "#e8f5e9",
+                  border: "1px solid #4caf50",
+                  color: "#2e7d32",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  marginBottom: "12px",
+                  fontSize: "13px",
+                }}
+              >
+                {ecoMessage}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "14px" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "#2c3e50",
+                  marginBottom: "8px",
+                }}
+              >
+                Choose an eco action
+              </div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {ECO_ACTIONS.map((action) => {
+                  const selected = ecoSelectedAction === action.type;
+                  return (
+                    <button
+                      key={action.type}
+                      type="button"
+                      onClick={() => setEcoSelectedAction(action.type)}
+                      style={{
+                        textAlign: "left",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        border: selected ? "2px solid #4CAF50" : "1px solid #e0e0e0",
+                        background: selected ? "#E8F5E9" : "white",
+                        cursor: "pointer",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontWeight: 700, color: "#2c3e50" }}>
+                        {action.label}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "#4CAF50", fontWeight: 800 }}>
+                        +{action.points} eco points
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "#2c3e50",
+                  marginBottom: "8px",
+                }}
+              >
+                Upload a photo
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                disabled={ecoSubmitting}
+                onChange={(e) => setEcoFile(e.target.files?.[0] || null)}
+              />
+              {ecoFile && (
+                <div style={{ marginTop: 8, fontSize: "12px", color: "#666" }}>
+                  Selected: <strong>{ecoFile.name}</strong>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSubmitEcoPhoto}
+              disabled={ecoSubmitting}
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                background: ecoSubmitting ? "#bbb" : "#4CAF50",
+                border: "none",
+                borderRadius: "12px",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: 800,
+                cursor: ecoSubmitting ? "not-allowed" : "pointer",
+              }}
+            >
+              {ecoSubmitting ? "Submitting..." : "Submit photo"}
             </button>
           </div>
         </div>
