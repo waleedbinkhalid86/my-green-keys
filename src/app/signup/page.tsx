@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import "../globals.css";
 
 type AccountType = "student" | "parent" | "teacher" | null;
@@ -172,11 +173,14 @@ export default function SignupPage() {
 
     setIsLoading(true);
     setSuccessMessage("");
+    setErrors((prev) => ({ ...prev, form: "" }));
 
     try {
+      const { supabaseUrl } = getSupabasePublicEnv();
       const supabase = createClient();
 
       // Sign up with Supabase Auth
+      console.log("[signup] supabaseUrl =", supabaseUrl);
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -284,8 +288,16 @@ export default function SignupPage() {
         router.push(redirectPath);
       }, 2000);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+
+      const isNetworkishFetchFailure =
+        error instanceof TypeError && /fetch/i.test(error.message);
+
       setErrors({
-        form: error instanceof Error ? error.message : "An unexpected error occurred",
+        form: isNetworkishFetchFailure
+          ? "Couldn’t reach Supabase (network error). Double-check NEXT_PUBLIC_SUPABASE_URL, your internet connection, and that your Supabase project is reachable."
+          : message,
       });
     } finally {
       setIsLoading(false);
