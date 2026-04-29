@@ -592,6 +592,68 @@ export default function ParentDashboard() {
           <section style={{ marginBottom: 60 }}>
             <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#2c3e50", marginBottom: 24 }}>🌿 Eco action photos waiting for approval</h2>
 
+            {/* Pencil texture filter defs */}
+            <svg
+              width="0"
+              height="0"
+              style={{ position: "absolute" }}
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <filter id="kidsPencilFilterParent" x="-10%" y="-10%" width="120%" height="120%">
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.9"
+                    numOctaves="3"
+                    seed="7"
+                    result="noise"
+                  />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="4"
+                    xChannelSelector="R"
+                    yChannelSelector="G"
+                    result="displaced"
+                  />
+
+                  {/* Edge sketch */}
+                  <feColorMatrix in="displaced" type="luminanceToAlpha" result="luma" />
+                  <feConvolveMatrix
+                    in="luma"
+                    order="3"
+                    kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"
+                    result="edges"
+                  />
+                  <feComponentTransfer in="edges" result="edgesSoft">
+                    <feFuncA type="gamma" amplitude="0.65" exponent="1.2" offset="0" />
+                  </feComponentTransfer>
+                  <feBlend in="displaced" in2="edgesSoft" mode="multiply" result="withEdges" />
+
+                  {/* Paper grain */}
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.15"
+                    numOctaves="2"
+                    seed="3"
+                    result="paper"
+                  />
+                  <feColorMatrix
+                    in="paper"
+                    type="matrix"
+                    values="
+                      0 0 0 0 0.7
+                      0 0 0 0 0.7
+                      0 0 0 0 0.7
+                      0 0 0 0.15 0"
+                    result="paperAlpha"
+                  />
+                  <feBlend in="withEdges" in2="paperAlpha" mode="soft-light" />
+                </filter>
+              </defs>
+            </svg>
+
             {ecoError && (
               <div
                 style={{
@@ -645,7 +707,14 @@ export default function ParentDashboard() {
                       <img
                         src={photo.photoUrl}
                         alt="Eco action submission"
-                        style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
+                        style={{
+                          width: "100%",
+                          height: 200,
+                          objectFit: "cover",
+                          display: "block",
+                          filter:
+                            "url(#kidsPencilFilterParent) contrast(140%) saturate(150%) brightness(110%)",
+                        }}
                       />
                     ) : (
                       <div style={{ width: "100%", height: 200, background: "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "3rem" }}>

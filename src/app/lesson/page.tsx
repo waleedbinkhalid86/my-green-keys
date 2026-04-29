@@ -148,6 +148,7 @@ export default function LessonPage() {
   const [showEcoUploadModal, setShowEcoUploadModal] = useState(false);
   const [ecoSelectedAction, setEcoSelectedAction] = useState<EcoActionType | null>(null);
   const [ecoFile, setEcoFile] = useState<File | null>(null);
+  const [ecoPreviewUrl, setEcoPreviewUrl] = useState<string>("");
   const [ecoSubmitting, setEcoSubmitting] = useState(false);
   const [ecoMessage, setEcoMessage] = useState<string>("");
   const [ecoError, setEcoError] = useState<string>("");
@@ -159,6 +160,17 @@ export default function LessonPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const shakeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const messageTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useEffect(() => {
+    if (!ecoFile) {
+      setEcoPreviewUrl("");
+      return;
+    }
+
+    const url = URL.createObjectURL(ecoFile);
+    setEcoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [ecoFile]);
 
   // Get current lesson data
   const currentLesson = lessons.find(l => l.id === currentLessonId) || lessons[0];
@@ -688,6 +700,8 @@ export default function LessonPage() {
             onClick={() => {
               setEcoError("");
               setEcoMessage("");
+              setEcoFile(null);
+              setEcoSelectedAction(null);
               setShowEcoUploadModal(true);
             }}
             style={{
@@ -1592,6 +1606,68 @@ export default function LessonPage() {
               animation: "slideUp 0.25s ease",
             }}
           >
+            {/* Pencil texture filter defs */}
+            <svg
+              width="0"
+              height="0"
+              style={{ position: "absolute" }}
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <filter id="kidsPencilFilterLesson" x="-10%" y="-10%" width="120%" height="120%">
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.9"
+                    numOctaves="3"
+                    seed="7"
+                    result="noise"
+                  />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="4"
+                    xChannelSelector="R"
+                    yChannelSelector="G"
+                    result="displaced"
+                  />
+
+                  {/* Edge sketch */}
+                  <feColorMatrix in="displaced" type="luminanceToAlpha" result="luma" />
+                  <feConvolveMatrix
+                    in="luma"
+                    order="3"
+                    kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"
+                    result="edges"
+                  />
+                  <feComponentTransfer in="edges" result="edgesSoft">
+                    <feFuncA type="gamma" amplitude="0.65" exponent="1.2" offset="0" />
+                  </feComponentTransfer>
+                  <feBlend in="displaced" in2="edgesSoft" mode="multiply" result="withEdges" />
+
+                  {/* Paper grain */}
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.15"
+                    numOctaves="2"
+                    seed="3"
+                    result="paper"
+                  />
+                  <feColorMatrix
+                    in="paper"
+                    type="matrix"
+                    values="
+                      0 0 0 0 0.7
+                      0 0 0 0 0.7
+                      0 0 0 0 0.7
+                      0 0 0 0.15 0"
+                    result="paperAlpha"
+                  />
+                  <feBlend in="withEdges" in2="paperAlpha" mode="soft-light" />
+                </filter>
+              </defs>
+            </svg>
+
             <div
               style={{
                 display: "flex",
@@ -1720,6 +1796,30 @@ export default function LessonPage() {
               {ecoFile && (
                 <div style={{ marginTop: 8, fontSize: "12px", color: "#666" }}>
                   Selected: <strong>{ecoFile.name}</strong>
+                </div>
+              )}
+              {ecoPreviewUrl && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    border: "1px solid #e0e0e0",
+                    background: "#fff",
+                  }}
+                >
+                  <img
+                    src={ecoPreviewUrl}
+                    alt="Eco photo preview"
+                    style={{
+                      width: "100%",
+                      height: 220,
+                      objectFit: "cover",
+                      display: "block",
+                      filter:
+                        "url(#kidsPencilFilterLesson) contrast(140%) saturate(150%) brightness(110%)",
+                    }}
+                  />
                 </div>
               )}
             </div>
