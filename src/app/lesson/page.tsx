@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
+import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import "../globals.css";
 
 const FINGER_MAP: Record<string, string> = {
@@ -177,6 +178,12 @@ export default function LessonPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1);
   const [onboardingError, setOnboardingError] = useState("");
+
+  // Eco facts UI
+  const [dailyFact, setDailyFact] = useState<EcoFact | null>(null);
+  const [showDailyFact, setShowDailyFact] = useState(false);
+  const [lessonFact, setLessonFact] = useState<EcoFact | null>(null);
+  const dailyFactTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -351,7 +358,34 @@ export default function LessonPage() {
     return () => {
       if (petPulseTimeoutRef.current) clearTimeout(petPulseTimeoutRef.current);
       if (petDanceTimeoutRef.current) clearTimeout(petDanceTimeoutRef.current);
+      if (dailyFactTimeoutRef.current) clearTimeout(dailyFactTimeoutRef.current);
     };
+  }, []);
+
+  const pickEcoFact = (seed: string) => {
+    // Simple deterministic hash
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    const idx = h % ecoFacts.length;
+    return ecoFacts[idx];
+  };
+
+  // Daily login eco fact popup (once per day)
+  useEffect(() => {
+    const key = "mgk_last_fact_shown";
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      const last = localStorage.getItem(key);
+      if (last === today) return;
+      const fact = pickEcoFact(`daily:${today}`);
+      setDailyFact(fact);
+      setShowDailyFact(true);
+      localStorage.setItem(key, today);
+      dailyFactTimeoutRef.current = setTimeout(() => setShowDailyFact(false), 5000);
+    } catch {
+      // ignore localStorage failures
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const savePetSetup = async () => {
@@ -636,6 +670,14 @@ export default function LessonPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete]);
 
+  // Pick a lesson-linked eco fact when lesson completes
+  useEffect(() => {
+    if (!isComplete) return;
+    const fact = ecoFacts.find((f) => f.lessonId === currentLessonId) ?? pickEcoFact(`lesson:${currentLessonId}`);
+    setLessonFact(fact);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete, currentLessonId]);
+
   const handleNextLesson = () => {
     if (currentLessonId < 100) {
       setCurrentLessonId(currentLessonId + 1);
@@ -918,6 +960,88 @@ export default function LessonPage() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+      {/* DAILY FACT POPUP */}
+      {showDailyFact && dailyFact && (
+        <div
+          style={{
+            position: "fixed",
+            top: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 2600,
+            width: "min(680px, 92vw)",
+          }}
+        >
+          <div
+            className="fact-popup"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(45,106,79,0.95) 0%, rgba(76,175,80,0.92) 60%, rgba(255,235,59,0.75) 100%)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              borderRadius: 18,
+              boxShadow: "0 18px 60px rgba(0,0,0,0.22)",
+              padding: 16,
+              color: "white",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            onClick={() => setShowDailyFact(false)}
+            role="dialog"
+            aria-label="Daily eco fact"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDailyFact(false);
+              }}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.25)",
+                background: "rgba(0,0,0,0.18)",
+                color: "white",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ fontSize: 34, lineHeight: 1 }}>{dailyFact.emoji}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 950, fontSize: 14 }}>Did you know? 🌍</div>
+                <div style={{ fontWeight: 900, fontSize: 18, marginTop: 6, lineHeight: 1.25 }}>
+                  {dailyFact.fact}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                  <span
+                    style={{
+                      background: "rgba(255,255,255,0.18)",
+                      border: "1px solid rgba(255,255,255,0.22)",
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {dailyFact.category}
+                  </span>
+                  <span style={{ fontSize: 12, opacity: 0.9, fontWeight: 800 }}>
+                    Source: {dailyFact.source}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ONBOARDING OVERLAY */}
       {showOnboarding && (
         <div
@@ -2137,6 +2261,42 @@ export default function LessonPage() {
                 .join("")}
             </div>
 
+            {/* ECO FACT */}
+            {lessonFact && (
+              <div
+                className="eco-fact-card"
+                style={{
+                  background: "linear-gradient(135deg,#E8F5E9 0%, #F1F8E9 100%)",
+                  border: "1px solid rgba(76,175,80,0.35)",
+                  padding: 16,
+                  borderRadius: 14,
+                  marginBottom: 16,
+                  textAlign: "left",
+                  animation: "factSlideIn 420ms ease both",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ fontSize: 30, lineHeight: 1 }}>{lessonFact.emoji}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 950, color: "#2c3e50", marginBottom: 6 }}>
+                      Did you know? 🌍
+                    </div>
+                    <div style={{ fontWeight: 900, color: "#1b4d30", fontSize: 16, lineHeight: 1.35 }}>
+                      {lessonFact.fact}
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                      <span style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 900, color: "#2e7d32" }}>
+                        {lessonFact.category}
+                      </span>
+                      <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
+                        Source: {lessonFact.source}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ECO REWARD */}
             <div style={{
               background: "#E8F5E9",
@@ -2909,6 +3069,17 @@ export default function LessonPage() {
           50% { transform: rotate(-10deg) translateY(-4px); }
           75% { transform: rotate(10deg) translateY(-2px); }
           100% { transform: rotate(0deg) translateY(0); }
+        }
+
+        /* Eco fact animations */
+        @keyframes factSlideIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fact-popup { animation: factPop 320ms ease both; }
+        @keyframes factPop {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         /* Onboarding visuals */

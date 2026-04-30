@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ecoFacts } from "@/data/ecoFacts";
 
 // Custom Icons
 const LeafIcon = () => (
@@ -105,6 +106,7 @@ export default function ParentDashboard() {
   const [childrenLoading, setChildrenLoading] = useState(true);
   const [childrenError, setChildrenError] = useState("");
   const [petWarnings, setPetWarnings] = useState<Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }>>([]);
+  const [todaysFact, setTodaysFact] = useState<{ emoji: string; fact: string; source: string } | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [addChildLoading, setAddChildLoading] = useState(false);
@@ -255,6 +257,16 @@ export default function ParentDashboard() {
 
   useEffect(() => {
     void loadChildren();
+  }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    // Deterministic daily pick (same for all parents each day)
+    let h = 0;
+    const seed = `parent:${today}`;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    const fact = ecoFacts[h % ecoFacts.length];
+    setTodaysFact({ emoji: fact.emoji, fact: fact.fact, source: fact.source });
   }, []);
 
   const handleAddChild = async () => {
@@ -773,6 +785,20 @@ export default function ParentDashboard() {
                 <div style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Eco actions</div>
                 <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild?.ecoPhotos ?? 0}</div>
               </div>
+              {todaysFact && (
+                <div style={{ background: "#E8F5E9", padding: 24, borderRadius: 12, border: "1px solid rgba(76,175,80,0.35)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontSize: "1.8rem" }}>{todaysFact.emoji}</div>
+                    <div style={{ fontWeight: 900, color: "#2c3e50" }}>Today&apos;s Eco Fact 🌍</div>
+                  </div>
+                  <div style={{ color: "#1b4d30", fontWeight: 900, lineHeight: 1.4 }}>
+                    {todaysFact.fact}
+                  </div>
+                  <div style={{ marginTop: 10, color: "#6b7280", fontSize: "0.85rem", fontWeight: 800 }}>
+                    Source: {todaysFact.source}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
