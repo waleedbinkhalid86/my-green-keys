@@ -1,14 +1,58 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
+
+const LOGIN_TIMEOUT_MS = 10_000;
+const LOGIN_TIMEOUT_MESSAGE =
+  "Connection timeout. Please try again or contact support.";
 
 type AccountType = "student" | "parent" | "teacher";
 
 interface LoginForm {
   emailOrUsername: string;
   password: string;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(timeoutMessage)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(id);
+        resolve(value);
+      },
+      (err: unknown) => {
+        clearTimeout(id);
+        reject(err);
+      }
+    );
+  });
+}
+
+function formatAuthError(error: AuthError): string {
+  const parts = [error.message];
+  if (error.status !== undefined) parts.push(`status: ${error.status}`);
+  const code = "code" in error && typeof (error as { code?: string }).code === "string"
+    ? (error as { code: string }).code
+    : undefined;
+  if (code) parts.push(`code: ${code}`);
+  return parts.join(" · ");
+}
+
+function formatPostgrestError(error: {
+  message: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+}): string {
+  const parts = [error.message];
+  if (error.code) parts.push(`code: ${error.code}`);
+  if (error.details) parts.push(`details: ${error.details}`);
+  if (error.hint) parts.push(`hint: ${error.hint}`);
+  return parts.join(" · ");
 }
 
 export default function LoginPage() {
@@ -62,57 +106,58 @@ export default function LoginPage() {
     setErrors({});
 
     try {
-      const supabase = createClient();
+      await withTimeout(
+        (async () => {
+          const supabase = createClient();
 
-      // Sign in with email and password
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: formData.emailOrUsername,
-        password: formData.password,
-      });
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: formData.emailOrUsername,
+            password: formData.password,
+          });
 
-      if (authError) {
-        if (authError.message.includes("Invalid login credentials") || authError.message.includes("Email not confirmed")) {
-          setErrors({ form: "Invalid email or password. Please try again or sign up for a new account." });
-        } else {
-          setErrors({ form: authError.message });
-        }
-        setIsLoading(false);
-        return;
-      }
+          if (authError) {
+            setErrors({ form: formatAuthError(authError) });
+            return;
+          }
 
-      if (!authData.user) {
-        setErrors({ form: "Failed to authenticate" });
-        setIsLoading(false);
-        return;
-      }
+          if (!authData.user) {
+            setErrors({ form: "Sign-in succeeded but no user was returned." });
+            return;
+          }
 
-      // Get user profile to determine account type and redirect
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("account_type")
-        .eq("id", authData.user.id)
-        .single();
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("account_type")
+            .eq("id", authData.user.id)
+            .single();
 
-      if (profileError || !profile) {
-        setErrors({ form: "Failed to retrieve user profile" });
-        setIsLoading(false);
-        return;
-      }
+          if (profileError) {
+            setErrors({ form: formatPostgrestError(profileError) });
+            return;
+          }
 
-      // Redirect based on account type
-      const accountTypeRedirectMap: Record<string, string> = {
-        student: "/lesson",
-        parent: "/dashboard/parent",
-        teacher: "/dashboard/teacher",
-      };
-      
-      const redirectPath = accountTypeRedirectMap[profile.account_type] || "/lesson";
+          if (!profile) {
+            setErrors({ form: "No profile row found for this user." });
+            return;
+          }
 
-      router.push(redirectPath);
+          const accountTypeRedirectMap: Record<string, string> = {
+            student: "/lesson",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          };
+
+          const redirectPath = accountTypeRedirectMap[profile.account_type] || "/lesson";
+          router.push(redirectPath);
+        })(),
+        LOGIN_TIMEOUT_MS,
+        LOGIN_TIMEOUT_MESSAGE
+      );
     } catch (error) {
-      setErrors({
-        form: error instanceof Error ? error.message : "An unexpected error occurred",
-      });
+      const message =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      setErrors({ form: message });
+    } finally {
       setIsLoading(false);
     }
   };
