@@ -427,16 +427,16 @@ export default function LessonPage() {
     }
   };
 
-  const savePetFromOnboarding = async () => {
+  const savePetFromOnboarding = async (): Promise<boolean> => {
     setOnboardingError("");
     try {
       if (!petType) {
         setOnboardingError("Please choose a companion.");
-        return;
+        return false;
       }
       if (!petName.trim()) {
         setOnboardingError("Please name your pet.");
-        return;
+        return false;
       }
 
       const supabase = createClient();
@@ -444,7 +444,7 @@ export default function LessonPage() {
       if (userError) throw userError;
       if (!userData.user) {
         setOnboardingError("You must be logged in.");
-        return;
+        return false;
       }
 
       const now = new Date().toISOString();
@@ -461,8 +461,10 @@ export default function LessonPage() {
 
       setPetLastFed(now);
       setShowPetSetup(false);
+      return true;
     } catch (err) {
       setOnboardingError(err instanceof Error ? err.message : "Failed to save pet.");
+      return false;
     }
   };
 
@@ -991,11 +993,11 @@ export default function LessonPage() {
                   display: "flex",
                   transform: `translateX(-${(onboardingStep - 1) * 100}%)`,
                   transition: "transform 400ms ease",
-                  width: "300%",
+                  width: "100%",
                 }}
               >
                 {/* STEP 1 */}
-                <div style={{ width: "100%", padding: 26 }}>
+                <div style={{ flex: "0 0 100%", width: "100%", padding: 26 }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
                       STEP 1/3
@@ -1032,7 +1034,7 @@ export default function LessonPage() {
                 </div>
 
                 {/* STEP 2 */}
-                <div style={{ width: "100%", padding: 26 }}>
+                <div style={{ flex: "0 0 100%", width: "100%", padding: 26 }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
                       STEP 2/3
@@ -1124,8 +1126,8 @@ export default function LessonPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await savePetFromOnboarding();
-                        if (!onboardingError) setOnboardingStep(3);
+                        const ok = await savePetFromOnboarding();
+                        if (ok) setOnboardingStep(3);
                       }}
                       style={{
                         flex: 1,
@@ -1144,7 +1146,7 @@ export default function LessonPage() {
                 </div>
 
                 {/* STEP 3 */}
-                <div style={{ width: "100%", padding: 26 }}>
+                <div style={{ flex: "0 0 100%", width: "100%", padding: 26 }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
                       STEP 3/3
@@ -2920,6 +2922,7 @@ export default function LessonPage() {
           opacity: 0.7;
           animation: onbLeafFall linear infinite;
           pointer-events: none;
+          z-index: 0;
         }
         @keyframes onbLeafFall {
           0% { transform: translateY(-20px) rotate(0deg); }
@@ -2932,6 +2935,8 @@ export default function LessonPage() {
           bottom: 0;
           height: 180px;
           background: linear-gradient(180deg, transparent 0%, rgba(27,77,48,0.85) 60%, rgba(27,77,48,1) 100%);
+          pointer-events: none;
+          z-index: 0;
         }
         .onb-heroTrees {
           height: 150px;
