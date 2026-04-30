@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AuthError } from "@supabase/supabase-js";
+import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
 
@@ -55,6 +55,50 @@ function formatPostgrestError(error: {
   return parts.join(" · ");
 }
 
+function formatUnknownError(error: unknown): string {
+  if (error instanceof Error) {
+    const bits = [error.message];
+    if (error.name && error.name !== "Error") bits.push(`name: ${error.name}`);
+    const cause = (error as Error & { cause?: unknown }).cause;
+    if (cause !== undefined && cause !== null) {
+      bits.push(`cause: ${formatUnknownError(cause)}`);
+    }
+    return bits.join(" · ");
+  }
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function FormErrorBanner({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      style={{
+        background: "#ffebee",
+        border: "1px solid #ef5350",
+        color: "#c62828",
+        padding: "12px 16px",
+        borderRadius: "8px",
+        marginBottom: "16px",
+        fontSize: "14px",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("student");
@@ -92,6 +136,10 @@ export default function LoginPage() {
       newErrors.password = "Password is required";
     }
 
+    if (Object.keys(newErrors).length > 0) {
+      newErrors.form = "Please fix the highlighted fields.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -108,28 +156,60 @@ export default function LoginPage() {
     try {
       await withTimeout(
         (async () => {
+          console.log("Starting login...");
           const supabase = createClient();
 
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: formData.emailOrUsername,
-            password: formData.password,
-          });
+          let authData: { user: User | null; session: Session | null } | null = null;
+          let authError: AuthError | null = null;
+
+          try {
+            const result = await supabase.auth.signInWithPassword({
+              email: formData.emailOrUsername,
+              password: formData.password,
+            });
+            authData = result.data;
+            authError = result.error;
+          } catch (signInThrown) {
+            console.log("Supabase response:", signInThrown, null);
+            setErrors({ form: formatUnknownError(signInThrown) });
+            return;
+          }
+
+          console.log("Supabase response:", authError, authData);
 
           if (authError) {
             setErrors({ form: formatAuthError(authError) });
             return;
           }
 
-          if (!authData.user) {
+          if (!authData?.user) {
             setErrors({ form: "Sign-in succeeded but no user was returned." });
             return;
           }
 
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("account_type")
-            .eq("id", authData.user.id)
-            .single();
+          let profile: { account_type: string } | null = null;
+          let profileError: {
+            message: string;
+            code?: string;
+            details?: string;
+            hint?: string;
+          } | null = null;
+
+          try {
+            const profileResult = await supabase
+              .from("profiles")
+              .select("account_type")
+              .eq("id", authData.user.id)
+              .single();
+            profile = profileResult.data;
+            profileError = profileResult.error;
+          } catch (profileThrown) {
+            console.log("Profile fetch response:", profileThrown, null);
+            setErrors({ form: formatUnknownError(profileThrown) });
+            return;
+          }
+
+          console.log("Profile fetch response:", profileError, profile);
 
           if (profileError) {
             setErrors({ form: formatPostgrestError(profileError) });
@@ -154,9 +234,7 @@ export default function LoginPage() {
         LOGIN_TIMEOUT_MESSAGE
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An unexpected error occurred";
-      setErrors({ form: message });
+      setErrors({ form: formatUnknownError(error) });
     } finally {
       setIsLoading(false);
     }
@@ -234,23 +312,6 @@ export default function LoginPage() {
           Welcome back to My Green Keys
         </p>
 
-        {/* ERROR MESSAGE */}
-        {errors.form && (
-          <div
-            style={{
-              background: "#ffebee",
-              border: "1px solid #ef5350",
-              color: "#c62828",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "24px",
-              fontSize: "14px",
-            }}
-          >
-            {errors.form}
-          </div>
-        )}
-
         {/* LOGIN FORM */}
         <form onSubmit={handleSubmit}>
           <div
@@ -262,6 +323,7 @@ export default function LoginPage() {
               boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             }}
           >
+            <FormErrorBanner message={errors.form ?? ""} />
             {/* EMAIL FIELD */}
             <div style={{ marginBottom: "24px" }}>
               <label
@@ -416,6 +478,8 @@ export default function LoginPage() {
                 Forgot password?
               </a>
             </div>
+
+            <FormErrorBanner message={errors.form ?? ""} />
 
             {/* LOG IN BUTTON */}
             <button
