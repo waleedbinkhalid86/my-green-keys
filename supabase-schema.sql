@@ -36,6 +36,31 @@ CREATE TABLE IF NOT EXISTS student_progress (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
 
+-- Create certificates table
+CREATE TABLE IF NOT EXISTS certificates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  certificate_type text,
+  lessons_completed integer,
+  wpm integer,
+  accuracy integer,
+  eco_points integer,
+  shared_with_parent boolean DEFAULT false,
+  shared_with_parent_at timestamp with time zone,
+  earned_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Parent notifications (used for "Share with Parent")
+CREATE TABLE IF NOT EXISTS parent_notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  child_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  kind text,
+  message text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  read_at timestamp with time zone
+);
+
 -- Create custom_lessons table
 CREATE TABLE IF NOT EXISTS custom_lessons (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

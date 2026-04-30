@@ -107,6 +107,7 @@ export default function ParentDashboard() {
   const [childrenError, setChildrenError] = useState("");
   const [petWarnings, setPetWarnings] = useState<Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }>>([]);
   const [todaysFact, setTodaysFact] = useState<{ emoji: string; fact: string; source: string } | null>(null);
+  const [certificateNotifs, setCertificateNotifs] = useState<Array<{ id: string; message: string; createdAt: string }>>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [addChildLoading, setAddChildLoading] = useState(false);
@@ -190,6 +191,31 @@ export default function ParentDashboard() {
         setSelectedChildId("");
         setChildrenError("You must be logged in to view your children.");
         return;
+      }
+
+      // Certificate notifications (best-effort)
+      try {
+        const { data: notifs, error: notifErr } = await supabase
+          .from("parent_notifications")
+          .select("id, message, created_at, read_at, kind")
+          .eq("parent_id", userData.user.id)
+          .eq("kind", "certificate")
+          .is("read_at", null)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (!notifErr) {
+          setCertificateNotifs(
+            ((notifs as any[]) || []).map((n) => ({
+              id: n.id as string,
+              message: (n.message as string) || "🏆 Your child earned a certificate!",
+              createdAt: (n.created_at as string) || "",
+            }))
+          );
+        } else {
+          setCertificateNotifs([]);
+        }
+      } catch {
+        setCertificateNotifs([]);
       }
 
       const { data, error } = await supabase
@@ -685,6 +711,59 @@ export default function ParentDashboard() {
               }}
             >
               {childrenError}
+            </div>
+          )}
+
+          {certificateNotifs.length > 0 && (
+            <div style={{ marginBottom: 16, display: "grid", gap: 10 }}>
+              {certificateNotifs.map((n) => (
+                <div
+                  key={n.id}
+                  style={{
+                    background: "#E8F5E9",
+                    border: "1px solid rgba(76,175,80,0.35)",
+                    color: "#1b4d30",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    fontSize: "0.95rem",
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div>{n.message}</div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const supabase = createClient();
+                        await supabase
+                          .from("parent_notifications")
+                          .update({ read_at: new Date().toISOString() })
+                          .eq("id", n.id);
+                      } catch {
+                        // ignore
+                      } finally {
+                        setCertificateNotifs((prev) => prev.filter((x) => x.id !== n.id));
+                      }
+                    }}
+                    style={{
+                      border: "1px solid rgba(76,175,80,0.35)",
+                      background: "white",
+                      color: "#2e7d32",
+                      fontWeight: 950,
+                      padding: "8px 10px",
+                      borderRadius: 12,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 

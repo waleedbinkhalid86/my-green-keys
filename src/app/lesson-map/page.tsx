@@ -3,12 +3,23 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { lessons, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
+import { CERTIFICATES, formatDate } from "@/lib/certificates";
 
 type ProgressRow = {
   lesson_id: number;
   completed?: boolean | null;
   stars?: number | null;
   eco_points?: number | null;
+};
+
+type CertificateRow = {
+  id: string;
+  certificate_type: string | null;
+  lessons_completed: number | null;
+  wpm: number | null;
+  accuracy: number | null;
+  eco_points: number | null;
+  earned_at: string | null;
 };
 
 const PHASES = [
@@ -73,11 +84,14 @@ export default function LessonMapPage() {
   const [completedSet, setCompletedSet] = useState<Set<number>>(new Set());
   const [starsTotal, setStarsTotal] = useState(0);
   const [ecoPointsTotal, setEcoPointsTotal] = useState(0);
+  const [certificates, setCertificates] = useState<CertificateRow[]>([]);
+  const [certsLoading, setCertsLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError("");
+      setCertsLoading(true);
       try {
         const supabase = createClient();
         const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -87,6 +101,7 @@ export default function LessonMapPage() {
           setCompletedSet(new Set());
           setStarsTotal(0);
           setEcoPointsTotal(0);
+          setCertificates([]);
           return;
         }
 
@@ -120,10 +135,20 @@ export default function LessonMapPage() {
         setCompletedSet(done);
         setStarsTotal(stars);
         setEcoPointsTotal(eco);
+
+        const { data: certRows, error: certErr } = await supabase
+          .from("certificates")
+          .select("id, certificate_type, lessons_completed, wpm, accuracy, eco_points, earned_at")
+          .eq("student_id", userData.user.id)
+          .order("earned_at", { ascending: false });
+        if (certErr) throw certErr;
+        setCertificates((certRows as any) ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load lesson map.");
+        setCertificates([]);
       } finally {
         setLoading(false);
+        setCertsLoading(false);
       }
     };
     void load();
@@ -246,6 +271,125 @@ export default function LessonMapPage() {
               {error}
             </div>
           )}
+        </div>
+
+        {/* MY CERTIFICATES */}
+        <div style={{ marginTop: 18 }}>
+          <div
+            style={{
+              background: "rgba(255,255,255,0.92)",
+              border: "1px solid rgba(0,0,0,0.06)",
+              borderRadius: 18,
+              padding: 18,
+              boxShadow: "0 10px 35px rgba(0,0,0,0.12)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
+                  MY CERTIFICATES
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#2c3e50", marginTop: 4 }}>
+                  Your achievements 🏆
+                </div>
+                <div style={{ color: "#6b7280", marginTop: 4, fontWeight: 700 }}>
+                  Earn certificates at 10, 25, 50, and 100 lessons.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => (window.location.href = "/certificate")}
+                style={{
+                  background: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 14,
+                  padding: "12px 14px",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                View Latest Certificate
+              </button>
+            </div>
+
+            {certsLoading ? (
+              <div style={{ marginTop: 12, color: "#2c3e50", fontWeight: 800 }}>Loading certificates...</div>
+            ) : certificates.length === 0 ? (
+              <div style={{ marginTop: 12, color: "#6b7280", fontWeight: 800 }}>
+                No certificates yet—finish lessons to unlock your first one!
+              </div>
+            ) : (
+              <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+                {certificates.map((c) => {
+                  const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
+                  return (
+                    <div
+                      key={c.id}
+                      style={{
+                        background: "linear-gradient(135deg,#E8F5E9 0%, #FFFFFF 60%, #FFFDE7 100%)",
+                        border: "1px solid rgba(76,175,80,0.25)",
+                        borderRadius: 16,
+                        padding: 14,
+                        boxShadow: "0 10px 26px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                        <div style={{ fontWeight: 950, color: "#2c3e50" }}>
+                          {def?.title ?? "Certificate"}
+                        </div>
+                        <div style={{ fontSize: 22 }}>{def?.emoji ?? "🏆"}</div>
+                      </div>
+                      <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
+                        Earned: {c.earned_at ? formatDate(c.earned_at) : "—"}
+                      </div>
+                      <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", color: "#1b4d30", fontWeight: 900 }}>
+                        <span>{c.lessons_completed ?? 0} lessons</span>
+                        <span>•</span>
+                        <span>{c.wpm ?? 0} WPM</span>
+                        <span>•</span>
+                        <span>{c.accuracy ?? 0}%</span>
+                      </div>
+
+                      <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: 12,
+                            border: "none",
+                            background: "#4CAF50",
+                            color: "white",
+                            fontWeight: 950,
+                            cursor: "pointer",
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(76,175,80,0.45)",
+                            background: "white",
+                            color: "#2e7d32",
+                            fontWeight: 950,
+                            cursor: "pointer",
+                          }}
+                        >
+                          PDF
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ marginTop: 18 }}>

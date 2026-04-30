@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
+import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
 import "../globals.css";
 
 const FINGER_MAP: Record<string, string> = {
@@ -184,6 +185,10 @@ export default function LessonPage() {
   const [showDailyFact, setShowDailyFact] = useState(false);
   const [lessonFact, setLessonFact] = useState<EcoFact | null>(null);
   const dailyFactTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Certificates
+  const [earnedCertificate, setEarnedCertificate] = useState<(CertificateDefinition & { id: string }) | null>(null);
+  const [showCertificatePopup, setShowCertificatePopup] = useState(false);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -678,6 +683,99 @@ export default function LessonPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete, currentLessonId]);
 
+  // Persist progress + trigger certificates at milestones.
+  useEffect(() => {
+    const run = async () => {
+      if (!isComplete) return;
+
+      try {
+        const supabase = createClient();
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!userData.user) return;
+
+        // 1) Mark current lesson as completed in student_progress (update if exists, else insert).
+        const existing = await supabase
+          .from("student_progress")
+          .select("id")
+          .eq("student_id", userData.user.id)
+          .eq("lesson_id", currentLessonId)
+          .maybeSingle();
+
+        const payload: Record<string, unknown> = {
+          student_id: userData.user.id,
+          lesson_id: currentLessonId,
+          completed: true,
+          wpm: Number(stats.wpm) || 0,
+          accuracy: Number(stats.accuracy) || 0,
+          completed_at: new Date().toISOString(),
+        };
+
+        if (existing.data?.id) {
+          const { error: updErr } = await supabase.from("student_progress").update(payload).eq("id", existing.data.id);
+          if (updErr) throw updErr;
+        } else {
+          const { error: insErr } = await supabase.from("student_progress").insert([payload]);
+          if (insErr) throw insErr;
+        }
+
+        // 2) Count completed lessons
+        const { data: countRows, error: countErr } = await supabase
+          .from("student_progress")
+          .select("lesson_id, completed")
+          .eq("student_id", userData.user.id)
+          .eq("completed", true);
+        if (countErr) throw countErr;
+        const completedLessons = (countRows ?? []).length;
+
+        const certDef = getCertificateForMilestone(completedLessons);
+        if (!certDef) return;
+
+        // 3) Ensure we only create it once
+        const existingCert = await supabase
+          .from("certificates")
+          .select("id")
+          .eq("student_id", userData.user.id)
+          .eq("lessons_completed", certDef.milestone)
+          .maybeSingle();
+
+        if (existingCert.data?.id) {
+          setEarnedCertificate({ ...certDef, id: existingCert.data.id as string });
+          setShowCertificatePopup(true);
+          return;
+        }
+
+        // Eco points total (prefer profiles.eco_points; exists in schema)
+        const { data: profileRow } = await supabase.from("profiles").select("eco_points").eq("id", userData.user.id).maybeSingle();
+        const ecoPointsTotal = Number((profileRow as any)?.eco_points ?? 0) || 0;
+
+        const { data: newCert, error: certErr } = await supabase
+          .from("certificates")
+          .insert([
+            {
+              student_id: userData.user.id,
+              certificate_type: certDef.type,
+              lessons_completed: certDef.milestone,
+              wpm: Number(stats.wpm) || 0,
+              accuracy: Number(stats.accuracy) || 0,
+              eco_points: ecoPointsTotal,
+            },
+          ])
+          .select("id")
+          .single();
+        if (certErr) throw certErr;
+
+        setEarnedCertificate({ ...certDef, id: (newCert as any)?.id as string });
+        setShowCertificatePopup(true);
+      } catch {
+        // Non-blocking: certificates shouldn't break lesson flow
+      }
+    };
+
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete]);
+
   const handleNextLesson = () => {
     if (currentLessonId < 100) {
       setCurrentLessonId(currentLessonId + 1);
@@ -960,6 +1058,108 @@ export default function LessonPage() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+      {/* CERTIFICATE POPUP */}
+      {showCertificatePopup && earnedCertificate && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2700,
+            background: "rgba(0,0,0,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 18,
+          }}
+          role="dialog"
+          aria-label="Certificate earned"
+        >
+          <div
+            style={{
+              width: "min(680px, 96vw)",
+              background: "linear-gradient(135deg,#E8F5E9 0%, #FFFFFF 55%, #FFFDE7 100%)",
+              borderRadius: 20,
+              border: "1px solid rgba(255,255,255,0.7)",
+              boxShadow: "0 22px 70px rgba(0,0,0,0.28)",
+              padding: 20,
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCertificatePopup(false)}
+              className="no-print"
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                border: "1px solid rgba(0,0,0,0.08)",
+                background: "rgba(255,255,255,0.9)",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 38 }}>{earnedCertificate.emoji}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 950, color: "#2e7d32", letterSpacing: "0.12em" }}>
+                  🎉 YOU EARNED A CERTIFICATE!
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 950, color: "#2c3e50", marginTop: 4 }}>
+                  {earnedCertificate.title}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14, color: "#2c3e50", fontWeight: 800, lineHeight: 1.5 }}>
+              Amazing work—keep typing to help the planet!
+            </div>
+
+            <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => window.open(`/certificate?id=${encodeURIComponent(earnedCertificate.id)}`, "_blank")}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: "#4CAF50",
+                  color: "white",
+                  fontWeight: 950,
+                  cursor: "pointer",
+                }}
+              >
+                View Certificate
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  window.open(`/certificate?id=${encodeURIComponent(earnedCertificate.id)}&print=1`, "_blank")
+                }
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  border: "1px solid rgba(76,175,80,0.45)",
+                  background: "white",
+                  color: "#2e7d32",
+                  fontWeight: 950,
+                  cursor: "pointer",
+                }}
+              >
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* DAILY FACT POPUP */}
       {showDailyFact && dailyFact && (
         <div
