@@ -5,7 +5,7 @@ const protectedRoutes = ['/lesson', '/dashboard', '/pricing'];
 const authRoutes = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request);
+  const { response, user } = await updateSession(request);
 
   // Parse the pathname
   const pathname = request.nextUrl.pathname;
@@ -16,14 +16,18 @@ export async function middleware(request: NextRequest) {
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  // Get session from cookies
-  const sessionCookie = request.cookies.get('sb-auth-token');
-  const hasSession = !!sessionCookie;
+  // Auth state should be determined by Supabase, not hard-coded cookie names.
+  const hasSession = !!user;
 
   // Redirect logic
   if (isProtectedRoute && !hasSession) {
     // Redirect to login if accessing protected route without session
-    return NextResponse.redirect(new URL('/login', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/login', request.url));
+    // Preserve any refreshed cookies on redirect.
+    response.cookies.getAll().forEach((c) => {
+      redirectResponse.cookies.set(c.name, c.value, c);
+    });
+    return redirectResponse;
   }
 
   if (isAuthRoute && hasSession) {

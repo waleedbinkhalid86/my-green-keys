@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabasePublicEnv } from "./env";
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -27,7 +27,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getSession();
+  // getUser() triggers session refresh and cookie updates when needed.
+  const { data } = await supabase.auth.getUser();
 
-  return response;
+  return { response, user: data.user };
 }
