@@ -891,10 +891,6 @@ export default function ParentDashboard() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{ background: "#f5f7fa", borderTop: "1px solid #e0e0e0", padding: "40px 24px", textAlign: "center", color: "#999", fontSize: "0.9rem" }}>
-        <p>© 2024 My Green Keys. Parent Dashboard.</p>
-      </footer>
     </div>
   );
 }

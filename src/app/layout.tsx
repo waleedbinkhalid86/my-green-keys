@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import SiteFooter from "@/components/SiteFooter";
 
 const poppins = Poppins({
   weight: ["300", "400", "600", "700", "800", "900"],
@@ -20,7 +21,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${poppins.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-poppins">{children}</body>
+      <body className="min-h-full flex flex-col font-poppins">
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

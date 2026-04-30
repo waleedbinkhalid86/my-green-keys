@@ -608,10 +608,6 @@ function PricingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ padding: "40px 24px", background: "#2c3e50", color: "#999", fontSize: "0.9rem", textAlign: "center" }}>
-        <p>© 2024 My Green Keys. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
