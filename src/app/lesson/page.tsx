@@ -236,6 +236,10 @@ export default function LessonPage() {
   useEffect(() => {
     const savedProfile = localStorage.getItem("userProfile");
     const savedLessonId = localStorage.getItem("currentLessonId");
+    const queryLesson =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("lesson")
+        : null;
     
     if (savedProfile) {
       setUserProfile(JSON.parse(savedProfile));
@@ -243,9 +247,14 @@ export default function LessonPage() {
       setShowWelcomeModal(true);
     }
     
-    if (savedLessonId) {
-      setCurrentLessonId(parseInt(savedLessonId));
+    const queryLessonId = queryLesson ? Number(queryLesson) : NaN;
+    if (Number.isFinite(queryLessonId) && queryLessonId >= 1 && queryLessonId <= 100) {
+      setCurrentLessonId(queryLessonId);
+      localStorage.setItem("currentLessonId", String(queryLessonId));
+      return;
     }
+
+    if (savedLessonId) setCurrentLessonId(parseInt(savedLessonId));
   }, []);
 
   useEffect(() => {
@@ -1236,7 +1245,9 @@ export default function LessonPage() {
             🏫 Join Class
           </button>
           <button
-            onClick={() => setShowLessonMap(true)}
+            onClick={() => {
+              window.location.href = "/lesson-map";
+            }}
             style={{
               background: "white",
               border: "2px solid #4CAF50",
