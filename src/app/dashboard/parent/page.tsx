@@ -104,6 +104,7 @@ export default function ParentDashboard() {
   const [children, setChildren] = useState<Child[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(true);
   const [childrenError, setChildrenError] = useState("");
+  const [petWarnings, setPetWarnings] = useState<Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }>>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [addChildLoading, setAddChildLoading] = useState(false);
@@ -203,6 +204,44 @@ export default function ParentDashboard() {
       } else {
         setSelectedChildId("");
       }
+
+      // Pet warnings (best-effort): treat children.username as the child's login email.
+      const usernames = mapped.map((c) => c.username).filter(Boolean);
+      if (usernames.length === 0) {
+        setPetWarnings([]);
+        return;
+      }
+
+      const { data: petProfiles, error: petError } = await supabase
+        .from("profiles")
+        .select("email, pet_type, pet_name, pet_health")
+        .in("email", usernames as string[]);
+      if (petError) {
+        setPetWarnings([]);
+        return;
+      }
+
+      const profileByEmail = new Map(
+        ((petProfiles as any[]) || []).map((p) => [p.email as string, p])
+      );
+      const warnings: Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }> = [];
+      for (const c of mapped) {
+        if (!c.username) continue;
+        const p = profileByEmail.get(c.username);
+        if (!p) continue;
+        const health = Number(p.pet_health ?? 100);
+        if (Number.isFinite(health) && health < 40) {
+          const type = (p.pet_type as string | null) ?? "panda";
+          const emoji = type === "turtle" ? "🐢" : "🐼";
+          warnings.push({
+            childName: c.name,
+            petEmoji: emoji,
+            petName: (p.pet_name as string | null) ?? "Pet",
+            petHealth: health,
+          });
+        }
+      }
+      setPetWarnings(warnings);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load children.";
@@ -634,6 +673,27 @@ export default function ParentDashboard() {
               }}
             >
               {childrenError}
+            </div>
+          )}
+
+          {petWarnings.length > 0 && (
+            <div style={{ marginBottom: 16, display: "grid", gap: 10 }}>
+              {petWarnings.map((w) => (
+                <div
+                  key={`${w.childName}-${w.petName}`}
+                  style={{
+                    background: "#FFF8E1",
+                    border: "1px solid #FFECB3",
+                    color: "#8d6e63",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    fontSize: "0.95rem",
+                    fontWeight: 800,
+                  }}
+                >
+                  {w.petEmoji} {w.petName} is hungry! Help {w.childName} type today!
+                </div>
+              ))}
             </div>
           )}
 

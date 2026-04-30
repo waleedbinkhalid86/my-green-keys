@@ -158,6 +158,17 @@ export default function LessonPage() {
   const [joinClassError, setJoinClassError] = useState("");
   const [joinClassSuccess, setJoinClassSuccess] = useState("");
   const [currentClass, setCurrentClass] = useState<{ id: string; name: string; code: string } | null>(null);
+
+  // Virtual Pet state (stored in Supabase profiles)
+  const [petLoading, setPetLoading] = useState(true);
+  const [petError, setPetError] = useState("");
+  const [showPetSetup, setShowPetSetup] = useState(false);
+  const [petType, setPetType] = useState<"panda" | "turtle" | null>(null);
+  const [petName, setPetName] = useState("");
+  const [petHealth, setPetHealth] = useState(100);
+  const [petLastFed, setPetLastFed] = useState<string | null>(null);
+  const [petPulse, setPetPulse] = useState(false);
+  const [petDance, setPetDance] = useState(false);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -166,6 +177,8 @@ export default function LessonPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const shakeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const messageTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const petPulseTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const petDanceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const loadCurrentClass = async () => {
     try {
@@ -238,6 +251,128 @@ export default function LessonPage() {
   useEffect(() => {
     void loadCurrentClass();
   }, []);
+
+  const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
+  const petMood: "happy" | "neutral" | "sad" =
+    petHealth >= 70 ? "happy" : petHealth >= 40 ? "neutral" : "sad";
+
+  const petEmoji = petType === "turtle" ? "🐢" : "🐼";
+
+  const loadPetFromProfile = async () => {
+    setPetLoading(true);
+    setPetError("");
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setPetError("You must be logged in to use the virtual pet.");
+        setShowPetSetup(false);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("pet_type, pet_name, pet_health, pet_last_fed")
+        .eq("id", userData.user.id)
+        .single();
+      if (profileError) throw profileError;
+
+      const nextPetType = (profile as any)?.pet_type as "panda" | "turtle" | null;
+      const nextPetName = ((profile as any)?.pet_name as string | null) ?? "";
+      const nextHealth = Number((profile as any)?.pet_health ?? 100);
+      const nextLastFed = ((profile as any)?.pet_last_fed as string | null) ?? null;
+
+      setPetType(nextPetType);
+      setPetName(nextPetName);
+      setPetHealth(clamp(Number.isFinite(nextHealth) ? nextHealth : 100, 0, 100));
+      setPetLastFed(nextLastFed);
+
+      if (!nextPetType || !nextPetName) {
+        setShowPetSetup(true);
+      } else {
+        setShowPetSetup(false);
+      }
+
+      // Health decay: -5 for each full 24h with no feeding (no completed lesson).
+      if (nextLastFed) {
+        const last = new Date(nextLastFed).getTime();
+        if (Number.isFinite(last)) {
+          const days = Math.floor((Date.now() - last) / (1000 * 60 * 60 * 24));
+          if (days > 0) {
+            const dec = days * 5;
+            const decayed = clamp(nextHealth - dec, 0, 100);
+            if (decayed !== nextHealth) {
+              setPetHealth(decayed);
+              const { error: updateError } = await supabase
+                .from("profiles")
+                .update({ pet_health: decayed })
+                .eq("id", userData.user.id);
+              if (updateError) throw updateError;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      setPetError(err instanceof Error ? err.message : "Failed to load pet.");
+    } finally {
+      setPetLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadPetFromProfile();
+    return () => {
+      if (petPulseTimeoutRef.current) clearTimeout(petPulseTimeoutRef.current);
+      if (petDanceTimeoutRef.current) clearTimeout(petDanceTimeoutRef.current);
+    };
+  }, []);
+
+  const savePetSetup = async () => {
+    setPetError("");
+    try {
+      if (!petType) {
+        setPetError("Please choose a pet.");
+        return;
+      }
+      if (!petName.trim()) {
+        setPetError("Please name your pet.");
+        return;
+      }
+
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setPetError("You must be logged in to set up your pet.");
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          pet_type: petType,
+          pet_name: petName.trim(),
+          pet_health: clamp(petHealth, 0, 100),
+          pet_last_fed: now,
+        })
+        .eq("id", userData.user.id);
+      if (error) throw error;
+
+      setPetLastFed(now);
+      setShowPetSetup(false);
+    } catch (err) {
+      setPetError(err instanceof Error ? err.message : "Failed to save pet.");
+    }
+  };
+
+  const bumpPetOnce = () => {
+    setPetPulse(true);
+    if (petPulseTimeoutRef.current) clearTimeout(petPulseTimeoutRef.current);
+    petPulseTimeoutRef.current = setTimeout(() => setPetPulse(false), 300);
+  };
 
   // Save current lesson to localStorage
   useEffect(() => {
@@ -312,6 +447,7 @@ export default function LessonPage() {
         shakeTimeoutRef.current = setTimeout(() => setShakeKey(null), 300);
       } else {
         // Correct key pressed
+        bumpPetOnce();
         const newEcoWords = value.split(" ").length - 1;
         setStats((prev) => ({ ...prev, ecoWords: newEcoWords }));
 
@@ -364,6 +500,41 @@ export default function LessonPage() {
       setStars(earnedStars);
     }
   };
+
+  // Feed pet on lesson completion (+10 health) and set last fed timestamp.
+  useEffect(() => {
+    const feedPet = async () => {
+      if (!isComplete) return;
+      if (!petType || !petName) return;
+
+      setPetDance(true);
+      if (petDanceTimeoutRef.current) clearTimeout(petDanceTimeoutRef.current);
+      petDanceTimeoutRef.current = setTimeout(() => setPetDance(false), 1400);
+
+      try {
+        const supabase = createClient();
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!userData.user) return;
+
+        const nextHealth = clamp(petHealth + 10, 0, 100);
+        const now = new Date().toISOString();
+        setPetHealth(nextHealth);
+        setPetLastFed(now);
+
+        const { error } = await supabase
+          .from("profiles")
+          .update({ pet_health: nextHealth, pet_last_fed: now })
+          .eq("id", userData.user.id);
+        if (error) throw error;
+      } catch {
+        // Non-blocking
+      }
+    };
+
+    void feedPet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete]);
 
   const handleNextLesson = () => {
     if (currentLessonId < 100) {
@@ -647,6 +818,121 @@ export default function LessonPage() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+      {/* PET SETUP (first time) */}
+      {showPetSetup && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.65)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: 28,
+              borderRadius: 18,
+              width: "min(680px, 94vw)",
+              boxShadow: "0 12px 50px rgba(0,0,0,0.35)",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: "12px", fontWeight: 900, letterSpacing: "0.18em", color: "#4CAF50" }}>
+                VIRTUAL PET
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#2c3e50", marginTop: 6 }}>
+                Choose Your Pet
+              </div>
+              <div style={{ color: "#666", marginTop: 6 }}>
+                Complete lessons to keep your pet healthy and happy.
+              </div>
+            </div>
+
+            {petError && (
+              <div style={{ background: "#ffebee", border: "1px solid #ef5350", color: "#c62828", padding: "10px 12px", borderRadius: 12, marginBottom: 12, fontSize: "13px", fontWeight: 800 }}>
+                {petError}
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+              <button
+                type="button"
+                onClick={() => setPetType("panda")}
+                style={{
+                  borderRadius: 16,
+                  border: petType === "panda" ? "3px solid #4CAF50" : "1px solid #e0e0e0",
+                  background: petType === "panda" ? "#E8F5E9" : "#fff",
+                  padding: 18,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ fontSize: 42, lineHeight: 1 }}>🐼</div>
+                <div style={{ fontWeight: 900, color: "#2c3e50", marginTop: 8 }}>Panda</div>
+                <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Loves typing streaks.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPetType("turtle")}
+                style={{
+                  borderRadius: 16,
+                  border: petType === "turtle" ? "3px solid #4CAF50" : "1px solid #e0e0e0",
+                  background: petType === "turtle" ? "#E8F5E9" : "#fff",
+                  padding: 18,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ fontSize: 42, lineHeight: 1 }}>🐢</div>
+                <div style={{ fontWeight: 900, color: "#2c3e50", marginTop: 8 }}>Turtle</div>
+                <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Slow and steady typer.</div>
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+              <label style={{ fontWeight: 900, color: "#2c3e50" }}>Pet name</label>
+              <input
+                value={petName}
+                onChange={(e) => setPetName(e.target.value)}
+                placeholder="e.g. Bamboo"
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: "2px solid #e0e0e0",
+                  fontSize: 16,
+                  fontWeight: 700,
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void savePetSetup()}
+              style={{
+                width: "100%",
+                marginTop: 14,
+                padding: "14px 16px",
+                borderRadius: 14,
+                border: "none",
+                background: "#4CAF50",
+                color: "white",
+                fontWeight: 900,
+                cursor: "pointer",
+                fontSize: 16,
+              }}
+            >
+              Save Pet
+            </button>
+          </div>
+        </div>
+      )}
       {/* JOIN CLASS MODAL */}
       {showJoinClassModal && (
         <div
@@ -778,7 +1064,7 @@ export default function LessonPage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, position: "relative" }}>
           {currentPhase && (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "20px", marginBottom: "4px" }}>{currentPhase.icon}</div>
@@ -802,6 +1088,61 @@ export default function LessonPage() {
               Hi {userProfile.name}! 👋
             </div>
           )}
+
+          {/* PET WIDGET */}
+          <div
+            style={{
+              position: "absolute",
+              right: -10,
+              top: -2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              minWidth: 120,
+              pointerEvents: "none",
+            }}
+          >
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 800, marginBottom: 2 }}>
+              {petName || "My Pet"}
+            </div>
+            <div
+              className={[
+                "pet",
+                `pet-${petMood}`,
+                petPulse ? "pet-pulse" : "",
+                petDance ? "pet-dance" : "",
+              ].join(" ")}
+              style={{ fontSize: 34, lineHeight: 1 }}
+            >
+              {petEmoji}
+            </div>
+            <div
+              style={{
+                width: 86,
+                height: 8,
+                background: "rgba(255,255,255,0.22)",
+                borderRadius: 999,
+                overflow: "hidden",
+                marginTop: 6,
+                border: "1px solid rgba(255,255,255,0.18)",
+              }}
+              aria-label="Pet health"
+            >
+              <div
+                style={{
+                  width: `${clamp(petHealth, 0, 100)}%`,
+                  height: "100%",
+                  background:
+                    petMood === "happy"
+                      ? "#4CAF50"
+                      : petMood === "neutral"
+                        ? "#FFEB3B"
+                        : "#f44336",
+                  transition: "width 0.35s ease",
+                }}
+              />
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -2121,6 +2462,39 @@ export default function LessonPage() {
             opacity: 1;
             transform: scale(1);
           }
+        }
+
+        /* Virtual Pet animations */
+        .pet { display: inline-block; transform-origin: 50% 80%; }
+        .pet-happy { animation: petBounce 1.15s ease-in-out infinite; }
+        .pet-neutral { animation: petIdle 2.2s ease-in-out infinite; }
+        .pet-sad { animation: petDroop 1.6s ease-in-out infinite; opacity: 0.9; }
+        .pet-pulse { animation: petPulse 0.25s ease-out; }
+        .pet-dance { animation: petDance 0.7s ease-in-out infinite; }
+
+        @keyframes petBounce {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-6px) scale(1.04); }
+        }
+        @keyframes petIdle {
+          0%, 100% { transform: translateY(0) rotate(-1deg); }
+          50% { transform: translateY(-2px) rotate(1deg); }
+        }
+        @keyframes petDroop {
+          0%, 100% { transform: translateY(3px) rotate(-4deg) scale(0.98); }
+          50% { transform: translateY(5px) rotate(-6deg) scale(0.97); }
+        }
+        @keyframes petPulse {
+          0% { transform: translateY(0) scale(1); }
+          60% { transform: translateY(-8px) scale(1.06); }
+          100% { transform: translateY(0) scale(1); }
+        }
+        @keyframes petDance {
+          0% { transform: rotate(0deg) translateY(0); }
+          25% { transform: rotate(10deg) translateY(-4px); }
+          50% { transform: rotate(-10deg) translateY(-4px); }
+          75% { transform: rotate(10deg) translateY(-2px); }
+          100% { transform: rotate(0deg) translateY(0); }
         }
       `}</style>
     </div>
