@@ -169,6 +169,14 @@ export default function LessonPage() {
   const [petLastFed, setPetLastFed] = useState<string | null>(null);
   const [petPulse, setPetPulse] = useState(false);
   const [petDance, setPetDance] = useState(false);
+
+  // Onboarding tutorial (3-step, first login only)
+  const [studentDisplayName, setStudentDisplayName] = useState<string>("");
+  const [onboardingLoading, setOnboardingLoading] = useState(true);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1);
+  const [onboardingError, setOnboardingError] = useState("");
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -283,10 +291,16 @@ export default function LessonPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("pet_type, pet_name, pet_health, pet_last_fed")
+        .select("full_name, pet_type, pet_name, pet_health, pet_last_fed, onboarding_completed")
         .eq("id", userData.user.id)
         .single();
       if (profileError) throw profileError;
+
+      const onboarding = Boolean((profile as any)?.onboarding_completed);
+      setOnboardingCompleted(onboarding);
+      setStudentDisplayName(((profile as any)?.full_name as string | null)?.trim() || "");
+      setShowOnboarding(!onboarding);
+      setOnboardingStep(1);
 
       const nextPetType = (profile as any)?.pet_type as "panda" | "turtle" | null;
       const nextPetName = ((profile as any)?.pet_name as string | null) ?? "";
@@ -298,10 +312,11 @@ export default function LessonPage() {
       setPetHealth(clamp(Number.isFinite(nextHealth) ? nextHealth : 100, 0, 100));
       setPetLastFed(nextLastFed);
 
-      if (!nextPetType || !nextPetName) {
-        setShowPetSetup(true);
-      } else {
+      // Pet setup screen should not interrupt onboarding; only show as fallback after onboarding.
+      if (!onboarding && (!nextPetType || !nextPetName)) {
         setShowPetSetup(false);
+      } else {
+        setShowPetSetup(!nextPetType || !nextPetName);
       }
 
       // Health decay: -5 for each full 24h with no feeding (no completed lesson).
@@ -327,6 +342,7 @@ export default function LessonPage() {
       setPetError(err instanceof Error ? err.message : "Failed to load pet.");
     } finally {
       setPetLoading(false);
+      setOnboardingLoading(false);
     }
   };
 
@@ -374,6 +390,79 @@ export default function LessonPage() {
       setShowPetSetup(false);
     } catch (err) {
       setPetError(err instanceof Error ? err.message : "Failed to save pet.");
+    }
+  };
+
+  const saveOnboardingCompleted = async (opts?: { defaultPetIfMissing?: boolean }) => {
+    setOnboardingError("");
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setOnboardingError("You must be logged in.");
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const updates: Record<string, unknown> = { onboarding_completed: true };
+
+      if (opts?.defaultPetIfMissing && (!petType || !petName.trim())) {
+        updates.pet_type = "panda";
+        updates.pet_name = "Buddy";
+        updates.pet_health = clamp(petHealth || 100, 0, 100);
+        updates.pet_last_fed = now;
+        setPetType("panda");
+        setPetName("Buddy");
+        setPetLastFed(now);
+      }
+
+      const { error } = await supabase.from("profiles").update(updates).eq("id", userData.user.id);
+      if (error) throw error;
+
+      setOnboardingCompleted(true);
+      setShowOnboarding(false);
+    } catch (err) {
+      setOnboardingError(err instanceof Error ? err.message : "Failed to update onboarding.");
+    }
+  };
+
+  const savePetFromOnboarding = async () => {
+    setOnboardingError("");
+    try {
+      if (!petType) {
+        setOnboardingError("Please choose a companion.");
+        return;
+      }
+      if (!petName.trim()) {
+        setOnboardingError("Please name your pet.");
+        return;
+      }
+
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setOnboardingError("You must be logged in.");
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          pet_type: petType,
+          pet_name: petName.trim(),
+          pet_health: clamp(petHealth, 0, 100),
+          pet_last_fed: now,
+        })
+        .eq("id", userData.user.id);
+      if (error) throw error;
+
+      setPetLastFed(now);
+      setShowPetSetup(false);
+    } catch (err) {
+      setOnboardingError(err instanceof Error ? err.message : "Failed to save pet.");
     }
   };
 
@@ -827,8 +916,320 @@ export default function LessonPage() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+      {/* ONBOARDING OVERLAY */}
+      {showOnboarding && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2500,
+            background:
+              "linear-gradient(180deg,#162d1e 0%,#1f4d35 25%,#2d6a4f 55%,#52b788 80%,#81c99e 100%)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Animated leaves */}
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="onb-leaf"
+              style={{
+                left: `${(i * 9) % 95}%`,
+                animationDelay: `${i * 0.6}s`,
+                animationDuration: `${7 + (i % 4)}s`,
+              }}
+            />
+          ))}
+
+          {/* Trees at bottom */}
+          <div className="onb-trees" aria-hidden />
+
+          {/* Skip */}
+          <button
+            type="button"
+            onClick={() => void saveOnboardingCompleted({ defaultPetIfMissing: true })}
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              background: "rgba(255,255,255,0.14)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              color: "rgba(255,255,255,0.9)",
+              padding: "8px 12px",
+              borderRadius: 999,
+              fontWeight: 800,
+              cursor: "pointer",
+              zIndex: 3,
+            }}
+          >
+            Skip
+          </button>
+
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 18,
+            }}
+          >
+            <div
+              style={{
+                width: "min(760px, 94vw)",
+                background: "rgba(255,255,255,0.92)",
+                border: "1px solid rgba(0,0,0,0.06)",
+                borderRadius: 20,
+                boxShadow: "0 18px 60px rgba(0,0,0,0.25)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  transform: `translateX(-${(onboardingStep - 1) * 100}%)`,
+                  transition: "transform 400ms ease",
+                  width: "300%",
+                }}
+              >
+                {/* STEP 1 */}
+                <div style={{ width: "100%", padding: 26 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
+                      STEP 1/3
+                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 950, color: "#2c3e50", marginTop: 10, lineHeight: 1.15 }}>
+                      Welcome to My Green Keys{studentDisplayName ? `, ${studentDisplayName}` : ""}! 🌿
+                    </div>
+                    <div style={{ marginTop: 10, color: "#6b7280", fontSize: 16, fontWeight: 700 }}>
+                      Learn to type while helping the planet!
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 22, display: "grid", gap: 12 }}>
+                    <div className="onb-heroTrees" />
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <button
+                        type="button"
+                        onClick={() => setOnboardingStep(2)}
+                        style={{
+                          padding: "14px 20px",
+                          borderRadius: 999,
+                          border: "none",
+                          background: "#4CAF50",
+                          color: "white",
+                          fontWeight: 900,
+                          fontSize: 16,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Let&apos;s Start! →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 2 */}
+                <div style={{ width: "100%", padding: 26 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
+                      STEP 2/3
+                    </div>
+                    <div style={{ fontSize: 30, fontWeight: 950, color: "#2c3e50", marginTop: 10 }}>
+                      Choose your companion!
+                    </div>
+                    <div style={{ marginTop: 8, color: "#6b7280", fontSize: 14, fontWeight: 700 }}>
+                      Your pet stays healthy when you type every day! 🌱
+                    </div>
+                  </div>
+
+                  {onboardingError && (
+                    <div style={{ marginTop: 14, background: "#ffebee", border: "1px solid #ef5350", color: "#c62828", padding: "10px 12px", borderRadius: 12, fontWeight: 900 }}>
+                      {onboardingError}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => setPetType("panda")}
+                      style={{
+                        borderRadius: 18,
+                        border: petType === "panda" ? "3px solid #4CAF50" : "1px solid #e0e0e0",
+                        background: petType === "panda" ? "#E8F5E9" : "white",
+                        padding: 16,
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontSize: 42 }}>🐼</div>
+                      <div style={{ fontWeight: 950, color: "#2c3e50", marginTop: 6 }}>Panda</div>
+                      <div style={{ color: "#6b7280", fontWeight: 700, fontSize: 13, marginTop: 2 }}>Friendly and playful.</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPetType("turtle")}
+                      style={{
+                        borderRadius: 18,
+                        border: petType === "turtle" ? "3px solid #4CAF50" : "1px solid #e0e0e0",
+                        background: petType === "turtle" ? "#E8F5E9" : "white",
+                        padding: 16,
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontSize: 42 }}>🐢</div>
+                      <div style={{ fontWeight: 950, color: "#2c3e50", marginTop: 6 }}>Turtle</div>
+                      <div style={{ color: "#6b7280", fontWeight: 700, fontSize: 13, marginTop: 2 }}>Calm and steady.</div>
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ display: "block", fontWeight: 900, color: "#2c3e50", marginBottom: 6 }}>
+                      Name your pet
+                    </label>
+                    <input
+                      value={petName}
+                      onChange={(e) => setPetName(e.target.value)}
+                      placeholder="e.g. Bamboo"
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: "2px solid #e0e0e0",
+                        fontSize: 16,
+                        fontWeight: 800,
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                    <button
+                      type="button"
+                      onClick={() => setOnboardingStep(1)}
+                      style={{
+                        flex: 1,
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: "1px solid #e0e0e0",
+                        background: "white",
+                        fontWeight: 950,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await savePetFromOnboarding();
+                        if (!onboardingError) setOnboardingStep(3);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#4CAF50",
+                        color: "white",
+                        fontWeight: 950,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+
+                {/* STEP 3 */}
+                <div style={{ width: "100%", padding: 26 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
+                      STEP 3/3
+                    </div>
+                    <div style={{ fontSize: 30, fontWeight: 950, color: "#2c3e50", marginTop: 10 }}>
+                      Here&apos;s how My Green Keys works!
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+                    {[
+                      { icon: "⌨️", title: "Type lessons to improve your speed" },
+                      { icon: "🌿", title: "Earn eco points with nature sentences" },
+                      { icon: "📸", title: "Upload eco photos for bonus rewards" },
+                      { icon: "🏆", title: "Earn badges and climb leaderboard" },
+                    ].map((c, idx) => (
+                      <div
+                        key={idx}
+                        className="onb-card"
+                        style={{ animationDelay: `${idx * 140}ms` }}
+                      >
+                        <div style={{ fontSize: 22 }}>{c.icon}</div>
+                        <div style={{ fontWeight: 950, color: "#2c3e50" }}>{c.title}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+                    <span className="onb-dot onb-dot-off" />
+                    <span className="onb-dot onb-dot-off" />
+                    <span className="onb-dot" />
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                    <button
+                      type="button"
+                      onClick={() => setOnboardingStep(2)}
+                      style={{
+                        flex: 1,
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: "1px solid #e0e0e0",
+                        background: "white",
+                        fontWeight: 950,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await saveOnboardingCompleted();
+                        window.location.href = "/lesson";
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "12px 14px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#FFEB3B",
+                        color: "#1B4D30",
+                        fontWeight: 950,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Start Typing! 🚀
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dots */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "0 0 18px" }}>
+                <span className={`onb-dot ${onboardingStep === 1 ? "" : "onb-dot-off"}`} />
+                <span className={`onb-dot ${onboardingStep === 2 ? "" : "onb-dot-off"}`} />
+                <span className={`onb-dot ${onboardingStep === 3 ? "" : "onb-dot-off"}`} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PET SETUP (first time) */}
-      {showPetSetup && (
+      {!showOnboarding && showPetSetup && (
         <div
           style={{
             position: "fixed",
@@ -2506,6 +2907,83 @@ export default function LessonPage() {
           50% { transform: rotate(-10deg) translateY(-4px); }
           75% { transform: rotate(10deg) translateY(-2px); }
           100% { transform: rotate(0deg) translateY(0); }
+        }
+
+        /* Onboarding visuals */
+        .onb-leaf {
+          position: absolute;
+          top: -30px;
+          width: 14px;
+          height: 14px;
+          border-radius: 0 50% 0 50%;
+          background: rgba(255,235,59,0.9);
+          opacity: 0.7;
+          animation: onbLeafFall linear infinite;
+          pointer-events: none;
+        }
+        @keyframes onbLeafFall {
+          0% { transform: translateY(-20px) rotate(0deg); }
+          100% { transform: translateY(110vh) rotate(720deg) translateX(60px); }
+        }
+        .onb-trees {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 180px;
+          background: linear-gradient(180deg, transparent 0%, rgba(27,77,48,0.85) 60%, rgba(27,77,48,1) 100%);
+        }
+        .onb-heroTrees {
+          height: 150px;
+          border-radius: 18px;
+          background:
+            radial-gradient(circle at 20% 85%, rgba(255,255,255,0.12) 0%, transparent 48%),
+            radial-gradient(circle at 60% 85%, rgba(255,255,255,0.10) 0%, transparent 50%),
+            radial-gradient(circle at 85% 82%, rgba(255,255,255,0.09) 0%, transparent 45%),
+            linear-gradient(180deg, rgba(76,175,80,0.18) 0%, rgba(33,150,243,0.08) 100%);
+          border: 1px solid rgba(0,0,0,0.06);
+          position: relative;
+          overflow: hidden;
+        }
+        .onb-heroTrees::after {
+          content: "🌳   🌲    🌳   🌲   🌳";
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          font-size: 26px;
+          opacity: 0.95;
+          animation: onbTreeSway 2.8s ease-in-out infinite;
+          transform-origin: left bottom;
+        }
+        @keyframes onbTreeSway {
+          0%, 100% { transform: rotate(-1deg); }
+          50% { transform: rotate(1deg); }
+        }
+        .onb-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: #fff;
+          border: 1px solid rgba(0,0,0,0.08);
+          border-radius: 16px;
+          padding: 14px 16px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+          animation: onbCardIn 480ms ease both;
+        }
+        @keyframes onbCardIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .onb-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: #4CAF50;
+          box-shadow: 0 0 0 3px rgba(76,175,80,0.18);
+        }
+        .onb-dot-off {
+          background: rgba(0,0,0,0.18);
+          box-shadow: none;
         }
       `}</style>
     </div>
