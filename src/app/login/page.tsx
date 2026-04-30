@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import "../globals.css";
@@ -100,7 +99,6 @@ function FormErrorBanner({ message }: { message: string }) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("student");
   const [formData, setFormData] = useState<LoginForm>({
     emailOrUsername: "",
@@ -228,7 +226,8 @@ export default function LoginPage() {
           };
 
           const redirectPath = accountTypeRedirectMap[profile.account_type] || "/lesson";
-          router.push(redirectPath);
+          console.log("Redirecting to:", redirectPath);
+          window.location.href = redirectPath;
         })(),
         LOGIN_TIMEOUT_MS,
         LOGIN_TIMEOUT_MESSAGE
