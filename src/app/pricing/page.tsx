@@ -1,6 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LeafIcon, CheckIcon, XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 
 const LeafIconCustom = () => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -99,10 +102,96 @@ function Nav({ isFixed = true }: NavBarProps) {
 }
 
 function PricingPage() {
+  const router = useRouter();
   const [isYearly, setIsYearly] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoResult, setPromoResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string>("");
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+
+  const priceIds = useMemo(() => {
+    const family = process.env.NEXT_PUBLIC_PADDLE_FAMILY_PRICE_ID || "";
+    const schoolStarter = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_STARTER_PRICE_ID || "";
+    const schoolGrowth = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_GROWTH_PRICE_ID || "";
+    return { family, schoolStarter, schoolGrowth };
+  }, []);
+
+  useEffect(() => {
+    const unsub = onPaddleEvent(async (event) => {
+      if (event?.name !== "checkout.completed") return;
+      const payload = event.data as any;
+      const transactionId = payload?.transaction_id as string | undefined;
+      if (!transactionId) return;
+
+      try {
+        const res = await fetch("/api/paddle/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transactionId }),
+        });
+        const json = (await res.json()) as any;
+        if (!res.ok) throw new Error(json?.error || "Failed to finalize purchase");
+        router.push(json.redirectTo || "/dashboard/parent");
+      } catch (err) {
+        setCheckoutError(err instanceof Error ? err.message : "Failed to finalize purchase");
+      }
+    });
+    return unsub;
+  }, [router]);
+
+  const openCheckout = async (planType: "family" | "school_starter" | "school_growth") => {
+    setCheckoutError("");
+    setCheckoutBusy(true);
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      if (!user) {
+        router.push("/signup");
+        return;
+      }
+
+      const priceId =
+        planType === "family"
+          ? priceIds.family
+          : planType === "school_starter"
+            ? priceIds.schoolStarter
+            : priceIds.schoolGrowth;
+
+      if (!priceId) {
+        throw new Error("Missing Paddle price ID configuration for this plan.");
+      }
+
+      const checkoutRes = await fetch("/api/paddle/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId, planType }),
+      });
+      const checkoutJson = (await checkoutRes.json()) as any;
+      if (!checkoutRes.ok) {
+        throw new Error(checkoutJson?.error || "Failed to start checkout");
+      }
+
+      const paddle = await getPaddle();
+      if (!paddle) {
+        throw new Error("Failed to initialize Paddle.");
+      }
+
+      paddle.Checkout.open({
+        transactionId: checkoutJson.transactionId,
+        settings: {
+          displayMode: "overlay",
+          theme: "light",
+          locale: "en",
+        },
+      });
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Failed to start checkout");
+    } finally {
+      setCheckoutBusy(false);
+    }
+  };
 
   const handlePromoCode = () => {
     const code = promoCode.toUpperCase();
@@ -179,6 +268,23 @@ function PricingPage() {
       {/* PRICING CARDS */}
       <section style={{ padding: "80px 24px", background: "#fff" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {checkoutError && (
+            <div
+              style={{
+                marginBottom: 20,
+                background: "#ffebee",
+                border: "1px solid #ef5350",
+                color: "#c62828",
+                padding: "12px 16px",
+                borderRadius: 10,
+                fontSize: "0.95rem",
+                fontWeight: 600,
+              }}
+            >
+              {checkoutError}
+            </div>
+          )}
+
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32, position: "relative" }}>
             {/* CARD 1: FREE STARTER */}
             <div style={{
@@ -204,7 +310,10 @@ function PricingPage() {
                 cursor: "pointer",
                 marginBottom: 32,
                 transition: "all 0.2s ease",
-              }} onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E8F5E9"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}>
+              }}
+              disabled={checkoutBusy}
+              onClick={() => router.push("/signup")}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E8F5E9"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}>
                 Start for Free
               </button>
 
@@ -264,8 +373,11 @@ function PricingPage() {
                 cursor: "pointer",
                 marginBottom: 12,
                 transition: "background 0.2s ease",
-              }} onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}>
-                Start Free Trial
+              }}
+              disabled={checkoutBusy}
+              onClick={() => openCheckout("family")}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}>
+                {checkoutBusy ? "Loading..." : "Get Started"}
               </button>
               <p style={{ fontSize: "0.85rem", color: "#999", marginBottom: 24, textAlign: "center" }}>7-day free trial, no credit card required</p>
 
@@ -330,8 +442,32 @@ function PricingPage() {
                 cursor: "pointer",
                 marginBottom: 12,
                 transition: "background 0.2s ease",
-              }} onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#0b7dda"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#2196F3"; }}>
-                Contact Us
+              }}
+              disabled={checkoutBusy}
+              onClick={() => openCheckout("school_starter")}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#0b7dda"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#2196F3"; }}>
+                {checkoutBusy ? "Loading..." : "Get Started (Starter)"}
+              </button>
+              <button
+                style={{
+                  width: "100%",
+                  padding: "12px 24px",
+                  background: "transparent",
+                  color: "#2196F3",
+                  border: "2px solid #2196F3",
+                  borderRadius: 8,
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  marginBottom: 12,
+                  transition: "all 0.2s ease",
+                }}
+                disabled={checkoutBusy}
+                onClick={() => openCheckout("school_growth")}
+                onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E3F2FD"; }}
+                onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
+              >
+                {checkoutBusy ? "Loading..." : "Get Started (Growth)"}
               </button>
               <p style={{ fontSize: "0.85rem", color: "#999", marginBottom: 24, textAlign: "center" }}>Available in 100 or 200 student packages</p>
 
