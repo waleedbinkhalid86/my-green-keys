@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function TeacherDashboard() {
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
@@ -12,6 +13,27 @@ export default function TeacherDashboard() {
   const [searchStudent, setSearchStudent] = useState('');
   const [schoolName, setSchoolName] = useState('Green Valley Primary School');
   const [primaryColor, setPrimaryColor] = useState('#4CAF50');
+
+  const [teacherId, setTeacherId] = useState<string>('');
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [classesError, setClassesError] = useState('');
+  const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [showCreateClass, setShowCreateClass] = useState(false);
+  const [createClassName, setCreateClassName] = useState('');
+  const [createClassLoading, setCreateClassLoading] = useState(false);
+  const [createClassError, setCreateClassError] = useState('');
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState('');
+  const [enrolledStudents, setEnrolledStudents] = useState<Array<{ id: string; full_name: string | null; email: string | null }>>([]);
+
+  const generateClassCode = useMemo(() => {
+    const alphabet = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'; // no 0/O, 1/I
+    return () => {
+      const suffix = Array.from({ length: 3 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+      return `GRN${suffix}`;
+    };
+  }, []);
 
   // Sample data
   const leaderboardData = [
@@ -56,6 +78,135 @@ export default function TeacherDashboard() {
     s.name.toLowerCase().includes(searchStudent.toLowerCase())
   );
 
+  const loadClasses = async () => {
+    setClassesLoading(true);
+    setClassesError('');
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setClasses([]);
+        setTeacherId('');
+        setSelectedClassId('');
+        setClassesError('You must be logged in to view classes.');
+        return;
+      }
+      setTeacherId(userData.user.id);
+
+      const { data, error } = await supabase
+        .from('classes')
+        .select('id, name, code')
+        .eq('teacher_id', userData.user.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      const list = (data as Array<{ id: string; name: string; code: string }> | null) ?? [];
+      setClasses(list);
+      if (list.length > 0) {
+        setSelectedClassId((prev) => prev || list[0].id);
+      } else {
+        setSelectedClassId('');
+      }
+    } catch (err) {
+      setClassesError(err instanceof Error ? err.message : 'Failed to load classes.');
+      setClasses([]);
+      setSelectedClassId('');
+    } finally {
+      setClassesLoading(false);
+    }
+  };
+
+  const loadEnrolledStudents = async (classId: string) => {
+    if (!classId) {
+      setEnrolledStudents([]);
+      return;
+    }
+    setStudentsLoading(true);
+    setStudentsError('');
+    try {
+      const supabase = createClient();
+      const { data: enrollments, error: enrollErr } = await supabase
+        .from('class_enrollments')
+        .select('student_id')
+        .eq('class_id', classId);
+      if (enrollErr) throw enrollErr;
+      const studentIds = ((enrollments as Array<{ student_id: string }> | null) ?? []).map((e) => e.student_id);
+      if (studentIds.length === 0) {
+        setEnrolledStudents([]);
+        return;
+      }
+
+      const { data: profiles, error: profilesErr } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', studentIds);
+      if (profilesErr) throw profilesErr;
+      setEnrolledStudents((profiles as Array<{ id: string; full_name: string | null; email: string | null }> | null) ?? []);
+    } catch (err) {
+      setStudentsError(err instanceof Error ? err.message : 'Failed to load students.');
+      setEnrolledStudents([]);
+    } finally {
+      setStudentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadClasses();
+  }, []);
+
+  useEffect(() => {
+    void loadEnrolledStudents(selectedClassId);
+  }, [selectedClassId]);
+
+  const handleCreateClass = async () => {
+    setCreateClassError('');
+    setCreateClassLoading(true);
+    try {
+      if (!teacherId) {
+        setCreateClassError('You must be logged in to create a class.');
+        return;
+      }
+      if (!createClassName.trim()) {
+        setCreateClassError('Class name is required.');
+        return;
+      }
+
+      const supabase = createClient();
+
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = generateClassCode();
+        const { error } = await supabase.from('classes').insert([
+          {
+            teacher_id: teacherId,
+            name: createClassName.trim(),
+            code,
+            school_id: null,
+          },
+        ]);
+
+        if (!error) {
+          setShowCreateClass(false);
+          setCreateClassName('');
+          await loadClasses();
+          return;
+        }
+
+        lastErr = error;
+        // If code is unique and insert failed for some other reason, stop retrying.
+        if (!String((error as { message?: string }).message || '').toLowerCase().includes('duplicate')) {
+          break;
+        }
+      }
+
+      throw lastErr ?? new Error('Failed to create class.');
+    } catch (err) {
+      setCreateClassError(err instanceof Error ? err.message : 'Failed to create class.');
+    } finally {
+      setCreateClassLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -84,6 +235,119 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
+      {showCreateClass && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              width: 'min(560px, 95vw)',
+              borderRadius: 16,
+              padding: 24,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#1e2832' }}>Create Class</div>
+                <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 4 }}>
+                  Generates a 6-character class code (example: GRN42X).
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateClass(false)}
+                style={{ background: 'transparent', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999' }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {createClassError && (
+              <div
+                style={{
+                  background: '#ffebee',
+                  border: '1px solid #ef5350',
+                  color: '#c62828',
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  marginTop: 12,
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                }}
+              >
+                {createClassError}
+              </div>
+            )}
+
+            <div style={{ marginTop: 14 }}>
+              <label style={{ display: 'block', fontWeight: 800, color: '#1e2832', marginBottom: 6 }}>Class name</label>
+              <input
+                value={createClassName}
+                onChange={(e) => setCreateClassName(e.target.value)}
+                placeholder="e.g. Grade 4A"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 10,
+                  fontSize: '1rem',
+                }}
+                disabled={createClassLoading}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={() => setShowCreateClass(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: '1px solid #e0e0e0',
+                  background: 'white',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                }}
+                disabled={createClassLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleCreateClass()}
+                style={{
+                  flex: 1,
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#4CAF50',
+                  color: 'white',
+                  fontWeight: 900,
+                  cursor: createClassLoading ? 'not-allowed' : 'pointer',
+                  opacity: createClassLoading ? 0.7 : 1,
+                }}
+                disabled={createClassLoading}
+              >
+                {createClassLoading ? 'Creating...' : 'Create Class'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ========== TOP NAVIGATION ========== */}
       <nav
         className="sticky top-0 z-50 shadow-sm border-b"
@@ -125,6 +389,111 @@ export default function TeacherDashboard() {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* ========== CLASSES ========== */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold" style={{ color: '#1e2832' }}>
+              🏫 Classes
+            </h2>
+            <button
+              className="px-4 py-2 rounded font-semibold text-white transition"
+              style={{ backgroundColor: '#4CAF50' }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#4CAF50')}
+              onClick={() => {
+                setCreateClassError('');
+                setShowCreateClass(true);
+              }}
+            >
+              ➕ Create Class
+            </button>
+          </div>
+
+          {classesError && (
+            <div className="p-4 rounded border mb-4" style={{ backgroundColor: '#ffebee', borderColor: '#ef5350', color: '#c62828' }}>
+              {classesError}
+            </div>
+          )}
+
+          {classesLoading ? (
+            <div className="p-6 rounded border" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
+              Loading classes...
+            </div>
+          ) : classes.length === 0 ? (
+            <div className="p-6 rounded border" style={{ backgroundColor: '#f0fdf4', borderColor: '#4CAF50' }}>
+              <p className="font-semibold text-gray-900">No classes yet.</p>
+              <p className="text-sm text-gray-600 mt-1">Create a class to generate a code students can use to join.</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border p-6" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
+              <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {classes.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedClassId(c.id)}
+                      className="px-4 py-2 rounded-full font-semibold transition border"
+                      style={{
+                        backgroundColor: selectedClassId === c.id ? '#E8F5E9' : 'white',
+                        borderColor: selectedClassId === c.id ? '#4CAF50' : '#e5e7eb',
+                        color: selectedClassId === c.id ? '#2e7d32' : '#374151',
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">Selected class code</div>
+                  <div className="text-2xl font-black" style={{ color: '#4CAF50', letterSpacing: '0.12em' }}>
+                    {classes.find((c) => c.id === selectedClassId)?.code || '—'}
+                  </div>
+                  <div className="text-xs text-gray-500">Students join using this code on the Lesson page.</div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="font-bold text-lg mb-3" style={{ color: '#1e2832' }}>
+                  👥 Enrolled students
+                </h3>
+                {studentsError && (
+                  <div className="p-4 rounded border mb-3" style={{ backgroundColor: '#ffebee', borderColor: '#ef5350', color: '#c62828' }}>
+                    {studentsError}
+                  </div>
+                )}
+                {studentsLoading ? (
+                  <div className="p-4 rounded border" style={{ backgroundColor: 'white', borderColor: '#e5e7eb' }}>
+                    Loading students...
+                  </div>
+                ) : enrolledStudents.length === 0 ? (
+                  <div className="p-4 rounded border" style={{ backgroundColor: 'white', borderColor: '#e5e7eb' }}>
+                    No students enrolled yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border" style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}>
+                    <table className="w-full min-w-[640px]">
+                      <thead style={{ backgroundColor: '#f3f4f6' }}>
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Student</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {enrolledStudents.map((s) => (
+                          <tr key={s.id} className="border-t" style={{ borderBottomColor: '#e5e7eb' }}>
+                            <td className="px-6 py-4 font-semibold text-gray-900">{s.full_name || s.id}</td>
+                            <td className="px-6 py-4 text-gray-700">{s.email || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* ========== OVERVIEW CARDS ========== */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {[

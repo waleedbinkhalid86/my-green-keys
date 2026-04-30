@@ -152,6 +152,12 @@ export default function LessonPage() {
   const [ecoSubmitting, setEcoSubmitting] = useState(false);
   const [ecoMessage, setEcoMessage] = useState<string>("");
   const [ecoError, setEcoError] = useState<string>("");
+  const [showJoinClassModal, setShowJoinClassModal] = useState(false);
+  const [classCode, setClassCode] = useState("");
+  const [joinClassLoading, setJoinClassLoading] = useState(false);
+  const [joinClassError, setJoinClassError] = useState("");
+  const [joinClassSuccess, setJoinClassSuccess] = useState("");
+  const [currentClass, setCurrentClass] = useState<{ id: string; name: string; code: string } | null>(null);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -160,6 +166,43 @@ export default function LessonPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const shakeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const messageTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const loadCurrentClass = async () => {
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setCurrentClass(null);
+        return;
+      }
+
+      const { data: enrollment, error: enrollError } = await supabase
+        .from("class_enrollments")
+        .select("class_id")
+        .eq("student_id", userData.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (enrollError) throw enrollError;
+      const classId = (enrollment as { class_id?: string } | null)?.class_id;
+      if (!classId) {
+        setCurrentClass(null);
+        return;
+      }
+
+      const { data: cls, error: clsError } = await supabase
+        .from("classes")
+        .select("id, name, code")
+        .eq("id", classId)
+        .single();
+      if (clsError) throw clsError;
+      setCurrentClass(cls as { id: string; name: string; code: string });
+    } catch {
+      // Non-blocking — lesson should still work even if class lookup fails.
+      setCurrentClass(null);
+    }
+  };
 
   useEffect(() => {
     if (!ecoFile) {
@@ -190,6 +233,10 @@ export default function LessonPage() {
     if (savedLessonId) {
       setCurrentLessonId(parseInt(savedLessonId));
     }
+  }, []);
+
+  useEffect(() => {
+    void loadCurrentClass();
   }, []);
 
   // Save current lesson to localStorage
@@ -425,6 +472,51 @@ export default function LessonPage() {
     }
   };
 
+  const handleJoinClass = async () => {
+    setJoinClassError("");
+    setJoinClassSuccess("");
+    setJoinClassLoading(true);
+    try {
+      const code = classCode.trim().toUpperCase();
+      if (!code) {
+        setJoinClassError("Please enter a class code.");
+        return;
+      }
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setJoinClassError("You must be logged in to join a class.");
+        return;
+      }
+
+      const { data: cls, error: clsError } = await supabase
+        .from("classes")
+        .select("id, name, code")
+        .eq("code", code)
+        .single();
+      if (clsError) throw clsError;
+
+      const classId = (cls as { id: string }).id;
+      const { error: enrollError } = await supabase
+        .from("class_enrollments")
+        .upsert(
+          { class_id: classId, student_id: userData.user.id },
+          { onConflict: "class_id,student_id" }
+        );
+      if (enrollError) throw enrollError;
+
+      setJoinClassSuccess(`Joined class: ${(cls as { name?: string }).name || code}`);
+      setShowJoinClassModal(false);
+      setClassCode("");
+      await loadCurrentClass();
+    } catch (err) {
+      setJoinClassError(err instanceof Error ? err.message : "Failed to join class.");
+    } finally {
+      setJoinClassLoading(false);
+    }
+  };
+
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
   const lessonProgress = ((currentLessonId - 1) / 100) * 100;
 
@@ -555,6 +647,108 @@ export default function LessonPage() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+      {/* JOIN CLASS MODAL */}
+      {showJoinClassModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1004,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: 24,
+              borderRadius: 16,
+              width: "min(520px, 92vw)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: "22px", fontWeight: 900, color: "#2c3e50" }}>Join Class</div>
+                <div style={{ fontSize: "13px", color: "#666", marginTop: 4 }}>
+                  Enter your 6-character class code (example: GRN42X).
+                </div>
+              </div>
+              <button
+                onClick={() => setShowJoinClassModal(false)}
+                style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {joinClassError && (
+              <div style={{ background: "#ffebee", border: "1px solid #ef5350", color: "#c62828", padding: "10px 12px", borderRadius: 12, marginBottom: 12, fontSize: "13px", fontWeight: 700 }}>
+                {joinClassError}
+              </div>
+            )}
+
+            <input
+              value={classCode}
+              onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+              placeholder="GRN42X"
+              maxLength={6}
+              disabled={joinClassLoading}
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                border: "2px solid #e0e0e0",
+                borderRadius: 12,
+                fontSize: "18px",
+                letterSpacing: "0.12em",
+                fontWeight: 900,
+                color: "#2c3e50",
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+              <button
+                type="button"
+                onClick={() => setShowJoinClassModal(false)}
+                disabled={joinClassLoading}
+                style={{
+                  flex: 1,
+                  padding: "12px 14px",
+                  background: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 12,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleJoinClass()}
+                disabled={joinClassLoading}
+                style={{
+                  flex: 1,
+                  padding: "12px 14px",
+                  background: joinClassLoading ? "#bbb" : "#4CAF50",
+                  border: "none",
+                  borderRadius: 12,
+                  fontWeight: 900,
+                  color: "white",
+                  cursor: joinClassLoading ? "not-allowed" : "pointer",
+                }}
+              >
+                {joinClassLoading ? "Joining..." : "Join"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TOP NAV BAR */}
       <nav style={{
         background: "#2c3e50",
@@ -671,6 +865,36 @@ export default function LessonPage() {
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button
+            onClick={() => {
+              setJoinClassError("");
+              setJoinClassSuccess("");
+              setShowJoinClassModal(true);
+            }}
+            style={{
+              background: "white",
+              border: "2px solid #4CAF50",
+              color: "#4CAF50",
+              padding: "6px 12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              const target = e.target as HTMLButtonElement;
+              target.style.background = "#4CAF50";
+              target.style.color = "white";
+            }}
+            onMouseOut={(e) => {
+              const target = e.target as HTMLButtonElement;
+              target.style.background = "white";
+              target.style.color = "#4CAF50";
+            }}
+          >
+            🏫 Join Class
+          </button>
+          <button
             onClick={() => setShowLessonMap(true)}
             style={{
               background: "white",
@@ -720,6 +944,18 @@ export default function LessonPage() {
           </button>
         </div>
       </div>
+
+      {joinClassSuccess && (
+        <div style={{ background: "#E8F5E9", borderBottom: "1px solid #4CAF50", padding: "10px 24px", color: "#2e7d32", fontWeight: 800 }}>
+          {joinClassSuccess}
+        </div>
+      )}
+
+      {currentClass && (
+        <div style={{ background: "white", borderBottom: "1px solid #e0e0e0", padding: "10px 24px", color: "#374151", fontWeight: 700 }}>
+          Joined class: <span style={{ color: "#4CAF50" }}>{currentClass.name}</span> <span style={{ color: "#999" }}>({currentClass.code})</span>
+        </div>
+      )}
 
       {/* ECO SCENE STRIP */}
       <div style={{

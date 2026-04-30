@@ -35,6 +35,8 @@ const LogoutIcon = () => (
 interface Child {
   id: string;
   name: string;
+  username: string;
+  age: number;
   gender: "boy" | "girl";
   avatar: string;
   lessonsCompleted: number;
@@ -66,48 +68,53 @@ interface PendingPhoto {
   pointsAwarded: number;
 }
 
-const SAMPLE_CHILDREN: Child[] = [
-  {
-    id: "1",
-    name: "Sarah",
-    gender: "girl",
-    avatar: "👧",
-    lessonsCompleted: 24,
-    avgWpm: 32,
-    accuracy: 94,
-    ecoPhotos: 3,
-    currentStreak: 5,
-    badges: ["🌱", "⭐", "🔥"],
-    wpmData: [18, 22, 25, 28, 30, 31, 32],
-    nextMilestone: "5 more lessons to unlock Eco Champion badge",
-    ecoActions: [
-      { type: "Watering plants 💧", date: "2024-04-25", approved: true },
-      { type: "Beach cleanup 🏖️", date: "2024-04-26", approved: true },
-      { type: "Planting tree 🌳", date: "2024-04-27", approved: false },
-    ]
-  },
-  {
-    id: "2",
-    name: "Omar",
-    gender: "boy",
-    avatar: "👦",
-    lessonsCompleted: 18,
-    avgWpm: 28,
-    accuracy: 91,
-    ecoPhotos: 2,
-    currentStreak: 3,
-    badges: ["🌱", "⭐"],
-    wpmData: [15, 18, 20, 22, 24, 26, 28],
-    nextMilestone: "8 more lessons to unlock Speed Champion badge",
-    ecoActions: [
-      { type: "Recycling 🔄", date: "2024-04-24", approved: true },
-      { type: "Composting 🥬", date: "2024-04-27", approved: false },
-    ]
-  }
-];
+type ChildRow = {
+  id: string;
+  full_name: string | null;
+  age: number | null;
+  gender: "boy" | "girl" | null;
+  username: string | null;
+};
+
+function toChildDashboard(row: ChildRow): Child {
+  const gender = row.gender ?? "boy";
+  const name = row.full_name?.trim() || "Child";
+  const username = row.username?.trim() || "";
+  const age = row.age ?? 0;
+  return {
+    id: row.id,
+    name,
+    username,
+    age,
+    gender,
+    avatar: gender === "girl" ? "👧" : "👦",
+    lessonsCompleted: 0,
+    avgWpm: 0,
+    accuracy: 0,
+    ecoPhotos: 0,
+    currentStreak: 0,
+    badges: [],
+    wpmData: [],
+    nextMilestone: "Complete lessons to unlock badges",
+    ecoActions: [],
+  };
+}
 
 export default function ParentDashboard() {
-  const [selectedChildId, setSelectedChildId] = useState("1");
+  const [children, setChildren] = useState<Child[]>([]);
+  const [childrenLoading, setChildrenLoading] = useState(true);
+  const [childrenError, setChildrenError] = useState("");
+  const [selectedChildId, setSelectedChildId] = useState<string>("");
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [addChildLoading, setAddChildLoading] = useState(false);
+  const [addChildError, setAddChildError] = useState("");
+  const [childForm, setChildForm] = useState({
+    name: "",
+    username: "",
+    age: "8",
+    gender: "boy" as "boy" | "girl",
+  });
+
   const [lessonText, setLessonText] = useState("");
   const [lessonName, setLessonName] = useState("");
   const [lessonDifficulty, setLessonDifficulty] = useState("Beginner");
@@ -119,7 +126,7 @@ export default function ParentDashboard() {
   const [ecoLoading, setEcoLoading] = useState<boolean>(true);
   const [ecoApprovingId, setEcoApprovingId] = useState<string | null>(null);
 
-  const selectedChild = SAMPLE_CHILDREN.find(c => c.id === selectedChildId) || SAMPLE_CHILDREN[0];
+  const selectedChild = children.find((c) => c.id === selectedChildId) || null;
 
   const actionLabel = useMemo(() => {
     const map: Record<string, string> = {
@@ -167,6 +174,98 @@ export default function ParentDashboard() {
 
     void loadPending();
   }, []);
+
+  const loadChildren = async () => {
+    setChildrenLoading(true);
+    setChildrenError("");
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setChildren([]);
+        setSelectedChildId("");
+        setChildrenError("You must be logged in to view your children.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("children")
+        .select("id, full_name, age, gender, username")
+        .eq("parent_id", userData.user.id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      const mapped = (data as ChildRow[] | null)?.map(toChildDashboard) ?? [];
+      setChildren(mapped);
+      if (mapped.length > 0) {
+        setSelectedChildId((prev) => prev || mapped[0].id);
+      } else {
+        setSelectedChildId("");
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load children.";
+      setChildrenError(message);
+      setChildren([]);
+      setSelectedChildId("");
+    } finally {
+      setChildrenLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadChildren();
+  }, []);
+
+  const handleAddChild = async () => {
+    setAddChildError("");
+    setAddChildLoading(true);
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        setAddChildError("You must be logged in to add a child.");
+        return;
+      }
+
+      const age = Number(childForm.age);
+      if (!childForm.name.trim()) {
+        setAddChildError("Child name is required.");
+        return;
+      }
+      if (!Number.isFinite(age) || age < 3 || age > 18) {
+        setAddChildError("Please enter a valid age.");
+        return;
+      }
+      if (!childForm.username.trim()) {
+        setAddChildError("Username is required.");
+        return;
+      }
+
+      const { error } = await supabase.from("children").insert([
+        {
+          parent_id: userData.user.id,
+          full_name: childForm.name.trim(),
+          age,
+          gender: childForm.gender,
+          username: childForm.username.trim(),
+        },
+      ]);
+      if (error) throw error;
+
+      setShowAddChildModal(false);
+      setChildForm({ name: "", username: "", age: "8", gender: "boy" });
+      await loadChildren();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add child.";
+      setAddChildError(message);
+    } finally {
+      setAddChildLoading(false);
+    }
+  };
 
   const handleSaveLesson = () => {
     if (lessonName && lessonText) {
@@ -319,53 +418,357 @@ export default function ParentDashboard() {
       {/* Main Content */}
       <div style={{ paddingTop: 80, paddingBottom: 40 }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px" }}>
+          {/* Add Child Modal */}
+          {showAddChildModal && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.55)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 999,
+                padding: 16,
+              }}
+            >
+              <div
+                style={{
+                  background: "white",
+                  width: "min(560px, 95vw)",
+                  borderRadius: 16,
+                  padding: 24,
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "#2c3e50" }}>
+                      Add Child
+                    </div>
+                    <div style={{ fontSize: "0.9rem", color: "#666", marginTop: 4 }}>
+                      Create a child profile linked to your parent account.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddChildModal(false)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      fontSize: 22,
+                      cursor: "pointer",
+                      color: "#999",
+                    }}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {addChildError && (
+                  <div
+                    style={{
+                      background: "#ffebee",
+                      border: "1px solid #ef5350",
+                      color: "#c62828",
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      marginBottom: 12,
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {addChildError}
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div>
+                    <label style={{ display: "block", fontWeight: 700, color: "#2c3e50", marginBottom: 6 }}>
+                      Child name
+                    </label>
+                    <input
+                      value={childForm.name}
+                      onChange={(e) => setChildForm((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="e.g. Sarah"
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 10,
+                        fontSize: "1rem",
+                      }}
+                      disabled={addChildLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontWeight: 700, color: "#2c3e50", marginBottom: 6 }}>
+                      Username
+                    </label>
+                    <input
+                      value={childForm.username}
+                      onChange={(e) => setChildForm((p) => ({ ...p, username: e.target.value }))}
+                      placeholder="e.g. sarah10"
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 10,
+                        fontSize: "1rem",
+                      }}
+                      disabled={addChildLoading}
+                    />
+                    <div style={{ fontSize: "0.8rem", color: "#999", marginTop: 6 }}>
+                      This is used for linking and identifying the child.
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ display: "block", fontWeight: 700, color: "#2c3e50", marginBottom: 6 }}>
+                        Age
+                      </label>
+                      <input
+                        inputMode="numeric"
+                        value={childForm.age}
+                        onChange={(e) => setChildForm((p) => ({ ...p, age: e.target.value }))}
+                        style={{
+                          width: "100%",
+                          padding: "12px 14px",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 10,
+                          fontSize: "1rem",
+                        }}
+                        disabled={addChildLoading}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontWeight: 700, color: "#2c3e50", marginBottom: 6 }}>
+                        Gender
+                      </label>
+                      <select
+                        value={childForm.gender}
+                        onChange={(e) =>
+                          setChildForm((p) => ({
+                            ...p,
+                            gender: e.target.value as "boy" | "girl",
+                          }))
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "12px 14px",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 10,
+                          fontSize: "1rem",
+                        }}
+                        disabled={addChildLoading}
+                      >
+                        <option value="boy">Boy</option>
+                        <option value="girl">Girl</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddChildModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      border: "1px solid #e0e0e0",
+                      background: "white",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                    disabled={addChildLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleAddChild()}
+                    style={{
+                      flex: 1,
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: "#4CAF50",
+                      color: "white",
+                      fontWeight: 900,
+                      cursor: addChildLoading ? "not-allowed" : "pointer",
+                      opacity: addChildLoading ? 0.7 : 1,
+                    }}
+                    disabled={addChildLoading}
+                  >
+                    {addChildLoading ? "Adding..." : "Add Child"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {childrenError && (
+            <div
+              style={{
+                background: "#ffebee",
+                border: "1px solid #ef5350",
+                color: "#c62828",
+                padding: "12px 16px",
+                borderRadius: 12,
+                marginBottom: 16,
+                fontSize: "0.95rem",
+                fontWeight: 700,
+              }}
+            >
+              {childrenError}
+            </div>
+          )}
+
+          {childrenLoading ? (
+            <div
+              style={{
+                background: "#f5f7fa",
+                padding: 24,
+                borderRadius: 12,
+                border: "1px solid #e0e0e0",
+                marginBottom: 24,
+              }}
+            >
+              Loading children...
+            </div>
+          ) : children.length === 0 ? (
+            <div
+              style={{
+                background: "#E8F5E9",
+                border: "2px solid #4CAF50",
+                padding: 20,
+                borderRadius: 12,
+                marginBottom: 24,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 900, color: "#2c3e50", marginBottom: 6 }}>
+                  Add your first child
+                </div>
+                <div style={{ color: "#666" }}>
+                  Create a linked child profile to track progress.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddChildModal(true)}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#4CAF50",
+                  color: "white",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                + Add Child
+              </button>
+            </div>
+          ) : null}
+
           {/* OVERVIEW CARDS */}
           <section style={{ marginBottom: 60 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
               <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
                 <div style={{ fontSize: "2rem", marginBottom: 8 }}>📚</div>
                 <div style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Total lessons completed</div>
-                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild.lessonsCompleted}</div>
+                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild?.lessonsCompleted ?? 0}</div>
               </div>
               <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
                 <div style={{ fontSize: "2rem", marginBottom: 8 }}>⚡</div>
                 <div style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Average WPM</div>
-                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild.avgWpm}</div>
+                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild?.avgWpm ?? 0}</div>
               </div>
               <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
                 <div style={{ fontSize: "2rem", marginBottom: 8 }}>🎯</div>
                 <div style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Accuracy</div>
-                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#4CAF50" }}>{selectedChild.accuracy}%</div>
+                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#4CAF50" }}>{selectedChild?.accuracy ?? 0}%</div>
               </div>
               <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
                 <div style={{ fontSize: "2rem", marginBottom: 8 }}>🌿</div>
                 <div style={{ color: "#999", fontSize: "0.9rem", marginBottom: 8 }}>Eco actions</div>
-                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild.ecoPhotos}</div>
+                <div style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50" }}>{selectedChild?.ecoPhotos ?? 0}</div>
               </div>
             </div>
           </section>
 
           {/* CHILD SELECTOR */}
-          {SAMPLE_CHILDREN.length > 1 && (
+          {children.length > 0 && (
             <section style={{ marginBottom: 60 }}>
-              <div style={{ display: "flex", gap: 16, borderBottom: "2px solid #e0e0e0", paddingBottom: 16 }}>
-                {SAMPLE_CHILDREN.map(child => (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#2c3e50" }}>
+                  Children
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddChildModal(true)}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#4CAF50",
+                    color: "white",
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  + Add Child
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 12, borderBottom: "2px solid #e0e0e0", paddingBottom: 16, overflowX: "auto" }}>
+                {children.map((child) => (
                   <button
                     key={child.id}
+                    type="button"
                     onClick={() => setSelectedChildId(child.id)}
                     style={{
                       background: selectedChildId === child.id ? "#E8F5E9" : "transparent",
                       border: selectedChildId === child.id ? "2px solid #4CAF50" : "1px solid #e0e0e0",
                       color: selectedChildId === child.id ? "#4CAF50" : "#666",
-                      padding: "12px 20px",
-                      borderRadius: 8,
-                      fontSize: "1rem",
-                      fontWeight: 600,
+                      padding: "12px 16px",
+                      borderRadius: 999,
+                      fontSize: "0.95rem",
+                      fontWeight: 800,
                       cursor: "pointer",
                       transition: "all 0.2s",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {child.avatar} {child.name}
+                    <span>{child.avatar}</span>
+                    <span>{child.name}</span>
+                    {child.username && (
+                      <span style={{ color: selectedChildId === child.id ? "#2e7d32" : "#999", fontWeight: 700 }}>
+                        @{child.username}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -373,6 +776,7 @@ export default function ParentDashboard() {
           )}
 
           {/* CHILD PROGRESS SECTION */}
+          {selectedChild && (
           <section style={{ marginBottom: 60 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
               <div style={{ fontSize: "3rem" }}>{selectedChild.avatar}</div>
@@ -387,13 +791,13 @@ export default function ParentDashboard() {
               <div style={{ background: "#f5f7fa", padding: 24, borderRadius: 12, border: "1px solid #e0e0e0" }}>
                 <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2c3e50", marginBottom: 16 }}>WPM Progress (Last 7 Days)</h3>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 150 }}>
-                  {selectedChild.wpmData.map((wpm, i) => (
+                  {(selectedChild.wpmData.length ? selectedChild.wpmData : [0,0,0,0,0,0,0]).map((wpm, i) => (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <div style={{ fontSize: "0.8rem", color: "#999", marginBottom: 4 }}>{wpm}</div>
                       <div
                         style={{
                           width: "100%",
-                          height: `${(wpm / Math.max(...selectedChild.wpmData)) * 100}px`,
+                          height: `${(wpm / Math.max(...(selectedChild.wpmData.length ? selectedChild.wpmData : [1]))) * 100}px`,
                           background: "#4CAF50",
                           borderRadius: "4px 4px 0 0",
                           transition: "height 0.3s ease",
@@ -442,6 +846,7 @@ export default function ParentDashboard() {
               </div>
             </div>
           </section>
+          )}
 
           {/* CUSTOM LESSON CREATOR */}
           <section style={{ marginBottom: 60 }}>
@@ -522,8 +927,9 @@ export default function ParentDashboard() {
                       fontSize: "1rem",
                       fontFamily: "Poppins, sans-serif",
                     }}
+                    onChange={(e) => setSelectedChildId(e.target.value)}
                   >
-                    {SAMPLE_CHILDREN.map(child => (
+                    {children.map(child => (
                       <option key={child.id} value={child.id}>{child.name}</option>
                     ))}
                   </select>
@@ -566,7 +972,7 @@ export default function ParentDashboard() {
                       <div>
                         <div style={{ fontWeight: 700, color: "#2c3e50", marginBottom: 4 }}>{lesson.name}</div>
                         <div style={{ fontSize: "0.85rem", color: "#999" }}>
-                          {lesson.difficulty} • Assigned to {SAMPLE_CHILDREN.find(c => c.id === lesson.assignedTo)?.name} • {lesson.createdAt}
+                        {lesson.difficulty} • Assigned to {children.find(c => c.id === lesson.assignedTo)?.name || "Unknown"} • {lesson.createdAt}
                         </div>
                       </div>
                       <button
