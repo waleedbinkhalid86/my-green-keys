@@ -3,11 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabasePublicEnv } from "./env";
 
 export async function updateSession(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  // Rebuild response when cookies refresh so request + response stay in sync (Supabase SSR pattern).
+  let response = NextResponse.next({ request });
 
   const { supabaseUrl, supabaseAnonKey } = getSupabasePublicEnv();
   const supabase = createServerClient(
@@ -19,15 +16,19 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
   );
 
-  // getUser() triggers session refresh and cookie updates when needed.
+  // getUser() validates the JWT and refreshes the session; setAll writes cookies to request + response.
   const { data } = await supabase.auth.getUser();
 
   return { response, user: data.user };
