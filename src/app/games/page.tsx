@@ -71,8 +71,9 @@ const GAMES: GameCardDef[] = [
 ];
 
 function hasPaidPlan(planType: string | null | undefined): boolean {
-  if (!planType) return false;
-  return planType !== "free";
+  const p = (planType ?? "").toLowerCase().trim();
+  if (!p) return false;
+  return p === "family" || p === "school_starter" || p === "school_growth";
 }
 
 export default function GamesHubPage() {
@@ -116,15 +117,26 @@ export default function GamesHubPage() {
         ).size;
         setCompletedLessons(uniqueDone);
 
-        const { data: sub } = await supabase
+        const { data: sub, error: subErr } = await supabase
           .from("subscriptions")
           .select("plan_type, status")
           .eq("user_id", userData.user.id)
+          .order("started_at", { ascending: false })
+          .limit(1)
           .maybeSingle();
 
-        const active = (sub as { status?: string } | null)?.status === "active";
-        const plan = (sub as { plan_type?: string } | null)?.plan_type ?? null;
-        setPaidPlan(active && hasPaidPlan(plan));
+        const subStatusRaw = (sub as { status?: string } | null)?.status ?? null;
+        const subPlanRaw = (sub as { plan_type?: string } | null)?.plan_type ?? null;
+        const active = (subStatusRaw ?? "").toLowerCase().trim() === "active";
+        const planOk = hasPaidPlan(subPlanRaw);
+        console.log("[GamesHub] subscription row", {
+          userId: userData.user.id,
+          plan_type: subPlanRaw,
+          status: subStatusRaw,
+          error: subErr?.message ?? null,
+          paidPlanComputed: active && planOk,
+        });
+        setPaidPlan(active && planOk);
 
         const { data: gardenRow, error: gardenErr } = await supabase
           .from("eco_garden")

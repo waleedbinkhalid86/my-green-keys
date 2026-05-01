@@ -239,3 +239,7 @@ CREATE POLICY "Students can insert their own eco garden" ON eco_garden
 
 CREATE POLICY "Students can update their own eco garden" ON eco_garden
   FOR UPDATE USING (auth.uid() = student_id);
+
+-- Subscriptions: users can view their own subscription row
+CREATE POLICY "Users can view their own subscription" ON subscriptions
+  FOR SELECT USING (auth.uid() = user_id);
