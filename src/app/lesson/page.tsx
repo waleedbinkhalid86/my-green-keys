@@ -101,8 +101,6 @@ function mixHexWithWhite(hex: string, whiteAmount: number): string {
 const EDCLUB_KB_GAP = 4;
 const EDCLUB_KB_KEY = 42;
 const EDCLUB_KB_RX = 6;
-const EDCLUB_HAND_STROKE = "#555555";
-const EDCLUB_HAND_STROKE_WIDTH = 2.5;
 const EDCLUB_KEY_BORDER = "#D0D7DE";
 const EDCLUB_KEY_LABEL = "#333333";
 const EDCLUB_KEY_SHADOW = "#B0B7BE";
@@ -252,61 +250,12 @@ function fingerTypeFromHighlight(key: string | null): string {
   return FINGER_MAP[key.toLowerCase()] ?? "";
 }
 
-/** Closed paths: palm + fingers; fingertips land on A S D F / space (left). */
-function realisticLeftHandPaths(
-  A: { cx: number; cy: number },
-  S: { cx: number; cy: number },
-  D: { cx: number; cy: number },
-  F: { cx: number; cy: number },
-  Sp: { cx: number; cy: number },
-  spaceY: number,
-): { palm: string; lpinky: string; lring: string; lmiddle: string; lindex: string; thumb: string } {
-  const palmCx = (A.cx + F.cx) / 2;
-  const h = 54;
-  const palmTop = spaceY - h - 6;
-  const w = 80;
-  const rx = 14;
-  const x = palmCx - w / 2;
-  const y = palmTop;
-  const palm = `M ${x + rx} ${y} H ${x + w - rx} Q ${x + w} ${y} ${x + w} ${y + rx} V ${y + h - rx} Q ${x + w} ${y + h} ${x + w - rx} ${y + h} H ${x + rx} Q ${x} ${y + h} ${x} ${y + h - rx} V ${y + rx} Q ${x} ${y} ${x + rx} ${y} Z`;
-
-  const mid = (tipY: number) => (tipY + y) / 2;
-  const lpinky = `M ${A.cx - 2} ${A.cy - 5} L ${A.cx - 10} ${A.cy + 4} Q ${x + 4} ${mid(A.cy)} ${x + 8} ${y + 5} L ${x + 20} ${y + 8} Q ${A.cx + 6} ${mid(A.cy)} ${A.cx + 3} ${A.cy - 4} Z`;
-  const lring = `M ${S.cx - 2} ${S.cy - 7} L ${S.cx - 11} ${S.cy + 5} Q ${x + 22} ${mid(S.cy)} ${x + 28} ${y + 4} L ${x + 40} ${y + 7} Q ${S.cx + 7} ${mid(S.cy)} ${S.cx + 3} ${S.cy - 6} Z`;
-  const lmiddle = `M ${D.cx} ${D.cy - 9} L ${D.cx - 11} ${D.cy + 6} Q ${x + 38} ${mid(D.cy)} ${x + 46} ${y + 3} L ${x + 58} ${y + 6} Q ${D.cx + 9} ${mid(D.cy)} ${D.cx + 4} ${D.cy - 8} Z`;
-  const lindex = `M ${F.cx + 1} ${F.cy - 7} L ${F.cx - 11} ${F.cy + 6} Q ${x + 54} ${mid(F.cy)} ${x + 66} ${y + 4} L ${x + 76} ${y + 7} Q ${F.cx + 10} ${mid(F.cy)} ${F.cx + 5} ${F.cy - 6} Z`;
-  const thumb = `M ${x + w - 6} ${y + h * 0.32} Q ${x + w + 20} ${(y + Sp.cy) / 2} ${Sp.cx - 48} ${Sp.cy - 4} L ${Sp.cx - 28} ${Sp.cy + 5} Q ${x + w + 4} ${y + h * 0.62} ${x + w - 14} ${y + h * 0.48} Z`;
-
-  return { palm, lpinky, lring, lmiddle, lindex, thumb };
-}
-
-/** Mirror layout: fingertips on J K L ; / space (right). */
-function realisticRightHandPaths(
-  J: { cx: number; cy: number },
-  K: { cx: number; cy: number },
-  L: { cx: number; cy: number },
-  semi: { cx: number; cy: number },
-  Sp: { cx: number; cy: number },
-  spaceY: number,
-): { palm: string; rindex: string; rmiddle: string; rring: string; rpinky: string; thumb: string } {
-  const palmCx = (J.cx + semi.cx) / 2;
-  const h = 54;
-  const palmTop = spaceY - h - 6;
-  const w = 80;
-  const rx = 14;
-  const x = palmCx - w / 2;
-  const y = palmTop;
-  const palm = `M ${x + rx} ${y} H ${x + w - rx} Q ${x + w} ${y} ${x + w} ${y + rx} V ${y + h - rx} Q ${x + w} ${y + h} ${x + w - rx} ${y + h} H ${x + rx} Q ${x} ${y + h} ${x} ${y + h - rx} V ${y + rx} Q ${x} ${y} ${x + rx} ${y} Z`;
-
-  const midR = (tipY: number) => (tipY + y) / 2;
-  const rindex = `M ${J.cx - 1} ${J.cy - 7} L ${J.cx - 11} ${J.cy + 6} Q ${x + 10} ${midR(J.cy)} ${x + 18} ${y + 4} L ${x + 30} ${y + 7} Q ${J.cx + 8} ${midR(J.cy)} ${J.cx + 3} ${J.cy - 6} Z`;
-  const rmiddle = `M ${K.cx} ${K.cy - 9} L ${K.cx - 11} ${K.cy + 6} Q ${x + 28} ${midR(K.cy)} ${x + 38} ${y + 3} L ${x + 50} ${y + 6} Q ${K.cx + 10} ${midR(K.cy)} ${K.cx + 5} ${K.cy - 8} Z`;
-  const rring = `M ${L.cx + 1} ${L.cy - 7} L ${L.cx - 11} ${L.cy + 6} Q ${x + 46} ${midR(L.cy)} ${x + 56} ${y + 4} L ${x + 64} ${y + 7} Q ${L.cx + 9} ${midR(L.cy)} ${L.cx + 4} ${L.cy - 6} Z`;
-  const rpinky = `M ${semi.cx + 2} ${semi.cy - 5} L ${semi.cx + 11} ${semi.cy + 5} Q ${x + w - 8} ${midR(semi.cy)} ${x + w - 10} ${y + 5} L ${x + w - 24} ${y + 8} Q ${semi.cx - 6} ${midR(semi.cy)} ${semi.cx - 3} ${semi.cy - 4} Z`;
-  const thumb = `M ${x + 6} ${y + h * 0.32} Q ${x - 20} ${(y + Sp.cy) / 2} ${Sp.cx + 48} ${Sp.cy - 4} L ${Sp.cx + 28} ${Sp.cy + 5} Q ${x - 4} ${y + h * 0.62} ${x + 14} ${y + h * 0.48} Z`;
-
-  return { palm, rindex, rmiddle, rring, rpinky, thumb };
-}
+/** Simple hand layout: palm + vertical ellipses aligned to home key centers. */
+const SIMPLE_PALM_W = 140;
+const SIMPLE_PALM_H = 50;
+const SIMPLE_PALM_RX = 20;
+const SIMPLE_HAND_STROKE = "#888888";
+const SIMPLE_HAND_STROKE_W = 2;
 
 function EdclubKeyboardHandsSection({
   highlightKey,
@@ -338,68 +287,83 @@ function EdclubKeyboardHandsSection({
   const L = geom.centers.l;
   const semi = geom.centers[";"];
   const Sp = geom.centers[" "];
-  const homeRowCy = geom.homeRowCy;
 
   if (!A || !S || !D || !F || !J || !K || !L || !semi || !Sp) return null;
 
-  const leftPaths = realisticLeftHandPaths(A, S, D, F, Sp, geom.spaceY);
-  const rightPaths = realisticRightHandPaths(J, K, L, semi, Sp, geom.spaceY);
+  const leftPalmCx = (A.cx + F.cx) / 2;
+  const rightPalmCx = (J.cx + semi.cx) / 2;
+  const palmCy = geom.spaceY - SIMPLE_PALM_H / 2 - 8;
 
   const fingerGlow = (lit: boolean) =>
     lit
-      ? `drop-shadow(0 0 4px ${themeColor}) drop-shadow(0 0 12px ${themeColor}99) drop-shadow(0 0 20px ${themeColor}44)`
+      ? `drop-shadow(0 0 4px ${themeColor}) drop-shadow(0 0 10px ${themeColor}88)`
       : undefined;
 
-  const renderPalmOutline = (d: string, k: string) => (
-    <path
-      key={k}
-      d={d}
+  const handDropShadow = "drop-shadow(0 2px 4px rgba(0,0,0,0.14))";
+
+  const renderFingerEllipse = (fingerType: string, cx: number, cy: number, rx: number, ry: number) => {
+    const lit = fingerHi === fingerType;
+    return (
+      <ellipse
+        key={fingerType}
+        cx={cx}
+        cy={cy}
+        rx={rx}
+        ry={ry}
+        fill={lit ? themeColor : "none"}
+        fillOpacity={lit ? 0.4 : undefined}
+        stroke={lit ? themeColor : SIMPLE_HAND_STROKE}
+        strokeWidth={lit ? 2.5 : SIMPLE_HAND_STROKE_W}
+        style={{
+          filter: `${handDropShadow}${lit ? ` ${fingerGlow(true)}` : ""}`,
+          transition: "fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease",
+        }}
+      />
+    );
+  };
+
+  const renderThumbEllipse = (side: "left" | "right", cx: number, cy: number, rotateDeg: number) => {
+    const lit = fingerHi === "space";
+    return (
+      <ellipse
+        key={`thumb-${side}`}
+        cx={cx}
+        cy={cy}
+        rx={10}
+        ry={22}
+        transform={`rotate(${rotateDeg} ${cx} ${cy})`}
+        fill={lit ? themeColor : "none"}
+        fillOpacity={lit ? 0.4 : undefined}
+        stroke={lit ? themeColor : SIMPLE_HAND_STROKE}
+        strokeWidth={lit ? 2.5 : SIMPLE_HAND_STROKE_W}
+        style={{
+          filter: `${handDropShadow}${lit ? ` ${fingerGlow(true)}` : ""}`,
+          transition: "fill 0.15s ease, stroke 0.15s ease",
+        }}
+      />
+    );
+  };
+
+  const renderPalm = (side: "left" | "right", cx: number, cy: number) => (
+    <rect
+      key={`palm-${side}`}
+      x={cx - SIMPLE_PALM_W / 2}
+      y={cy - SIMPLE_PALM_H / 2}
+      width={SIMPLE_PALM_W}
+      height={SIMPLE_PALM_H}
+      rx={SIMPLE_PALM_RX}
+      ry={SIMPLE_PALM_RX}
       fill="none"
-      stroke={EDCLUB_HAND_STROKE}
-      strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
-      strokeLinejoin="round"
+      stroke={SIMPLE_HAND_STROKE}
+      strokeWidth={SIMPLE_HAND_STROKE_W}
+      style={{ filter: handDropShadow }}
     />
   );
 
-  const renderHandPart = (fingerType: string, d: string) => {
-    const lit = fingerHi === fingerType;
-    return (
-      <path
-        key={fingerType}
-        d={d}
-        fill={lit ? themeColor : "none"}
-        fillOpacity={lit ? 0.92 : undefined}
-        stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-        strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        style={{
-          filter: fingerGlow(lit),
-          transition: "fill 0.15s ease, stroke 0.15s ease",
-        }}
-      />
-    );
-  };
-
-  const renderThumbPath = (side: "left" | "right", d: string) => {
-    const lit = fingerHi === "space";
-    return (
-      <path
-        key={`thumb-${side}`}
-        d={d}
-        fill={lit ? themeColor : "none"}
-        fillOpacity={lit ? 0.92 : undefined}
-        stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-        strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        style={{
-          filter: fingerGlow(lit),
-          transition: "fill 0.15s ease, stroke 0.15s ease",
-        }}
-      />
-    );
-  };
+  const thumbLcx = (F.cx + Sp.cx) / 2 + Math.min(38, (Sp.cx - F.cx) * 0.22);
+  const thumbLcy = palmCy - 12;
+  const thumbRcx = (J.cx + Sp.cx) / 2 - Math.min(38, (Sp.cx - J.cx) * 0.22);
+  const thumbRcy = palmCy - 12;
 
   const pillLabel =
     highlightKey === null
@@ -573,20 +537,20 @@ function EdclubKeyboardHandsSection({
         })}
 
         <g style={{ pointerEvents: "none" }}>
-          {renderPalmOutline(leftPaths.palm, "palm-L")}
-          {renderHandPart("lpinky", leftPaths.lpinky)}
-          {renderHandPart("lring", leftPaths.lring)}
-          {renderHandPart("lmiddle", leftPaths.lmiddle)}
-          {renderHandPart("lindex", leftPaths.lindex)}
-          {renderThumbPath("left", leftPaths.thumb)}
+          {renderPalm("left", leftPalmCx, palmCy)}
+          {renderFingerEllipse("lpinky", A.cx, A.cy - 12, 10, 28)}
+          {renderFingerEllipse("lring", S.cx, S.cy - 10, 11, 32)}
+          {renderFingerEllipse("lmiddle", D.cx, D.cy - 8, 11, 34)}
+          {renderFingerEllipse("lindex", F.cx, F.cy - 10, 11, 32)}
+          {renderThumbEllipse("left", thumbLcx, thumbLcy, -30)}
         </g>
         <g style={{ pointerEvents: "none" }}>
-          {renderPalmOutline(rightPaths.palm, "palm-R")}
-          {renderHandPart("rindex", rightPaths.rindex)}
-          {renderHandPart("rmiddle", rightPaths.rmiddle)}
-          {renderHandPart("rring", rightPaths.rring)}
-          {renderHandPart("rpinky", rightPaths.rpinky)}
-          {renderThumbPath("right", rightPaths.thumb)}
+          {renderPalm("right", rightPalmCx, palmCy)}
+          {renderFingerEllipse("rindex", J.cx, J.cy - 10, 11, 32)}
+          {renderFingerEllipse("rmiddle", K.cx, K.cy - 8, 11, 34)}
+          {renderFingerEllipse("rring", L.cx, L.cy - 10, 11, 32)}
+          {renderFingerEllipse("rpinky", semi.cx, semi.cy - 12, 10, 28)}
+          {renderThumbEllipse("right", thumbRcx, thumbRcy, 30)}
         </g>
       </svg>
     </div>
