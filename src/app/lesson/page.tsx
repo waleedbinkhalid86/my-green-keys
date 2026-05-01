@@ -51,11 +51,61 @@ const KEYBOARD_LAYOUT = [
   { row: 3, keys: ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"] },
 ];
 
+/** Territory tint per finger zone (edclub-style warm left / cool right). */
+const TERRITORY_COLORS: Record<string, string> = {
+  lpinky: "#FFB3B3",
+  lring: "#FFDBB3",
+  lmiddle: "#FFF3B3",
+  lindex: "#B3FFD6",
+  rindex: "#B3D6FF",
+  rmiddle: "#C5B3FF",
+  rring: "#FFB3F0",
+  rpinky: "#B3FFFF",
+  space: "#E0E0E0",
+};
+
+const SPECIAL_KEY_ZONE: Record<string, string> = {
+  tab: "lpinky",
+  caps: "lpinky",
+  "shift-l": "lpinky",
+  bksp: "rpinky",
+  enter: "rpinky",
+  "shift-r": "rpinky",
+  space: "space",
+};
+
+function territoryZoneForKey(id: string, mapId: string | null): string {
+  if (mapId === " ") return "space";
+  if (mapId) {
+    const mapped = FINGER_MAP[mapId];
+    if (mapped) return mapped;
+    if (mapId === "g" || mapId === "b") return "lindex";
+    if (mapId === "h" || mapId === "n") return "rindex";
+  }
+  return SPECIAL_KEY_ZONE[id] ?? "lpinky";
+}
+
+function mixHexWithWhite(hex: string, whiteAmount: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const t = Math.min(1, Math.max(0, whiteAmount));
+  const nr = Math.round(r + (255 - r) * t);
+  const ng = Math.round(g + (255 - g) * t);
+  const nb = Math.round(b + (255 - b) * t);
+  const x = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${x(nr)}${x(ng)}${x(nb)}`;
+}
+
 const EDCLUB_KB_GAP = 8;
 const EDCLUB_KB_KEY = 52;
 const EDCLUB_KB_RX = 6;
-const EDCLUB_HAND_STROKE = "#8899AA";
+const EDCLUB_HAND_STROKE = "#9BA8B7";
 const EDCLUB_KB_TOP = 118;
+const EDCLUB_KEY_BORDER = "#D0D7DE";
+const EDCLUB_KEY_LABEL = "#4A5568";
+const EDCLUB_KEY_SHADOW = "#B0B7BE";
 
 type EdclubPlacedKey = {
   id: string;
@@ -65,6 +115,7 @@ type EdclubPlacedKey = {
   y: number;
   w: number;
   h: number;
+  zone: string;
 };
 
 type EdclubKbGeom = {
@@ -106,8 +157,13 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
     }, -EDCLUB_KB_GAP),
   );
 
+  const keyUnit = EDCLUB_KB_KEY + EDCLUB_KB_GAP;
+  /** Q / A / Z row stagger (key widths), like a physical keyboard */
+  const rowStagger = [0.5, 0.75, 1.25].map((m) => m * keyUnit);
+  const maxStagger = Math.max(...rowStagger);
+
   const spaceW = EDCLUB_KB_KEY * 6;
-  const vbWidth = Math.max(...rowWidths, spaceW) + 40;
+  const vbWidth = Math.max(...rowWidths, spaceW) + maxStagger * 2 + 48;
 
   const keyboardTop = EDCLUB_KB_TOP;
   const rowYs = [0, 1, 2].map((i) => keyboardTop + i * (EDCLUB_KB_KEY + EDCLUB_KB_GAP));
@@ -119,12 +175,13 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
 
   rows.forEach((row, ri) => {
     const rw = rowWidths[ri];
-    let x = (vbWidth - rw) / 2;
+    let x = (vbWidth - rw) / 2 + rowStagger[ri];
     const y = rowYs[ri];
     for (const item of row) {
       const w = item.kind === "special" ? EDCLUB_KB_KEY * item.mult : EDCLUB_KB_KEY;
       if (item.kind === "letter") {
         const letter = item.letter;
+        const zone = territoryZoneForKey(letter, letter);
         keys.push({
           id: letter,
           mapId: letter,
@@ -133,9 +190,11 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
           y,
           w,
           h: EDCLUB_KB_KEY,
+          zone,
         });
         centers[letter] = { cx: x + w / 2, cy: y + EDCLUB_KB_KEY / 2 };
       } else {
+        const zone = territoryZoneForKey(item.id, null);
         keys.push({
           id: item.id,
           mapId: null,
@@ -144,6 +203,7 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
           y,
           w,
           h: EDCLUB_KB_KEY,
+          zone,
         });
       }
       x += w + EDCLUB_KB_GAP;
@@ -159,6 +219,7 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
     y: spaceY,
     w: spaceW,
     h: EDCLUB_KB_KEY,
+    zone: "space",
   });
   centers[" "] = { cx: sx + spaceW / 2, cy: spaceY + EDCLUB_KB_KEY / 2 };
 
@@ -168,6 +229,27 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
 }
 
 const EDCLUB_KB_GEOM = buildEdclubKeyboardGeometry();
+
+/** First index where correction is needed, or length of correct prefix for next key. */
+function nextLessonKeyIndex(sentence: string, typed: string): number {
+  const n = Math.min(typed.length, sentence.length);
+  let i = 0;
+  while (i < n && typed[i] === sentence[i]) i++;
+  if (i < typed.length && typed[i] !== sentence[i]) return i;
+  return typed.length;
+}
+
+const FINGER_HAND_SIDE: Record<string, "left" | "right" | null> = {
+  lpinky: "left",
+  lring: "left",
+  lmiddle: "left",
+  lindex: "left",
+  rindex: "right",
+  rmiddle: "right",
+  rring: "right",
+  rpinky: "right",
+  space: null,
+};
 
 function normalizeHighlightKey(k: string | null): string | null {
   if (k === null) return null;
@@ -187,12 +269,14 @@ function EdclubKeyboardHandsSection({
   pressedVKey,
   themeColor,
   fontClassName,
+  showInstruction,
 }: {
   highlightKey: string | null;
   shakeKey: string | null;
   pressedVKey: string | null;
   themeColor: string;
   fontClassName: string;
+  showInstruction: boolean;
 }) {
   const geom = EDCLUB_KB_GEOM;
   const hk = normalizeHighlightKey(highlightKey);
@@ -265,8 +349,9 @@ function EdclubKeyboardHandsSection({
           d={d}
           fill="none"
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
+          strokeLinejoin="round"
           style={{ filter: fingerGlow(lit) }}
         />
         <ellipse
@@ -276,7 +361,7 @@ function EdclubKeyboardHandsSection({
           ry={7}
           fill={lit ? themeColor : "none"}
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           style={{ filter: fingerGlow(lit) }}
         />
       </g>
@@ -297,8 +382,9 @@ function EdclubKeyboardHandsSection({
           d={d}
           fill="none"
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
+          strokeLinejoin="round"
           style={{ filter: fingerGlow(lit) }}
         />
         <ellipse
@@ -308,7 +394,7 @@ function EdclubKeyboardHandsSection({
           ry={8}
           fill={lit ? themeColor : "none"}
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           style={{ filter: fingerGlow(lit) }}
         />
       </g>
@@ -324,69 +410,82 @@ function EdclubKeyboardHandsSection({
           ? highlightKey.toUpperCase()
           : highlightKey;
   const fingerWord = fingerHi ? FINGER_NAMES[fingerHi] ?? "" : "";
+  const handSide = fingerHi ? FINGER_HAND_SIDE[fingerHi] : null;
+
+  const territoryForHighlight =
+    highlightKey === null
+      ? TERRITORY_COLORS.space
+      : TERRITORY_COLORS[fingerTypeFromHighlight(highlightKey)] ?? TERRITORY_COLORS.lindex;
 
   return (
     <div
       className={fontClassName}
       style={{
         background: "#F5F7FA",
-        padding: "18px 16px 20px",
-        borderRadius: 20,
+        padding: "16px 14px 18px",
+        borderRadius: 16,
         marginBottom: 18,
         boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
         border: "1px solid rgba(0,0,0,0.06)",
         width: "100%",
       }}
     >
-      <div
-        style={{
-          marginBottom: 14,
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: 10,
-          fontSize: 17,
-          fontWeight: 700,
-          color: "#374151",
-          lineHeight: 1.35,
-        }}
-      >
-        {highlightKey ? (
-          <>
-            <span>Type the</span>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: 40,
-                padding: "6px 16px",
-                borderRadius: 999,
-                background: themeColor,
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-                boxShadow: `0 2px 10px ${themeColor}55`,
-              }}
-            >
-              {pillLabel}
+      {showInstruction && (
+        <div
+          style={{
+            marginBottom: 14,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 10,
+            fontSize: 17,
+            fontWeight: 700,
+            color: "#374151",
+            lineHeight: 1.35,
+          }}
+        >
+          {highlightKey ? (
+            <>
+              <span>Type the</span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 40,
+                  padding: "6px 16px",
+                  borderRadius: 999,
+                  background: territoryForHighlight,
+                  color: "#1e293b",
+                  fontWeight: 800,
+                  fontSize: 16,
+                  border: `1px solid ${mixHexWithWhite(territoryForHighlight, 0.35)}`,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                }}
+              >
+                {pillLabel}
+              </span>
+              <span>
+                key
+                {fingerWord && fingerHi === "space" ? (
+                  <> using your {fingerWord}.</>
+                ) : fingerWord && handSide ? (
+                  <>
+                    {" "}
+                    using your {fingerWord} {handSide} finger.
+                  </>
+                ) : (
+                  "."
+                )}
+              </span>
+            </>
+          ) : (
+            <span style={{ color: "#6B7280", fontWeight: 700 }}>
+              Great job — lesson complete or waiting for the next key.
             </span>
-            <span>
-              key
-              {fingerWord ? (
-                <>
-                  {" "}
-                  using your {fingerWord} finger.
-                </>
-              ) : (
-                "."
-              )}
-            </span>
-          </>
-        ) : (
-          <span style={{ color: "#6B7280", fontWeight: 700 }}>Great job — lesson complete or waiting for the next key.</span>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <svg
         width="100%"
@@ -401,21 +500,21 @@ function EdclubKeyboardHandsSection({
           width={geom.vbWidth - 16}
           height={geom.vbHeight - geom.keyboardTop + 14}
           rx={8}
-          fill="#F0F2F5"
+          fill="#ECEFF1"
         />
 
         <path
           d={`M ${A.cx - 24} ${homeRowCy - 6} Q ${(A.cx + F.cx) / 2} ${homeRowCy - 48} ${F.cx + 24} ${homeRowCy - 6}`}
           fill="none"
           stroke={EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
         />
         <path
           d={`M ${J.cx - 24} ${homeRowCy - 6} Q ${(J.cx + semi.cx) / 2} ${homeRowCy - 48} ${semi.cx + 24} ${homeRowCy - 6}`}
           fill="none"
           stroke={EDCLUB_HAND_STROKE}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
         />
 
@@ -425,13 +524,15 @@ function EdclubKeyboardHandsSection({
           const pressed = k.mapId !== null && pk === k.mapId;
           const cx = k.x + k.w / 2;
           const cy = k.y + k.h / 2;
-          const labelSize = k.label.length > 6 ? 9 : k.mapId ? 13 : 10;
-          const fill = active ? `${themeColor}2E` : "#FFFFFF";
-          const stroke = active ? themeColor : "rgba(0,0,0,0.1)";
+          const territory = TERRITORY_COLORS[k.zone] ?? "#E0E0E0";
+          const baseFill = mixHexWithWhite(territory, active ? 0.38 : 0.62);
+          const fill = active ? mixHexWithWhite(territory, 0.22) : baseFill;
+          const stroke = active ? themeColor : EDCLUB_KEY_BORDER;
           const sw = active ? 2 : 1;
           const shadow = active
-            ? `drop-shadow(0 0 8px ${themeColor}88) drop-shadow(0 4px 6px rgba(0,0,0,0.12))`
-            : "drop-shadow(0 2px 4px rgba(0,0,0,0.08))";
+            ? `drop-shadow(0 0 8px ${themeColor}66) drop-shadow(0 1px 0 #90979f)`
+            : `drop-shadow(0 2px 0 ${EDCLUB_KEY_SHADOW})`;
+          const labelSize = k.label.length > 6 ? 9 : 11;
           return (
             <g
               key={k.id}
@@ -469,7 +570,7 @@ function EdclubKeyboardHandsSection({
                 className={fontClassName}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill={active ? themeColor : "#8899AA"}
+                fill={active ? themeColor : EDCLUB_KEY_LABEL}
                 fontSize={labelSize}
                 fontWeight={800}
                 style={{ pointerEvents: "none", userSelect: "none" }}
@@ -569,6 +670,7 @@ export default function LessonPage() {
   const [stars, setStars] = useState(0);
   const [shakeKey, setShakeKey] = useState<string | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
+  const [showKeyboardInstruction, setShowKeyboardInstruction] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showLessonMap, setShowLessonMap] = useState(false);
@@ -965,6 +1067,7 @@ export default function LessonPage() {
     setEcoDisplay(0);
     setIsComplete(false);
     setStars(0);
+    setShowKeyboardInstruction(true);
   }, [currentLessonId]);
 
   // Calculate WPM and accuracy against the sentence
@@ -1017,7 +1120,9 @@ export default function LessonPage() {
 
     // Check if typed character matches
     if (value.length > userInput.length) {
-      const expectedChar = currentLesson.sentence[userInput.length];
+      setShowKeyboardInstruction(false);
+      const cursorBefore = nextLessonKeyIndex(currentLesson.sentence, userInput);
+      const expectedChar = currentLesson.sentence[cursorBefore];
       mapPress(lastChar);
       if (lastChar !== expectedChar) {
         setShakeKey(lastChar === " " ? " " : lastChar.toLowerCase());
@@ -1245,6 +1350,7 @@ export default function LessonPage() {
     setEcoDisplay(0);
     setStars(0);
     setMessages([]);
+    setShowKeyboardInstruction(true);
     if (inputRef.current) inputRef.current.focus();
   };
 
@@ -1371,10 +1477,15 @@ export default function LessonPage() {
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
   const lessonProgress = ((currentLessonId - 1) / 100) * 100;
 
+  const lessonKeyIndex = nextLessonKeyIndex(currentLesson.sentence, userInput);
   const guideHighlightKey =
-    userInput.length < currentLesson.sentence.length
-      ? currentLesson.sentence[userInput.length]
+    lessonKeyIndex < currentLesson.sentence.length
+      ? currentLesson.sentence[lessonKeyIndex]
       : null;
+
+  useEffect(() => {
+    setShowKeyboardInstruction(true);
+  }, [lessonKeyIndex, currentLessonId]);
 
   const ecoWordCount = useMemo(() => {
     const targetWords = currentLesson.sentence.trim().split(/\s+/).filter(Boolean);
@@ -2515,7 +2626,7 @@ export default function LessonPage() {
                 if (index < userInput.length) {
                   color = userInput[index] === char ? "#2ECC71" : "#E67E22"; // correct / wrong (no red)
                 }
-                const isCurrentPos = index === userInput.length;
+                const isCurrentPos = index === lessonKeyIndex;
                 const style: React.CSSProperties = {
                   color,
                   fontWeight: index < userInput.length && userInput[index] === char ? 800 : 600,
@@ -2642,6 +2753,7 @@ export default function LessonPage() {
           pressedVKey={pressedVKey}
           themeColor={getThemeColor()}
           fontClassName={nunito.className}
+          showInstruction={showKeyboardInstruction}
         />
 
         {/* BOTTOM BAR */}
