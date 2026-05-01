@@ -51,17 +51,17 @@ const KEYBOARD_LAYOUT = [
   { row: 3, keys: ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"] },
 ];
 
-/** Territory tint per finger zone (edclub-style warm left / cool right). */
+/** Territory fills per finger zone (high-visibility, edclub-style). */
 const TERRITORY_COLORS: Record<string, string> = {
-  lpinky: "#FFB3B3",
-  lring: "#FFDBB3",
-  lmiddle: "#FFF3B3",
-  lindex: "#B3FFD6",
-  rindex: "#B3D6FF",
-  rmiddle: "#C5B3FF",
-  rring: "#FFB3F0",
-  rpinky: "#B3FFFF",
-  space: "#E0E0E0",
+  lpinky: "#FFD5D5",
+  lring: "#FFE8D5",
+  lmiddle: "#FFF5D5",
+  lindex: "#D5FFE8",
+  rindex: "#D5EAFF",
+  rmiddle: "#E0D5FF",
+  rring: "#FFD5F5",
+  rpinky: "#D5FFFF",
+  space: "#EEEEEE",
 };
 
 const SPECIAL_KEY_ZONE: Record<string, string> = {
@@ -98,13 +98,13 @@ function mixHexWithWhite(hex: string, whiteAmount: number): string {
   return `#${x(nr)}${x(ng)}${x(nb)}`;
 }
 
-const EDCLUB_KB_GAP = 8;
-const EDCLUB_KB_KEY = 52;
+const EDCLUB_KB_GAP = 4;
+const EDCLUB_KB_KEY = 45;
 const EDCLUB_KB_RX = 6;
-const EDCLUB_HAND_STROKE = "#9BA8B7";
-const EDCLUB_KB_TOP = 118;
+const EDCLUB_HAND_STROKE = "#666666";
+const EDCLUB_HAND_STROKE_WIDTH = 3;
 const EDCLUB_KEY_BORDER = "#D0D7DE";
-const EDCLUB_KEY_LABEL = "#4A5568";
+const EDCLUB_KEY_LABEL = "#333333";
 const EDCLUB_KEY_SHADOW = "#B0B7BE";
 
 type EdclubPlacedKey = {
@@ -163,11 +163,13 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
   const maxStagger = Math.max(...rowStagger);
 
   const spaceW = EDCLUB_KB_KEY * 6;
-  const vbWidth = Math.max(...rowWidths, spaceW) + maxStagger * 2 + 48;
+  const vbWidth = Math.max(...rowWidths, spaceW) + maxStagger * 2 + 56;
 
-  const keyboardTop = EDCLUB_KB_TOP;
-  const rowYs = [0, 1, 2].map((i) => keyboardTop + i * (EDCLUB_KB_KEY + EDCLUB_KB_GAP));
-  const spaceY = keyboardTop + 3 * (EDCLUB_KB_KEY + EDCLUB_KB_GAP);
+  const keyStackH = 3 * keyUnit + EDCLUB_KB_KEY;
+  const handBand = Math.round(0.4 * keyStackH);
+  const keyboardTop = 18 + handBand;
+  const rowYs = [0, 1, 2].map((i) => keyboardTop + i * keyUnit);
+  const spaceY = keyboardTop + 3 * keyUnit;
   const homeRowCy = rowYs[1] + EDCLUB_KB_KEY / 2;
 
   const keys: EdclubPlacedKey[] = [];
@@ -223,7 +225,7 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
   });
   centers[" "] = { cx: sx + spaceW / 2, cy: spaceY + EDCLUB_KB_KEY / 2 };
 
-  const vbHeight = spaceY + EDCLUB_KB_KEY + 20;
+  const vbHeight = spaceY + EDCLUB_KB_KEY + 28;
 
   return { keys, centers, vbWidth, vbHeight, keyboardTop, homeRowCy };
 }
@@ -238,18 +240,6 @@ function nextLessonKeyIndex(sentence: string, typed: string): number {
   if (i < typed.length && typed[i] !== sentence[i]) return i;
   return typed.length;
 }
-
-const FINGER_HAND_SIDE: Record<string, "left" | "right" | null> = {
-  lpinky: "left",
-  lring: "left",
-  lmiddle: "left",
-  lindex: "left",
-  rindex: "right",
-  rmiddle: "right",
-  rring: "right",
-  rpinky: "right",
-  space: null,
-};
 
 function normalizeHighlightKey(k: string | null): string | null {
   if (k === null) return null;
@@ -297,17 +287,19 @@ function EdclubKeyboardHandsSection({
 
   if (!A || !S || !D || !F || !J || !K || !L || !semi || !Sp) return null;
 
+  const handSpreadL = 52;
+  const handSpreadR = 52;
   const knL = {
-    lpinky: { x: A.cx - 6, y: homeRowCy - 46 },
-    lring: { x: S.cx - 2, y: homeRowCy - 52 },
-    lmiddle: { x: D.cx, y: homeRowCy - 58 },
-    lindex: { x: F.cx + 2, y: homeRowCy - 52 },
+    lpinky: { x: A.cx - 8 - handSpreadL, y: homeRowCy - 62 },
+    lring: { x: S.cx - 4 - handSpreadL * 0.85, y: homeRowCy - 70 },
+    lmiddle: { x: D.cx - handSpreadL * 0.55, y: homeRowCy - 78 },
+    lindex: { x: F.cx + 4 - handSpreadL * 0.25, y: homeRowCy - 70 },
   };
   const knR = {
-    rindex: { x: J.cx - 2, y: homeRowCy - 52 },
-    rmiddle: { x: K.cx, y: homeRowCy - 58 },
-    rring: { x: L.cx + 2, y: homeRowCy - 52 },
-    rpinky: { x: semi.cx + 6, y: homeRowCy - 46 },
+    rindex: { x: J.cx - 4 + handSpreadR * 0.25, y: homeRowCy - 70 },
+    rmiddle: { x: K.cx + handSpreadR * 0.55, y: homeRowCy - 78 },
+    rring: { x: L.cx + 4 + handSpreadR * 0.85, y: homeRowCy - 70 },
+    rpinky: { x: semi.cx + 8 + handSpreadR, y: homeRowCy - 62 },
   };
 
   const tipL = {
@@ -323,10 +315,10 @@ function EdclubKeyboardHandsSection({
     rpinky: { x: semi.cx, y: semi.cy },
   };
 
-  const thumbKnL = { x: F.cx + 40, y: homeRowCy + 4 };
-  const thumbTipL = { x: Sp.cx - 52, y: Sp.cy };
-  const thumbKnR = { x: J.cx - 40, y: homeRowCy + 4 };
-  const thumbTipR = { x: Sp.cx + 52, y: Sp.cy };
+  const thumbKnL = { x: F.cx + 48, y: homeRowCy + 8 };
+  const thumbTipL = { x: Sp.cx - 58, y: Sp.cy };
+  const thumbKnR = { x: J.cx - 48, y: homeRowCy + 8 };
+  const thumbTipR = { x: Sp.cx + 58, y: Sp.cy };
 
   const fingerGlow = (lit: boolean) =>
     lit
@@ -349,7 +341,7 @@ function EdclubKeyboardHandsSection({
           d={d}
           fill="none"
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
           strokeLinecap="round"
           strokeLinejoin="round"
           style={{ filter: fingerGlow(lit) }}
@@ -357,11 +349,11 @@ function EdclubKeyboardHandsSection({
         <ellipse
           cx={tip.x}
           cy={tip.y}
-          rx={9}
-          ry={7}
+          rx={14}
+          ry={11}
           fill={lit ? themeColor : "none"}
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
           style={{ filter: fingerGlow(lit) }}
         />
       </g>
@@ -372,9 +364,9 @@ function EdclubKeyboardHandsSection({
     const lit = fingerHi === "space";
     const kn = side === "left" ? thumbKnL : thumbKnR;
     const tip = side === "left" ? thumbTipL : thumbTipR;
-    const bias = side === "left" ? 10 : -10;
+    const bias = side === "left" ? 14 : -14;
     const mx = (kn.x + tip.x) / 2 + bias;
-    const my = (kn.y + tip.y) / 2 - 12;
+    const my = (kn.y + tip.y) / 2 - 16;
     const d = `M ${kn.x} ${kn.y} Q ${mx} ${my} ${tip.x} ${tip.y}`;
     return (
       <g key={`thumb-${side}`} style={{ transition: "filter 0.2s ease" }}>
@@ -382,7 +374,7 @@ function EdclubKeyboardHandsSection({
           d={d}
           fill="none"
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
           strokeLinecap="round"
           strokeLinejoin="round"
           style={{ filter: fingerGlow(lit) }}
@@ -390,11 +382,11 @@ function EdclubKeyboardHandsSection({
         <ellipse
           cx={tip.x}
           cy={tip.y}
-          rx={10}
-          ry={8}
+          rx={15}
+          ry={12}
           fill={lit ? themeColor : "none"}
           stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
           style={{ filter: fingerGlow(lit) }}
         />
       </g>
@@ -410,7 +402,6 @@ function EdclubKeyboardHandsSection({
           ? highlightKey.toUpperCase()
           : highlightKey;
   const fingerWord = fingerHi ? FINGER_NAMES[fingerHi] ?? "" : "";
-  const handSide = fingerHi ? FINGER_HAND_SIDE[fingerHi] : null;
 
   const territoryForHighlight =
     highlightKey === null
@@ -422,26 +413,30 @@ function EdclubKeyboardHandsSection({
       className={fontClassName}
       style={{
         background: "#F5F7FA",
-        padding: "16px 14px 18px",
-        borderRadius: 16,
-        marginBottom: 18,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+        padding: "24px",
+        borderRadius: 20,
+        marginBottom: 28,
+        marginTop: 8,
+        boxShadow: "0 16px 40px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.08)",
         border: "1px solid rgba(0,0,0,0.06)",
         width: "100%",
+        maxWidth: 900,
+        marginLeft: "auto",
+        marginRight: "auto",
       }}
     >
       {showInstruction && (
         <div
           style={{
-            marginBottom: 14,
+            marginBottom: 20,
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            gap: 10,
-            fontSize: 17,
+            gap: 12,
+            fontSize: 18,
             fontWeight: 700,
-            color: "#374151",
-            lineHeight: 1.35,
+            color: "#1e293b",
+            lineHeight: 1.4,
           }}
         >
           {highlightKey ? (
@@ -452,27 +447,25 @@ function EdclubKeyboardHandsSection({
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  minWidth: 40,
-                  padding: "6px 16px",
+                  minWidth: 48,
+                  padding: "8px 22px",
                   borderRadius: 999,
                   background: territoryForHighlight,
-                  color: "#1e293b",
+                  color: "#333333",
                   fontWeight: 800,
-                  fontSize: 16,
-                  border: `1px solid ${mixHexWithWhite(territoryForHighlight, 0.35)}`,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  fontSize: 28,
+                  border: `2px solid ${mixHexWithWhite(territoryForHighlight, 0.25)}`,
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
                 }}
               >
                 {pillLabel}
               </span>
               <span>
                 key
-                {fingerWord && fingerHi === "space" ? (
-                  <> using your {fingerWord}.</>
-                ) : fingerWord && handSide ? (
+                {fingerWord ? (
                   <>
                     {" "}
-                    using your {fingerWord} {handSide} finger.
+                    using your {fingerWord} finger.
                   </>
                 ) : (
                   "."
@@ -480,7 +473,7 @@ function EdclubKeyboardHandsSection({
               </span>
             </>
           ) : (
-            <span style={{ color: "#6B7280", fontWeight: 700 }}>
+            <span style={{ color: "#64748b", fontWeight: 700 }}>
               Great job — lesson complete or waiting for the next key.
             </span>
           )}
@@ -489,33 +482,19 @@ function EdclubKeyboardHandsSection({
 
       <svg
         width="100%"
+        height="auto"
         viewBox={`0 0 ${geom.vbWidth} ${geom.vbHeight}`}
         preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block", maxWidth: "100%" }}
+        style={{ display: "block", maxWidth: "100%", minHeight: 280 }}
         aria-hidden
       >
         <rect
-          x={8}
-          y={geom.keyboardTop - 12}
-          width={geom.vbWidth - 16}
-          height={geom.vbHeight - geom.keyboardTop + 14}
-          rx={8}
-          fill="#ECEFF1"
-        />
-
-        <path
-          d={`M ${A.cx - 24} ${homeRowCy - 6} Q ${(A.cx + F.cx) / 2} ${homeRowCy - 48} ${F.cx + 24} ${homeRowCy - 6}`}
-          fill="none"
-          stroke={EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-        />
-        <path
-          d={`M ${J.cx - 24} ${homeRowCy - 6} Q ${(J.cx + semi.cx) / 2} ${homeRowCy - 48} ${semi.cx + 24} ${homeRowCy - 6}`}
-          fill="none"
-          stroke={EDCLUB_HAND_STROKE}
-          strokeWidth={1.5}
-          strokeLinecap="round"
+          x={6}
+          y={geom.keyboardTop - 14}
+          width={geom.vbWidth - 12}
+          height={geom.vbHeight - geom.keyboardTop + 18}
+          rx={10}
+          fill="#E8EBEF"
         />
 
         {geom.keys.map((k) => {
@@ -524,21 +503,24 @@ function EdclubKeyboardHandsSection({
           const pressed = k.mapId !== null && pk === k.mapId;
           const cx = k.x + k.w / 2;
           const cy = k.y + k.h / 2;
-          const territory = TERRITORY_COLORS[k.zone] ?? "#E0E0E0";
-          const baseFill = mixHexWithWhite(territory, active ? 0.38 : 0.62);
-          const fill = active ? mixHexWithWhite(territory, 0.22) : baseFill;
+          const territory = TERRITORY_COLORS[k.zone] ?? "#EEEEEE";
+          const fill = active ? themeColor : territory;
           const stroke = active ? themeColor : EDCLUB_KEY_BORDER;
-          const sw = active ? 2 : 1;
+          const sw = active ? 3 : 1;
           const shadow = active
-            ? `drop-shadow(0 0 8px ${themeColor}66) drop-shadow(0 1px 0 #90979f)`
+            ? `drop-shadow(0 0 14px ${themeColor}99) drop-shadow(0 0 28px ${themeColor}55) drop-shadow(0 1px 0 #6b7280)`
             : `drop-shadow(0 2px 0 ${EDCLUB_KEY_SHADOW})`;
-          const labelSize = k.label.length > 6 ? 9 : 11;
+          const isLetter =
+            k.mapId !== null && k.mapId !== " " && k.mapId.length === 1 && /[a-z;,\./]/.test(k.mapId);
+          const labelSize = k.label.length > 7 ? 12 : isLetter ? 14 : 13;
+          const labelWeight = isLetter ? 800 : 700;
+          const labelFill = active ? "#ffffff" : EDCLUB_KEY_LABEL;
           return (
             <g
               key={k.id}
               style={{
                 transformOrigin: `${cx}px ${cy}px`,
-                transform: pressed ? "scale(0.94)" : "scale(1)",
+                transform: pressed ? "scale(0.96)" : "scale(1)",
                 transition: "transform 0.08s ease",
                 animation: shaking ? "shakeWrong 0.15s ease" : "none",
               }}
@@ -557,11 +539,11 @@ function EdclubKeyboardHandsSection({
               {(k.mapId === "f" || k.mapId === "j") && (
                 <rect
                   x={cx - 3}
-                  y={k.y + k.h - 9}
+                  y={k.y + k.h - 10}
                   width={6}
                   height={5}
                   rx={2}
-                  fill="rgba(100,116,139,0.45)"
+                  fill={active ? "rgba(255,255,255,0.85)" : "rgba(51,51,51,0.35)"}
                 />
               )}
               <text
@@ -570,9 +552,9 @@ function EdclubKeyboardHandsSection({
                 className={fontClassName}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill={active ? themeColor : EDCLUB_KEY_LABEL}
+                fill={labelFill}
                 fontSize={labelSize}
-                fontWeight={800}
+                fontWeight={labelWeight}
                 style={{ pointerEvents: "none", userSelect: "none" }}
               >
                 {k.label}
@@ -581,16 +563,33 @@ function EdclubKeyboardHandsSection({
           );
         })}
 
-        {renderFinger("lpinky", knL.lpinky, tipL.lpinky, 14)}
-        {renderFinger("lring", knL.lring, tipL.lring, 16)}
-        {renderFinger("lmiddle", knL.lmiddle, tipL.lmiddle, 18)}
-        {renderFinger("lindex", knL.lindex, tipL.lindex, 16)}
+        <path
+          d={`M ${A.cx - 32} ${homeRowCy - 4} Q ${(A.cx + F.cx) / 2} ${homeRowCy - 56} ${F.cx + 32} ${homeRowCy - 4}`}
+          fill="none"
+          stroke={EDCLUB_HAND_STROKE}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
+          strokeLinecap="round"
+          opacity={0.95}
+        />
+        <path
+          d={`M ${J.cx - 32} ${homeRowCy - 4} Q ${(J.cx + semi.cx) / 2} ${homeRowCy - 56} ${semi.cx + 32} ${homeRowCy - 4}`}
+          fill="none"
+          stroke={EDCLUB_HAND_STROKE}
+          strokeWidth={EDCLUB_HAND_STROKE_WIDTH}
+          strokeLinecap="round"
+          opacity={0.95}
+        />
+
+        {renderFinger("lpinky", knL.lpinky, tipL.lpinky, 20)}
+        {renderFinger("lring", knL.lring, tipL.lring, 22)}
+        {renderFinger("lmiddle", knL.lmiddle, tipL.lmiddle, 24)}
+        {renderFinger("lindex", knL.lindex, tipL.lindex, 22)}
         {renderThumb("left")}
 
-        {renderFinger("rindex", knR.rindex, tipR.rindex, 16)}
-        {renderFinger("rmiddle", knR.rmiddle, tipR.rmiddle, 18)}
-        {renderFinger("rring", knR.rring, tipR.rring, 16)}
-        {renderFinger("rpinky", knR.rpinky, tipR.rpinky, 14)}
+        {renderFinger("rindex", knR.rindex, tipR.rindex, 22)}
+        {renderFinger("rmiddle", knR.rmiddle, tipR.rmiddle, 24)}
+        {renderFinger("rring", knR.rring, tipR.rring, 22)}
+        {renderFinger("rpinky", knR.rpinky, tipR.rpinky, 20)}
         {renderThumb("right")}
       </svg>
     </div>
