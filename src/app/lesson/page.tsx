@@ -2001,6 +2001,36 @@ export default function LessonPage() {
           </button>
           <button
             onClick={() => {
+              window.location.href = "/games";
+            }}
+            style={{
+              background: "white",
+              border: "2px solid #7B1FA2",
+              color: "#7B1FA2",
+              padding: "6px 12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              const target = e.target as HTMLButtonElement;
+              target.style.background = "linear-gradient(90deg,#7B1FA2,#4CAF50)";
+              target.style.color = "white";
+              target.style.borderColor = "#7B1FA2";
+            }}
+            onMouseOut={(e) => {
+              const target = e.target as HTMLButtonElement;
+              target.style.background = "white";
+              target.style.color = "#7B1FA2";
+              target.style.borderColor = "#7B1FA2";
+            }}
+          >
+            🎮 Games
+          </button>
+          <button
+            onClick={() => {
               setEcoError("");
               setEcoMessage("");
               setEcoFile(null);

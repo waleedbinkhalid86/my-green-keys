@@ -96,6 +96,16 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   expires_at timestamp with time zone
 );
 
+-- Game scores (mini-games)
+CREATE TABLE IF NOT EXISTS game_scores (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  game_name text NOT NULL,
+  score integer NOT NULL DEFAULT 0,
+  eco_points_earned integer NOT NULL DEFAULT 0,
+  played_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
 -- Create promo_codes table
 CREATE TABLE IF NOT EXISTS promo_codes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,6 +132,8 @@ CREATE INDEX idx_eco_photos_status ON eco_photos(status);
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_plan_type ON subscriptions(plan_type);
 CREATE INDEX idx_promo_codes_code ON promo_codes(code);
+CREATE INDEX idx_game_scores_student_id ON game_scores(student_id);
+CREATE INDEX idx_game_scores_game_name ON game_scores(game_name);
 
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -131,6 +143,7 @@ ALTER TABLE custom_lessons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE eco_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game_scores ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for profiles
 CREATE POLICY "Users can view their own profile" ON profiles
@@ -195,3 +208,10 @@ CREATE POLICY "Parents can update eco points" ON profiles
       AND p.account_type = 'parent'
     )
   );
+
+-- Game scores: students record their own plays
+CREATE POLICY "Students can view their own game scores" ON game_scores
+  FOR SELECT USING (auth.uid() = student_id);
+
+CREATE POLICY "Students can insert their own game scores" ON game_scores
+  FOR INSERT WITH CHECK (auth.uid() = student_id);
