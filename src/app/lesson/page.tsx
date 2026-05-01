@@ -33,18 +33,6 @@ const FINGER_MAP: Record<string, string> = {
   " ": "space",
 };
 
-const FINGER_COLORS: Record<string, string> = {
-  lpinky: "#FF6B6B",
-  lring: "#FF9F43",
-  lmiddle: "#FECA57",
-  lindex: "#48DBFB",
-  rindex: "#48DBFB",
-  rmiddle: "#FECA57",
-  rring: "#FF9F43",
-  rpinky: "#FF6B6B",
-  space: "#A29BFE",
-};
-
 const FINGER_NAMES: Record<string, string> = {
   lpinky: "Pinky",
   lring: "Ring",
@@ -62,6 +50,451 @@ const KEYBOARD_LAYOUT = [
   { row: 2, keys: ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"] },
   { row: 3, keys: ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"] },
 ];
+
+const EDCLUB_KB_GAP = 8;
+const EDCLUB_KB_KEY = 52;
+const EDCLUB_KB_RX = 6;
+const EDCLUB_HAND_STROKE = "#8899AA";
+const EDCLUB_KB_TOP = 118;
+
+type EdclubPlacedKey = {
+  id: string;
+  mapId: string | null;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+type EdclubKbGeom = {
+  keys: EdclubPlacedKey[];
+  centers: Record<string, { cx: number; cy: number }>;
+  vbWidth: number;
+  vbHeight: number;
+  keyboardTop: number;
+  homeRowCy: number;
+};
+
+function buildEdclubKeyboardGeometry(): EdclubKbGeom {
+  type RowItem =
+    | { kind: "special"; id: string; label: string; mult: number }
+    | { kind: "letter"; letter: string };
+
+  const rows: RowItem[][] = [
+    [
+      { kind: "special", id: "tab", label: "Tab", mult: 1.5 },
+      ...KEYBOARD_LAYOUT[0].keys.map((letter) => ({ kind: "letter" as const, letter })),
+      { kind: "special", id: "bksp", label: "Backspace", mult: 1.5 },
+    ],
+    [
+      { kind: "special", id: "caps", label: "Caps", mult: 1.5 },
+      ...KEYBOARD_LAYOUT[1].keys.map((letter) => ({ kind: "letter" as const, letter })),
+      { kind: "special", id: "enter", label: "Enter", mult: 1.8 },
+    ],
+    [
+      { kind: "special", id: "shift-l", label: "Shift", mult: 1.8 },
+      ...KEYBOARD_LAYOUT[2].keys.map((letter) => ({ kind: "letter" as const, letter })),
+      { kind: "special", id: "shift-r", label: "Shift", mult: 1.8 },
+    ],
+  ];
+
+  const rowWidths = rows.map((row) =>
+    row.reduce((sum, item) => {
+      const w = item.kind === "special" ? EDCLUB_KB_KEY * item.mult : EDCLUB_KB_KEY;
+      return sum + w + EDCLUB_KB_GAP;
+    }, -EDCLUB_KB_GAP),
+  );
+
+  const spaceW = EDCLUB_KB_KEY * 6;
+  const vbWidth = Math.max(...rowWidths, spaceW) + 40;
+
+  const keyboardTop = EDCLUB_KB_TOP;
+  const rowYs = [0, 1, 2].map((i) => keyboardTop + i * (EDCLUB_KB_KEY + EDCLUB_KB_GAP));
+  const spaceY = keyboardTop + 3 * (EDCLUB_KB_KEY + EDCLUB_KB_GAP);
+  const homeRowCy = rowYs[1] + EDCLUB_KB_KEY / 2;
+
+  const keys: EdclubPlacedKey[] = [];
+  const centers: Record<string, { cx: number; cy: number }> = {};
+
+  rows.forEach((row, ri) => {
+    const rw = rowWidths[ri];
+    let x = (vbWidth - rw) / 2;
+    const y = rowYs[ri];
+    for (const item of row) {
+      const w = item.kind === "special" ? EDCLUB_KB_KEY * item.mult : EDCLUB_KB_KEY;
+      if (item.kind === "letter") {
+        const letter = item.letter;
+        keys.push({
+          id: letter,
+          mapId: letter,
+          label: letter === ";" ? ";" : letter.toUpperCase(),
+          x,
+          y,
+          w,
+          h: EDCLUB_KB_KEY,
+        });
+        centers[letter] = { cx: x + w / 2, cy: y + EDCLUB_KB_KEY / 2 };
+      } else {
+        keys.push({
+          id: item.id,
+          mapId: null,
+          label: item.label,
+          x,
+          y,
+          w,
+          h: EDCLUB_KB_KEY,
+        });
+      }
+      x += w + EDCLUB_KB_GAP;
+    }
+  });
+
+  const sx = (vbWidth - spaceW) / 2;
+  keys.push({
+    id: "space",
+    mapId: " ",
+    label: "Space",
+    x: sx,
+    y: spaceY,
+    w: spaceW,
+    h: EDCLUB_KB_KEY,
+  });
+  centers[" "] = { cx: sx + spaceW / 2, cy: spaceY + EDCLUB_KB_KEY / 2 };
+
+  const vbHeight = spaceY + EDCLUB_KB_KEY + 20;
+
+  return { keys, centers, vbWidth, vbHeight, keyboardTop, homeRowCy };
+}
+
+const EDCLUB_KB_GEOM = buildEdclubKeyboardGeometry();
+
+function normalizeHighlightKey(k: string | null): string | null {
+  if (k === null) return null;
+  if (k === " ") return " ";
+  return k.toLowerCase();
+}
+
+function fingerTypeFromHighlight(key: string | null): string {
+  if (!key) return "";
+  if (key === " ") return "space";
+  return FINGER_MAP[key.toLowerCase()] ?? "";
+}
+
+function EdclubKeyboardHandsSection({
+  highlightKey,
+  shakeKey,
+  pressedVKey,
+  themeColor,
+  fontClassName,
+}: {
+  highlightKey: string | null;
+  shakeKey: string | null;
+  pressedVKey: string | null;
+  themeColor: string;
+  fontClassName: string;
+}) {
+  const geom = EDCLUB_KB_GEOM;
+  const hk = normalizeHighlightKey(highlightKey);
+  const sk = normalizeHighlightKey(shakeKey);
+  const pk = normalizeHighlightKey(pressedVKey);
+  const fingerHi = fingerTypeFromHighlight(highlightKey);
+
+  const A = geom.centers.a;
+  const S = geom.centers.s;
+  const D = geom.centers.d;
+  const F = geom.centers.f;
+  const J = geom.centers.j;
+  const K = geom.centers.k;
+  const L = geom.centers.l;
+  const semi = geom.centers[";"];
+  const Sp = geom.centers[" "];
+  const homeRowCy = geom.homeRowCy;
+
+  if (!A || !S || !D || !F || !J || !K || !L || !semi || !Sp) return null;
+
+  const knL = {
+    lpinky: { x: A.cx - 6, y: homeRowCy - 46 },
+    lring: { x: S.cx - 2, y: homeRowCy - 52 },
+    lmiddle: { x: D.cx, y: homeRowCy - 58 },
+    lindex: { x: F.cx + 2, y: homeRowCy - 52 },
+  };
+  const knR = {
+    rindex: { x: J.cx - 2, y: homeRowCy - 52 },
+    rmiddle: { x: K.cx, y: homeRowCy - 58 },
+    rring: { x: L.cx + 2, y: homeRowCy - 52 },
+    rpinky: { x: semi.cx + 6, y: homeRowCy - 46 },
+  };
+
+  const tipL = {
+    lpinky: { x: A.cx, y: A.cy },
+    lring: { x: S.cx, y: S.cy },
+    lmiddle: { x: D.cx, y: D.cy },
+    lindex: { x: F.cx, y: F.cy },
+  };
+  const tipR = {
+    rindex: { x: J.cx, y: J.cy },
+    rmiddle: { x: K.cx, y: K.cy },
+    rring: { x: L.cx, y: L.cy },
+    rpinky: { x: semi.cx, y: semi.cy },
+  };
+
+  const thumbKnL = { x: F.cx + 40, y: homeRowCy + 4 };
+  const thumbTipL = { x: Sp.cx - 52, y: Sp.cy };
+  const thumbKnR = { x: J.cx - 40, y: homeRowCy + 4 };
+  const thumbTipR = { x: Sp.cx + 52, y: Sp.cy };
+
+  const fingerGlow = (lit: boolean) =>
+    lit
+      ? `drop-shadow(0 0 4px ${themeColor}) drop-shadow(0 0 12px ${themeColor}99) drop-shadow(0 0 20px ${themeColor}44)`
+      : undefined;
+
+  const renderFinger = (
+    type: string,
+    kn: { x: number; y: number },
+    tip: { x: number; y: number },
+    curveLift: number,
+  ) => {
+    const lit = fingerHi === type;
+    const mx = (kn.x + tip.x) / 2 + (tip.x > kn.x ? 4 : -4);
+    const my = (kn.y + tip.y) / 2 - curveLift;
+    const d = `M ${kn.x} ${kn.y} Q ${mx} ${my} ${tip.x} ${tip.y}`;
+    return (
+      <g key={type} style={{ transition: "filter 0.2s ease" }}>
+        <path
+          d={d}
+          fill="none"
+          stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          strokeLinecap="round"
+          style={{ filter: fingerGlow(lit) }}
+        />
+        <ellipse
+          cx={tip.x}
+          cy={tip.y}
+          rx={9}
+          ry={7}
+          fill={lit ? themeColor : "none"}
+          stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          style={{ filter: fingerGlow(lit) }}
+        />
+      </g>
+    );
+  };
+
+  const renderThumb = (side: "left" | "right") => {
+    const lit = fingerHi === "space";
+    const kn = side === "left" ? thumbKnL : thumbKnR;
+    const tip = side === "left" ? thumbTipL : thumbTipR;
+    const bias = side === "left" ? 10 : -10;
+    const mx = (kn.x + tip.x) / 2 + bias;
+    const my = (kn.y + tip.y) / 2 - 12;
+    const d = `M ${kn.x} ${kn.y} Q ${mx} ${my} ${tip.x} ${tip.y}`;
+    return (
+      <g key={`thumb-${side}`} style={{ transition: "filter 0.2s ease" }}>
+        <path
+          d={d}
+          fill="none"
+          stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          strokeLinecap="round"
+          style={{ filter: fingerGlow(lit) }}
+        />
+        <ellipse
+          cx={tip.x}
+          cy={tip.y}
+          rx={10}
+          ry={8}
+          fill={lit ? themeColor : "none"}
+          stroke={lit ? themeColor : EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          style={{ filter: fingerGlow(lit) }}
+        />
+      </g>
+    );
+  };
+
+  const pillLabel =
+    highlightKey === null
+      ? ""
+      : highlightKey === " "
+        ? "Space"
+        : highlightKey.length === 1
+          ? highlightKey.toUpperCase()
+          : highlightKey;
+  const fingerWord = fingerHi ? FINGER_NAMES[fingerHi] ?? "" : "";
+
+  return (
+    <div
+      className={fontClassName}
+      style={{
+        background: "#F5F7FA",
+        padding: "18px 16px 20px",
+        borderRadius: 20,
+        marginBottom: 18,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+        border: "1px solid rgba(0,0,0,0.06)",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          marginBottom: 14,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 10,
+          fontSize: 17,
+          fontWeight: 700,
+          color: "#374151",
+          lineHeight: 1.35,
+        }}
+      >
+        {highlightKey ? (
+          <>
+            <span>Type the</span>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 40,
+                padding: "6px 16px",
+                borderRadius: 999,
+                background: themeColor,
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: 16,
+                boxShadow: `0 2px 10px ${themeColor}55`,
+              }}
+            >
+              {pillLabel}
+            </span>
+            <span>
+              key
+              {fingerWord ? (
+                <>
+                  {" "}
+                  using your {fingerWord} finger.
+                </>
+              ) : (
+                "."
+              )}
+            </span>
+          </>
+        ) : (
+          <span style={{ color: "#6B7280", fontWeight: 700 }}>Great job — lesson complete or waiting for the next key.</span>
+        )}
+      </div>
+
+      <svg
+        width="100%"
+        viewBox={`0 0 ${geom.vbWidth} ${geom.vbHeight}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ display: "block", maxWidth: "100%" }}
+        aria-hidden
+      >
+        <rect
+          x={8}
+          y={geom.keyboardTop - 12}
+          width={geom.vbWidth - 16}
+          height={geom.vbHeight - geom.keyboardTop + 14}
+          rx={8}
+          fill="#F0F2F5"
+        />
+
+        <path
+          d={`M ${A.cx - 24} ${homeRowCy - 6} Q ${(A.cx + F.cx) / 2} ${homeRowCy - 48} ${F.cx + 24} ${homeRowCy - 6}`}
+          fill="none"
+          stroke={EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+        <path
+          d={`M ${J.cx - 24} ${homeRowCy - 6} Q ${(J.cx + semi.cx) / 2} ${homeRowCy - 48} ${semi.cx + 24} ${homeRowCy - 6}`}
+          fill="none"
+          stroke={EDCLUB_HAND_STROKE}
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+
+        {geom.keys.map((k) => {
+          const active = k.mapId !== null && hk === k.mapId;
+          const shaking = k.mapId !== null && sk === k.mapId;
+          const pressed = k.mapId !== null && pk === k.mapId;
+          const cx = k.x + k.w / 2;
+          const cy = k.y + k.h / 2;
+          const labelSize = k.label.length > 6 ? 9 : k.mapId ? 13 : 10;
+          const fill = active ? `${themeColor}2E` : "#FFFFFF";
+          const stroke = active ? themeColor : "rgba(0,0,0,0.1)";
+          const sw = active ? 2 : 1;
+          const shadow = active
+            ? `drop-shadow(0 0 8px ${themeColor}88) drop-shadow(0 4px 6px rgba(0,0,0,0.12))`
+            : "drop-shadow(0 2px 4px rgba(0,0,0,0.08))";
+          return (
+            <g
+              key={k.id}
+              style={{
+                transformOrigin: `${cx}px ${cy}px`,
+                transform: pressed ? "scale(0.94)" : "scale(1)",
+                transition: "transform 0.08s ease",
+                animation: shaking ? "shakeWrong 0.15s ease" : "none",
+              }}
+            >
+              <rect
+                x={k.x}
+                y={k.y}
+                width={k.w}
+                height={k.h}
+                rx={EDCLUB_KB_RX}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={sw}
+                style={{ filter: shadow }}
+              />
+              {(k.mapId === "f" || k.mapId === "j") && (
+                <rect
+                  x={cx - 3}
+                  y={k.y + k.h - 9}
+                  width={6}
+                  height={5}
+                  rx={2}
+                  fill="rgba(100,116,139,0.45)"
+                />
+              )}
+              <text
+                x={cx}
+                y={cy}
+                className={fontClassName}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={active ? themeColor : "#8899AA"}
+                fontSize={labelSize}
+                fontWeight={800}
+                style={{ pointerEvents: "none", userSelect: "none" }}
+              >
+                {k.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {renderFinger("lpinky", knL.lpinky, tipL.lpinky, 14)}
+        {renderFinger("lring", knL.lring, tipL.lring, 16)}
+        {renderFinger("lmiddle", knL.lmiddle, tipL.lmiddle, 18)}
+        {renderFinger("lindex", knL.lindex, tipL.lindex, 16)}
+        {renderThumb("left")}
+
+        {renderFinger("rindex", knR.rindex, tipR.rindex, 16)}
+        {renderFinger("rmiddle", knR.rmiddle, tipR.rmiddle, 18)}
+        {renderFinger("rring", knR.rring, tipR.rring, 16)}
+        {renderFinger("rpinky", knR.rpinky, tipR.rpinky, 14)}
+        {renderThumb("right")}
+      </svg>
+    </div>
+  );
+}
 
 const TYPING_RULES = [
   {
@@ -136,7 +569,6 @@ export default function LessonPage() {
   const [stars, setStars] = useState(0);
   const [shakeKey, setShakeKey] = useState<string | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
-  const [highlightKey, setHighlightKey] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showLessonMap, setShowLessonMap] = useState(false);
@@ -634,13 +1066,6 @@ export default function LessonPage() {
       }
     }
 
-    // Highlight next key
-    if (value.length < currentLesson.sentence.length) {
-      setHighlightKey(currentLesson.sentence[value.length]);
-    } else {
-      setHighlightKey(null);
-    }
-
     setUserInput(value);
 
     // Check if lesson complete
@@ -946,6 +1371,11 @@ export default function LessonPage() {
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
   const lessonProgress = ((currentLessonId - 1) / 100) * 100;
 
+  const guideHighlightKey =
+    userInput.length < currentLesson.sentence.length
+      ? currentLesson.sentence[userInput.length]
+      : null;
+
   const ecoWordCount = useMemo(() => {
     const targetWords = currentLesson.sentence.trim().split(/\s+/).filter(Boolean);
     if (!userInput.length) return 0;
@@ -998,297 +1428,6 @@ export default function LessonPage() {
   const getThemeColor = () => {
     if (!userProfile) return "#2ECC71";
     return userProfile.gender === "boy" ? "#4A90D9" : "#FF6B9D";
-  };
-
-  const getGlowColor = () => {
-    return "rgba(46, 204, 113, 0.25)";
-  };
-
-  const getGlowBorder = () => {
-    return "#2ECC71";
-  };
-
-  const renderHandSVG = (hand: "left" | "right") => {
-    const isLeft = hand === "left";
-    const themeColor = getThemeColor();
-    const skin = "#FDBCB4";
-    const skinHighlight = "#ffcfc4";
-    const outline = "#E8956D";
-    const knuckleY = 96;
-
-    const fingerForHighlight = (key: string | null): string => {
-      if (!key) return "";
-      if (key === " ") return "space";
-      const lower = key.toLowerCase();
-      return FINGER_MAP[lower] ?? "";
-    };
-
-    const highlightedFingerType = fingerForHighlight(highlightKey);
-
-    const isFingerLit = (fingerType: string) =>
-      fingerType !== "" && fingerType === highlightedFingerType;
-
-    /** Left palm: viewer L→R = Pinky, Ring, Middle, Index; thumb on viewer's left */
-    const leftFingers: Array<{ type: string; x: number; w: number; h: number; y: number }> = [
-      { type: "lpinky", x: 100, w: 13, h: 62, y: knuckleY - 62 },
-      { type: "lring", x: 81, w: 15, h: 74, y: knuckleY - 74 },
-      { type: "lmiddle", x: 61, w: 17, h: 86, y: knuckleY - 86 },
-      { type: "lindex", x: 40, w: 16, h: 80, y: knuckleY - 80 },
-    ];
-
-    /** Right palm: same layout mirrored; types use r-* for correct-key mapping */
-    const rightFingers = leftFingers.map((f) => ({
-      ...f,
-      x: 150 - f.x - f.w,
-      type: `r${f.type.slice(1)}`,
-    }));
-
-    const fingers = isLeft ? leftFingers : rightFingers;
-
-    const fingerGlow = (lit: boolean) =>
-      lit
-        ? `drop-shadow(0 0 6px ${themeColor}) drop-shadow(0 0 14px ${themeColor}99) drop-shadow(0 0 22px ${themeColor}44)`
-        : undefined;
-
-    const fingerPad = (f: (typeof leftFingers)[0], i: number) => {
-      const lit = isFingerLit(f.type);
-      const tipCy = f.y + 6;
-      const padCy = f.y + f.h - 10;
-      return (
-        <g key={`${f.type}-${i}`}>
-          {/* Finger pad (tip) */}
-          <ellipse
-            cx={f.x + f.w / 2}
-            cy={tipCy}
-            rx={f.w / 2 + 1}
-            ry={7}
-            fill={lit ? skinHighlight : skin}
-            stroke={outline}
-            strokeWidth={lit ? 2 : 1.35}
-            style={{
-              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
-              filter: fingerGlow(lit),
-            }}
-          />
-          {/* Phalanx */}
-          <rect
-            x={f.x}
-            y={f.y + 10}
-            width={f.w}
-            height={f.h - 18}
-            rx={5}
-            fill={lit ? skinHighlight : skin}
-            stroke={outline}
-            strokeWidth={lit ? 2 : 1.35}
-            style={{
-              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
-              filter: fingerGlow(lit),
-            }}
-          />
-          {/* Lower knuckle */}
-          <ellipse
-            cx={f.x + f.w / 2}
-            cy={padCy}
-            rx={f.w / 2 + 0.5}
-            ry={8}
-            fill={lit ? skinHighlight : skin}
-            stroke={outline}
-            strokeWidth={lit ? 2 : 1.35}
-            style={{
-              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
-              filter: fingerGlow(lit),
-            }}
-          />
-        </g>
-      );
-    };
-
-    const thumbLit = isFingerLit("space");
-    const thumbSkin = thumbLit ? skinHighlight : skin;
-    const thumbStrokeW = thumbLit ? 2 : 1.35;
-
-    const leftThumb = (
-      <g transform="translate(4, 72) rotate(-24 18 58)">
-        <rect x={2} y={10} width={26} height={54} rx={12} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
-        <ellipse cx={15} cy={12} rx={12} ry={9} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
-      </g>
-    );
-
-    const rightThumb = (
-      <g transform="translate(146, 72) rotate(24 -18 58)">
-        <rect x={-28} y={10} width={26} height={54} rx={12} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
-        <ellipse cx={-15} cy={12} rx={12} ry={9} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
-      </g>
-    );
-
-    const palmPath = isLeft
-      ? "M 22 96 C 18 104, 16 120, 18 138 L 20 168 C 22 176, 40 178, 75 176 C 110 178, 128 176, 130 168 L 132 138 C 134 120, 128 104, 118 96 C 105 90, 88 88, 75 90 C 62 88, 35 90, 22 96 Z"
-      : "M 128 96 C 132 104, 134 120, 132 138 L 130 168 C 128 176, 110 178, 75 176 C 40 178, 22 176, 20 168 L 18 138 C 16 120, 22 104, 32 96 C 45 90, 62 88, 75 90 C 88 88, 115 90, 128 96 Z";
-
-    const labelOrder: Array<{ label: string; type: string }> = [
-      { label: "Pinky", type: isLeft ? "lpinky" : "rpinky" },
-      { label: "Ring", type: isLeft ? "lring" : "rring" },
-      { label: "Middle", type: isLeft ? "lmiddle" : "rmiddle" },
-      { label: "Index", type: isLeft ? "lindex" : "rindex" },
-      { label: "Thumb", type: "space" },
-    ];
-
-    const thumbGroupStyle: React.CSSProperties = {
-      transition: "filter 0.25s ease",
-      filter: thumbLit ? fingerGlow(true) : undefined,
-    };
-
-    return (
-      <div style={{ textAlign: "center", flex: "0 0 auto", width: 150 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 10 }}>
-          {isLeft ? "Left hand" : "Right hand"}
-        </div>
-        <svg
-          width={150}
-          height={180}
-          viewBox="0 0 150 180"
-          style={{ margin: "0 auto", display: "block", overflow: "visible" }}
-          aria-hidden
-        >
-          {/* Palm (behind fingers) */}
-          <path
-            d={palmPath}
-            fill={skin}
-            stroke={outline}
-            strokeWidth={1.5}
-            style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.06))" }}
-          />
-          {/* Palm crease */}
-          <path
-            d={isLeft ? "M 32 118 Q 75 128 118 118" : "M 32 118 Q 75 128 118 118"}
-            fill="none"
-            stroke={outline}
-            strokeWidth={0.9}
-            opacity={0.45}
-          />
-
-          <g style={thumbGroupStyle}>{isLeft ? leftThumb : rightThumb}</g>
-
-          {/* Four fingers (drawn after thumb so index stacks correctly — reorder: draw pinky first) */}
-          {[...fingers].reverse().map((f, i) => fingerPad(f, i))}
-        </svg>
-        <div
-          style={{
-            marginTop: 12,
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gap: 4,
-            fontSize: 10,
-            fontWeight: 800,
-            color: "#6b7280",
-            maxWidth: 150,
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
-        >
-          {labelOrder.map(({ label, type }) => {
-            const active = isFingerLit(type);
-            return (
-              <span
-                key={label}
-                style={{
-                  color: active ? themeColor : "#6b7280",
-                  textShadow: active ? `0 0 12px ${themeColor}55` : "none",
-                }}
-              >
-                {label}
-              </span>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const KB_SPECIAL_BG = "#ECEFF1";
-
-  const renderKeyboardLetter = (key: string) => {
-    const fingerType = FINGER_MAP[key] || "lindex";
-    const isHighlighted = highlightKey === key;
-    const isShaking = shakeKey === key;
-    const isPressed = pressedVKey === key;
-    const w = 52;
-    return (
-      <div key={key} style={{ textAlign: "center", flexShrink: 0 }}>
-        <button
-          type="button"
-          tabIndex={-1}
-          style={{
-            width: w,
-            height: 52,
-            background: isHighlighted ? getGlowColor() : FINGER_COLORS[fingerType],
-            border: isHighlighted ? `2px solid ${getGlowBorder()}` : "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 900,
-            cursor: "default",
-            textTransform: "uppercase",
-            transition: "transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease",
-            boxShadow: isHighlighted
-              ? `0 0 0 4px rgba(46, 204, 113, 0.25), 0 10px 20px rgba(0,0,0,0.12)`
-              : "0 6px 14px rgba(0,0,0,0.10)",
-            animation: isShaking ? "shakeWrong 0.15s ease" : "none",
-            position: "relative",
-            color: isHighlighted ? "#fff" : "#1A2F23",
-            transform: isPressed ? "scale(0.92)" : isHighlighted ? "scale(1.05)" : "scale(1)",
-          }}
-        >
-          {key === ";" ? ";" : key.toUpperCase()}
-          {(key === "f" || key === "j") && (
-            <span
-              style={{
-                position: "absolute",
-                width: 6,
-                height: 6,
-                background: "rgba(26,47,35,0.55)",
-                borderRadius: "50%",
-                bottom: 3,
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            />
-          )}
-        </button>
-        <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800 }}>
-          {FINGER_NAMES[fingerType]}
-        </div>
-      </div>
-    );
-  };
-
-  const renderKeyboardSpecial = (id: string, label: string, mult: number) => {
-    const width = Math.round(52 * mult);
-    return (
-      <div key={id} style={{ textAlign: "center", flexShrink: 0 }}>
-        <button
-          type="button"
-          tabIndex={-1}
-          style={{
-            width,
-            height: 52,
-            background: KB_SPECIAL_BG,
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 8,
-            fontSize: label.length > 8 ? 10 : 12,
-            fontWeight: 900,
-            cursor: "default",
-            color: "#1A2F23",
-            transition: "transform 0.1s ease, box-shadow 0.15s ease",
-            boxShadow: "0 6px 14px rgba(0,0,0,0.08)",
-            lineHeight: 1.15,
-            padding: "0 6px",
-          }}
-        >
-          {label}
-        </button>
-        <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800, minHeight: 14 }} />
-      </div>
-    );
   };
 
   return (
@@ -2497,114 +2636,13 @@ export default function LessonPage() {
           </button>
         </div>
 
-        {/* VIRTUAL KEYBOARD */}
-        <div
-          className="overflow-x-auto"
-          style={{
-            background: "#FFFFFF",
-            padding: "18px 16px",
-            borderRadius: "20px",
-            marginBottom: "18px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-            border: "1px solid rgba(0,0,0,0.06)",
-          }}
-        >
-          <div className="min-w-[920px]">
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 10,
-                justifyContent: "center",
-              }}
-            >
-              {renderKeyboardSpecial("tab", "Tab", 1.5)}
-              {KEYBOARD_LAYOUT[0].keys.map((k) => renderKeyboardLetter(k))}
-              {renderKeyboardSpecial("bksp", "Backspace", 1.5)}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 10,
-                justifyContent: "center",
-              }}
-            >
-              {renderKeyboardSpecial("caps", "Caps Lock", 1.5)}
-              {KEYBOARD_LAYOUT[1].keys.map((k) => renderKeyboardLetter(k))}
-              {renderKeyboardSpecial("enter", "Enter", 1.8)}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 10,
-                justifyContent: "center",
-              }}
-            >
-              {renderKeyboardSpecial("shift-l", "Shift", 1.8)}
-              {KEYBOARD_LAYOUT[2].keys.map((k) => renderKeyboardLetter(k))}
-              {renderKeyboardSpecial("shift-r", "Shift", 1.8)}
-            </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "flex-start" }}>
-              <div style={{ textAlign: "center", flexShrink: 0 }}>
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  style={{
-                    width: Math.round(52 * 6),
-                    height: 52,
-                    background: highlightKey === " " ? getGlowColor() : FINGER_COLORS.space,
-                    border:
-                      highlightKey === " " ? `2px solid ${getGlowBorder()}` : "1px solid rgba(0,0,0,0.12)",
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 950,
-                    cursor: "default",
-                    transition: "transform 0.1s ease, box-shadow 0.15s ease",
-                    boxShadow:
-                      highlightKey === " "
-                        ? `0 0 0 4px rgba(46, 204, 113, 0.25), 0 10px 20px rgba(0,0,0,0.12)`
-                        : "0 6px 14px rgba(0,0,0,0.10)",
-                    color: highlightKey === " " ? "#fff" : "#1A2F23",
-                    transform:
-                      pressedVKey === " "
-                        ? "scale(0.92)"
-                        : highlightKey === " "
-                          ? "scale(1.05)"
-                          : "scale(1)",
-                  }}
-                >
-                  Space
-                </button>
-                <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800 }}>Space bar</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* HAND VISUALIZATION — TypingClub-style guides, 150×180 per hand */}
-        <div
-          className="hidden sm:flex flex-col sm:flex-row"
-          style={{
-            background: "#FFFFFF",
-            padding: "22px 16px 26px",
-            borderRadius: "20px",
-            marginBottom: "18px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-            border: "1px solid rgba(0,0,0,0.06)",
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 32,
-            justifyContent: "center",
-            alignItems: "flex-end",
-            width: "100%",
-          }}
-        >
-          {renderHandSVG("left")}
-          {renderHandSVG("right")}
-        </div>
+        <EdclubKeyboardHandsSection
+          highlightKey={guideHighlightKey}
+          shakeKey={shakeKey}
+          pressedVKey={pressedVKey}
+          themeColor={getThemeColor()}
+          fontClassName={nunito.className}
+        />
 
         {/* BOTTOM BAR */}
         <div style={{
