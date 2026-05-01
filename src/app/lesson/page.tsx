@@ -98,9 +98,9 @@ function mixHexWithWhite(hex: string, whiteAmount: number): string {
   return `#${x(nr)}${x(ng)}${x(nb)}`;
 }
 
-const EDCLUB_KB_GAP = 4;
-const EDCLUB_KB_KEY = 50;
-const EDCLUB_KB_RX = 6;
+const EDCLUB_KB_GAP = 3;
+const EDCLUB_KB_KEY = 36;
+const EDCLUB_KB_RX = 5;
 const EDCLUB_KEY_BORDER = "#D0D7DE";
 const EDCLUB_KEY_LABEL = "#333333";
 const EDCLUB_KEY_SHADOW = "#B0B7BE";
@@ -130,19 +130,19 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
 
   const rows: RowItem[][] = [
     [
-      { kind: "special", id: "tab", label: "Tab", mult: 1.5 },
+      { kind: "special", id: "tab", label: "Tab", mult: 1.4 },
       ...KEYBOARD_LAYOUT[0].keys.map((letter) => ({ kind: "letter" as const, letter })),
-      { kind: "special", id: "bksp", label: "Backspace", mult: 1.5 },
+      { kind: "special", id: "bksp", label: "Backspace", mult: 1.4 },
     ],
     [
-      { kind: "special", id: "caps", label: "Caps", mult: 1.5 },
+      { kind: "special", id: "caps", label: "Caps", mult: 1.4 },
       ...KEYBOARD_LAYOUT[1].keys.map((letter) => ({ kind: "letter" as const, letter })),
-      { kind: "special", id: "enter", label: "Enter", mult: 1.8 },
+      { kind: "special", id: "enter", label: "Enter", mult: 1.65 },
     ],
     [
-      { kind: "special", id: "shift-l", label: "Shift", mult: 1.8 },
+      { kind: "special", id: "shift-l", label: "Shift", mult: 1.65 },
       ...KEYBOARD_LAYOUT[2].keys.map((letter) => ({ kind: "letter" as const, letter })),
-      { kind: "special", id: "shift-r", label: "Shift", mult: 1.8 },
+      { kind: "special", id: "shift-r", label: "Shift", mult: 1.65 },
     ],
   ];
 
@@ -159,9 +159,9 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
   const maxStagger = Math.max(...rowStagger);
 
   const spaceW = EDCLUB_KB_KEY * 6;
-  const vbWidth = Math.max(...rowWidths, spaceW) + maxStagger * 2 + 32;
+  const vbWidth = Math.max(...rowWidths, spaceW) + maxStagger * 2 + 24;
 
-  const keyboardTop = 12;
+  const keyboardTop = 8;
   const rowYs = [0, 1, 2].map((i) => keyboardTop + i * keyUnit);
   const spaceY = keyboardTop + 3 * keyUnit;
 
@@ -215,7 +215,7 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
     zone: "space",
   });
 
-  const vbHeight = spaceY + EDCLUB_KB_KEY + 24;
+  const vbHeight = spaceY + EDCLUB_KB_KEY + 14;
 
   return { keys, vbWidth, vbHeight, keyboardTop };
 }
@@ -284,16 +284,16 @@ function EdclubKeyboardSection({
       className={fontClassName}
       style={{
         background: "#F5F7FA",
-        padding: "18px 16px 20px",
-        borderRadius: 20,
-        marginBottom: 16,
+        padding: "12px 14px 14px",
+        borderRadius: 14,
+        marginBottom: 11,
         marginTop: 0,
-        boxShadow: "0 16px 40px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.08)",
+        boxShadow: "0 10px 28px rgba(15, 23, 42, 0.1), 0 3px 10px rgba(15, 23, 42, 0.06)",
         border: "1px solid rgba(0,0,0,0.06)",
-        width: "100vw",
-        maxWidth: "100vw",
-        marginLeft: "calc(50% - 50vw)",
-        marginRight: "calc(50% - 50vw)",
+        width: "100%",
+        maxWidth: 860,
+        marginLeft: "auto",
+        marginRight: "auto",
         boxSizing: "border-box",
         overflowX: "auto",
         overflowY: "visible",
@@ -302,15 +302,15 @@ function EdclubKeyboardSection({
       {showInstruction && (
         <div
           style={{
-            marginBottom: 12,
+            marginBottom: 8,
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            gap: 12,
-            fontSize: 18,
+            gap: 8,
+            fontSize: 15,
             fontWeight: 700,
             color: "#1e293b",
-            lineHeight: 1.4,
+            lineHeight: 1.35,
           }}
         >
           {highlightKey ? (
@@ -321,15 +321,15 @@ function EdclubKeyboardSection({
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  minWidth: 48,
-                  padding: "8px 22px",
+                  minWidth: 40,
+                  padding: "5px 16px",
                   borderRadius: 999,
                   background: territoryForHighlight,
                   color: "#333333",
                   fontWeight: 800,
-                  fontSize: 28,
-                  border: `2px solid ${mixHexWithWhite(territoryForHighlight, 0.25)}`,
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
+                  fontSize: 22,
+                  border: `1px solid ${mixHexWithWhite(territoryForHighlight, 0.25)}`,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 }}
               >
                 {pillLabel}
@@ -359,7 +359,7 @@ function EdclubKeyboardSection({
         height="auto"
         viewBox={`0 0 ${geom.vbWidth} ${geom.vbHeight}`}
         preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block", minWidth: geom.vbWidth, minHeight: 260 }}
+        style={{ display: "block", minWidth: geom.vbWidth, minHeight: 195 }}
         aria-hidden
       >
         <rect
@@ -380,13 +380,13 @@ function EdclubKeyboardSection({
           const territory = TERRITORY_COLORS[k.zone] ?? "#EEEEEE";
           const fill = active ? themeColor : territory;
           const stroke = active ? themeColor : EDCLUB_KEY_BORDER;
-          const sw = active ? 3 : 1;
+          const sw = active ? 2.5 : 1;
           const shadow = active
-            ? `drop-shadow(0 0 14px ${themeColor}99) drop-shadow(0 0 28px ${themeColor}55) drop-shadow(0 1px 0 #6b7280)`
+            ? `drop-shadow(0 0 10px ${themeColor}99) drop-shadow(0 0 20px ${themeColor}55) drop-shadow(0 1px 0 #6b7280)`
             : `drop-shadow(0 2px 0 ${EDCLUB_KEY_SHADOW})`;
           const isLetter =
             k.mapId !== null && k.mapId !== " " && k.mapId.length === 1 && /[a-z;,\./]/.test(k.mapId);
-          const labelSize = k.label.length > 7 ? 11 : isLetter ? 14 : 13;
+          const labelSize = k.label.length > 7 ? 9 : isLetter ? 12 : 11;
           const labelWeight = isLetter ? 800 : 700;
           const labelFill = active ? "#ffffff" : EDCLUB_KEY_LABEL;
           return (
@@ -412,10 +412,10 @@ function EdclubKeyboardSection({
               />
               {(k.mapId === "f" || k.mapId === "j") && (
                 <rect
-                  x={cx - 3}
-                  y={k.y + k.h - 11}
-                  width={6}
-                  height={5}
+                  x={cx - 2.5}
+                  y={k.y + k.h - 8}
+                  width={5}
+                  height={4}
                   rx={2}
                   fill={active ? "rgba(255,255,255,0.85)" : "rgba(51,51,51,0.35)"}
                 />
@@ -2262,22 +2262,22 @@ export default function LessonPage() {
       {/* LESSON INFO STRIP (minimal) */}
       <div
         style={{
-          height: 40,
+          height: 34,
           background: "#F8F9FA",
           borderBottom: "1px solid rgba(0,0,0,0.06)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 20px",
-          gap: 12,
+          padding: "0 14px",
+          gap: 8,
           fontWeight: 800,
         }}
       >
         <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 260, justifyContent: "flex-end" }}>
-          <span style={{ fontSize: 12, opacity: 0.85 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
+          <span style={{ fontSize: 11, opacity: 0.85 }}>
             Target: <span style={{ fontWeight: 950 }}>{currentLesson.targetWPM || 20} WPM</span>
           </span>
           <div style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
@@ -2308,11 +2308,11 @@ export default function LessonPage() {
       {/* ECO POINTS COUNTER (subtle, top) */}
       <div
         style={{
-          padding: "10px 20px",
+          padding: "7px 14px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 12,
+          gap: 8,
           color: "#2C3E50",
         }}
       >
@@ -2323,7 +2323,7 @@ export default function LessonPage() {
           </span>{" "}
           eco points
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
           <button
             type="button"
             onClick={() => {
@@ -2332,7 +2332,7 @@ export default function LessonPage() {
               setShowJoinClassModal(true);
             }}
             style={{
-              padding: "10px 14px",
+              padding: "7px 10px",
               borderRadius: 50,
               border: "2px solid #2ECC71",
               background: "#fff",
@@ -2354,7 +2354,7 @@ export default function LessonPage() {
               setShowEcoUploadModal(true);
             }}
             style={{
-              padding: "10px 14px",
+              padding: "7px 10px",
               borderRadius: 50,
               border: "2px solid #2ECC71",
               background: "#2ECC71",
@@ -2370,17 +2370,17 @@ export default function LessonPage() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="lesson-main-pad" style={{ maxWidth: 980, margin: "0 auto", padding: "12px 12px 56px" }}>
+      <div className="lesson-main-pad" style={{ maxWidth: 860, margin: "0 auto", padding: "8px 8px 0" }}>
         {/* TYPING AREA (TypingClub style) */}
         <div
           style={{
             position: "relative",
             maxWidth: "100%",
-            margin: "0 auto 6px",
+            margin: "0 auto 4px",
             background: "#FFFFFF",
-            borderRadius: 20,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-            padding: 16,
+            borderRadius: 14,
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+            padding: 11,
             border: "1px solid rgba(0,0,0,0.06)",
           }}
         >
@@ -2389,23 +2389,23 @@ export default function LessonPage() {
             className="typing-area-pet hidden md:flex"
             style={{
               position: "absolute",
-              top: 14,
-              right: 14,
+              top: 8,
+              right: 8,
               flexDirection: "column",
               alignItems: "center",
-              gap: 6,
+              gap: 4,
               pointerEvents: "none",
             }}
           >
             <div
               className={["pet", `pet-${petMood}`, petPulse ? "pet-pulse" : "", petDance ? "pet-dance" : ""].join(" ")}
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: 20,
+                width: 52,
+                height: 52,
+                borderRadius: 14,
                 display: "grid",
                 placeItems: "center",
-                fontSize: 40,
+                fontSize: 28,
                 background: "linear-gradient(180deg, rgba(46,204,113,0.12), rgba(26,47,35,0.06))",
                 border: "1px solid rgba(46,204,113,0.25)",
               }}
@@ -2415,8 +2415,8 @@ export default function LessonPage() {
             </div>
             <div
               style={{
-                width: 72,
-                height: 6,
+                width: 48,
+                height: 5,
                 borderRadius: 999,
                 background: "rgba(26,47,35,0.12)",
                 overflow: "hidden",
@@ -2433,35 +2433,35 @@ export default function LessonPage() {
               />
             </div>
           </div>
-          <div style={{ marginBottom: "10px" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "#95A5A6", marginBottom: 6, letterSpacing: "0.08em" }}>
+          <div style={{ marginBottom: "7px" }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: "#95A5A6", marginBottom: 4, letterSpacing: "0.08em" }}>
               DRILL TEXT
             </div>
             <div style={{
               fontFamily: "Roboto Mono, monospace",
-              fontSize: "16px",
-              lineHeight: 1.6,
+              fontSize: "13px",
+              lineHeight: 1.45,
               color: "#95A5A6",
               background: "#F8F9FA",
-              padding: "12px 14px",
-              borderRadius: 16,
+              padding: "8px 10px",
+              borderRadius: 10,
             }}>
               {currentLesson.drill}
             </div>
           </div>
 
           <div style={{ marginBottom: "0" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "#95A5A6", marginBottom: 8, letterSpacing: "0.08em" }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: "#95A5A6", marginBottom: 6, letterSpacing: "0.08em" }}>
               ECO SENTENCE
             </div>
             <div
               className={`eco-sentence-wrap${wordFlash ? " word-flash" : ""}`}
               style={{
               fontFamily: "Roboto Mono, monospace",
-              fontSize: "20px",
-              lineHeight: 1.45,
-              minHeight: "44px",
-              borderRadius: 12,
+              fontSize: "18px",
+              lineHeight: 1.35,
+              minHeight: "36px",
+              borderRadius: 10,
               transition: "background-color 0.2s ease, box-shadow 0.2s ease",
             }}
             >
@@ -2507,13 +2507,13 @@ export default function LessonPage() {
           enterKeyHint="done"
           style={{
             width: "100%",
-            height: "56px",
-            padding: "0 16px",
-            fontSize: "20px",
+            height: "44px",
+            padding: "0 14px",
+            fontSize: "17px",
             fontFamily: "Roboto Mono, monospace",
             border: "2px solid #2ECC71",
-            borderRadius: "16px",
-            marginBottom: "8px",
+            borderRadius: "12px",
+            marginBottom: "6px",
             boxSizing: "border-box",
             boxShadow: "0 0 0 0 rgba(46,204,113,0)",
             outline: "none",
@@ -2541,20 +2541,20 @@ export default function LessonPage() {
         {/* NAVIGATION BUTTONS */}
         <div style={{
           display: "flex",
-          gap: "12px",
-          marginBottom: "12px",
+          gap: "8px",
+          marginBottom: "8px",
           justifyContent: "center",
         }}>
           <button
             onClick={handlePrevLesson}
             disabled={currentLessonId === 1}
             style={{
-              padding: "12px 18px",
+              padding: "8px 14px",
               background: currentLessonId === 1 ? "#F8F9FA" : "#FFFFFF",
               border: currentLessonId === 1 ? "1px solid rgba(0,0,0,0.08)" : "2px solid #2ECC71",
               color: currentLessonId === 1 ? "#95A5A6" : "#1A8F4E",
               borderRadius: "50px",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 900,
               cursor: currentLessonId === 1 ? "not-allowed" : "pointer",
               transition: "all 0.2s ease",
@@ -2566,12 +2566,12 @@ export default function LessonPage() {
           <button
             onClick={() => setShowLessonMap(true)}
             style={{
-              padding: "12px 18px",
+              padding: "8px 14px",
               background: "#FFFFFF",
               border: "2px solid #2ECC71",
               color: "#2C3E50",
               borderRadius: "50px",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 900,
               cursor: "pointer",
               transition: "all 0.2s ease",
@@ -2584,12 +2584,12 @@ export default function LessonPage() {
             onClick={handleNextLesson}
             disabled={currentLessonId === 100}
             style={{
-              padding: "12px 18px",
+              padding: "8px 14px",
               background: currentLessonId === 100 ? "#F8F9FA" : "#2ECC71",
               border: "none",
               color: currentLessonId === 100 ? "#95A5A6" : "#fff",
               borderRadius: "50px",
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 950,
               cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
               transition: "all 0.2s ease",
@@ -2605,13 +2605,13 @@ export default function LessonPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 0",
+          padding: "11px 0",
         }}>
           <div style={{
-            fontSize: "14px",
+            fontSize: "13px",
             color: "#4CAF50",
             fontWeight: 600,
-            minHeight: "20px",
+            minHeight: "18px",
           }}>
             {messages.map((msg, i) => (
               <div key={i}>{msg}</div>
@@ -2620,11 +2620,11 @@ export default function LessonPage() {
           <button
             onClick={handleReset}
             style={{
-              padding: "8px 16px",
+              padding: "6px 12px",
               background: "white",
               border: "1px solid #ddd",
               borderRadius: "4px",
-              fontSize: "14px",
+              fontSize: "13px",
               cursor: "pointer",
               fontWeight: 600,
               color: "#666",
@@ -3738,7 +3738,7 @@ export default function LessonPage() {
 
         /* Mobile typing bar + spacing */
         .lesson-main-pad {
-          padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+          padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
         }
         @media (max-width: 767px) {
           .lesson-main-pad {
