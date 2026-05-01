@@ -374,9 +374,13 @@ export default function GamesHubPage() {
           position: "relative",
           zIndex: 5,
           width: "100%",
+          minHeight: 180,
           background: "#1A8F4E",
           color: "#ffffff",
-          padding: "clamp(22px, 4vw, 36px) clamp(16px, 4vw, 28px) clamp(40px, 7vw, 56px)",
+          paddingTop: 20,
+          paddingLeft: 32,
+          paddingRight: 32,
+          paddingBottom: "clamp(36px, 6vw, 52px)",
           overflow: "hidden",
           flexShrink: 0,
         }}
@@ -443,9 +447,9 @@ export default function GamesHubPage() {
           style={{
             position: "relative",
             zIndex: 2,
-            maxWidth: 1100,
+            maxWidth: 1200,
             margin: "0 auto",
-            paddingTop: 4,
+            width: "100%",
           }}
         >
           <h1
@@ -455,7 +459,8 @@ export default function GamesHubPage() {
               fontWeight: 800,
               margin: 0,
               lineHeight: 1.12,
-              textShadow: "0 3px 0 rgba(0,0,0,0.18)",
+              textShadow:
+                "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
             }}
           >
             🎮 Game Zone!
@@ -529,10 +534,11 @@ export default function GamesHubPage() {
           position: "relative",
           zIndex: 2,
           flex: 1,
-          maxWidth: 1100,
+          maxWidth: 1200,
           margin: "0 auto",
           width: "100%",
-          padding: "clamp(28px, 4vw, 40px) clamp(16px, 3vw, 26px) 48px",
+          boxSizing: "border-box",
+          padding: "clamp(28px, 4vw, 40px) 32px 48px",
         }}
       >
         {loading && (
@@ -610,7 +616,7 @@ export default function GamesHubPage() {
                           : "0 6px 16px rgba(0,0,0,0.08)",
                         transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
                         animationDelay: `${LEVEL_ORDER.indexOf(id) * 80}ms`,
-                        minHeight: 140,
+                        minHeight: 160,
                       }}
                     >
                       {isRec && (
@@ -779,9 +785,9 @@ export default function GamesHubPage() {
                     className={`games-hub-game-card games-hub-card-animate`}
                     style={{
                       position: "relative",
-                      minHeight: 380,
+                      height: 280,
                       borderRadius: 24,
-                      padding: 26,
+                      padding: 16,
                       boxSizing: "border-box",
                       background: g.gradient,
                       boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
@@ -843,7 +849,7 @@ export default function GamesHubPage() {
                     <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center" }}>
                       <span
                         style={{
-                          fontSize: 60,
+                          fontSize: 70,
                           lineHeight: 1,
                           filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                         }}
@@ -852,14 +858,14 @@ export default function GamesHubPage() {
                       </span>
                     </div>
 
-                    <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "center", marginTop: 12 }}>
+                    <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "center", marginTop: 8, minHeight: 0 }}>
                       <h3
                         style={{
                           color: "#ffffff",
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: 800,
-                          margin: "0 0 10px",
-                          lineHeight: 1.25,
+                          margin: "0 0 6px",
+                          lineHeight: 1.2,
                         }}
                       >
                         {g.name}
@@ -868,10 +874,14 @@ export default function GamesHubPage() {
                         style={{
                           margin: 0,
                           fontWeight: 700,
-                          fontSize: 13,
-                          lineHeight: 1.5,
+                          fontSize: 12,
+                          lineHeight: 1.45,
                           color: "#ffffff",
                           opacity: 0.96,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical" as const,
+                          overflow: "hidden",
                         }}
                       >
                         {g.description}
@@ -882,12 +892,12 @@ export default function GamesHubPage() {
                         unlocked && (
                           <p
                             style={{
-                              marginTop: 10,
-                              fontSize: 13,
+                              marginTop: 6,
+                              fontSize: 11,
                               fontWeight: 800,
                               background: "rgba(255,255,255,0.25)",
-                              padding: "8px 10px",
-                              borderRadius: 12,
+                              padding: "6px 8px",
+                              borderRadius: 10,
                             }}
                           >
                             Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}! 🌿
@@ -896,7 +906,7 @@ export default function GamesHubPage() {
                     </div>
 
                     {stars != null && unlocked && mode === "play" && (
-                      <div style={{ position: "relative", zIndex: 1, marginTop: 10, fontSize: 20, letterSpacing: 4 }}>
+                      <div style={{ position: "relative", zIndex: 1, marginTop: 6, fontSize: 16, letterSpacing: 3 }}>
                         {[0, 1, 2].map((si) => (
                           <span key={si} style={{ opacity: si < stars ? 1 : 0.35 }}>
                             ⭐
@@ -905,7 +915,7 @@ export default function GamesHubPage() {
                       </div>
                     )}
 
-                    <div style={{ position: "relative", zIndex: 1, marginTop: "auto", paddingTop: 20 }}>
+                    <div style={{ position: "relative", zIndex: 1, marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
                       {mode === "play" && (
                         <Link
                           href={g.slug}
@@ -914,15 +924,15 @@ export default function GamesHubPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            height: 48,
-                            minHeight: 48,
+                            height: 52,
+                            minHeight: 52,
                             width: "100%",
-                            padding: "0 22px",
+                            padding: "0 18px",
                             borderRadius: 999,
                             background: "#1A8F4E",
                             color: "#ffffff",
                             fontWeight: 800,
-                            fontSize: 17,
+                            fontSize: 16,
                             textDecoration: "none",
                             border: "3px solid rgba(255,255,255,0.5)",
                             boxSizing: "border-box",
@@ -933,16 +943,17 @@ export default function GamesHubPage() {
                       )}
                       {mode === "lesson_lock" && (
                         <>
-                          <div style={{ textAlign: "center", fontSize: 44, marginBottom: 8 }} aria-hidden>
+                          <div style={{ textAlign: "center", fontSize: 28, marginBottom: 4, lineHeight: 1 }} aria-hidden>
                             🔒
                           </div>
                           <p
                             style={{
-                              margin: "0 0 8px",
+                              margin: "0 0 4px",
                               fontWeight: 800,
-                              fontSize: 14,
+                              fontSize: 12,
                               textAlign: "center",
                               color: "#ffffff",
+                              lineHeight: 1.3,
                             }}
                           >
                             Complete {needLessons} more lesson{needLessons === 1 ? "" : "s"} to unlock!
@@ -951,10 +962,11 @@ export default function GamesHubPage() {
                             style={{
                               margin: 0,
                               fontWeight: 700,
-                              fontSize: 13,
+                              fontSize: 11,
                               textAlign: "center",
                               color: "#ffffff",
                               opacity: 0.92,
+                              lineHeight: 1.3,
                             }}
                           >
                             You&apos;re at {done}/{g.unlockLessons} lessons
@@ -965,11 +977,12 @@ export default function GamesHubPage() {
                         <>
                           <p
                             style={{
-                              margin: "0 0 10px",
+                              margin: "0 0 6px",
                               fontWeight: 800,
-                              fontSize: 16,
+                              fontSize: 13,
                               textAlign: "center",
                               color: "#ffffff",
+                              lineHeight: 1.25,
                             }}
                           >
                             Family Plan Required
@@ -980,14 +993,14 @@ export default function GamesHubPage() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              height: 48,
-                              minHeight: 48,
+                              height: 52,
+                              minHeight: 52,
                               width: "100%",
                               borderRadius: 999,
                               background: "linear-gradient(180deg, #FFD54F, #FFB300)",
                               color: "#5D4037",
                               fontWeight: 800,
-                              fontSize: 17,
+                              fontSize: 16,
                               textDecoration: "none",
                               border: "3px solid rgba(255,255,255,0.65)",
                               boxSizing: "border-box",
@@ -1003,12 +1016,12 @@ export default function GamesHubPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            height: 48,
-                            minHeight: 48,
+                            height: 52,
+                            minHeight: 52,
                             borderRadius: 999,
                             background: "rgba(255,255,255,0.25)",
                             fontWeight: 800,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: "#ffffff",
                           }}
                         >
