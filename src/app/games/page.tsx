@@ -286,6 +286,8 @@ export default function GamesHubPage() {
       className={fontClass}
       style={{
         minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
         background: "linear-gradient(180deg, #87CEEB 0%, #B8E0FE 45%, #E8F4FD 100%)",
         color: "#1A2F23",
         position: "relative",
@@ -366,14 +368,17 @@ export default function GamesHubPage() {
         }
       `}</style>
 
-      {/* Hero */}
+      {/* Hero — full-width band at top; title first for visibility */}
       <header
         style={{
           position: "relative",
+          zIndex: 5,
+          width: "100%",
           background: "#1A8F4E",
-          color: "#fff",
-          padding: "clamp(18px, 4vw, 32px) clamp(16px, 4vw, 28px) clamp(36px, 6vw, 52px)",
+          color: "#ffffff",
+          padding: "clamp(22px, 4vw, 36px) clamp(16px, 4vw, 28px) clamp(40px, 7vw, 56px)",
           overflow: "hidden",
+          flexShrink: 0,
         }}
       >
         <div
@@ -382,7 +387,8 @@ export default function GamesHubPage() {
             position: "absolute",
             inset: 0,
             pointerEvents: "none",
-            opacity: 0.25,
+            opacity: 0.22,
+            zIndex: 0,
           }}
         >
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -408,11 +414,12 @@ export default function GamesHubPage() {
           style={{
             position: "absolute",
             right: "8%",
-            top: "18%",
+            top: "22%",
             fontSize: 28,
             animation: "gamesHubFloat 4s ease-in-out infinite",
             pointerEvents: "none",
-            opacity: 0.9,
+            opacity: 0.55,
+            zIndex: 0,
           }}
         >
           ⭐
@@ -421,60 +428,71 @@ export default function GamesHubPage() {
           style={{
             position: "absolute",
             left: "6%",
-            top: "22%",
+            top: "28%",
             fontSize: 24,
             animation: "gamesHubFloatSlow 5.5s ease-in-out infinite",
             pointerEvents: "none",
-            opacity: 0.85,
+            opacity: 0.5,
+            zIndex: 0,
           }}
         >
           🍃
         </div>
 
-        <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <Link
-              href="/lesson"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 44,
-                padding: "0 18px",
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.2)",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 14,
-                textDecoration: "none",
-                border: "2px solid rgba(255,255,255,0.45)",
-              }}
-            >
-              ← Back to lessons
-            </Link>
-          </div>
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            maxWidth: 1100,
+            margin: "0 auto",
+            paddingTop: 4,
+          }}
+        >
           <h1
             style={{
-              fontSize: "clamp(1.75rem, 5vw, 2.75rem)",
+              color: "#ffffff",
+              fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
               fontWeight: 800,
               margin: 0,
-              lineHeight: 1.15,
-              textShadow: "0 2px 0 rgba(0,0,0,0.12)",
+              lineHeight: 1.12,
+              textShadow: "0 3px 0 rgba(0,0,0,0.18)",
             }}
           >
             🎮 Game Zone!
           </h1>
           <p
             style={{
-              margin: "12px 0 0",
-              fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
+              color: "#ffffff",
+              margin: "14px 0 0",
+              fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
               fontWeight: 700,
-              opacity: 0.95,
-              maxWidth: 520,
-              lineHeight: 1.45,
+              opacity: 0.98,
+              maxWidth: 560,
+              lineHeight: 1.5,
             }}
           >
             Learn to type while saving the planet!
           </p>
+          <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
+            <Link
+              href="/lesson"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: 48,
+                padding: "0 20px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.22)",
+                color: "#ffffff",
+                fontWeight: 800,
+                fontSize: 15,
+                textDecoration: "none",
+                border: "2px solid rgba(255,255,255,0.55)",
+              }}
+            >
+              ← Back to lessons
+            </Link>
+          </div>
         </div>
 
         {/* Nature strip */}
@@ -494,6 +512,7 @@ export default function GamesHubPage() {
             paddingBottom: 4,
             fontSize: 18,
             pointerEvents: "none",
+            zIndex: 1,
           }}
         >
           <span>🌳</span>
@@ -509,9 +528,11 @@ export default function GamesHubPage() {
         style={{
           position: "relative",
           zIndex: 2,
+          flex: 1,
           maxWidth: 1100,
           margin: "0 auto",
-          padding: "clamp(16px, 3vw, 28px) clamp(14px, 3vw, 22px) 40px",
+          width: "100%",
+          padding: "clamp(28px, 4vw, 40px) clamp(16px, 3vw, 26px) 48px",
         }}
       >
         {loading && (
@@ -535,18 +556,18 @@ export default function GamesHubPage() {
         {!loading && !error && (
           <>
             {/* Level selector */}
-            <section className="games-hub-card-animate" style={{ marginBottom: 28, animationDelay: "0ms" }}>
-              <h2 style={{ fontSize: "clamp(1.35rem, 3.5vw, 1.65rem)", fontWeight: 800, margin: "0 0 6px" }}>
+            <section className="games-hub-card-animate" style={{ marginBottom: 44, animationDelay: "0ms" }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 10px", color: "#1A2F23" }}>
                 Choose Your Level 🌟
               </h2>
-              <p style={{ margin: "0 0 16px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
+              <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
               </p>
               <div
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 12,
+                  gap: 16,
                 }}
                 className="games-hub-level-grid"
               >
@@ -575,7 +596,7 @@ export default function GamesHubPage() {
                         .join(" ")}
                       style={{
                         textAlign: "left",
-                        padding: 14,
+                        padding: 16,
                         borderRadius: 20,
                         border: isSel ? `4px solid ${theme.accent}` : "3px solid rgba(26,47,35,0.12)",
                         background: theme.gradient,
@@ -589,7 +610,7 @@ export default function GamesHubPage() {
                           : "0 6px 16px rgba(0,0,0,0.08)",
                         transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
                         animationDelay: `${LEVEL_ORDER.indexOf(id) * 80}ms`,
-                        minHeight: 120,
+                        minHeight: 140,
                       }}
                     >
                       {isRec && (
@@ -625,9 +646,9 @@ export default function GamesHubPage() {
                           ✓
                         </span>
                       )}
-                      <div style={{ fontSize: 32, marginTop: isSel ? 8 : 0 }}>{def.emoji}</div>
-                      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 6 }}>{def.label}</div>
-                      <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, opacity: 0.9, lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 32, lineHeight: 1, marginTop: isSel ? 8 : 0 }}>{def.emoji}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 8 }}>{def.label}</div>
+                      <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, opacity: 0.9, lineHeight: 1.45 }}>
                         Speed {def.speedMultiplier}× · {def.lives} lives · {def.roundSeconds}s ·{" "}
                         <span style={{ fontWeight: 800 }}>{def.pointsMultiplier}× eco</span>
                       </div>
@@ -641,8 +662,8 @@ export default function GamesHubPage() {
             <section
               className="games-hub-card-animate"
               style={{
-                marginBottom: 28,
-                padding: "20px 22px",
+                marginBottom: 44,
+                padding: "24px 26px",
                 borderRadius: 24,
                 background: "#fff",
                 border: "2px solid rgba(26,143,78,0.25)",
@@ -650,7 +671,7 @@ export default function GamesHubPage() {
                 animationDelay: "100ms",
               }}
             >
-              <h2 style={{ fontSize: "clamp(1.2rem, 3vw, 1.45rem)", fontWeight: 800, margin: "0 0 14px" }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", color: "#1A2F23" }}>
                 Your Progress 📚
               </h2>
               <p style={{ margin: "0 0 12px", fontWeight: 700, fontSize: "clamp(1rem, 2.2vw, 1.15rem)" }}>
@@ -706,9 +727,10 @@ export default function GamesHubPage() {
             <h2
               className="games-hub-card-animate"
               style={{
-                fontSize: "clamp(1.25rem, 3vw, 1.5rem)",
+                fontSize: 24,
                 fontWeight: 800,
-                margin: "0 0 16px",
+                margin: "8px 0 22px",
+                color: "#1A2F23",
                 animationDelay: "150ms",
               }}
             >
@@ -719,7 +741,7 @@ export default function GamesHubPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
-                gap: 20,
+                gap: 28,
               }}
             >
               <style>{`
@@ -757,9 +779,9 @@ export default function GamesHubPage() {
                     className={`games-hub-game-card games-hub-card-animate`}
                     style={{
                       position: "relative",
-                      minHeight: 350,
+                      minHeight: 380,
                       borderRadius: 24,
-                      padding: 22,
+                      padding: 26,
                       boxSizing: "border-box",
                       background: g.gradient,
                       boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
@@ -819,16 +841,39 @@ export default function GamesHubPage() {
                     </div>
 
                     <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center" }}>
-                      <span style={{ fontSize: 80, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}>
+                      <span
+                        style={{
+                          fontSize: 60,
+                          lineHeight: 1,
+                          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+                        }}
+                      >
                         {g.emoji}
                       </span>
                     </div>
 
-                    <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "center", marginTop: 8 }}>
-                      <h3 style={{ fontSize: "clamp(1.15rem, 2.8vw, 1.35rem)", fontWeight: 800, margin: "0 0 8px", lineHeight: 1.2 }}>
+                    <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "center", marginTop: 12 }}>
+                      <h3
+                        style={{
+                          color: "#ffffff",
+                          fontSize: 20,
+                          fontWeight: 800,
+                          margin: "0 0 10px",
+                          lineHeight: 1.25,
+                        }}
+                      >
                         {g.name}
                       </h3>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: 14, lineHeight: 1.45, opacity: 0.95 }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontWeight: 700,
+                          fontSize: 13,
+                          lineHeight: 1.5,
+                          color: "#ffffff",
+                          opacity: 0.96,
+                        }}
+                      >
                         {g.description}
                       </p>
                       {g.slug === "/games/eco-garden" &&
@@ -860,7 +905,7 @@ export default function GamesHubPage() {
                       </div>
                     )}
 
-                    <div style={{ position: "relative", zIndex: 1, marginTop: "auto", paddingTop: 16 }}>
+                    <div style={{ position: "relative", zIndex: 1, marginTop: "auto", paddingTop: 20 }}>
                       {mode === "play" && (
                         <Link
                           href={g.slug}
@@ -869,12 +914,13 @@ export default function GamesHubPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            minHeight: 60,
+                            height: 48,
+                            minHeight: 48,
                             width: "100%",
-                            padding: "0 20px",
+                            padding: "0 22px",
                             borderRadius: 999,
                             background: "#1A8F4E",
-                            color: "#fff",
+                            color: "#ffffff",
                             fontWeight: 800,
                             fontSize: 17,
                             textDecoration: "none",
@@ -887,20 +933,45 @@ export default function GamesHubPage() {
                       )}
                       {mode === "lesson_lock" && (
                         <>
-                          <div style={{ textAlign: "center", fontSize: 48, marginBottom: 8 }} aria-hidden>
+                          <div style={{ textAlign: "center", fontSize: 44, marginBottom: 8 }} aria-hidden>
                             🔒
                           </div>
-                          <p style={{ margin: "0 0 8px", fontWeight: 800, fontSize: 15, textAlign: "center" }}>
+                          <p
+                            style={{
+                              margin: "0 0 8px",
+                              fontWeight: 800,
+                              fontSize: 14,
+                              textAlign: "center",
+                              color: "#ffffff",
+                            }}
+                          >
                             Complete {needLessons} more lesson{needLessons === 1 ? "" : "s"} to unlock!
                           </p>
-                          <p style={{ margin: 0, fontWeight: 700, fontSize: 14, textAlign: "center", opacity: 0.9 }}>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontWeight: 700,
+                              fontSize: 13,
+                              textAlign: "center",
+                              color: "#ffffff",
+                              opacity: 0.92,
+                            }}
+                          >
                             You&apos;re at {done}/{g.unlockLessons} lessons
                           </p>
                         </>
                       )}
                       {mode === "paid_lock" && (
                         <>
-                          <p style={{ margin: "0 0 10px", fontWeight: 800, fontSize: 16, textAlign: "center" }}>
+                          <p
+                            style={{
+                              margin: "0 0 10px",
+                              fontWeight: 800,
+                              fontSize: 16,
+                              textAlign: "center",
+                              color: "#ffffff",
+                            }}
+                          >
                             Family Plan Required
                           </p>
                           <Link
@@ -909,7 +980,8 @@ export default function GamesHubPage() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              minHeight: 60,
+                              height: 48,
+                              minHeight: 48,
                               width: "100%",
                               borderRadius: 999,
                               background: "linear-gradient(180deg, #FFD54F, #FFB300)",
@@ -918,6 +990,7 @@ export default function GamesHubPage() {
                               fontSize: 17,
                               textDecoration: "none",
                               border: "3px solid rgba(255,255,255,0.65)",
+                              boxSizing: "border-box",
                             }}
                           >
                             Upgrade
@@ -930,11 +1003,13 @@ export default function GamesHubPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            minHeight: 60,
+                            height: 48,
+                            minHeight: 48,
                             borderRadius: 999,
                             background: "rgba(255,255,255,0.25)",
                             fontWeight: 800,
                             fontSize: 16,
+                            color: "#ffffff",
                           }}
                         >
                           Coming soon!
@@ -946,46 +1021,118 @@ export default function GamesHubPage() {
               })}
             </div>
 
-            {/* Coming soon teasers */}
-            <section style={{ marginTop: 36 }}>
-              <h2 style={{ fontSize: "clamp(1.2rem, 3vw, 1.45rem)", fontWeight: 800, margin: "0 0 14px" }}>
+            {/* Coming soon teasers — same vibe as game cards, grayed out */}
+            <section style={{ marginTop: 52 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 22px", color: "#1A2F23" }}>
                 Coming Soon ✨
               </h2>
               <div
+                className="games-hub-coming-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-                  gap: 14,
+                  gridTemplateColumns: "1fr",
+                  gap: 24,
                 }}
               >
-                {COMING_SOON.map((c) => (
-                  <div
+                <style>{`
+                  @media (min-width: 640px) {
+                    .games-hub-coming-grid {
+                      grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                  }
+                  @media (min-width: 1024px) {
+                    .games-hub-coming-grid {
+                      grid-template-columns: repeat(3, 1fr) !important;
+                    }
+                  }
+                `}</style>
+                {COMING_SOON.map((c, ci) => (
+                  <article
                     key={c.name}
+                    className="games-hub-card-animate games-hub-game-card"
                     style={{
-                      borderRadius: 20,
-                      padding: 18,
-                      background: "rgba(255,255,255,0.65)",
-                      border: "2px dashed rgba(26,47,35,0.2)",
+                      position: "relative",
+                      minHeight: 280,
+                      borderRadius: 24,
+                      padding: 26,
+                      boxSizing: "border-box",
+                      background: "linear-gradient(160deg, #78909C 0%, #455A64 55%, #37474F 100%)",
+                      boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
+                      border: "3px solid rgba(255,255,255,0.25)",
+                      color: "#ffffff",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
                       textAlign: "center",
-                      opacity: 0.85,
+                      opacity: 0.88,
+                      overflow: "hidden",
+                      animationDelay: `${320 + ci * 90}ms`,
                     }}
                   >
-                    <div style={{ fontSize: 40, marginBottom: 8 }}>{c.emoji}</div>
-                    <div style={{ fontWeight: 800, color: "#1A2F23", marginBottom: 8 }}>{c.name}</div>
+                    <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.2 }}>
+                      <span style={{ position: "absolute", left: "12%", top: "20%", fontSize: 22 }}>✨</span>
+                      <span style={{ position: "absolute", right: "14%", top: "35%", fontSize: 18 }}>🌿</span>
+                    </div>
                     <span
                       style={{
-                        display: "inline-block",
-                        fontSize: 12,
-                        fontWeight: 800,
-                        background: "#B0BEC5",
-                        color: "#37474F",
-                        padding: "4px 12px",
-                        borderRadius: 999,
+                        fontSize: 60,
+                        lineHeight: 1,
+                        filter: "grayscale(0.15)",
+                        position: "relative",
+                        zIndex: 1,
                       }}
                     >
-                      Coming Soon!
+                      {c.emoji}
                     </span>
-                  </div>
+                    <h3
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        margin: "14px 0 0",
+                        fontSize: 20,
+                        fontWeight: 800,
+                        color: "#ffffff",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {c.name}
+                    </h3>
+                    <p
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        margin: "10px 0 0",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        opacity: 0.88,
+                        lineHeight: 1.45,
+                        maxWidth: 280,
+                      }}
+                    >
+                      A brand-new typing adventure is sprouting here!
+                    </p>
+                    <div style={{ marginTop: "auto", paddingTop: 20, position: "relative", zIndex: 1, width: "100%" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: 48,
+                          minHeight: 48,
+                          borderRadius: 999,
+                          background: "rgba(0,0,0,0.22)",
+                          color: "#ECEFF1",
+                          fontWeight: 800,
+                          fontSize: 15,
+                          border: "2px dashed rgba(255,255,255,0.4)",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        Coming Soon!
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             </section>
