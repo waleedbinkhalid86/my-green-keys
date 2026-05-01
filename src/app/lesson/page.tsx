@@ -33,19 +33,6 @@ const FINGER_MAP: Record<string, string> = {
   " ": "space",
 };
 
-// Finger colors for hand display
-const FINGER_COLORS_HAND: Record<string, string> = {
-  lpinky: "#FF6B6B", // coral
-  lring: "#FF9F43", // orange
-  lmiddle: "#FECA57", // yellow
-  lindex: "#48DBFB", // blue
-  rindex: "#48DBFB", // blue
-  rmiddle: "#FECA57", // yellow
-  rring: "#FF9F43", // orange
-  rpinky: "#FF6B6B", // coral
-  space: "#A29BFE", // purple
-};
-
 const FINGER_COLORS: Record<string, string> = {
   lpinky: "#FF6B6B",
   lring: "#FF9F43",
@@ -1023,95 +1010,196 @@ export default function LessonPage() {
 
   const renderHandSVG = (hand: "left" | "right") => {
     const isLeft = hand === "left";
-    const fingerLabels = ["Pinky", "Ring", "Middle", "Index", "Thumb"];
-    const fingerMapping = isLeft
-      ? ["lpinky", "lring", "lmiddle", "lindex", "space"]
-      : ["rindex", "rmiddle", "rring", "rpinky", "space"];
-    
-    // Determine which finger is highlighted
-    let highlightedFingerType = "";
-    if (highlightKey) {
-      highlightedFingerType = FINGER_MAP[highlightKey] || "";
-    }
+    const themeColor = getThemeColor();
+    const skin = "#FDBCB4";
+    const skinHighlight = "#ffcfc4";
+    const outline = "#E8956D";
+    const knuckleY = 96;
+
+    const fingerForHighlight = (key: string | null): string => {
+      if (!key) return "";
+      if (key === " ") return "space";
+      const lower = key.toLowerCase();
+      return FINGER_MAP[lower] ?? "";
+    };
+
+    const highlightedFingerType = fingerForHighlight(highlightKey);
+
+    const isFingerLit = (fingerType: string) =>
+      fingerType !== "" && fingerType === highlightedFingerType;
+
+    /** Left palm: viewer L→R = Pinky, Ring, Middle, Index; thumb on viewer's left */
+    const leftFingers: Array<{ type: string; x: number; w: number; h: number; y: number }> = [
+      { type: "lpinky", x: 100, w: 13, h: 62, y: knuckleY - 62 },
+      { type: "lring", x: 81, w: 15, h: 74, y: knuckleY - 74 },
+      { type: "lmiddle", x: 61, w: 17, h: 86, y: knuckleY - 86 },
+      { type: "lindex", x: 40, w: 16, h: 80, y: knuckleY - 80 },
+    ];
+
+    /** Right palm: same layout mirrored; types use r-* for correct-key mapping */
+    const rightFingers = leftFingers.map((f) => ({
+      ...f,
+      x: 150 - f.x - f.w,
+      type: `r${f.type.slice(1)}`,
+    }));
+
+    const fingers = isLeft ? leftFingers : rightFingers;
+
+    const fingerGlow = (lit: boolean) =>
+      lit
+        ? `drop-shadow(0 0 6px ${themeColor}) drop-shadow(0 0 14px ${themeColor}99) drop-shadow(0 0 22px ${themeColor}44)`
+        : undefined;
+
+    const fingerPad = (f: (typeof leftFingers)[0], i: number) => {
+      const lit = isFingerLit(f.type);
+      const tipCy = f.y + 6;
+      const padCy = f.y + f.h - 10;
+      return (
+        <g key={`${f.type}-${i}`}>
+          {/* Finger pad (tip) */}
+          <ellipse
+            cx={f.x + f.w / 2}
+            cy={tipCy}
+            rx={f.w / 2 + 1}
+            ry={7}
+            fill={lit ? skinHighlight : skin}
+            stroke={outline}
+            strokeWidth={lit ? 2 : 1.35}
+            style={{
+              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
+              filter: fingerGlow(lit),
+            }}
+          />
+          {/* Phalanx */}
+          <rect
+            x={f.x}
+            y={f.y + 10}
+            width={f.w}
+            height={f.h - 18}
+            rx={5}
+            fill={lit ? skinHighlight : skin}
+            stroke={outline}
+            strokeWidth={lit ? 2 : 1.35}
+            style={{
+              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
+              filter: fingerGlow(lit),
+            }}
+          />
+          {/* Lower knuckle */}
+          <ellipse
+            cx={f.x + f.w / 2}
+            cy={padCy}
+            rx={f.w / 2 + 0.5}
+            ry={8}
+            fill={lit ? skinHighlight : skin}
+            stroke={outline}
+            strokeWidth={lit ? 2 : 1.35}
+            style={{
+              transition: "filter 0.25s ease, stroke-width 0.25s ease, fill 0.25s ease",
+              filter: fingerGlow(lit),
+            }}
+          />
+        </g>
+      );
+    };
+
+    const thumbLit = isFingerLit("space");
+    const thumbSkin = thumbLit ? skinHighlight : skin;
+    const thumbStrokeW = thumbLit ? 2 : 1.35;
+
+    const leftThumb = (
+      <g transform="translate(4, 72) rotate(-24 18 58)">
+        <rect x={2} y={10} width={26} height={54} rx={12} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
+        <ellipse cx={15} cy={12} rx={12} ry={9} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
+      </g>
+    );
+
+    const rightThumb = (
+      <g transform="translate(146, 72) rotate(24 -18 58)">
+        <rect x={-28} y={10} width={26} height={54} rx={12} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
+        <ellipse cx={-15} cy={12} rx={12} ry={9} fill={thumbSkin} stroke={outline} strokeWidth={thumbStrokeW} />
+      </g>
+    );
+
+    const palmPath = isLeft
+      ? "M 22 96 C 18 104, 16 120, 18 138 L 20 168 C 22 176, 40 178, 75 176 C 110 178, 128 176, 130 168 L 132 138 C 134 120, 128 104, 118 96 C 105 90, 88 88, 75 90 C 62 88, 35 90, 22 96 Z"
+      : "M 128 96 C 132 104, 134 120, 132 138 L 130 168 C 128 176, 110 178, 75 176 C 40 178, 22 176, 20 168 L 18 138 C 16 120, 22 104, 32 96 C 45 90, 62 88, 75 90 C 88 88, 115 90, 128 96 Z";
+
+    const labelOrder: Array<{ label: string; type: string }> = [
+      { label: "Pinky", type: isLeft ? "lpinky" : "rpinky" },
+      { label: "Ring", type: isLeft ? "lring" : "rring" },
+      { label: "Middle", type: isLeft ? "lmiddle" : "rmiddle" },
+      { label: "Index", type: isLeft ? "lindex" : "rindex" },
+      { label: "Thumb", type: "space" },
+    ];
+
+    const thumbGroupStyle: React.CSSProperties = {
+      transition: "filter 0.25s ease",
+      filter: thumbLit ? fingerGlow(true) : undefined,
+    };
 
     return (
-      <div style={{ textAlign: "center", flex: 1 }}>
-        <div style={{ fontSize: "12px", fontWeight: 600, color: "#666", marginBottom: "8px" }}>
-          {isLeft ? "Left Hand" : "Right Hand"}
+      <div style={{ textAlign: "center", flex: "0 0 auto", width: 150 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#374151", marginBottom: 10 }}>
+          {isLeft ? "Left hand" : "Right hand"}
         </div>
-        <svg width="80" height="140" viewBox="0 0 80 140" style={{ margin: "0 auto", display: "block" }}>
-          {/* Hand base */}
-          <ellipse cx="40" cy="110" rx="18" ry="20" fill="#F5DEB3" stroke="#D3A574" strokeWidth="1" />
-          
-          {/* Fingers */}
-          {[0, 1, 2, 3].map((i) => {
-            const xPositions = isLeft ? [15, 27, 39, 51] : [29, 41, 53, 65];
-            const fingerType = fingerMapping[i];
-            const isGlowing = fingerType === highlightedFingerType;
-            
+        <svg
+          width={150}
+          height={180}
+          viewBox="0 0 150 180"
+          style={{ margin: "0 auto", display: "block", overflow: "visible" }}
+          aria-hidden
+        >
+          {/* Palm (behind fingers) */}
+          <path
+            d={palmPath}
+            fill={skin}
+            stroke={outline}
+            strokeWidth={1.5}
+            style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.06))" }}
+          />
+          {/* Palm crease */}
+          <path
+            d={isLeft ? "M 32 118 Q 75 128 118 118" : "M 32 118 Q 75 128 118 118"}
+            fill="none"
+            stroke={outline}
+            strokeWidth={0.9}
+            opacity={0.45}
+          />
+
+          <g style={thumbGroupStyle}>{isLeft ? leftThumb : rightThumb}</g>
+
+          {/* Four fingers (drawn after thumb so index stacks correctly — reorder: draw pinky first) */}
+          {[...fingers].reverse().map((f, i) => fingerPad(f, i))}
+        </svg>
+        <div
+          style={{
+            marginTop: 12,
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: 4,
+            fontSize: 10,
+            fontWeight: 800,
+            color: "#6b7280",
+            maxWidth: 150,
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          {labelOrder.map(({ label, type }) => {
+            const active = isFingerLit(type);
             return (
-              <g key={i}>
-                <rect
-                  x={xPositions[i] - 5}
-                  y={isGlowing ? 10 : 20}
-                  width="10"
-                  height="80"
-                  fill={FINGER_COLORS_HAND[fingerType]}
-                  stroke="#999"
-                  strokeWidth="0.5"
-                  rx="4"
-                  style={{
-                    filter: isGlowing ? "brightness(1.4) drop-shadow(0 0 8px currentColor)" : "opacity: 0.5",
-                    transition: "all 0.3s ease",
-                  }}
-                  opacity={isGlowing ? 1 : 0.5}
-                />
-                <circle
-                  cx={xPositions[i]}
-                  cy={isGlowing ? 8 : 18}
-                  r="6"
-                  fill={FINGER_COLORS_HAND[fingerType]}
-                  stroke="#999"
-                  strokeWidth="0.5"
-                  style={{
-                    filter: isGlowing ? "brightness(1.4) drop-shadow(0 0 8px currentColor)" : "opacity: 0.5",
-                    transition: "all 0.3s ease",
-                  }}
-                  opacity={isGlowing ? 1 : 0.5}
-                />
-              </g>
+              <span
+                key={label}
+                style={{
+                  color: active ? themeColor : "#6b7280",
+                  textShadow: active ? `0 0 12px ${themeColor}55` : "none",
+                }}
+              >
+                {label}
+              </span>
             );
           })}
-          
-          {/* Thumb */}
-          {(() => {
-            const thumbType = fingerMapping[4];
-            const isGlowing = thumbType === highlightedFingerType;
-            const thumbX = isLeft ? 15 : 65;
-            return (
-              <g key="thumb">
-                <ellipse
-                  cx={thumbX}
-                  cy="100"
-                  rx="7"
-                  ry="14"
-                  fill={FINGER_COLORS_HAND[thumbType]}
-                  stroke="#999"
-                  strokeWidth="0.5"
-                  style={{
-                    filter: isGlowing ? "brightness(1.4) drop-shadow(0 0 8px currentColor)" : "opacity: 0.5",
-                    transition: "all 0.3s ease",
-                  }}
-                  opacity={isGlowing ? 1 : 0.5}
-                />
-              </g>
-            );
-          })()}
-        </svg>
-        <div style={{ fontSize: "10px", color: "#999", marginTop: "8px", display: "flex", justifyContent: "space-around" }}>
-          {fingerLabels.map((label, i) => (
-            <span key={i}>{label}</span>
-          ))}
         </div>
       </div>
     );
@@ -2495,19 +2583,23 @@ export default function LessonPage() {
           </div>
         </div>
 
-        {/* HAND VISUALIZATION */}
+        {/* HAND VISUALIZATION — TypingClub-style guides, 150×180 per hand */}
         <div
           className="hidden sm:flex flex-col sm:flex-row"
           style={{
             background: "#FFFFFF",
-            padding: "18px 16px",
+            padding: "22px 16px 26px",
             borderRadius: "20px",
             marginBottom: "18px",
             boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
             border: "1px solid rgba(0,0,0,0.06)",
             display: "flex",
-            gap: "24px",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 32,
             justifyContent: "center",
+            alignItems: "flex-end",
+            width: "100%",
           }}
         >
           {renderHandSVG("left")}
