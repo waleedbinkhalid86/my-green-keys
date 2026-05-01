@@ -1,11 +1,47 @@
 import { lessons, type Lesson } from "@/data/lessons";
 
+/** Whole-word blocklist for kid-safe typing games (lowercase tokens only). */
+export const WORD_BLACKLIST = [
+  "ass",
+  "aas",
+  "slag",
+  "fag",
+  "damn",
+  "hell",
+  "crap",
+  "piss",
+  "shit",
+  "sex",
+  "arse",
+  "sag",
+  "gas",
+] as const;
+
+const WORD_BLACKLIST_SET = new Set<string>(WORD_BLACKLIST);
+
+export function isAllowedGameWord(word: string): boolean {
+  const t = word.toLowerCase().trim();
+  if (!t) return false;
+  return !WORD_BLACKLIST_SET.has(t);
+}
+
+/** Tokens in a phrase must all be allowed (for item names, facts). */
+export function isAllowedGamePhrase(text: string): boolean {
+  const parts = text.toLowerCase().split(/\s+/);
+  for (const part of parts) {
+    const t = part.replace(/^[^a-z0-9]+/g, "").replace(/[^a-z0-9]+$/g, "");
+    if (t && !isAllowedGameWord(t)) return false;
+  }
+  return true;
+}
+
 function normalizeToken(raw: string): string | null {
   const t = raw
     .toLowerCase()
     .replace(/^[^a-z0-9]+/g, "")
     .replace(/[^a-z0-9]+$/g, "");
   if (!t || !/^[a-z0-9]+$/.test(t)) return null;
+  if (!isAllowedGameWord(t)) return null;
   return t;
 }
 
@@ -32,17 +68,38 @@ export function vocabularyFromLessonRange(
       if (w.length >= minLen && w.length <= maxLen) set.add(w);
     }
   }
-  return [...set];
+  return [...set].filter(isAllowedGameWord);
 }
 
+const SAFE_FALLBACK_WORDS = [
+  "tree",
+  "leaf",
+  "sun",
+  "air",
+  "soil",
+  "bird",
+  "frog",
+  "lake",
+  "seed",
+  "grow",
+  "rain",
+  "wind",
+  "root",
+  "nest",
+];
+
 export function pickRandomWord(pool: string[], avoid?: Set<string>): string {
-  if (pool.length === 0) return "as";
+  const filtered = pool.filter((w) => isAllowedGameWord(w));
+  if (filtered.length === 0) {
+    const fb = SAFE_FALLBACK_WORDS.find((w) => isAllowedGameWord(w));
+    return fb ?? "ok";
+  }
   const maxAttempts = 40;
   for (let i = 0; i < maxAttempts; i++) {
-    const w = pool[Math.floor(Math.random() * pool.length)]!;
+    const w = filtered[Math.floor(Math.random() * filtered.length)]!;
     if (!avoid?.has(w)) return w;
   }
-  return pool[Math.floor(Math.random() * pool.length)]!;
+  return filtered[Math.floor(Math.random() * filtered.length)]!;
 }
 
 export type AgeBand = "6-8" | "9-11" | "12-14";
@@ -89,29 +146,64 @@ export function bandGameParams(band: AgeBand): {
   };
 }
 
-export type ProgressiveTier = 0 | 1 | 2 | 3;
-
-/** Word lengths by catches this round (before the next word spawns). */
-export function progressiveLengthRange(caught: number): { min: number; max: number } {
-  if (caught < 5) return { min: 2, max: 3 };
-  if (caught < 10) return { min: 3, max: 4 };
-  if (caught < 15) return { min: 4, max: 5 };
-  return { min: 5, max: 6 };
-}
+export type FallingLeavesStageInfo = {
+  stage: 1 | 2 | 3 | 4;
+  emoji: string;
+  title: string;
+  minLen: number;
+  maxLen: number;
+  lettersLabel: string;
+  /** Null when already at stage 4. */
+  catchesToNext: number | null;
+};
 
 /**
- * Earliest completed lessons (by lesson id) included in the pool this step.
- * Progresses through lesson order as the player catches more words.
+ * Simple stages from leaves caught this round (matches hub difficulty names).
+ * Stage 1: 0–4 caught → 2–3 letters · 🌱 Seedling
  */
-export function progressiveLessonIdWindow(sortedCompletedLessonIds: number[], caught: number): number[] {
-  const ids =
-    sortedCompletedLessonIds.length > 0 ? [...sortedCompletedLessonIds].sort((a, b) => a - b) : [1];
-  let take: number;
-  if (caught < 5) take = Math.min(3, ids.length);
-  else if (caught < 10) take = Math.min(5, ids.length);
-  else if (caught < 15) take = Math.min(8, ids.length);
-  else take = ids.length;
-  return ids.slice(0, Math.max(1, take));
+export function fallingLeavesStage(caught: number): FallingLeavesStageInfo {
+  if (caught < 5) {
+    return {
+      stage: 1,
+      emoji: "🌱",
+      title: "Seedling",
+      minLen: 2,
+      maxLen: 3,
+      lettersLabel: "2–3 letters",
+      catchesToNext: 5 - caught,
+    };
+  }
+  if (caught < 10) {
+    return {
+      stage: 2,
+      emoji: "🌿",
+      title: "Explorer",
+      minLen: 3,
+      maxLen: 4,
+      lettersLabel: "3–4 letters",
+      catchesToNext: 10 - caught,
+    };
+  }
+  if (caught < 15) {
+    return {
+      stage: 3,
+      emoji: "🌳",
+      title: "Guardian",
+      minLen: 4,
+      maxLen: 5,
+      lettersLabel: "4–5 letters",
+      catchesToNext: 15 - caught,
+    };
+  }
+  return {
+    stage: 4,
+    emoji: "⚡",
+    title: "Champion",
+    minLen: 5,
+    maxLen: 6,
+    lettersLabel: "5–6 letters",
+    catchesToNext: null,
+  };
 }
 
 export function buildPoolFromLessons(lessonIds: number[], minLen: number, maxLen: number): string[] {
@@ -120,42 +212,25 @@ export function buildPoolFromLessons(lessonIds: number[], minLen: number, maxLen
   for (const lesson of lessons) {
     if (!idSet.has(lesson.id)) continue;
     for (const w of tokensFromLesson(lesson)) {
-      if (w.length >= minLen && w.length <= maxLen) set.add(w);
+      if (w.length >= minLen && w.length <= maxLen && isAllowedGameWord(w)) set.add(w);
     }
   }
   return [...set];
 }
 
 /**
- * Words only from lessons the student has completed; length + lesson window from round progress.
+ * Words only from lessons the student has completed; lengths from simple catch-based stages.
  */
 export function progressiveWordPool(sortedCompletedLessonIds: number[], caught: number): string[] {
-  const window = progressiveLessonIdWindow(sortedCompletedLessonIds, caught);
-  const { min, max } = progressiveLengthRange(caught);
-  let pool = buildPoolFromLessons(window, min, max);
+  const ids =
+    sortedCompletedLessonIds.length > 0 ? [...sortedCompletedLessonIds].sort((a, b) => a - b) : [1];
+  const { minLen, maxLen } = fallingLeavesStage(caught);
+  let pool = buildPoolFromLessons(ids, minLen, maxLen);
   if (pool.length === 0) {
-    pool = buildPoolFromLessons(window, Math.max(2, min - 1), Math.min(12, max + 2));
+    pool = buildPoolFromLessons(ids, Math.max(2, minLen - 1), Math.min(12, maxLen + 2));
   }
   if (pool.length === 0) {
-    pool = buildPoolFromLessons(window, 2, 6);
+    pool = buildPoolFromLessons(ids, 2, 6);
   }
-  return pool;
-}
-
-export function progressiveDifficultyLabel(
-  sortedCompletedLessonIds: number[],
-  caught: number
-): { tier: ProgressiveTier; title: string; lettersLabel: string; lessonsLabel: string } {
-  const tier: ProgressiveTier = caught < 5 ? 0 : caught < 10 ? 1 : caught < 15 ? 2 : 3;
-  const { min, max } = progressiveLengthRange(caught);
-  const win = progressiveLessonIdWindow(sortedCompletedLessonIds, caught);
-  const lo = Math.min(...win);
-  const hi = Math.max(...win);
-  const titles = ["Seedling", "Sprout", "Young grove", "Forest keeper"];
-  return {
-    tier,
-    title: titles[tier],
-    lettersLabel: `${min}–${max} letters`,
-    lessonsLabel: lo === hi ? `Lesson ${lo}` : `Lessons ${lo}–${hi}`,
-  };
+  return pool.filter(isAllowedGameWord);
 }

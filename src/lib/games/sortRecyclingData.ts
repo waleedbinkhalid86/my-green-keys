@@ -1,4 +1,5 @@
 import type { SortBin } from "@/lib/games/gameLevels";
+import { isAllowedGamePhrase } from "@/lib/games/lessonVocab";
 
 export type RecyclingItem = {
   id: string;
@@ -163,10 +164,18 @@ export const RECYCLING_FACTS: string[] = [
   "Many cities want glass separate—broken glass can spoil paper bales.",
 ];
 
+const RECYCLING_ITEMS_SAFE = RECYCLING_ITEMS.filter(
+  (i) => isAllowedGamePhrase(i.name) && isAllowedGamePhrase(i.wrongHint)
+);
+const ITEM_POOL = RECYCLING_ITEMS_SAFE.length > 0 ? RECYCLING_ITEMS_SAFE : RECYCLING_ITEMS;
+
+const RECYCLING_FACTS_SAFE = RECYCLING_FACTS.filter(isAllowedGamePhrase);
+const FACT_POOL = RECYCLING_FACTS_SAFE.length > 0 ? RECYCLING_FACTS_SAFE : RECYCLING_FACTS;
+
 export function randomRecyclingFact(): string {
-  return RECYCLING_FACTS[Math.floor(Math.random() * RECYCLING_FACTS.length)]!;
+  return FACT_POOL[Math.floor(Math.random() * FACT_POOL.length)]!;
 }
 
 export function randomRecyclingItem(): RecyclingItem {
-  return RECYCLING_ITEMS[Math.floor(Math.random() * RECYCLING_ITEMS.length)]!;
+  return ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)]!;
 }

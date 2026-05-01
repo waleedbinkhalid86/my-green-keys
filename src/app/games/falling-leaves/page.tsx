@@ -7,8 +7,8 @@ import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import {
   ageToBand,
   bandGameParams,
+  fallingLeavesStage,
   pickRandomWord,
-  progressiveDifficultyLabel,
   progressiveWordPool,
 } from "@/lib/games/lessonVocab";
 import { GAME_LEVELS, getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
@@ -89,6 +89,8 @@ export default function FallingLeavesPage() {
   const [resultsFact, setResultsFact] = useState<EcoFact | null>(null);
   const [newRecord, setNewRecord] = useState(false);
   const [petDance, setPetDance] = useState(false);
+  const [stageUpBanner, setStageUpBanner] = useState(false);
+  const prevStageRef = useRef(1);
 
   const syncLeaves = useCallback((next: Leaf[]) => {
     leavesRef.current = next;
@@ -103,10 +105,7 @@ export default function FallingLeavesPage() {
     caughtRef.current = caught;
   }, [caught]);
 
-  const difficulty = useMemo(
-    () => progressiveDifficultyLabel(completedLessonIds, caught),
-    [completedLessonIds, caught]
-  );
+  const stageInfo = useMemo(() => fallingLeavesStage(caught), [caught]);
 
   useEffect(() => {
     const run = async () => {
@@ -193,8 +192,23 @@ export default function FallingLeavesPage() {
     setResultsFact(null);
     setNewRecord(false);
     setPetDance(false);
+    setStageUpBanner(false);
+    prevStageRef.current = 1;
     if (factClearRef.current) clearTimeout(factClearRef.current);
   }, [syncLeaves]);
+
+  useEffect(() => {
+    if (phase !== "play") return;
+    const s = fallingLeavesStage(caught);
+    const prev = prevStageRef.current;
+    if (caught > 0 && s.stage > prev) {
+      setStageUpBanner(true);
+      const t = window.setTimeout(() => setStageUpBanner(false), 2600);
+      prevStageRef.current = s.stage;
+      return () => clearTimeout(t);
+    }
+    prevStageRef.current = s.stage;
+  }, [caught, phase]);
 
   const endGame = useCallback(() => {
     if (roundEndedRef.current) return;
@@ -520,9 +534,47 @@ export default function FallingLeavesPage() {
           .fl-leaf-shake { animation: fl-shake 0.38s ease; }
           .fl-pet-dance { animation: fl-pet-dance 0.65s ease-in-out infinite; }
           .fl-new-record { animation: fl-celebrate 0.8s ease infinite; }
+          @keyframes fl-stage-pop {
+            0% { opacity: 0; transform: scale(0.7) translateY(12px); }
+            18% { opacity: 1; transform: scale(1.08) translateY(0); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          .fl-stage-up-banner { animation: fl-stage-pop 0.55s ease both; }
         `,
         }}
       />
+
+      {stageUpBanner && phase === "play" && (
+        <div
+          style={{
+            position: "fixed",
+            top: "14%",
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            display: "flex",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            className="fl-stage-up-banner"
+            role="status"
+            style={{
+              padding: "16px 28px",
+              borderRadius: 20,
+              background: "linear-gradient(135deg,#FFEB3B,#A5D6A7)",
+              color: "#1b5e20",
+              fontWeight: 950,
+              fontSize: 22,
+              boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+              border: "2px solid rgba(255,255,255,0.6)",
+            }}
+          >
+            Stage up! 🎉
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -758,22 +810,30 @@ export default function FallingLeavesPage() {
             <div
               style={{
                 marginTop: 12,
-                padding: "12px 16px",
+                padding: "14px 18px",
                 borderRadius: 16,
-                background: "linear-gradient(90deg, rgba(123,31,162,0.35), rgba(76,175,80,0.25))",
-                border: "1px solid rgba(255,255,255,0.2)",
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: "8px 16px",
+                background: "linear-gradient(90deg, rgba(123,31,162,0.4), rgba(76,175,80,0.28))",
+                border: "1px solid rgba(255,255,255,0.22)",
                 fontWeight: 800,
               }}
             >
-              <span style={{ fontSize: 13, color: "#FFEB3B" }}>📖 Reading level</span>
-              <span style={{ fontSize: 15, fontWeight: 950 }}>{difficulty.title}</span>
-              <span style={{ opacity: 0.85, fontSize: 13 }}>
-                Stage {difficulty.tier + 1}/4 · {difficulty.lettersLabel} · {difficulty.lessonsLabel}
-              </span>
+              <div style={{ fontSize: 20, fontWeight: 950, letterSpacing: "0.02em" }}>
+                Stage {stageInfo.stage} {stageInfo.emoji} · {stageInfo.title}
+              </div>
+              <div style={{ marginTop: 6, opacity: 0.92, fontSize: 14 }}>
+                Word size: {stageInfo.lettersLabel} (from lessons you&apos;ve completed)
+              </div>
+              <div style={{ marginTop: 8, fontSize: 14, color: "#FFEB3B", fontWeight: 900 }}>
+                {stageInfo.catchesToNext != null ? (
+                  <>
+                    {stageInfo.catchesToNext === 1
+                      ? "1 more catch to reach the next stage!"
+                      : `${stageInfo.catchesToNext} more catches to the next stage!`}
+                  </>
+                ) : (
+                  <>Top stage—you&apos;re a leaf-catching champion! Keep the combo going!</>
+                )}
+              </div>
             </div>
 
             <div

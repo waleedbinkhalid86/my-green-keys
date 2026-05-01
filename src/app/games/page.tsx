@@ -106,7 +106,12 @@ export default function GamesHubPage() {
           .eq("student_id", userData.user.id)
           .eq("completed", true);
         if (pErr) throw pErr;
-        setCompletedLessons((progressRows ?? []).length);
+        const uniqueDone = new Set(
+          (progressRows ?? [])
+            .map((r) => r.lesson_id)
+            .filter((n): n is number => typeof n === "number" && n >= 1)
+        ).size;
+        setCompletedLessons(uniqueDone);
 
         const { data: sub } = await supabase
           .from("subscriptions")
@@ -128,6 +133,12 @@ export default function GamesHubPage() {
 
   const done = completedLessons ?? 0;
   const recommendedId = suggestedLevelIdForAge(profileAge);
+
+  const lessonMilestones = GAMES.map((g) => g.unlockLessons).filter((n) => n > 0);
+  const nextLessonUnlock = [...new Set(lessonMilestones)].sort((a, b) => a - b).find((m) => done < m) ?? null;
+  const progressToNextPct =
+    nextLessonUnlock != null && nextLessonUnlock > 0 ? Math.min(100, (done / nextLessonUnlock) * 100) : 100;
+  const SORT_RECYCLING_AT = 5;
 
   return (
     <div
@@ -214,10 +225,66 @@ export default function GamesHubPage() {
         )}
 
         {!loading && !error && (
-          <div style={{ marginBottom: 18, fontWeight: 800, opacity: 0.9 }}>
-            Lessons completed: <span style={{ color: "#FFEB3B" }}>{done}</span>
+          <div
+            style={{
+              marginBottom: 20,
+              padding: 18,
+              borderRadius: 18,
+              background: "linear-gradient(145deg, rgba(255,255,255,0.1), rgba(0,0,0,0.2))",
+              border: "1px solid rgba(129, 199, 132, 0.35)",
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 950 }}>
+              You&apos;ve completed <span style={{ color: "#FFEB3B" }}>{done}</span> lesson{done === 1 ? "" : "s"}—nice
+              progress!
+            </div>
+            <p style={{ marginTop: 8, opacity: 0.92, fontWeight: 600, lineHeight: 1.5 }}>
+              <strong>Sort Recycling:</strong>{" "}
+              {done < SORT_RECYCLING_AT ? (
+                <>
+                  <span style={{ color: "#FFEB3B" }}>
+                    {done}/{SORT_RECYCLING_AT} lessons
+                  </span>{" "}
+                  —finish{" "}
+                  <strong>{SORT_RECYCLING_AT - done}</strong> more to unlock your city sorting game! 🌟
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "#A5D6A7" }}>✅ Unlocked!</span> You completed {SORT_RECYCLING_AT}+ lessons—enjoy Eco
+                  Hero City!
+                </>
+              )}
+            </p>
+            {nextLessonUnlock != null && done < nextLessonUnlock && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 800 }}>
+                  <span>Progress to next unlock ({nextLessonUnlock} lessons)</span>
+                  <span>
+                    {done}/{nextLessonUnlock}
+                  </span>
+                </div>
+                <div style={{ height: 12, borderRadius: 999, background: "rgba(0,0,0,0.25)", marginTop: 8, overflow: "hidden" }}>
+                  <div
+                    style={{
+                      width: `${progressToNextPct}%`,
+                      height: "100%",
+                      borderRadius: 999,
+                      background: "linear-gradient(90deg,#FFEB3B,#4CAF50)",
+                      transition: "width 0.35s ease",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            {nextLessonUnlock == null && (
+              <p style={{ marginTop: 10, fontWeight: 800, color: "#C8E6C9" }}>
+                You&apos;ve hit every lesson milestone for these games—legend status! 🏆
+              </p>
+            )}
             {paidPlan && (
-              <span style={{ marginLeft: 12, color: "#A5D6A7" }}>· Family / school plan active ✓</span>
+              <p style={{ marginTop: 10, fontSize: 14, color: "#A5D6A7", fontWeight: 700 }}>
+                Family / school plan active—premium games can unlock earlier with your subscription ✓
+              </p>
             )}
           </div>
         )}
@@ -307,10 +374,18 @@ export default function GamesHubPage() {
 
             let lockMessage: string | null = null;
             if (!lessonOk) {
-              lockMessage = `Complete ${g.unlockLessons} lessons to unlock`;
+              const need = Math.max(0, g.unlockLessons - done);
+              lockMessage =
+                need === 0
+                  ? null
+                  : `Almost there—complete ${need} more lesson${need === 1 ? "" : "s"} to unlock (you’re at ${done}/${g.unlockLessons})! 🌱`;
             } else if (g.requiresPaid && !paidPlan) {
               lockMessage = "Family Plan required";
             }
+            const unlockCelebrate =
+              unlocked && g.unlockLessons > 0 && lessonOk
+                ? `✅ Unlocked! You completed ${g.unlockLessons} lessons!`
+                : null;
 
             const inner = (
               <>
@@ -353,6 +428,11 @@ export default function GamesHubPage() {
                 <p style={{ marginTop: 8, opacity: 0.88, fontWeight: 600, lineHeight: 1.45, fontSize: 14 }}>
                   {g.description}
                 </p>
+                {unlockCelebrate && (
+                  <p style={{ marginTop: 12, fontSize: 14, fontWeight: 900, color: "#E8F5E9", background: "rgba(76,175,80,0.35)", padding: "10px 12px", borderRadius: 12 }}>
+                    {unlockCelebrate}
+                  </p>
+                )}
                 {lockMessage && (
                   <p style={{ marginTop: 12, fontSize: 13, fontWeight: 800, color: "#FFCC80" }}>{lockMessage}</p>
                 )}
