@@ -1,4 +1,4 @@
-import type { GameLevelDefinition } from "@/lib/games/gameLevels";
+import type { GameLevelDefinition, GameLevelId } from "@/lib/games/gameLevels";
 
 export type OceanPlasticItemDef = {
   id: string;
@@ -29,4 +29,44 @@ export function plasticTypingTarget(item: OceanPlasticItemDef, level: GameLevelD
 
 export function randomPlasticItem(): OceanPlasticItemDef {
   return OCEAN_PLASTIC_ITEMS[Math.floor(Math.random() * OCEAN_PLASTIC_ITEMS.length)]!;
+}
+
+/** Seconds for one item to drift from off-screen left to past the right edge (~116% width). */
+export function oceanCrossScreenSeconds(id: GameLevelId): number {
+  if (id === "seedling") return 12;
+  if (id === "explorer") return 8;
+  if (id === "guardian") return 6;
+  return 4;
+}
+
+/** Horizontal speed in percent-of-play-area per second. */
+export function oceanDriftVxPctPerSec(id: GameLevelId): number {
+  const travelPct = 116;
+  return travelPct / oceanCrossScreenSeconds(id);
+}
+
+export function oceanMaxDriftingPieces(id: GameLevelId): number {
+  if (id === "seedling" || id === "explorer") return 1;
+  return 2;
+}
+
+/** Minimum ms between spawns when below max drifting count. */
+export function oceanSpawnGapMs(id: GameLevelId): number {
+  if (id === "seedling") return 4500;
+  if (id === "explorer") return 3500;
+  if (id === "guardian") return 2800;
+  return 2200;
+}
+
+export function oceanLevelTypingHint(level: GameLevelDefinition): string {
+  if (level.id === "seedling") {
+    return "Seedling: type the first letter only (like s for straw).";
+  }
+  if (level.id === "explorer") {
+    return "Explorer: type the first 3 letters (like str for straw).";
+  }
+  if (level.id === "guardian") {
+    return "Guardian: type the full word (like straw).";
+  }
+  return "Champion: type the full word — items move a bit quicker!";
 }

@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { GAME_LEVELS, getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
 import {
+  oceanDriftVxPctPerSec,
+  oceanLevelTypingHint,
+  oceanMaxDriftingPieces,
+  oceanSpawnGapMs,
   plasticTypingTarget,
   randomPlasticItem,
   type OceanPlasticItemDef,
@@ -31,7 +35,7 @@ type PlasticPiece = {
   shakeKey: number;
 };
 
-type Phase = "load" | "ready" | "play" | "celebration" | "results";
+type Phase = "load" | "howto" | "play" | "celebration" | "results";
 
 function randomId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -125,7 +129,7 @@ export default function SaveTheOceanPage() {
         if (uErr) throw uErr;
         if (!userData.user) {
           setError("Please sign in to play.");
-          setPhase("ready");
+          setPhase("howto");
           return;
         }
 
@@ -149,10 +153,10 @@ export default function SaveTheOceanPage() {
           .maybeSingle();
 
         setHighScore(Number((scores as { score?: number } | null)?.score ?? 0) || 0);
-        setPhase("ready");
+        setPhase("howto");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load.");
-        setPhase("ready");
+        setPhase("howto");
       }
     };
     void run();
@@ -163,6 +167,13 @@ export default function SaveTheOceanPage() {
     setGameLevel(lvl);
     roundLevelRef.current = lvl;
   }, []);
+
+  useEffect(() => {
+    if (phase !== "howto") return;
+    const lvl = getStoredGameLevel();
+    setGameLevel(lvl);
+    roundLevelRef.current = lvl;
+  }, [phase]);
 
   const resetRound = useCallback(() => {
     const L = roundLevelRef.current;
@@ -219,8 +230,7 @@ export default function SaveTheOceanPage() {
   const spawnPiece = useCallback(() => {
     const def = randomPlasticItem();
     const L = roundLevelRef.current;
-    const baseVx = 14 + Math.random() * 10;
-    const vx = baseVx * L.speedMultiplier * (L.id === "champion" ? 1.15 : 1);
+    const vx = oceanDriftVxPctPerSec(L.id);
     const piece: PlasticPiece = {
       id: randomId(),
       def,
@@ -274,14 +284,14 @@ export default function SaveTheOceanPage() {
       }
 
       spawnAccRef.current += dt * 1000;
-      const spawnEvery = Math.max(900, 2400 / Math.max(0.35, L.speedMultiplier));
-      while (spawnAccRef.current >= spawnEvery && !roundEndedRef.current) {
+      const maxDrift = oceanMaxDriftingPieces(L.id);
+      const spawnGap = oceanSpawnGapMs(L.id);
+      while (spawnAccRef.current >= spawnGap && !roundEndedRef.current) {
         const dc = next.filter((p) => p.state === "drift").length;
-        if (dc >= 7) break;
-        spawnAccRef.current -= spawnEvery;
+        if (dc >= maxDrift) break;
+        spawnAccRef.current -= spawnGap;
         const def = randomPlasticItem();
-        const baseVx = 14 + Math.random() * 10;
-        const vx = baseVx * L.speedMultiplier * (L.id === "champion" ? 1.15 : 1);
+        const vx = oceanDriftVxPctPerSec(L.id);
         next.push({
           id: randomId(),
           def,
@@ -334,8 +344,33 @@ export default function SaveTheOceanPage() {
   }, [phase, endPlay]);
 
   useEffect(() => {
-    if (phase === "play" || phase === "ready") inputRef.current?.focus();
+    if (phase === "play") inputRef.current?.focus();
   }, [phase]);
+
+  const priorityTargetId = useMemo(() => {
+    if (phase !== "play") return null;
+    const L = gameLevel;
+    const drifting = pieces.filter((p) => p.state === "drift");
+    if (drifting.length === 0) return null;
+    const withTarget = drifting.map((p) => ({
+      p,
+      t: plasticTypingTarget(p.def, L).toLowerCase(),
+    }));
+    const buf = typingBuffer.toLowerCase();
+    const partial = buf ? withTarget.filter((x) => x.t.startsWith(buf)) : [];
+    if (partial.length === 1) return partial[0]!.p.id;
+    if (partial.length > 1) return [...partial].sort((a, b) => b.p.xPct - a.p.xPct)[0]!.p.id;
+    return [...withTarget].sort((a, b) => b.p.xPct - a.p.xPct)[0]!.p.id;
+  }, [phase, pieces, typingBuffer, gameLevel]);
+
+  const typeReminderWord = useMemo(() => {
+    if (!priorityTargetId) return "";
+    const p = pieces.find((x) => x.id === priorityTargetId && x.state === "drift");
+    if (!p) return "";
+    return plasticTypingTarget(p.def, gameLevel).toUpperCase();
+  }, [priorityTargetId, pieces, gameLevel]);
+
+  const levelHintText = useMemo(() => oceanLevelTypingHint(gameLevel), [gameLevel]);
 
   const clearPiece = useCallback(
     (pieceId: string) => {
@@ -521,6 +556,12 @@ export default function SaveTheOceanPage() {
           .sto-shake-anim { animation: sto-shake 0.35s ease; }
           .sto-zara-free { animation: sto-zara-swim 4s ease-in-out forwards; }
           .sto-pet-dance { animation: sto-pet-dance 0.7s ease-in-out infinite; }
+          @keyframes sto-target-glow {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(255,255,255,0.95), 0 0 22px 4px rgba(79,195,247,0.75); }
+            50% { box-shadow: 0 0 10px 3px rgba(255,255,255,1), 0 0 28px 8px rgba(129,212,250,0.9); }
+          }
+          .sto-item-card { min-width: 140px; }
+          .sto-item-focus { animation: sto-target-glow 1.2s ease-in-out infinite; border-color: #fff !important; }
         `,
         }}
       />
@@ -591,11 +632,97 @@ export default function SaveTheOceanPage() {
       {phase === "load" && (
         <p style={{ padding: 24, fontWeight: 700 }}>Loading your submarine…</p>
       )}
-      {error && (
-        <p style={{ padding: 24, color: "#ffab91", fontWeight: 700 }}>{error}</p>
+
+      {phase === "howto" && (
+        <div
+          style={{
+            position: "relative",
+            zIndex: 3,
+            padding: "20px 18px 28px",
+            maxWidth: 560,
+            margin: "0 auto",
+          }}
+        >
+          <div
+            style={{
+              padding: 22,
+              borderRadius: 22,
+              background: "linear-gradient(165deg, rgba(13,71,161,0.55), rgba(1,40,80,0.75))",
+              border: "2px solid rgba(100,181,246,0.55)",
+              boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
+            }}
+          >
+            <h2 style={{ fontSize: 26, fontWeight: 950, margin: 0, textAlign: "center" }}>
+              How to Play
+            </h2>
+            <p
+              style={{
+                marginTop: 16,
+                fontSize: 18,
+                fontWeight: 700,
+                lineHeight: 1.55,
+                textAlign: "center",
+                color: "#fff",
+                textShadow: "0 1px 2px rgba(0,0,0,0.45)",
+              }}
+            >
+              🌊 Plastic is floating in the ocean!
+              <br />
+              Type the word on each plastic item to remove it.
+              <br />
+              Help clean the ocean and rescue Zara! 🐢
+            </p>
+            <div
+              style={{
+                marginTop: 18,
+                padding: 14,
+                borderRadius: 14,
+                background: "rgba(0,0,0,0.35)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#FFEB3B" }}>
+                {gameLevel.emoji} Your level: {gameLevel.label}
+              </p>
+              <p style={{ margin: "10px 0 0", fontSize: 15, fontWeight: 700, lineHeight: 1.5, opacity: 0.95 }}>
+                {levelHintText}
+              </p>
+              <p style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 600, opacity: 0.85 }}>
+                Tip: Change difficulty anytime from the Games hub.
+              </p>
+            </div>
+            {error && (
+              <p style={{ marginTop: 14, color: "#ffccbc", fontWeight: 700, textAlign: "center" }}>{error}</p>
+            )}
+            <p style={{ marginTop: 16, textAlign: "center", fontWeight: 700, opacity: 0.9 }}>
+              Best cleanup so far: <strong style={{ color: "#FFEB3B" }}>{highScore}</strong> pieces
+            </p>
+            <div style={{ textAlign: "center", marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={startGame}
+                disabled={!!error}
+                style={{
+                  padding: "16px 28px",
+                  borderRadius: 16,
+                  border: "none",
+                  fontWeight: 950,
+                  cursor: error ? "not-allowed" : "pointer",
+                  opacity: error ? 0.55 : 1,
+                  background: "linear-gradient(90deg,#FFEB3B,#29b6f6)",
+                  color: "#0d1b2a",
+                  fontSize: 18,
+                  boxShadow: "0 10px 28px rgba(41,182,246,0.45)",
+                }}
+              >
+                Let&apos;s Play! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {(phase === "ready" || phase === "play" || phase === "celebration") && (
+      {(phase === "play" || phase === "celebration") && (
         <div style={{ position: "relative", zIndex: 3, padding: "12px 16px 20px" }}>
           <div
             style={{
@@ -604,6 +731,8 @@ export default function SaveTheOceanPage() {
               marginBottom: 12,
               gridTemplateColumns: "1fr 1fr",
               maxWidth: 720,
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
             <div
@@ -660,6 +789,7 @@ export default function SaveTheOceanPage() {
               alignItems: "center",
               marginBottom: 12,
               fontWeight: 800,
+              justifyContent: "center",
             }}
           >
             <span style={{ background: "rgba(0,0,0,0.35)", padding: "8px 12px", borderRadius: 12 }}>
@@ -673,35 +803,6 @@ export default function SaveTheOceanPage() {
               Level: {gameLevel.emoji} {gameLevel.label}
             </span>
           </div>
-
-          {phase === "ready" && (
-            <div style={{ maxWidth: 520 }}>
-              <p style={{ lineHeight: 1.5, fontWeight: 600, opacity: 0.95 }}>
-                Zara the sea turtle is trapped in plastic drift. Type the labels to clear debris and heal the
-                water!
-              </p>
-              <p style={{ marginTop: 8, fontSize: 14, opacity: 0.85 }}>
-                High score: <strong>{highScore}</strong> pieces removed
-              </p>
-              <button
-                type="button"
-                onClick={startGame}
-                style={{
-                  marginTop: 14,
-                  padding: "12px 22px",
-                  borderRadius: 14,
-                  border: "none",
-                  fontWeight: 950,
-                  cursor: "pointer",
-                  background: "linear-gradient(90deg,#29b6f6,#26a69a)",
-                  color: "#fff",
-                  fontSize: 16,
-                }}
-              >
-                Dive in 🛟
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -710,7 +811,7 @@ export default function SaveTheOceanPage() {
           ref={playAreaRef}
           style={{
             position: "relative",
-            margin: "0 12px 100px",
+            margin: "0 12px 0",
             height: "min(52vh, 420px)",
             borderRadius: 20,
             border: "2px solid rgba(79,195,247,0.35)",
@@ -722,10 +823,12 @@ export default function SaveTheOceanPage() {
             pieces.map((p) => {
               if (p.state !== "drift") return null;
               const target = plasticTypingTarget(p.def, roundLevelRef.current);
+              const caps = target.toUpperCase();
+              const isFocus = p.id === priorityTargetId;
               return (
                 <div
                   key={p.id}
-                  className={p.shakeKey ? "sto-shake-anim" : undefined}
+                  className={`sto-item-card ${p.shakeKey ? "sto-shake-anim" : ""} ${isFocus ? "sto-item-focus" : ""}`}
                   title={p.def.label}
                   style={{
                     position: "absolute",
@@ -735,24 +838,30 @@ export default function SaveTheOceanPage() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    gap: 4,
+                    gap: 8,
+                    padding: "10px 12px 12px",
+                    borderRadius: 14,
+                    background: "linear-gradient(180deg, #0d47a1 0%, #01579b 100%)",
+                    border: isFocus ? "3px solid #fff" : "2px solid rgba(100,181,246,0.85)",
+                    boxSizing: "border-box",
                   }}
                 >
-                  <span style={{ fontSize: 28, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }}>
+                  <span style={{ fontSize: 36, lineHeight: 1, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}>
                     {p.def.emoji}
                   </span>
                   <span
                     style={{
-                      fontSize: 11,
-                      fontWeight: 900,
-                      background: "rgba(0,0,0,0.55)",
-                      padding: "4px 8px",
-                      borderRadius: 8,
-                      color: "#e1f5fe",
+                      fontSize: 22,
+                      fontWeight: 950,
+                      color: "#ffffff",
+                      letterSpacing: "0.04em",
+                      textShadow:
+                        "0 0 12px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.85), 0 0 2px #000",
                       whiteSpace: "nowrap",
+                      textAlign: "center",
                     }}
                   >
-                    {target}
+                    {caps}
                   </span>
                 </div>
               );
@@ -798,33 +907,6 @@ export default function SaveTheOceanPage() {
             🛥️
           </div>
 
-          {phase === "play" && (
-            <input
-              ref={inputRef}
-              type="text"
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              aria-label="Type to clean plastic"
-              value={typingBuffer}
-              readOnly
-              onKeyDown={onKeyDown}
-              style={{
-                position: "absolute",
-                left: 12,
-                bottom: 12,
-                width: "calc(100% - 24px)",
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(100,181,246,0.5)",
-                background: "rgba(0,0,0,0.45)",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-              }}
-            />
-          )}
-
           {activeFactPopup && phase === "play" && (
             <div
               style={{
@@ -847,6 +929,74 @@ export default function SaveTheOceanPage() {
               {activeFactPopup.fact}
             </div>
           )}
+        </div>
+      )}
+
+      {phase === "play" && (
+        <div
+          style={{
+            position: "relative",
+            zIndex: 4,
+            padding: "16px 16px 28px",
+            maxWidth: 640,
+            margin: "0 auto",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 8px",
+              fontSize: 14,
+              fontWeight: 800,
+              color: "#B3E5FC",
+              textAlign: "center",
+              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+            }}
+          >
+            {levelHintText}
+          </p>
+          <input
+            ref={inputRef}
+            type="text"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            aria-label="Type to clean plastic"
+            value={typingBuffer}
+            readOnly
+            onKeyDown={onKeyDown}
+            style={{
+              width: "100%",
+              minHeight: 56,
+              padding: "14px 18px",
+              borderRadius: 16,
+              border: "3px solid rgba(100,181,246,0.9)",
+              background: "rgba(1, 30, 60, 0.92)",
+              color: "#fff",
+              fontWeight: 900,
+              fontSize: 22,
+              boxShadow: "0 8px 28px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.12)",
+              outline: "none",
+            }}
+          />
+          <p
+            style={{
+              margin: "12px 0 0",
+              fontSize: 20,
+              fontWeight: 950,
+              textAlign: "center",
+              color: "#fff",
+              textShadow: "0 0 10px rgba(79,195,247,0.6), 0 2px 4px rgba(0,0,0,0.8)",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {typeReminderWord ? (
+              <>
+                Type: <span style={{ color: "#FFEB3B" }}>{typeReminderWord}</span>
+              </>
+            ) : (
+              <span style={{ opacity: 0.85 }}>Type the glowing word above! ⌨️</span>
+            )}
+          </p>
         </div>
       )}
 
