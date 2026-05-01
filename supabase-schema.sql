@@ -215,3 +215,27 @@ CREATE POLICY "Students can view their own game scores" ON game_scores
 
 CREATE POLICY "Students can insert their own game scores" ON game_scores
   FOR INSERT WITH CHECK (auth.uid() = student_id);
+
+-- Eco garden (persists between sessions)
+CREATE TABLE IF NOT EXISTS eco_garden (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  garden_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  last_watered timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  total_plants integer NOT NULL DEFAULT 0,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  UNIQUE(student_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_eco_garden_student_id ON eco_garden(student_id);
+
+ALTER TABLE eco_garden ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students can view their own eco garden" ON eco_garden
+  FOR SELECT USING (auth.uid() = student_id);
+
+CREATE POLICY "Students can insert their own eco garden" ON eco_garden
+  FOR INSERT WITH CHECK (auth.uid() = student_id);
+
+CREATE POLICY "Students can update their own eco garden" ON eco_garden
+  FOR UPDATE USING (auth.uid() = student_id);

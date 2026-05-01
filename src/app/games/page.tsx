@@ -43,10 +43,11 @@ const GAMES: GameCardDef[] = [
     requiresPaid: false,
   },
   {
-    slug: "/games/plant-a-tree",
+    slug: "/games/eco-garden",
     emoji: "🌱",
-    name: "Plant a Tree",
-    description: "Grow a mighty tree with perfect typing streaks.",
+    name: "My Eco Garden",
+    description:
+      "A magical garden that grows between sessions—type raindrops to water plants, unlock visitors, and watch it bloom when you return.",
     unlockLessons: 20,
     requiresPaid: true,
   },
@@ -54,9 +55,10 @@ const GAMES: GameCardDef[] = [
     slug: "/games/save-the-ocean",
     emoji: "🌊",
     name: "Save the Ocean",
-    description: "Rescue sea friends by clearing waves of eco words.",
+    description:
+      "Operation Blue Planet: clear floating plastic by typing fast, heal the water, and free Zara the sea turtle 🐢 from the mess.",
     unlockLessons: 40,
-    requiresPaid: true,
+    requiresPaid: false,
   },
   {
     slug: "/games/kind-world-academy",
@@ -80,6 +82,7 @@ export default function GamesHubPage() {
   const [error, setError] = useState("");
   const [profileAge, setProfileAge] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<GameLevelDefinition>(() => getStoredGameLevel());
+  const [ecoGardenPlantCount, setEcoGardenPlantCount] = useState<number | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -122,6 +125,16 @@ export default function GamesHubPage() {
         const active = (sub as { status?: string } | null)?.status === "active";
         const plan = (sub as { plan_type?: string } | null)?.plan_type ?? null;
         setPaidPlan(active && hasPaidPlan(plan));
+
+        const { data: gardenRow, error: gardenErr } = await supabase
+          .from("eco_garden")
+          .select("total_plants")
+          .eq("student_id", userData.user.id)
+          .maybeSingle();
+        if (!gardenErr) {
+          const tp = (gardenRow as { total_plants?: number } | null)?.total_plants;
+          setEcoGardenPlantCount(typeof tp === "number" ? tp : null);
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load games.");
       } finally {
@@ -370,7 +383,10 @@ export default function GamesHubPage() {
             const paidOk = !g.requiresPaid || paidPlan;
             const unlocked = lessonOk && paidOk;
             const isImplemented =
-              g.slug === "/games/falling-leaves" || g.slug === "/games/sort-recycling";
+              g.slug === "/games/falling-leaves" ||
+              g.slug === "/games/sort-recycling" ||
+              g.slug === "/games/save-the-ocean" ||
+              g.slug === "/games/eco-garden";
 
             let lockMessage: string | null = null;
             if (!lessonOk) {
@@ -428,6 +444,34 @@ export default function GamesHubPage() {
                 <p style={{ marginTop: 8, opacity: 0.88, fontWeight: 600, lineHeight: 1.45, fontSize: 14 }}>
                   {g.description}
                 </p>
+                {g.slug === "/games/eco-garden" &&
+                  ecoGardenPlantCount != null &&
+                  ecoGardenPlantCount > 0 &&
+                  unlocked && (
+                    <p
+                      style={{
+                        marginTop: 10,
+                        fontSize: 14,
+                        fontWeight: 900,
+                        color: "#E8F5E9",
+                        background: "rgba(129, 199, 132, 0.25)",
+                        padding: "8px 10px",
+                        borderRadius: 12,
+                      }}
+                    >
+                      Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}! 🌿
+                    </p>
+                  )}
+                {!unlocked && g.slug === "/games/save-the-ocean" && (
+                  <p style={{ marginTop: 10, fontSize: 13, fontWeight: 800, opacity: 0.9 }}>
+                    Preview: Zara the turtle 🐢 is counting on you when you unlock this mission.
+                  </p>
+                )}
+                {!unlocked && g.slug === "/games/eco-garden" && (
+                  <p style={{ marginTop: 10, fontSize: 13, fontWeight: 800, opacity: 0.9 }}>
+                    Preview: a sunny grid garden that remembers you between visits.
+                  </p>
+                )}
                 {unlockCelebrate && (
                   <p style={{ marginTop: 12, fontSize: 14, fontWeight: 900, color: "#E8F5E9", background: "rgba(76,175,80,0.35)", padding: "10px 12px", borderRadius: 12 }}>
                     {unlockCelebrate}
