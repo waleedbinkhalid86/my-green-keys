@@ -7,9 +7,9 @@ import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import {
   ageToBand,
   bandGameParams,
-  getFallingLeavesWordPool,
   pickRandomWord,
-  vocabularyFromLessonRange,
+  progressiveDifficultyLabel,
+  progressiveWordPool,
 } from "@/lib/games/lessonVocab";
 import "@/app/globals.css";
 
@@ -47,7 +47,8 @@ export default function FallingLeavesPage() {
   const [error, setError] = useState("");
 
   const [age, setAge] = useState<number | null>(null);
-  const [wordPool, setWordPool] = useState<string[]>([]);
+  /** Completed lesson ids only (words never appear from lessons not yet completed). */
+  const [completedLessonIds, setCompletedLessonIds] = useState<number[]>([1]);
   const [highScore, setHighScore] = useState<number>(0);
 
   const [petType, setPetType] = useState<"panda" | "turtle" | null>(null);
@@ -73,6 +74,8 @@ export default function FallingLeavesPage() {
   const rafRef = useRef<number | null>(null);
   const roundEndedRef = useRef(false);
   const roundIdRef = useRef(0);
+  const completedLessonIdsRef = useRef<number[]>([1]);
+  const caughtRef = useRef(0);
 
   const playAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -89,6 +92,19 @@ export default function FallingLeavesPage() {
     leavesRef.current = next;
     setLeaves(next);
   }, []);
+
+  useEffect(() => {
+    completedLessonIdsRef.current = completedLessonIds;
+  }, [completedLessonIds]);
+
+  useEffect(() => {
+    caughtRef.current = caught;
+  }, [caught]);
+
+  const difficulty = useMemo(
+    () => progressiveDifficultyLabel(completedLessonIds, caught),
+    [completedLessonIds, caught]
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -111,12 +127,20 @@ export default function FallingLeavesPage() {
         const a = (profile as { age?: number } | null)?.age ?? null;
         setAge(a);
 
-        const b = ageToBand(a);
-        let pool = getFallingLeavesWordPool(b);
-        if (pool.length < 6) {
-          pool = vocabularyFromLessonRange(1, 30, 3, 8);
-        }
-        setWordPool(pool);
+        const { data: progressRows } = await supabase
+          .from("student_progress")
+          .select("lesson_id")
+          .eq("student_id", userData.user.id)
+          .eq("completed", true);
+
+        const ids = Array.from(
+          new Set(
+            (progressRows ?? [])
+              .map((r: { lesson_id: unknown }) => r.lesson_id)
+              .filter((n): n is number => typeof n === "number" && n >= 1)
+          )
+        ).sort((x, y) => x - y);
+        setCompletedLessonIds(ids.length > 0 ? ids : [1]);
 
         const pt = (profile as { pet_type?: string; pet_name?: string } | null)?.pet_type;
         setPetType(pt === "turtle" ? "turtle" : pt === "panda" ? "panda" : null);
@@ -143,6 +167,7 @@ export default function FallingLeavesPage() {
 
   const resetRound = useCallback(() => {
     roundEndedRef.current = false;
+    caughtRef.current = 0;
     setTimeLeft(ROUND_SECONDS);
     setForestHealth(100);
     setMisses(0);
@@ -159,7 +184,6 @@ export default function FallingLeavesPage() {
     setResultsFact(null);
     setNewRecord(false);
     setPetDance(false);
-    lastTsRef.current = null;
     if (factClearRef.current) clearTimeout(factClearRef.current);
   }, [syncLeaves]);
 
@@ -179,7 +203,7 @@ export default function FallingLeavesPage() {
   }, []);
 
   const spawnLeaf = useCallback(() => {
-    const pool = wordPool.length ? wordPool : ["tree", "leaf", "grow", "soil"];
+    const pool = progressiveWordPool(completedLessonIdsRef.current, caughtRef.current);
     const word = pickRandomWord(pool);
     const leaf: Leaf = {
       id: randomId(),
@@ -192,7 +216,7 @@ export default function FallingLeavesPage() {
       caughtBoost: false,
     };
     syncLeaves([...leavesRef.current, leaf]);
-  }, [params.fallSpeed, syncLeaves, wordPool]);
+  }, [params.fallSpeed, syncLeaves]);
 
   useEffect(() => {
     if (phase !== "play" || roundEndedRef.current) return;
@@ -252,7 +276,7 @@ export default function FallingLeavesPage() {
         !roundEndedRef.current
       ) {
         spawnAccRef.current -= params.spawnEveryMs;
-        const pool = wordPool.length ? wordPool : ["tree", "leaf", "grow", "soil"];
+        const pool = progressiveWordPool(completedLessonIdsRef.current, caughtRef.current);
         const word = pickRandomWord(pool);
         next.push({
           id: randomId(),
@@ -278,7 +302,7 @@ export default function FallingLeavesPage() {
       rafRef.current = null;
       lastTsRef.current = null;
     };
-  }, [phase, params.maxLeaves, params.spawnEveryMs, params.fallSpeed, endGame, wordPool]);
+  }, [phase, params.maxLeaves, params.spawnEveryMs, params.fallSpeed, endGame]);
 
   useEffect(() => {
     if (phase !== "play" || roundEndedRef.current) return;
@@ -308,6 +332,7 @@ export default function FallingLeavesPage() {
 
       setCaught((c) => {
         const nc = c + 1;
+        caughtRef.current = nc;
         if (nc > 0 && nc % 10 === 0 && factMilestoneRef.current !== nc) {
           factMilestoneRef.current = nc;
           showFactBriefly(randomEcoFact());
@@ -594,6 +619,10 @@ export default function FallingLeavesPage() {
             <p style={{ marginTop: 12, opacity: 0.9, fontWeight: 600 }}>
               Age band: <strong>{band}</strong> · {ROUND_SECONDS}s round · {MAX_MISSES} misses ends the storm
             </p>
+            <p style={{ marginTop: 10, opacity: 0.88, fontWeight: 600, lineHeight: 1.45, maxWidth: 560, margin: "10px auto 0" }}>
+              Words begin short (2–3 letters) from your earliest completed lessons, then grow after every 5 catches. Only
+              vocabulary from lessons you&apos;ve finished appears—no spoilers!
+            </p>
             {highScore > 0 && (
               <p style={{ marginTop: 8, color: "#FFEB3B", fontWeight: 900 }}>Your best: {highScore} leaves caught</p>
             )}
@@ -675,6 +704,27 @@ export default function FallingLeavesPage() {
                 <div style={{ fontSize: 22, fontWeight: 950 }}>{caught}</div>
                 <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}>⏱ {timeLeft}s</div>
               </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 12,
+                padding: "12px 16px",
+                borderRadius: 16,
+                background: "linear-gradient(90deg, rgba(123,31,162,0.35), rgba(76,175,80,0.25))",
+                border: "1px solid rgba(255,255,255,0.2)",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "8px 16px",
+                fontWeight: 800,
+              }}
+            >
+              <span style={{ fontSize: 13, color: "#FFEB3B" }}>📖 Reading level</span>
+              <span style={{ fontSize: 15, fontWeight: 950 }}>{difficulty.title}</span>
+              <span style={{ opacity: 0.85, fontSize: 13 }}>
+                Stage {difficulty.tier + 1}/4 · {difficulty.lettersLabel} · {difficulty.lessonsLabel}
+              </span>
             </div>
 
             <div
