@@ -4,7 +4,17 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Lock } from "lucide-react";
+import {
+  GAME_LEVELS,
+  type GameLevelDefinition,
+  type GameLevelId,
+  getStoredGameLevel,
+  setStoredGameLevel,
+  suggestedLevelIdForAge,
+} from "@/lib/games/gameLevels";
 import "@/app/globals.css";
+
+const LEVEL_ORDER: GameLevelId[] = ["seedling", "explorer", "guardian", "champion"];
 
 type GameCardDef = {
   slug: string;
@@ -28,7 +38,7 @@ const GAMES: GameCardDef[] = [
     slug: "/games/sort-recycling",
     emoji: "🗑️",
     name: "Sort Recycling",
-    description: "Sort items into the right bins before the conveyor overflows.",
+    description: "Eco Hero City: sort falling waste into plastic, paper, organic, and glass before the streets fill up!",
     unlockLessons: 5,
     requiresPaid: false,
   },
@@ -68,6 +78,8 @@ export default function GamesHubPage() {
   const [paidPlan, setPaidPlan] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [profileAge, setProfileAge] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<GameLevelDefinition>(() => getStoredGameLevel());
 
   useEffect(() => {
     const run = async () => {
@@ -79,6 +91,14 @@ export default function GamesHubPage() {
           setLoading(false);
           return;
         }
+
+        const { data: profileRow } = await supabase
+          .from("profiles")
+          .select("age")
+          .eq("id", userData.user.id)
+          .maybeSingle();
+        const age = (profileRow as { age?: number } | null)?.age ?? null;
+        setProfileAge(age);
 
         const { data: progressRows, error: pErr } = await supabase
           .from("student_progress")
@@ -107,6 +127,7 @@ export default function GamesHubPage() {
   }, []);
 
   const done = completedLessons ?? 0;
+  const recommendedId = suggestedLevelIdForAge(profileAge);
 
   return (
     <div
@@ -201,6 +222,75 @@ export default function GamesHubPage() {
           </div>
         )}
 
+        {!loading && !error && (
+          <section style={{ marginBottom: 28 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 950, marginBottom: 6 }}>Choose your challenge level</h2>
+            <p style={{ opacity: 0.88, fontWeight: 600, marginBottom: 14, maxWidth: 720, lineHeight: 1.45 }}>
+              This applies to every mini-game. Faster levels mean more eco points—but less time and fewer misses!
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {LEVEL_ORDER.map((id) => {
+                const def = GAME_LEVELS[id];
+                const isSel = selectedLevel.id === id;
+                const isRec = recommendedId === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setStoredGameLevel(id);
+                      setSelectedLevel(GAME_LEVELS[id]);
+                    }}
+                    style={{
+                      textAlign: "left",
+                      padding: 16,
+                      borderRadius: 18,
+                      border: isSel ? "2px solid #FFEB3B" : "1px solid rgba(255,255,255,0.2)",
+                      background: isSel
+                        ? "linear-gradient(145deg, rgba(255,235,59,0.2), rgba(76,175,80,0.15))"
+                        : "linear-gradient(145deg, rgba(255,255,255,0.1), rgba(0,0,0,0.2))",
+                      color: "#e8f5e9",
+                      cursor: "pointer",
+                      position: "relative",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {isRec && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          fontSize: 11,
+                          fontWeight: 950,
+                          background: "linear-gradient(90deg,#7B1FA2,#4CAF50)",
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          color: "#fff",
+                        }}
+                      >
+                        Recommended
+                      </span>
+                    )}
+                    <div style={{ fontSize: 28 }}>{def.emoji}</div>
+                    <div style={{ fontSize: 17, fontWeight: 950, marginTop: 6 }}>{def.label}</div>
+                    <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700, opacity: 0.9, lineHeight: 1.45 }}>
+                      Speed {def.speedMultiplier}× · {def.lives} lives · {def.roundSeconds}s ·{" "}
+                      <span style={{ color: "#FFEB3B" }}>{def.pointsMultiplier}× eco</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <div
           style={{
             display: "grid",
@@ -212,7 +302,8 @@ export default function GamesHubPage() {
             const lessonOk = done >= g.unlockLessons;
             const paidOk = !g.requiresPaid || paidPlan;
             const unlocked = lessonOk && paidOk;
-            const isImplemented = g.slug === "/games/falling-leaves";
+            const isImplemented =
+              g.slug === "/games/falling-leaves" || g.slug === "/games/sort-recycling";
 
             let lockMessage: string | null = null;
             if (!lessonOk) {

@@ -11,11 +11,10 @@ import {
   progressiveDifficultyLabel,
   progressiveWordPool,
 } from "@/lib/games/lessonVocab";
+import { GAME_LEVELS, getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
 import "@/app/globals.css";
 
 const GAME_NAME = "falling_leaves";
-const ROUND_SECONDS = 60;
-const MAX_MISSES = 3;
 const BASE_ECO_PER_LEAF = 12;
 const COMBO_THRESHOLD = 5;
 
@@ -57,7 +56,10 @@ export default function FallingLeavesPage() {
   const band = useMemo(() => ageToBand(age), [age]);
   const params = useMemo(() => bandGameParams(band), [band]);
 
-  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const [gameLevel, setGameLevel] = useState<GameLevelDefinition>(GAME_LEVELS.guardian);
+  const roundLevelRef = useRef<GameLevelDefinition>(GAME_LEVELS.guardian);
+
+  const [timeLeft, setTimeLeft] = useState(GAME_LEVELS.guardian.roundSeconds);
   const [forestHealth, setForestHealth] = useState(100);
   const [misses, setMisses] = useState(0);
   const [caught, setCaught] = useState(0);
@@ -165,10 +167,17 @@ export default function FallingLeavesPage() {
     void run();
   }, []);
 
+  useEffect(() => {
+    const lvl = getStoredGameLevel();
+    setGameLevel(lvl);
+    roundLevelRef.current = lvl;
+  }, []);
+
   const resetRound = useCallback(() => {
+    const L = roundLevelRef.current;
     roundEndedRef.current = false;
     caughtRef.current = 0;
-    setTimeLeft(ROUND_SECONDS);
+    setTimeLeft(L.roundSeconds);
     setForestHealth(100);
     setMisses(0);
     setCaught(0);
@@ -205,12 +214,12 @@ export default function FallingLeavesPage() {
   const spawnLeaf = useCallback(() => {
     const pool = progressiveWordPool(completedLessonIdsRef.current, caughtRef.current);
     const word = pickRandomWord(pool);
-    const leaf: Leaf = {
+      const leaf: Leaf = {
       id: randomId(),
       word,
       xPct: 12 + Math.random() * 76,
       y: -24,
-      vy: params.fallSpeed * (0.92 + Math.random() * 0.16),
+      vy: params.fallSpeed * roundLevelRef.current.speedMultiplier * (0.92 + Math.random() * 0.16),
       state: "falling",
       shakeKey: 0,
       caughtBoost: false,
@@ -257,11 +266,12 @@ export default function FallingLeavesPage() {
 
       if (missedNow > 0) {
         setMisses((m) => {
-          const nm = Math.min(MAX_MISSES, m + missedNow);
-          setForestHealth(Math.max(0, 100 * (1 - nm / MAX_MISSES)));
+          const lives = Math.max(1, roundLevelRef.current.lives);
+          const nm = Math.min(lives, m + missedNow);
+          setForestHealth(Math.max(0, 100 * (1 - nm / lives)));
           setComboStreak(0);
           setTypingBuffer("");
-          if (nm >= MAX_MISSES) {
+          if (nm >= lives) {
             queueMicrotask(() => endGame());
           }
           return nm;
@@ -283,7 +293,8 @@ export default function FallingLeavesPage() {
           word,
           xPct: 12 + Math.random() * 76,
           y: -24,
-          vy: params.fallSpeed * (0.92 + Math.random() * 0.16),
+          vy:
+            params.fallSpeed * roundLevelRef.current.speedMultiplier * (0.92 + Math.random() * 0.16),
           state: "falling",
           shakeKey: 0,
           caughtBoost: false,
@@ -328,7 +339,7 @@ export default function FallingLeavesPage() {
   const catchLeaf = useCallback(
     (leafId: string) => {
       const mult = comboStreak + 1 >= COMBO_THRESHOLD ? 2 : 1;
-      const gained = BASE_ECO_PER_LEAF * mult;
+      const gained = Math.round(BASE_ECO_PER_LEAF * roundLevelRef.current.pointsMultiplier * mult);
 
       setCaught((c) => {
         const nc = c + 1;
@@ -411,6 +422,9 @@ export default function FallingLeavesPage() {
   );
 
   const startGame = () => {
+    const lvl = getStoredGameLevel();
+    roundLevelRef.current = lvl;
+    setGameLevel(lvl);
     roundIdRef.current += 1;
     resetRound();
     setPhase("play");
@@ -466,7 +480,8 @@ export default function FallingLeavesPage() {
 
   const petEmoji = petType === "turtle" ? "🐢" : "🐼";
   const comboActive = comboStreak >= COMBO_THRESHOLD;
-  const stormTooStrong = phase === "results" && misses >= MAX_MISSES;
+  const roundLives = gameLevel.lives;
+  const stormTooStrong = phase === "results" && misses >= roundLives;
 
   return (
     <div
@@ -617,7 +632,12 @@ export default function FallingLeavesPage() {
               You are the Forest Guardian! Type each word on a falling leaf to catch it and send it home to the trees.
             </p>
             <p style={{ marginTop: 12, opacity: 0.9, fontWeight: 600 }}>
-              Age band: <strong>{band}</strong> · {ROUND_SECONDS}s round · {MAX_MISSES} misses ends the storm
+              Level:{" "}
+              <strong>
+                {gameLevel.emoji} {gameLevel.label}
+              </strong>{" "}
+              · Age band: <strong>{band}</strong> · {gameLevel.roundSeconds}s · {gameLevel.lives} misses ·{" "}
+              <span style={{ color: "#FFEB3B" }}>{gameLevel.pointsMultiplier}× eco</span>
             </p>
             <p style={{ marginTop: 10, opacity: 0.88, fontWeight: 600, lineHeight: 1.45, maxWidth: 560, margin: "10px auto 0" }}>
               Words begin short (2–3 letters) from your earliest completed lessons, then grow after every 5 catches. Only
@@ -649,6 +669,32 @@ export default function FallingLeavesPage() {
 
         {phase === "play" && (
           <>
+            <div
+              style={{
+                marginTop: 14,
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  background: "rgba(0,0,0,0.4)",
+                  border: "1px solid rgba(255,235,59,0.35)",
+                  fontWeight: 950,
+                  fontSize: 14,
+                }}
+              >
+                {gameLevel.emoji} {gameLevel.label}
+              </span>
+              <span style={{ fontWeight: 950, fontSize: 16, color: "#FFEB3B" }}>
+                {gameLevel.pointsMultiplier}× Eco Points! {gameLevel.emoji}
+              </span>
+            </div>
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 16 }}>
               <div
                 style={{
@@ -663,6 +709,9 @@ export default function FallingLeavesPage() {
                 <div style={{ fontSize: 22, fontWeight: 950, color: comboActive ? "#FFEB3B" : "#A5D6A7" }}>
                   {ecoPoints}
                   {comboActive && <span style={{ marginLeft: 8, fontSize: 14 }}>2× combo!</span>}
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4, fontWeight: 700 }}>
+                  Level pays {gameLevel.pointsMultiplier}× per leaf (before combo)
                 </div>
               </div>
               <div
