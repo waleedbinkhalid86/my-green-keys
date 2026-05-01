@@ -1,10 +1,17 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Nunito } from "next/font/google";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
 import "../globals.css";
+
+const nunito = Nunito({
+  weight: ["600", "700", "800"],
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const FINGER_MAP: Record<string, string> = {
   // Left pinky
@@ -28,27 +35,27 @@ const FINGER_MAP: Record<string, string> = {
 
 // Finger colors for hand display
 const FINGER_COLORS_HAND: Record<string, string> = {
-  lpinky: "#EF9A9A",   // Red
-  lring: "#FFCC80",    // Orange
-  lmiddle: "#FFF176",  // Yellow
-  lindex: "#A5D6A7",   // Green
-  rindex: "#A5D6A7",   // Green
-  rmiddle: "#FFF176",  // Yellow
-  rring: "#FFCC80",    // Orange
-  rpinky: "#EF9A9A",   // Red
-  space: "#B0BEC5",    // Grey
+  lpinky: "#FF6B6B", // coral
+  lring: "#FF9F43", // orange
+  lmiddle: "#FECA57", // yellow
+  lindex: "#48DBFB", // blue
+  rindex: "#48DBFB", // blue
+  rmiddle: "#FECA57", // yellow
+  rring: "#FF9F43", // orange
+  rpinky: "#FF6B6B", // coral
+  space: "#A29BFE", // purple
 };
 
 const FINGER_COLORS: Record<string, string> = {
-  lpinky: "#FFCDD2",
-  lring: "#FFE0B2",
-  lmiddle: "#FFF9C4",
-  lindex: "#C8E6C9",
-  rindex: "#C8E6C9",
-  rmiddle: "#BBDEFB",
-  rring: "#E1BEE7",
-  rpinky: "#F8BBD0",
-  space: "#E0E0E0",
+  lpinky: "#FF6B6B",
+  lring: "#FF9F43",
+  lmiddle: "#FECA57",
+  lindex: "#48DBFB",
+  rindex: "#48DBFB",
+  rmiddle: "#FECA57",
+  rring: "#FF9F43",
+  rpinky: "#FF6B6B",
+  space: "#A29BFE",
 };
 
 const FINGER_NAMES: Record<string, string> = {
@@ -171,6 +178,10 @@ export default function LessonPage() {
   const [petLastFed, setPetLastFed] = useState<string | null>(null);
   const [petPulse, setPetPulse] = useState(false);
   const [petDance, setPetDance] = useState(false);
+  const [wordFlash, setWordFlash] = useState(false);
+  const [pressedVKey, setPressedVKey] = useState<string | null>(null);
+  const pressedVKeyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [ecoDisplay, setEcoDisplay] = useState(0);
 
   // Onboarding tutorial (3-step, first login only)
   const [studentDisplayName, setStudentDisplayName] = useState<string>("");
@@ -532,6 +543,7 @@ export default function LessonPage() {
       ecoWords: 0,
       startTime: null,
     });
+    setEcoDisplay(0);
     setIsComplete(false);
     setStars(0);
   }, [currentLessonId]);
@@ -577,18 +589,33 @@ export default function LessonPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const lastChar = value[value.length - 1];
+    const mapPress = (ch: string) => {
+      const k = ch === " " ? " " : ch.toLowerCase();
+      setPressedVKey(k);
+      if (pressedVKeyTimeoutRef.current) clearTimeout(pressedVKeyTimeoutRef.current);
+      pressedVKeyTimeoutRef.current = setTimeout(() => setPressedVKey(null), 100);
+    };
 
     // Check if typed character matches
     if (value.length > userInput.length) {
       const expectedChar = currentLesson.sentence[userInput.length];
+      mapPress(lastChar);
       if (lastChar !== expectedChar) {
-        setShakeKey(lastChar);
-        shakeTimeoutRef.current = setTimeout(() => setShakeKey(null), 300);
+        setShakeKey(lastChar === " " ? " " : lastChar.toLowerCase());
+        shakeTimeoutRef.current = setTimeout(() => setShakeKey(null), 150);
       } else {
         // Correct key pressed
         bumpPetOnce();
-        const newEcoWords = value.split(" ").length - 1;
-        setStats((prev) => ({ ...prev, ecoWords: newEcoWords }));
+
+        if (lastChar === " " && value.trim().length > 0) {
+          const typedWords = value.trimEnd().split(/\s+/).filter(Boolean);
+          const targetWords = currentLesson.sentence.split(/\s+/).filter(Boolean);
+          const idx = typedWords.length - 1;
+          if (idx >= 0 && typedWords[idx] === targetWords[idx]) {
+            setWordFlash(true);
+            window.setTimeout(() => setWordFlash(false), 200);
+          }
+        }
 
         // Encouragement every 5 correct keys
         if (stats.streak > 0 && stats.streak % 5 === 0) {
@@ -803,6 +830,7 @@ export default function LessonPage() {
       ecoWords: 0,
       startTime: null,
     });
+    setEcoDisplay(0);
     setStars(0);
     setMessages([]);
     if (inputRef.current) inputRef.current.focus();
@@ -931,11 +959,46 @@ export default function LessonPage() {
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
   const lessonProgress = ((currentLessonId - 1) / 100) * 100;
 
+  const ecoWordCount = useMemo(() => {
+    const targetWords = currentLesson.sentence.trim().split(/\s+/).filter(Boolean);
+    if (!userInput.length) return 0;
+    const raw = userInput.trimEnd().split(/\s+/).filter(Boolean);
+    const complete =
+      userInput.endsWith(" ") || userInput === currentLesson.sentence ? raw : raw.slice(0, -1);
+    let n = 0;
+    for (let i = 0; i < complete.length && i < targetWords.length; i++) {
+      if (complete[i] === targetWords[i]) n++;
+      else break;
+    }
+    return n;
+  }, [userInput, currentLesson.sentence]);
+
+  const ecoPointsEarnedThisLesson = useMemo(() => {
+    if (userInput !== currentLesson.sentence) return ecoWordCount;
+    return currentLesson.sentence.trim().split(/\s+/).filter(Boolean).length;
+  }, [userInput, currentLesson.sentence, ecoWordCount]);
+
+  useEffect(() => {
+    setStats((prev) => (prev.ecoWords === ecoWordCount ? prev : { ...prev, ecoWords: ecoWordCount }));
+  }, [ecoWordCount]);
+
+  useEffect(() => {
+    if (ecoDisplay === ecoWordCount) return;
+    const id = window.setInterval(() => {
+      setEcoDisplay((d) => {
+        if (d === ecoWordCount) return d;
+        return d < ecoWordCount ? d + 1 : d - 1;
+      });
+    }, 22);
+    return () => window.clearInterval(id);
+  }, [ecoWordCount, ecoDisplay]);
+
   const handleWelcomeSubmit = () => {
-    if (welcomeData.name && welcomeData.gender) {
+    const trimmed = welcomeData.name.trim();
+    if (trimmed && welcomeData.gender) {
       const profile: UserProfile = {
-        name: welcomeData.name,
-        age: parseInt(welcomeData.age),
+        name: trimmed,
+        age: parseInt(welcomeData.age, 10),
         gender: welcomeData.gender,
       };
       setUserProfile(profile);
@@ -946,18 +1009,16 @@ export default function LessonPage() {
 
   // Determine color theme based on gender
   const getThemeColor = () => {
-    if (!userProfile) return "#4CAF50";
-    return userProfile.gender === "boy" ? "#2196F3" : "#E91E63";
+    if (!userProfile) return "#2ECC71";
+    return userProfile.gender === "boy" ? "#4A90D9" : "#FF6B9D";
   };
 
   const getGlowColor = () => {
-    if (!userProfile) return "rgba(76,175,80,0.25)";
-    return userProfile.gender === "boy" ? "rgba(33,150,243,0.25)" : "rgba(233,30,99,0.25)";
+    return "rgba(46, 204, 113, 0.25)";
   };
 
   const getGlowBorder = () => {
-    if (!userProfile) return "#4CAF50";
-    return userProfile.gender === "boy" ? "#2196F3" : "#E91E63";
+    return "#2ECC71";
   };
 
   const renderHandSVG = (hand: "left" | "right") => {
@@ -1056,8 +1117,102 @@ export default function LessonPage() {
     );
   };
 
+  const KB_SPECIAL_BG = "#ECEFF1";
+
+  const renderKeyboardLetter = (key: string) => {
+    const fingerType = FINGER_MAP[key] || "lindex";
+    const isHighlighted = highlightKey === key;
+    const isShaking = shakeKey === key;
+    const isPressed = pressedVKey === key;
+    const w = 52;
+    return (
+      <div key={key} style={{ textAlign: "center", flexShrink: 0 }}>
+        <button
+          type="button"
+          tabIndex={-1}
+          style={{
+            width: w,
+            height: 52,
+            background: isHighlighted ? getGlowColor() : FINGER_COLORS[fingerType],
+            border: isHighlighted ? `2px solid ${getGlowBorder()}` : "1px solid rgba(0,0,0,0.12)",
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 900,
+            cursor: "default",
+            textTransform: "uppercase",
+            transition: "transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease",
+            boxShadow: isHighlighted
+              ? `0 0 0 4px rgba(46, 204, 113, 0.25), 0 10px 20px rgba(0,0,0,0.12)`
+              : "0 6px 14px rgba(0,0,0,0.10)",
+            animation: isShaking ? "shakeWrong 0.15s ease" : "none",
+            position: "relative",
+            color: isHighlighted ? "#fff" : "#1A2F23",
+            transform: isPressed ? "scale(0.92)" : isHighlighted ? "scale(1.05)" : "scale(1)",
+          }}
+        >
+          {key === ";" ? ";" : key.toUpperCase()}
+          {(key === "f" || key === "j") && (
+            <span
+              style={{
+                position: "absolute",
+                width: 6,
+                height: 6,
+                background: "rgba(26,47,35,0.55)",
+                borderRadius: "50%",
+                bottom: 3,
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            />
+          )}
+        </button>
+        <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800 }}>
+          {FINGER_NAMES[fingerType]}
+        </div>
+      </div>
+    );
+  };
+
+  const renderKeyboardSpecial = (id: string, label: string, mult: number) => {
+    const width = Math.round(52 * mult);
+    return (
+      <div key={id} style={{ textAlign: "center", flexShrink: 0 }}>
+        <button
+          type="button"
+          tabIndex={-1}
+          style={{
+            width,
+            height: 52,
+            background: KB_SPECIAL_BG,
+            border: "1px solid rgba(0,0,0,0.12)",
+            borderRadius: 8,
+            fontSize: label.length > 8 ? 10 : 12,
+            fontWeight: 900,
+            cursor: "default",
+            color: "#1A2F23",
+            transition: "transform 0.1s ease, box-shadow 0.15s ease",
+            boxShadow: "0 6px 14px rgba(0,0,0,0.08)",
+            lineHeight: 1.15,
+            padding: "0 6px",
+          }}
+        >
+          {label}
+        </button>
+        <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800, minHeight: 14 }} />
+      </div>
+    );
+  };
+
   return (
-    <div style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
+    <div
+      className={nunito.className}
+      style={{
+        background: "#FFFFFF",
+        minHeight: "100vh",
+        color: "#2C3E50",
+        fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif",
+      }}
+    >
       {/* CERTIFICATE POPUP */}
       {showCertificatePopup && earnedCertificate && (
         <div
@@ -1772,285 +1927,187 @@ export default function LessonPage() {
       )}
 
       {/* TOP NAV BAR */}
-      <nav style={{
-        background: "#2c3e50",
-        color: "white",
-        padding: "12px 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: "300px" }}>
+      <nav
+        style={{
+          background: "#1A2F23",
+          color: "#ffffff",
+          padding: "12px 20px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          gap: 12,
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        {/* Left: logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
           <button
+            type="button"
             onClick={() => window.history.back()}
             style={{
-              background: "none",
-              border: "none",
-              color: "white",
-              fontSize: "20px",
+              width: 38,
+              height: 38,
+              borderRadius: 50,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              fontWeight: 900,
               cursor: "pointer",
             }}
+            aria-label="Back"
           >
             ←
           </button>
-          <div>
-            <div style={{ fontSize: "14px", opacity: 0.8 }}>Lesson {currentLessonId} of 100</div>
-            <div style={{ fontSize: "16px", fontWeight: 600 }}>{currentLesson.title}</div>
+          <div style={{ fontWeight: 950, letterSpacing: "-0.01em" }}>
+            <div style={{ fontSize: 14, opacity: 0.85 }}>My Green Keys</div>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 24, position: "relative" }}>
-          {currentPhase && (
+        {/* Center: lesson + module */}
+        <div style={{ textAlign: "center", fontWeight: 900, fontSize: 14, opacity: 0.95, whiteSpace: "nowrap" }}>
+          Lesson {currentLessonId} of 100 <span style={{ opacity: 0.7 }}>|</span>{" "}
+          <span style={{ fontWeight: 950 }}>
+            📚 {currentPhase?.name ?? "Typing"}
+          </span>
+        </div>
+
+        {/* Right: stats + actions + pet */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "20px", marginBottom: "4px" }}>{currentPhase.icon}</div>
-              <div style={{ fontSize: "12px", opacity: 0.8 }}>{currentPhase.name}</div>
+              <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.wpm}</div>
+              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>WPM</div>
             </div>
-          )}
-          <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.wpm}</div>
-            <div style={{ fontSize: "11px", opacity: 0.8 }}>WPM</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.accuracy}%</div>
+              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Accuracy</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 950, color: "#F39C12" }}>{stats.streak} 🔥</div>
+              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Streak</div>
+            </div>
           </div>
-          <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.accuracy}%</div>
-            <div style={{ fontSize: "11px", opacity: 0.8 }}>Accuracy</div>
-          </div>
-          <div style={{ fontSize: "13px", textAlign: "center" }}>
-            <div style={{ color: "#4CAF50", fontWeight: 700, fontSize: "18px" }}>{stats.streak}</div>
-            <div style={{ fontSize: "11px", opacity: 0.8 }}>Streak</div>
-          </div>
-          {userProfile && (
-            <div style={{ fontSize: "14px", fontWeight: 600 }}>
-              Hi {userProfile.name}! 👋
+
+          {userProfile?.name && (
+            <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
+              Hi {userProfile.name}!
             </div>
           )}
 
-          {/* PET WIDGET */}
-          <div
+          <button
+            type="button"
+            onClick={() => (window.location.href = "/lesson-map")}
             style={{
-              position: "absolute",
-              right: -10,
-              top: -2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              minWidth: 120,
-              pointerEvents: "none",
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "1px solid rgba(255,255,255,0.22)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
             }}
           >
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 800, marginBottom: 2 }}>
-              {petName || "My Pet"}
+            Lesson Map
+          </button>
+          <button
+            type="button"
+            onClick={() => (window.location.href = "/games")}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "1px solid rgba(255,255,255,0.22)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            Games
+          </button>
+
+          {/* Pet widget (nav — larger on desktop, compact on mobile) */}
+          <div className="nav-pet-wrap" style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 4 }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.85, lineHeight: 1.1 }}>
+                {petName || "My Pet"}
+              </div>
+              <div
+                style={{
+                  width: 56,
+                  height: 6,
+                  background: "rgba(255,255,255,0.18)",
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  marginTop: 6,
+                  border: "1px solid rgba(255,255,255,0.14)",
+                }}
+                aria-label="Pet health"
+              >
+                <div
+                  className="pet-health-fill"
+                  style={{
+                    width: `${clamp(petHealth, 0, 100)}%`,
+                    height: "100%",
+                    background:
+                      petMood === "happy"
+                        ? "#2ECC71"
+                        : petMood === "neutral"
+                          ? "#F39C12"
+                          : "#E67E22",
+                  }}
+                />
+              </div>
             </div>
             <div
               className={[
                 "pet",
+                "nav-pet-emoji",
                 `pet-${petMood}`,
                 petPulse ? "pet-pulse" : "",
                 petDance ? "pet-dance" : "",
               ].join(" ")}
-              style={{ fontSize: 34, lineHeight: 1 }}
+              style={{ borderRadius: 16, display: "grid", placeItems: "center" }}
+              aria-label="Pet"
             >
               {petEmoji}
-            </div>
-            <div
-              style={{
-                width: 86,
-                height: 8,
-                background: "rgba(255,255,255,0.22)",
-                borderRadius: 999,
-                overflow: "hidden",
-                marginTop: 6,
-                border: "1px solid rgba(255,255,255,0.18)",
-              }}
-              aria-label="Pet health"
-            >
-              <div
-                style={{
-                  width: `${clamp(petHealth, 0, 100)}%`,
-                  height: "100%",
-                  background:
-                    petMood === "happy"
-                      ? "#4CAF50"
-                      : petMood === "neutral"
-                        ? "#FFEB3B"
-                        : "#f44336",
-                  transition: "width 0.35s ease",
-                }}
-              />
             </div>
           </div>
         </div>
       </nav>
 
-      {/* PROGRESS BAR */}
-      <div style={{
-        height: "4px",
-        background: "#e0e0e0",
-        position: "relative",
-      }}>
-        <div
-          style={{
-            height: "100%",
-            background: "linear-gradient(90deg, #4CAF50 0%, #2196F3 100%)",
-            width: `${lessonProgress}%`,
-            transition: "width 0.3s ease",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "-8px",
-            left: `${lessonProgress}%`,
-            transform: "translateX(-50%)",
-            fontSize: "16px",
-            transition: "left 0.3s ease",
-          }}
-        >
-          🌿
+      {/* LESSON INFO STRIP (minimal) */}
+      <div
+        style={{
+          height: 40,
+          background: "#F8F9FA",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          gap: 12,
+          fontWeight: 800,
+        }}
+      >
+        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
         </div>
-      </div>
-
-      {/* LESSON INFO BAR */}
-      <div style={{
-        background: "white",
-        padding: "12px 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderBottom: "1px solid #e0e0e0",
-      }}>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <span style={{
-            background: currentLesson.module === "eco" ? "#E8F5E9" : 
-                       currentLesson.module === "health" ? "#E3F2FD" :
-                       currentLesson.module === "manners" ? "#FCE4EC" : "#F5F5F5",
-            color: currentLesson.module === "eco" ? "#4CAF50" : 
-                   currentLesson.module === "health" ? "#2196F3" :
-                   currentLesson.module === "manners" ? "#E91E63" : "#666",
-            padding: "4px 12px",
-            borderRadius: "12px",
-            fontSize: "12px",
-            fontWeight: 600,
-          }}>
-            {currentLesson.module === "eco" ? "🌍 Eco" : 
-             currentLesson.module === "health" ? "💪 Health" :
-             currentLesson.module === "manners" ? "🤝 Manners" : "⌨️ Typing"}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 260, justifyContent: "flex-end" }}>
+          <span style={{ fontSize: 12, opacity: 0.85 }}>
+            Target: <span style={{ fontWeight: 950 }}>{currentLesson.targetWPM || 20} WPM</span>
           </span>
-          <span style={{ color: "#666", fontSize: "14px" }}>
-            New Keys: {currentLesson.newKeys.join(", ")}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button
-            onClick={() => {
-              setJoinClassError("");
-              setJoinClassSuccess("");
-              setShowJoinClassModal(true);
-            }}
-            style={{
-              background: "white",
-              border: "2px solid #4CAF50",
-              color: "#4CAF50",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            onMouseOver={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "#4CAF50";
-              target.style.color = "white";
-            }}
-            onMouseOut={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "white";
-              target.style.color = "#4CAF50";
-            }}
-          >
-            🏫 Join Class
-          </button>
-          <button
-            onClick={() => {
-              window.location.href = "/lesson-map";
-            }}
-            style={{
-              background: "white",
-              border: "2px solid #4CAF50",
-              color: "#4CAF50",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            onMouseOver={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "#4CAF50";
-              target.style.color = "white";
-            }}
-            onMouseOut={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "white";
-              target.style.color = "#4CAF50";
-            }}
-          >
-            📚 Lesson Map
-          </button>
-          <button
-            onClick={() => {
-              window.location.href = "/games";
-            }}
-            style={{
-              background: "white",
-              border: "2px solid #7B1FA2",
-              color: "#7B1FA2",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            onMouseOver={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "linear-gradient(90deg,#7B1FA2,#4CAF50)";
-              target.style.color = "white";
-              target.style.borderColor = "#7B1FA2";
-            }}
-            onMouseOut={(e) => {
-              const target = e.target as HTMLButtonElement;
-              target.style.background = "white";
-              target.style.color = "#7B1FA2";
-              target.style.borderColor = "#7B1FA2";
-            }}
-          >
-            🎮 Games
-          </button>
-          <button
-            onClick={() => {
-              setEcoError("");
-              setEcoMessage("");
-              setEcoFile(null);
-              setEcoSelectedAction(null);
-              setShowEcoUploadModal(true);
-            }}
-            style={{
-              background: "#4CAF50",
-              border: "none",
-              color: "white",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-          >
-            📸 Submit Eco Photo
-          </button>
+          <div style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+            <div
+              className="lesson-strip-progress-fill"
+              style={{
+                width: `${lessonProgress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg,#2ECC71,#1A8F4E)",
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -2066,104 +2123,192 @@ export default function LessonPage() {
         </div>
       )}
 
-      {/* ECO SCENE STRIP */}
-      <div style={{
-        height: "60px",
-        background: "linear-gradient(180deg, #B4E8B4 0%, #A5E0A5 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 40,
-        padding: "0 24px",
-        borderBottom: "2px solid #4CAF50",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Animated trees */}
-        <svg width="40" height="50" viewBox="0 0 40 50" style={{
-          animation: "sway 2.5s ease-in-out infinite",
-        }}>
-          <rect x="17" y="32" width="6" height="18" fill="#6B3F1E" />
-          <polygon points="20,8 32,28 8,28" fill="#2D6A4F" />
-          <polygon points="20,18 28,32 12,32" fill="#40916C" />
-          <polygon points="20,26 25,35 15,35" fill="#52B788" />
-        </svg>
-
-        {/* Eco counter */}
-        <div style={{
-          fontSize: "18px",
-          fontWeight: 700,
-          color: "#1B4D30",
-        }}>
-          {userProfile && `Hi ${userProfile.name}! `}
-          {stats.ecoWords} eco words typed 🌍
+      {/* ECO POINTS COUNTER (subtle, top) */}
+      <div
+        style={{
+          padding: "10px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          color: "#2C3E50",
+        }}
+      >
+        <div style={{ fontWeight: 900, opacity: 0.9 }}>
+          🌿{" "}
+          <span className="eco-counter-tick" style={{ color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
+            {ecoDisplay}
+          </span>{" "}
+          eco points
         </div>
-
-        {/* Floating leaves */}
-        <div style={{
-          position: "absolute",
-          right: "5%",
-          top: "10px",
-          animation: "float 3s ease-in-out infinite",
-          fontSize: "20px",
-        }}>
-          🍃
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => {
+              setJoinClassError("");
+              setJoinClassSuccess("");
+              setShowJoinClassModal(true);
+            }}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "2px solid #2ECC71",
+              background: "#fff",
+              color: "#1A8F4E",
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 4px 0 #1A8F4E",
+            }}
+          >
+            🏫 Join Class
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEcoError("");
+              setEcoMessage("");
+              setEcoFile(null);
+              setEcoSelectedAction(null);
+              setShowEcoUploadModal(true);
+            }}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "2px solid #2ECC71",
+              background: "#2ECC71",
+              color: "#fff",
+              fontWeight: 950,
+              cursor: "pointer",
+              boxShadow: "0 4px 0 #1A8F4E",
+            }}
+          >
+            📸 Submit Eco Photo
+          </button>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px" }}>
-        {/* DRILL AND SENTENCE BOX */}
-        <div style={{
-          background: "white",
-          padding: "24px",
-          borderRadius: "8px",
-          marginBottom: "24px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-        }}>
+      <div className="lesson-main-pad" style={{ maxWidth: 980, margin: "0 auto", padding: "24px 18px 100px" }}>
+        {/* TYPING AREA (TypingClub style) */}
+        <div
+          style={{
+            position: "relative",
+            maxWidth: 800,
+            margin: "0 auto 18px",
+            background: "#FFFFFF",
+            borderRadius: 20,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+            padding: 22,
+            border: "1px solid rgba(0,0,0,0.06)",
+          }}
+        >
+          {/* Desktop pet — top-right of typing card (hidden on small screens) */}
+          <div
+            className="typing-area-pet hidden md:flex"
+            style={{
+              position: "absolute",
+              top: 14,
+              right: 14,
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              className={["pet", `pet-${petMood}`, petPulse ? "pet-pulse" : "", petDance ? "pet-dance" : ""].join(" ")}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 20,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 40,
+                background: "linear-gradient(180deg, rgba(46,204,113,0.12), rgba(26,47,35,0.06))",
+                border: "1px solid rgba(46,204,113,0.25)",
+              }}
+              aria-hidden
+            >
+              {petEmoji}
+            </div>
+            <div
+              style={{
+                width: 72,
+                height: 6,
+                borderRadius: 999,
+                background: "rgba(26,47,35,0.12)",
+                overflow: "hidden",
+                border: "1px solid rgba(0,0,0,0.06)",
+              }}
+            >
+              <div
+                className="pet-health-fill"
+                style={{
+                  width: `${clamp(petHealth, 0, 100)}%`,
+                  height: "100%",
+                  background: petMood === "happy" ? "#2ECC71" : petMood === "neutral" ? "#F39C12" : "#E67E22",
+                }}
+              />
+            </div>
+          </div>
           <div style={{ marginBottom: "16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "#666", marginBottom: "6px" }}>DRILL TEXT</div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "#95A5A6", marginBottom: 8, letterSpacing: "0.08em" }}>
+              DRILL TEXT
+            </div>
             <div style={{
               fontFamily: "Roboto Mono, monospace",
               fontSize: "16px",
               lineHeight: 1.6,
-              color: "#999",
-              background: "#f5f5f5",
-              padding: "12px",
-              borderRadius: "4px",
+              color: "#95A5A6",
+              background: "#F8F9FA",
+              padding: "12px 14px",
+              borderRadius: 16,
             }}>
               {currentLesson.drill}
             </div>
           </div>
 
           <div style={{ marginBottom: "0" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "#666", marginBottom: "6px" }}>SENTENCE</div>
-            <div style={{
+            <div style={{ fontSize: 12, fontWeight: 900, color: "#95A5A6", marginBottom: 8, letterSpacing: "0.08em" }}>
+              ECO SENTENCE
+            </div>
+            <div
+              className={`eco-sentence-wrap${wordFlash ? " word-flash" : ""}`}
+              style={{
               fontFamily: "Roboto Mono, monospace",
-              fontSize: "22px",
+              fontSize: "24px",
               lineHeight: 1.8,
               minHeight: "60px",
-            }}>
+              borderRadius: 12,
+              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+            }}
+            >
               {currentLesson.sentence.split("").map((char, index) => {
-                let color = "#999"; // Grey - not yet typed
+                let color = "#95A5A6"; // untyped
                 if (index < userInput.length) {
-                  color = userInput[index] === char ? "#4CAF50" : "#f44336"; // Green correct, Red error
+                  color = userInput[index] === char ? "#2ECC71" : "#E67E22"; // correct / wrong (no red)
                 }
                 const isCurrentPos = index === userInput.length;
                 const style: React.CSSProperties = {
                   color,
-                  fontWeight: userInput[index] === char ? 600 : 400,
+                  fontWeight: index < userInput.length && userInput[index] === char ? 800 : 600,
                   display: "inline",
                   position: "relative",
+                  borderRadius: 8,
+                  padding: "0 2px",
                 };
                 if (isCurrentPos) {
-                  style.borderBottom = "2px solid #2196F3";
-                  style.animation = "blink 1s infinite";
+                  style.background = "#F39C12";
+                  style.color = "#1A2F23";
                 }
-                if (userInput[index] !== char && index < userInput.length) {
-                  style.background = "rgba(244, 67, 54, 0.2)";
+                if (index < userInput.length && userInput[index] !== char) {
+                  style.background = "rgba(230, 126, 34, 0.18)";
                 }
-                return <span key={index} style={style}>{char}</span>;
+                return (
+                  <span key={index} style={style}>
+                    {char}
+                  </span>
+                );
               })}
             </div>
           </div>
@@ -2175,16 +2320,28 @@ export default function LessonPage() {
           type="text"
           value={userInput}
           onChange={handleInputChange}
-          placeholder="Click here and start typing..."
+          placeholder="Type here — tap to focus"
+          className="lesson-typing-input"
+          enterKeyHint="done"
           style={{
             width: "100%",
-            padding: "16px",
-            fontSize: "16px",
+            height: "56px",
+            padding: "0 16px",
+            fontSize: "20px",
             fontFamily: "Roboto Mono, monospace",
-            border: "2px solid #4CAF50",
-            borderRadius: "8px",
-            marginBottom: "24px",
+            border: "2px solid #2ECC71",
+            borderRadius: "16px",
+            marginBottom: "22px",
             boxSizing: "border-box",
+            boxShadow: "0 0 0 0 rgba(46,204,113,0)",
+            outline: "none",
+            WebkitAppearance: "none" as const,
+          }}
+          onFocus={(e) => {
+            (e.target as HTMLInputElement).style.boxShadow = "0 0 0 4px rgba(46, 204, 113, 0.25)";
+          }}
+          onBlur={(e) => {
+            (e.target as HTMLInputElement).style.boxShadow = "0 0 0 0 rgba(46,204,113,0)";
           }}
           disabled={isComplete}
           autoFocus
@@ -2201,15 +2358,16 @@ export default function LessonPage() {
             onClick={handlePrevLesson}
             disabled={currentLessonId === 1}
             style={{
-              padding: "12px 24px",
-              background: currentLessonId === 1 ? "#ccc" : "white",
-              border: currentLessonId === 1 ? "1px solid #ddd" : "2px solid #4CAF50",
-              color: currentLessonId === 1 ? "#999" : "#4CAF50",
-              borderRadius: "8px",
+              padding: "12px 18px",
+              background: currentLessonId === 1 ? "#F8F9FA" : "#FFFFFF",
+              border: currentLessonId === 1 ? "1px solid rgba(0,0,0,0.08)" : "2px solid #2ECC71",
+              color: currentLessonId === 1 ? "#95A5A6" : "#1A8F4E",
+              borderRadius: "50px",
               fontSize: "14px",
-              fontWeight: 600,
+              fontWeight: 900,
               cursor: currentLessonId === 1 ? "not-allowed" : "pointer",
               transition: "all 0.2s ease",
+              boxShadow: currentLessonId === 1 ? "none" : "0 4px 0 #1A8F4E",
             }}
           >
             ← Previous Lesson
@@ -2217,15 +2375,16 @@ export default function LessonPage() {
           <button
             onClick={() => setShowLessonMap(true)}
             style={{
-              padding: "12px 24px",
-              background: "white",
-              border: "2px solid #2196F3",
-              color: "#2196F3",
-              borderRadius: "8px",
+              padding: "12px 18px",
+              background: "#FFFFFF",
+              border: "2px solid #2ECC71",
+              color: "#2C3E50",
+              borderRadius: "50px",
               fontSize: "14px",
-              fontWeight: 600,
+              fontWeight: 900,
               cursor: "pointer",
               transition: "all 0.2s ease",
+              boxShadow: "0 4px 0 #1A8F4E",
             }}
           >
             📚 See All {lessons.length} Lessons
@@ -2234,15 +2393,16 @@ export default function LessonPage() {
             onClick={handleNextLesson}
             disabled={currentLessonId === 100}
             style={{
-              padding: "12px 24px",
-              background: currentLessonId === 100 ? "#ccc" : "#4CAF50",
+              padding: "12px 18px",
+              background: currentLessonId === 100 ? "#F8F9FA" : "#2ECC71",
               border: "none",
-              color: "white",
-              borderRadius: "8px",
+              color: currentLessonId === 100 ? "#95A5A6" : "#fff",
+              borderRadius: "50px",
               fontSize: "14px",
-              fontWeight: 600,
+              fontWeight: 950,
               cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
               transition: "all 0.2s ease",
+              boxShadow: currentLessonId === 100 ? "none" : "0 4px 0 #1A8F4E",
             }}
           >
             Next Lesson →
@@ -2253,108 +2413,98 @@ export default function LessonPage() {
         <div
           className="overflow-x-auto"
           style={{
-            background: "white",
-            padding: "24px",
-            borderRadius: "8px",
-            marginBottom: "24px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            background: "#FFFFFF",
+            padding: "18px 16px",
+            borderRadius: "20px",
+            marginBottom: "18px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+            border: "1px solid rgba(0,0,0,0.06)",
           }}
         >
-          <div className="min-w-[520px]">
-            {KEYBOARD_LAYOUT.map((row) => (
-              <div
-                key={row.row}
-                style={{
-                  display: "flex",
-                  gap: "6px",
-                  marginBottom: "8px",
-                  justifyContent: "center",
-                }}
-              >
-              {row.keys.map((key) => {
-                const fingerType = FINGER_MAP[key] || "other";
-                const isHighlighted = highlightKey === key;
-                const isShaking = shakeKey === key;
-                return (
-                  <div key={key} style={{ textAlign: "center" }}>
-                    <button
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        background: isHighlighted ? getGlowColor() : FINGER_COLORS[fingerType],
-                        border: isHighlighted ? `2px solid ${getGlowBorder()}` : "1px solid #ccc",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        cursor: "default",
-                        textTransform: "uppercase",
-                        transition: "all 0.15s ease",
-                        boxShadow: isHighlighted ? `0 0 14px ${getGlowBorder().replace(')', ', 0.4)')}` : "none",
-                        animation: isShaking ? "shake 0.3s ease" : "none",
-                        position: "relative",
-                        color: isHighlighted ? "#fff" : "#000",
-                        transform: isHighlighted ? "scale(1.15)" : "scale(1)",
-                      }}
-                    >
-                      {key === ";" ? ";" : key.toUpperCase()}
-                      {(key === "f" || key === "j") && (
-                        <span style={{
-                          position: "absolute",
-                          width: "6px",
-                          height: "6px",
-                          background: "#666",
-                          borderRadius: "50%",
-                          bottom: "3px",
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                        }} />
-                      )}
-                    </button>
-                    <div style={{ fontSize: "10px", color: "#999", marginTop: "4px" }}>
-                      {FINGER_NAMES[fingerType]}
-                    </div>
-                  </div>
-                );
-              })}
-              </div>
-            ))}
-
-          {/* SPACEBAR */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button
+          <div className="min-w-[920px]">
+            <div
               style={{
-                width: "300px",
-                height: "40px",
-                background: highlightKey === " " ? getGlowColor() : FINGER_COLORS["space"],
-                border: highlightKey === " " ? `2px solid ${getGlowBorder()}` : "1px solid #ccc",
-                borderRadius: "4px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "default",
-                transition: "all 0.15s ease",
-                boxShadow: highlightKey === " " ? `0 0 14px ${getGlowBorder().replace(')', ', 0.4)')}` : "none",
-                color: highlightKey === " " ? "#fff" : "#000",
-                transform: highlightKey === " " ? "scale(1.15)" : "scale(1)",
+                display: "flex",
+                gap: 8,
+                marginBottom: 10,
+                justifyContent: "center",
               }}
             >
-              SPACE
-            </button>
-          </div>
-            <div style={{ fontSize: "10px", color: "#999", marginTop: "4px", textAlign: "center" }}>
-              Spacebar
+              {renderKeyboardSpecial("tab", "Tab", 1.5)}
+              {KEYBOARD_LAYOUT[0].keys.map((k) => renderKeyboardLetter(k))}
+              {renderKeyboardSpecial("bksp", "Backspace", 1.5)}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginBottom: 10,
+                justifyContent: "center",
+              }}
+            >
+              {renderKeyboardSpecial("caps", "Caps Lock", 1.5)}
+              {KEYBOARD_LAYOUT[1].keys.map((k) => renderKeyboardLetter(k))}
+              {renderKeyboardSpecial("enter", "Enter", 1.8)}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginBottom: 10,
+                justifyContent: "center",
+              }}
+            >
+              {renderKeyboardSpecial("shift-l", "Shift", 1.8)}
+              {KEYBOARD_LAYOUT[2].keys.map((k) => renderKeyboardLetter(k))}
+              {renderKeyboardSpecial("shift-r", "Shift", 1.8)}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "flex-start" }}>
+              <div style={{ textAlign: "center", flexShrink: 0 }}>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  style={{
+                    width: Math.round(52 * 6),
+                    height: 52,
+                    background: highlightKey === " " ? getGlowColor() : FINGER_COLORS.space,
+                    border:
+                      highlightKey === " " ? `2px solid ${getGlowBorder()}` : "1px solid rgba(0,0,0,0.12)",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 950,
+                    cursor: "default",
+                    transition: "transform 0.1s ease, box-shadow 0.15s ease",
+                    boxShadow:
+                      highlightKey === " "
+                        ? `0 0 0 4px rgba(46, 204, 113, 0.25), 0 10px 20px rgba(0,0,0,0.12)`
+                        : "0 6px 14px rgba(0,0,0,0.10)",
+                    color: highlightKey === " " ? "#fff" : "#1A2F23",
+                    transform:
+                      pressedVKey === " "
+                        ? "scale(0.92)"
+                        : highlightKey === " "
+                          ? "scale(1.05)"
+                          : "scale(1)",
+                  }}
+                >
+                  Space
+                </button>
+                <div style={{ fontSize: 10, color: "#95A5A6", marginTop: 6, fontWeight: 800 }}>Space bar</div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* HAND VISUALIZATION */}
         <div
-          className="flex flex-col sm:flex-row"
+          className="hidden sm:flex flex-col sm:flex-row"
           style={{
-            background: "white",
-            padding: "24px",
-            borderRadius: "8px",
-            marginBottom: "24px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            background: "#FFFFFF",
+            padding: "18px 16px",
+            borderRadius: "20px",
+            marginBottom: "18px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+            border: "1px solid rgba(0,0,0,0.06)",
             display: "flex",
             gap: "24px",
             justifyContent: "center",
@@ -2401,184 +2551,238 @@ export default function LessonPage() {
 
       {/* LESSON COMPLETE OVERLAY */}
       {isComplete && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white",
-            padding: "40px",
-            borderRadius: "16px",
-            textAlign: "center",
-            maxWidth: "500px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
-            animation: "slideUp 0.4s ease",
-          }}>
-            <div style={{
-              fontSize: "64px",
-              marginBottom: "16px",
-              animation: "scaleIn 0.6s ease",
-            }}>
-              ✓
-            </div>
-            <h2 style={{
-              fontSize: "32px",
-              fontWeight: 800,
-              color: "#4CAF50",
-              marginBottom: "24px",
-            }}>
-              Lesson Complete!
-            </h2>
+        <div
+          className="lesson-complete-backdrop"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px 16px 72px",
+            overflow: "hidden",
+          }}
+        >
+          <div className="lesson-complete-confetti" aria-hidden>
+            {Array.from({ length: 42 }).map((_, i) => (
+              <span
+                key={i}
+                className={`confetti-bit confetti-${i % 3}`}
+                style={{
+                  left: `${(i * 17 + 7) % 100}%`,
+                  animationDelay: `${(i % 12) * 0.08}s`,
+                  animationDuration: `${2.2 + (i % 5) * 0.35}s`,
+                }}
+              />
+            ))}
+          </div>
 
-            {/* STATS */}
+          <div
+            className="lesson-complete-panel"
+            style={{
+              position: "relative",
+              width: "min(520px, 100%)",
+              maxHeight: "min(92vh, 880px)",
+              overflow: "auto",
+              borderRadius: 24,
+              padding: "28px 22px 26px",
+              textAlign: "center",
+              background: "linear-gradient(165deg, rgba(255,255,255,0.97) 0%, #f4fbf6 45%, #fffef5 100%)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255,255,255,0.65)",
+            }}
+          >
             <div
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+              aria-hidden
               style={{
-                display: "grid",
-                gap: "16px",
-                marginBottom: "32px",
+                position: "absolute",
+                inset: 0,
+                borderRadius: 24,
+                background:
+                  "radial-gradient(circle at 12% 8%, rgba(46,204,113,0.2), transparent 42%), radial-gradient(circle at 88% 12%, rgba(243,156,18,0.22), transparent 40%), radial-gradient(circle at 50% 100%, rgba(46,139,87,0.12), transparent 55%)",
+                pointerEvents: "none",
+              }}
+            />
+
+            <h2
+              style={{
+                position: "relative",
+                fontSize: "clamp(26px, 5vw, 34px)",
+                fontWeight: 800,
+                color: "#14532d",
+                margin: "0 0 8px",
               }}
             >
-              <div style={{
-                background: "#F5F5F5",
-                padding: "16px",
-                borderRadius: "8px",
-              }}>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#4CAF50" }}>
-                  {stats.wpm}
-                </div>
-                <div style={{ fontSize: "12px", color: "#999" }}>WPM</div>
-              </div>
-              <div style={{
-                background: "#F5F5F5",
-                padding: "16px",
-                borderRadius: "8px",
-              }}>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#4CAF50" }}>
-                  {stats.accuracy}%
-                </div>
-                <div style={{ fontSize: "12px", color: "#999" }}>Accuracy</div>
-              </div>
-              <div style={{
-                background: "#F5F5F5",
-                padding: "16px",
-                borderRadius: "8px",
-              }}>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#4CAF50" }}>
-                  {stats.streak}
-                </div>
-                <div style={{ fontSize: "12px", color: "#999" }}>Best Streak</div>
-              </div>
+              Lesson complete!
+            </h2>
+            <div style={{ position: "relative", fontSize: 15, fontWeight: 800, color: "#3d5c4a", marginBottom: 18 }}>
+              You helped the planet with every keystroke.
             </div>
 
-            {/* STARS */}
-            <div style={{
-              fontSize: "48px",
-              marginBottom: "16px",
-              letterSpacing: "8px",
-            }}>
-              {Array(3)
-                .fill(0)
-                .map((_, i) => (i < stars ? "★" : "☆"))
-                .join("")}
+            {/* Stars — stagger in */}
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                justifyContent: "center",
+                gap: 10,
+                marginBottom: 20,
+                minHeight: 56,
+                alignItems: "center",
+              }}
+            >
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="complete-star"
+                  style={{
+                    fontSize: 52,
+                    lineHeight: 1,
+                    color: i < stars ? "#F1C40F" : "rgba(0,0,0,0.12)",
+                    animationDelay: `${0.12 + i * 0.16}s`,
+                    textShadow: i < stars ? "0 4px 0 rgba(180,130,0,0.35)" : "none",
+                  }}
+                >
+                  ★
+                </span>
+              ))}
             </div>
 
-            {/* ECO FACT */}
+            {/* Stats */}
+            <div
+              className="lesson-complete-stats"
+              style={{
+                position: "relative",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 10,
+                marginBottom: 18,
+              }}
+            >
+              {[
+                { label: "WPM", value: stats.wpm },
+                { label: "Accuracy", value: `${stats.accuracy}%` },
+                { label: "Eco points", value: ecoPointsEarnedThisLesson, sub: "earned" },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  style={{
+                    background: "rgba(255,255,255,0.92)",
+                    border: "1px solid rgba(46,204,113,0.28)",
+                    borderRadius: 16,
+                    padding: "14px 10px",
+                    boxShadow: "0 8px 20px rgba(26,47,35,0.08)",
+                  }}
+                >
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
+                    {card.value}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: "#6b7c72", marginTop: 4, letterSpacing: "0.04em" }}>
+                    {card.label}
+                    {card.sub ? (
+                      <span style={{ display: "block", fontSize: 10, opacity: 0.85, fontWeight: 800 }}>{card.sub}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pet happy dance */}
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <div
+                className={["pet", "pet-happy", "pet-dance"].join(" ")}
+                style={{
+                  display: "inline-grid",
+                  placeItems: "center",
+                  width: 72,
+                  height: 72,
+                  borderRadius: 22,
+                  fontSize: 40,
+                  background: "linear-gradient(180deg, rgba(46,204,113,0.2), rgba(255,255,255,0.9))",
+                  border: "2px solid rgba(46,204,113,0.45)",
+                  boxShadow: "0 12px 28px rgba(26,47,35,0.15)",
+                }}
+              >
+                {petEmoji}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: "#2d6a4f", marginTop: 8 }}>Your pet is celebrating!</div>
+            </div>
+
+            {/* Eco fact — slide from bottom */}
             {lessonFact && (
               <div
-                className="eco-fact-card"
+                className="lesson-complete-fact"
                 style={{
-                  background: "linear-gradient(135deg,#E8F5E9 0%, #F1F8E9 100%)",
-                  border: "1px solid rgba(76,175,80,0.35)",
-                  padding: 16,
-                  borderRadius: 14,
-                  marginBottom: 16,
+                  position: "relative",
+                  background: "linear-gradient(135deg,#E8F5E9 0%, #FFFDE7 100%)",
+                  border: "1px solid rgba(76,175,80,0.4)",
+                  padding: "14px 14px",
+                  borderRadius: 16,
+                  marginBottom: 20,
                   textAlign: "left",
-                  animation: "factSlideIn 420ms ease both",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <div style={{ fontSize: 30, lineHeight: 1 }}>{lessonFact.emoji}</div>
+                  <div style={{ fontSize: 32, lineHeight: 1 }}>{lessonFact.emoji}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 950, color: "#2c3e50", marginBottom: 6 }}>
-                      Did you know? 🌍
-                    </div>
-                    <div style={{ fontWeight: 900, color: "#1b4d30", fontSize: 16, lineHeight: 1.35 }}>
-                      {lessonFact.fact}
-                    </div>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
-                      <span style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 900, color: "#2e7d32" }}>
+                    <div style={{ fontWeight: 950, color: "#1b4332", marginBottom: 6, fontSize: 14 }}>Eco fact</div>
+                    <div style={{ fontWeight: 800, color: "#14532d", fontSize: 15, lineHeight: 1.4 }}>{lessonFact.fact}</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                      <span
+                        style={{
+                          background: "#fff",
+                          border: "1px solid rgba(0,0,0,0.06)",
+                          borderRadius: 999,
+                          padding: "4px 10px",
+                          fontSize: 11,
+                          fontWeight: 900,
+                          color: "#2e7d32",
+                        }}
+                      >
                         {lessonFact.category}
                       </span>
-                      <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                        Source: {lessonFact.source}
-                      </span>
+                      <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 800 }}>Source: {lessonFact.source}</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ECO REWARD */}
-            <div style={{
-              background: "#E8F5E9",
-              padding: "16px",
-              borderRadius: "8px",
-              marginBottom: "24px",
-              fontSize: "16px",
-              fontWeight: 600,
-              color: "#4CAF50",
-            }}>
-              🌱 {stats.ecoWords} eco words typed - 1 tree closer!
-            </div>
-
-            {/* BUTTONS */}
-            <div style={{
-              display: "flex",
-              gap: "12px",
-            }}>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch" }}>
               <button
+                type="button"
+                onClick={handleNextLesson}
+                disabled={currentLessonId === 100}
+                style={{
+                  height: 56,
+                  borderRadius: 999,
+                  border: "none",
+                  background: currentLessonId === 100 ? "#bfc9c4" : "linear-gradient(180deg,#2ECC71,#1A8F4E)",
+                  color: "#fff",
+                  fontSize: 18,
+                  fontWeight: 900,
+                  cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
+                  boxShadow: currentLessonId === 100 ? "none" : "0 6px 0 #0f3d24, 0 14px 28px rgba(26,143,78,0.35)",
+                }}
+              >
+                {currentLessonId === 100 ? "🏆 You've finished all lessons!" : "Next Lesson →"}
+              </button>
+              <button
+                type="button"
                 onClick={handleReset}
                 style={{
-                  flex: 1,
-                  padding: "12px 24px",
-                  background: "white",
-                  border: "2px solid #4CAF50",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "#4CAF50",
+                  height: 44,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.95)",
+                  border: "2px solid rgba(26,47,35,0.18)",
+                  color: "#2d4a3e",
+                  fontSize: 15,
+                  fontWeight: 800,
                   cursor: "pointer",
-                  transition: "all 0.2s ease",
                 }}
               >
                 Try Again
-              </button>
-              <button
-                onClick={handleNextLesson}
-                style={{
-                  flex: 1,
-                  padding: "12px 24px",
-                  background: "#4CAF50",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "white",
-                  cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                disabled={currentLessonId === 100}
-              >
-                {currentLessonId === 100 ? "🏆 You\'ve Graduated!" : "Next Lesson →"}
               </button>
             </div>
           </div>
@@ -2733,139 +2937,201 @@ export default function LessonPage() {
 
       {/* WELCOME MODAL */}
       {showWelcomeModal && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1001,
-        }}>
-          <div style={{
-            background: "white",
-            padding: "40px",
-            borderRadius: "16px",
-            textAlign: "center",
-            maxWidth: "500px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
-            animation: "slideUp 0.4s ease",
-          }}>
-            <h2 style={{
-              fontSize: "28px",
-              fontWeight: 800,
-              color: "#4CAF50",
-              marginBottom: "24px",
-            }}>
-              Welcome to My Green Keys! 🌿
-            </h2>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 35, 24, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1001,
+            padding: 18,
+          }}
+        >
+          <div
+            className="welcome-modal-card"
+            style={{
+              width: "min(480px, 100%)",
+              background: "#fff",
+              borderRadius: 22,
+              boxShadow: "0 24px 70px rgba(0,0,0,0.28)",
+              border: "1px solid rgba(0,0,0,0.06)",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
+          >
+            <div
+              className="welcome-modal-hero"
+              style={{
+                height: 120,
+                background:
+                  "linear-gradient(180deg, rgba(129,199,132,0.35) 0%, rgba(46,125,50,0.2) 40%, rgba(255,249,230,0.9) 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                fontSize: 40,
+                borderBottom: "1px solid rgba(0,0,0,0.06)",
+              }}
+              aria-hidden
+            >
+              <span>🌳</span>
+              <span>🌿</span>
+              <span>🦋</span>
+              <span>☀️</span>
+            </div>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "8px", textAlign: "left", color: "#666" }}>
-                What's your name?
-              </label>
+            <div style={{ padding: "26px 24px 28px" }}>
+              <h2
+                style={{
+                  fontSize: "clamp(22px, 4.5vw, 28px)",
+                  fontWeight: 900,
+                  color: "#14532d",
+                  margin: "0 0 20px",
+                }}
+              >
+                Welcome! What&apos;s your name? 🌿
+              </h2>
+
               <input
                 type="text"
                 value={welcomeData.name}
                 onChange={(e) => setWelcomeData({ ...welcomeData, name: e.target.value })}
-                placeholder="Your name..."
+                placeholder="Your name"
+                autoFocus
                 style={{
                   width: "100%",
-                  padding: "12px",
-                  fontSize: "14px",
-                  border: "2px solid #e0e0e0",
-                  borderRadius: "8px",
+                  padding: "16px 18px",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  border: "2px solid rgba(46,204,113,0.45)",
+                  borderRadius: 16,
                   boxSizing: "border-box",
-                  fontFamily: "Poppins, sans-serif",
+                  marginBottom: 22,
+                  outline: "none",
                 }}
               />
-            </div>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "8px", textAlign: "left", color: "#666" }}>
-                How old are you?
-              </label>
-              <select
-                value={welcomeData.age}
-                onChange={(e) => setWelcomeData({ ...welcomeData, age: e.target.value })}
+              <div
                 style={{
-                  width: "100%",
-                  padding: "12px",
-                  fontSize: "14px",
-                  border: "2px solid #e0e0e0",
-                  borderRadius: "8px",
-                  fontFamily: "Poppins, sans-serif",
+                  fontSize: 13,
+                  fontWeight: 900,
+                  color: "#5a6b62",
+                  marginBottom: 10,
+                  textAlign: "left",
                 }}
               >
-                {Array.from({ length: 9 }, (_, i) => i + 6).map((age) => (
-                  <option key={age} value={age}>{age}</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "12px", color: "#666" }}>
-                Tell us about you:
-              </label>
-              <div style={{ display: "flex", gap: "12px" }}>
+                I am a…
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 22 }}>
                 <button
+                  type="button"
                   onClick={() => setWelcomeData({ ...welcomeData, gender: "boy" })}
                   style={{
-                    flex: 1,
-                    padding: "12px",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    border: welcomeData.gender === "boy" ? "2px solid #2196F3" : "2px solid #ddd",
-                    background: welcomeData.gender === "boy" ? "#E3F2FD" : "white",
-                    color: welcomeData.gender === "boy" ? "#2196F3" : "#999",
-                    borderRadius: "8px",
+                    padding: "18px 12px",
+                    borderRadius: 18,
+                    border: welcomeData.gender === "boy" ? "3px solid #2563eb" : "2px solid #e5e7eb",
+                    background: welcomeData.gender === "boy" ? "linear-gradient(180deg,#dbeafe,#eff6ff)" : "#f9fafb",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    textAlign: "center",
+                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                    boxShadow: welcomeData.gender === "boy" ? "0 8px 0 #1d4ed8" : "none",
                   }}
                 >
-                  👦 I'm a Boy
+                  <div style={{ fontSize: 44, lineHeight: 1 }}>👦</div>
+                  <div style={{ fontWeight: 950, color: "#1e3a8a", marginTop: 8, fontSize: 16 }}>Boy</div>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setWelcomeData({ ...welcomeData, gender: "girl" })}
                   style={{
-                    flex: 1,
-                    padding: "12px",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    border: welcomeData.gender === "girl" ? "2px solid #E91E63" : "2px solid #ddd",
-                    background: welcomeData.gender === "girl" ? "#FCE4EC" : "white",
-                    color: welcomeData.gender === "girl" ? "#E91E63" : "#999",
-                    borderRadius: "8px",
+                    padding: "18px 12px",
+                    borderRadius: 18,
+                    border: welcomeData.gender === "girl" ? "3px solid #db2777" : "2px solid #e5e7eb",
+                    background: welcomeData.gender === "girl" ? "linear-gradient(180deg,#fce7f3,#fdf2f8)" : "#f9fafb",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    textAlign: "center",
+                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                    boxShadow: welcomeData.gender === "girl" ? "0 8px 0 #be185d" : "none",
                   }}
                 >
-                  👧 I'm a Girl
+                  <div style={{ fontSize: 44, lineHeight: 1 }}>👧</div>
+                  <div style={{ fontWeight: 950, color: "#9d174d", marginTop: 8, fontSize: 16 }}>Girl</div>
                 </button>
               </div>
-            </div>
 
-            <button
-              onClick={handleWelcomeSubmit}
-              disabled={!welcomeData.name || !welcomeData.gender}
-              style={{
-                width: "100%",
-                padding: "14px",
-                background: welcomeData.name && welcomeData.gender ? "#4CAF50" : "#ccc",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: 700,
-                color: "white",
-                cursor: welcomeData.name && welcomeData.gender ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Let's Start Typing! 🌿
-            </button>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 900,
+                  color: "#5a6b62",
+                  marginBottom: 10,
+                  textAlign: "left",
+                }}
+              >
+                My age
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  overflowX: "auto",
+                  paddingBottom: 6,
+                  marginBottom: 22,
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {Array.from({ length: 9 }, (_, i) => i + 6).map((age) => {
+                  const sel = welcomeData.age === String(age);
+                  return (
+                    <button
+                      key={age}
+                      type="button"
+                      onClick={() => setWelcomeData({ ...welcomeData, age: String(age) })}
+                      style={{
+                        flex: "0 0 auto",
+                        minWidth: 44,
+                        height: 44,
+                        borderRadius: 999,
+                        border: sel ? "2px solid #16a34a" : "2px solid #e5e7eb",
+                        background: sel ? "#dcfce7" : "#fff",
+                        fontWeight: 950,
+                        fontSize: 16,
+                        color: sel ? "#14532d" : "#64748b",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {age}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleWelcomeSubmit}
+                disabled={!welcomeData.name?.trim() || !welcomeData.gender}
+                style={{
+                  width: "100%",
+                  height: 54,
+                  borderRadius: 999,
+                  border: "none",
+                  background:
+                    welcomeData.name?.trim() && welcomeData.gender
+                      ? "linear-gradient(180deg,#2ECC71,#1A8F4E)"
+                      : "#d1d5db",
+                  color: "#fff",
+                  fontSize: 18,
+                  fontWeight: 950,
+                  cursor: welcomeData.name?.trim() && welcomeData.gender ? "pointer" : "not-allowed",
+                  boxShadow:
+                    welcomeData.name?.trim() && welcomeData.gender ? "0 6px 0 #0f3d24, 0 12px 24px rgba(26,143,78,0.3)" : "none",
+                }}
+              >
+                Let&apos;s Start! 🚀
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -3247,6 +3513,11 @@ export default function LessonPage() {
           25% { transform: translateX(-5px); }
           75% { transform: translateX(5px); }
         }
+        @keyframes shakeWrong {
+          0%, 100% { transform: translateX(0); }
+          33% { transform: translateX(-6px); }
+          66% { transform: translateX(6px); }
+        }
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -3273,7 +3544,7 @@ export default function LessonPage() {
         .pet-happy { animation: petBounce 1.15s ease-in-out infinite; }
         .pet-neutral { animation: petIdle 2.2s ease-in-out infinite; }
         .pet-sad { animation: petDroop 1.6s ease-in-out infinite; opacity: 0.9; }
-        .pet-pulse { animation: petPulse 0.25s ease-out; }
+        .pet-pulse { animation: petPulse 0.3s ease-out !important; }
         .pet-dance { animation: petDance 0.7s ease-in-out infinite; }
 
         @keyframes petBounce {
@@ -3290,7 +3561,7 @@ export default function LessonPage() {
         }
         @keyframes petPulse {
           0% { transform: translateY(0) scale(1); }
-          60% { transform: translateY(-8px) scale(1.06); }
+          45% { transform: translateY(-8px) scale(1.05); }
           100% { transform: translateY(0) scale(1); }
         }
         @keyframes petDance {
@@ -3310,6 +3581,123 @@ export default function LessonPage() {
         @keyframes factPop {
           from { opacity: 0; transform: translateY(-6px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Lesson complete overlay — nature + confetti */
+        .lesson-complete-backdrop {
+          background:
+            radial-gradient(ellipse 120% 80% at 50% 0%, rgba(180, 230, 180, 0.5), transparent 55%),
+            linear-gradient(180deg, #1a3d28 0%, #2d6a4f 35%, #52b788 70%, #b7e4c7 100%);
+        }
+        .lesson-complete-confetti {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
+        .confetti-bit {
+          position: absolute;
+          top: -12px;
+          width: 9px;
+          height: 12px;
+          border-radius: 2px;
+          opacity: 0.92;
+          animation-name: confettiFall;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        .confetti-0 { background: linear-gradient(180deg, #facc15, #22c55e); }
+        .confetti-1 { background: linear-gradient(180deg, #4ade80, #fbbf24); }
+        .confetti-2 { background: linear-gradient(180deg, #86efac, #eab308); }
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(110vh) rotate(720deg); opacity: 0.65; }
+        }
+        .lesson-complete-panel {
+          animation: lessonCompleteZoom 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes lessonCompleteZoom {
+          from { opacity: 0; transform: scale(0.92); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .complete-star {
+          opacity: 0;
+          animation: starPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes starPop {
+          from { opacity: 0; transform: scale(0.2) translateY(16px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .lesson-complete-fact {
+          animation: factFromBottom 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes factFromBottom {
+          from { opacity: 0; transform: translateY(28px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 420px) {
+          .lesson-complete-stats {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        /* Welcome modal */
+        .welcome-modal-card {
+          animation: welcomeSlide 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes welcomeSlide {
+          from { opacity: 0; transform: translateY(22px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Mobile typing bar + spacing */
+        .lesson-main-pad {
+          padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+        }
+        @media (max-width: 767px) {
+          .lesson-main-pad {
+            padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+          }
+          .lesson-typing-input {
+            position: fixed !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 38px !important;
+            z-index: 45 !important;
+            max-width: 100vw !important;
+            margin: 0 !important;
+            border-radius: 18px 18px 0 0 !important;
+            margin-bottom: 0 !important;
+            box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.14) !important;
+            border-bottom: none !important;
+          }
+          .nav-pet-emoji {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 22px !important;
+          }
+        }
+        @media (min-width: 768px) {
+          .nav-pet-emoji {
+            width: 50px;
+            height: 50px;
+            font-size: 28px;
+          }
+        }
+
+        .pet-health-fill {
+          transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .lesson-strip-progress-fill {
+          transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .eco-counter-tick {
+          transition: transform 0.2s ease, color 0.2s ease;
+          display: inline-block;
+        }
+        .word-flash {
+          background-color: rgba(46, 204, 113, 0.22) !important;
+          box-shadow: inset 0 0 0 2px rgba(46, 204, 113, 0.35);
         }
 
         /* Onboarding visuals */
@@ -3392,6 +3780,48 @@ export default function LessonPage() {
           box-shadow: none;
         }
       `}</style>
+
+      {/* BOTTOM PROGRESS BAR */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 38,
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(0,0,0,0.08)",
+          zIndex: 40,
+          display: "flex",
+          alignItems: "center",
+          padding: "0 16px",
+          gap: 12,
+        }}
+      >
+        <div style={{ fontSize: 12, fontWeight: 900, color: "#2C3E50", whiteSpace: "nowrap" }}>
+          Lesson {currentLessonId} of 100
+        </div>
+        <div style={{ flex: 1, height: 6, borderRadius: 999, background: "#F8F9FA", overflow: "hidden" }}>
+          <div
+            style={{
+              width: `${lessonProgress}%`,
+              height: "100%",
+              background: "linear-gradient(90deg,#2ECC71,#1A8F4E)",
+              transition: "width 0.35s ease",
+            }}
+          />
+        </div>
+        <div
+          style={{
+            transform: `translateX(${lessonProgress - 50}%)`,
+            transition: "transform 0.35s ease",
+            fontSize: 16,
+          }}
+          aria-hidden
+        >
+          🌿
+        </div>
+      </div>
     </div>
   );
 }
