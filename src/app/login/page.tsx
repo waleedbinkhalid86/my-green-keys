@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,6 +105,16 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const err = new URLSearchParams(window.location.search).get("error");
+    if (err) {
+      setErrors({ form: decodeURIComponent(err) });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -235,6 +246,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setErrors({});
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        setErrors({ form: formatAuthError(error) });
+      }
+    } catch (e) {
+      setErrors({ form: formatUnknownError(e) });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans">
       <nav className="flex items-center justify-between border-b border-white/10 bg-[var(--mgk-dark)] px-6 py-4 shadow-sm">
@@ -263,6 +295,12 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent className="space-y-5">
               <FormErrorBanner message={errors.form ?? ""} />
+
+              <GoogleSignInButton
+                onClick={handleGoogleSignIn}
+                disabled={isLoading || googleLoading}
+              />
+              <AuthOrDivider />
 
               <div className="space-y-2">
                 <Label htmlFor="emailOrUsername">Email</Label>
@@ -327,7 +365,12 @@ export default function LoginPage() {
                 </a>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isLoading || googleLoading}
+              >
                 {isLoading ? "Logging In…" : "Log In"}
               </Button>
             </CardContent>

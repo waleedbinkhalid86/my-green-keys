@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
@@ -69,6 +71,90 @@ export default function SignupPage() {
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [oauthUser, setOauthUser] = useState<User | null>(null);
+  const [googleGateLoading, setGoogleGateLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const googleParam = new URLSearchParams(window.location.search).get("google") === "true";
+    if (!googleParam) return;
+
+    let cancelled = false;
+    setGoogleGateLoading(true);
+
+    (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (cancelled) return;
+
+      if (error || !user) {
+        router.replace("/login");
+        setGoogleGateLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (profile?.account_type) {
+        const accountTypeRedirectMap: Record<string, string> = {
+          student: "/lesson",
+          parent: "/dashboard/parent",
+          teacher: "/dashboard/teacher",
+        };
+        router.replace(accountTypeRedirectMap[profile.account_type] || "/lesson");
+        return;
+      }
+
+      setOauthUser(user);
+      setFormData((prev) => ({
+        ...prev,
+        email: user.email ?? "",
+        fullName:
+          (user.user_metadata?.full_name as string) ||
+          (user.user_metadata?.name as string) ||
+          prev.fullName,
+      }));
+      setGoogleGateLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    setErrors((prev) => ({ ...prev, form: "" }));
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        setErrors({ form: error.message });
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Google sign-in failed";
+      setErrors({ form: message });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleAccountTypeSelect = (type: AccountType) => {
     setAccountType(type);
@@ -126,14 +212,16 @@ export default function SignupPage() {
       newErrors.email = "Invalid email address";
     }
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
+    if (!oauthUser) {
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      } else if (formData.password.length < 6) {
+        newErrors.password = "Password must be at least 6 characters";
+      }
 
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
     }
 
     if (accountType === "student") {
@@ -190,32 +278,41 @@ export default function SignupPage() {
       const supabase = createClient();
 
       console.log("[signup] supabaseUrl =", supabaseUrl);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
 
-      if (authError) {
-        if (authError.message.includes("already registered")) {
-          setErrors({ email: "This email is already registered. Please log in instead." });
-        } else {
-          setErrors({ form: authError.message });
+      let userId: string;
+
+      if (oauthUser) {
+        userId = oauthUser.id;
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+
+        if (authError) {
+          if (authError.message.includes("already registered")) {
+            setErrors({ email: "This email is already registered. Please log in instead." });
+          } else {
+            setErrors({ form: authError.message });
+          }
+          setIsLoading(false);
+          return;
         }
-        setIsLoading(false);
-        return;
-      }
 
-      if (!authData.user) {
-        setErrors({ form: "Failed to create account" });
-        setIsLoading(false);
-        return;
+        if (!authData.user) {
+          setErrors({ form: "Failed to create account" });
+          setIsLoading(false);
+          return;
+        }
+
+        userId = authData.user.id;
       }
 
       const profileData: Record<string, unknown> = {
-        id: authData.user.id,
+        id: userId,
         full_name: formData.fullName,
         email: formData.email,
         account_type: accountType,
@@ -245,7 +342,7 @@ export default function SignupPage() {
 
       const { error: subscriptionError } = await supabase.from("subscriptions").insert([
         {
-          user_id: authData.user.id,
+          user_id: userId,
           plan_type: "free",
           status: "active",
           promo_code: formData.promoCode || null,
@@ -260,7 +357,7 @@ export default function SignupPage() {
       if (accountType === "parent") {
         const { error: childError } = await supabase.from("children").insert([
           {
-            parent_id: authData.user.id,
+            parent_id: userId,
             full_name: formData.childName,
             age: parseInt(formData.childAge),
             gender: formData.childGender,
@@ -322,13 +419,39 @@ export default function SignupPage() {
           <p className="mt-2 text-muted-foreground">Choose your account type to get started</p>
         </div>
 
-        <div className="mb-8 space-y-3">
-          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-            <span>Step 1 · Account type</span>
-            <span>Step 2 · Your details</span>
-          </div>
-          <Progress value={stepProgress} className="[&_[data-slot=progress-track]]:h-2" />
-        </div>
+        {googleGateLoading ? (
+          <Card className="border-dashed">
+            <CardContent className="py-16 text-center text-sm text-muted-foreground">
+              Finishing Google sign-in…
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {!oauthUser ? (
+              <>
+                <GoogleSignInButton
+                  onClick={handleGoogleSignUp}
+                  disabled={isLoading || googleLoading}
+                />
+                <AuthOrDivider pillClassName="bg-background" />
+              </>
+            ) : (
+              <div
+                className="mb-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
+                role="status"
+              >
+                You&apos;re signed in with Google. Choose your account type and complete your profile — no password
+                needed.
+              </div>
+            )}
+
+            <div className="mb-8 space-y-3">
+              <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                <span>Step 1 · Account type</span>
+                <span>Step 2 · Your details</span>
+              </div>
+              <Progress value={stepProgress} className="[&_[data-slot=progress-track]]:h-2" />
+            </div>
 
         {errors.form ? (
           <div
@@ -369,6 +492,7 @@ export default function SignupPage() {
               }}
               className={cn(
                 "cursor-pointer transition-shadow",
+                googleGateLoading && "pointer-events-none opacity-50",
                 accountType === option.type
                   ? "border-2 border-primary shadow-md ring-2 ring-primary/20"
                   : "border-border hover:border-primary/40"
@@ -420,7 +544,8 @@ export default function SignupPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    disabled={isLoading}
+                    disabled={isLoading || !!oauthUser}
+                    readOnly={!!oauthUser}
                     aria-invalid={!!errors.email}
                     className={cn(errors.email && "border-destructive")}
                   />
@@ -582,61 +707,65 @@ export default function SignupPage() {
                   </>
                 ) : null}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={passwordVisible ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      aria-invalid={!!errors.password}
-                      className={cn("pr-10", errors.password && "border-destructive")}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      onClick={() => setPasswordVisible(!passwordVisible)}
-                    >
-                      {passwordVisible ? "Hide" : "Show"}
-                    </Button>
-                  </div>
-                  {errors.password ? (
-                    <p className="text-xs text-destructive">{errors.password}</p>
-                  ) : null}
-                </div>
+                {!oauthUser ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={passwordVisible ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          disabled={isLoading}
+                          aria-invalid={!!errors.password}
+                          className={cn("pr-10", errors.password && "border-destructive")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          onClick={() => setPasswordVisible(!passwordVisible)}
+                        >
+                          {passwordVisible ? "Hide" : "Show"}
+                        </Button>
+                      </div>
+                      {errors.password ? (
+                        <p className="text-xs text-destructive">{errors.password}</p>
+                      ) : null}
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={confirmPasswordVisible ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      aria-invalid={!!errors.confirmPassword}
-                      className={cn("pr-14", errors.confirmPassword && "border-destructive")}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 text-muted-foreground"
-                      onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-                    >
-                      {confirmPasswordVisible ? "Hide" : "Show"}
-                    </Button>
-                  </div>
-                  {errors.confirmPassword ? (
-                    <p className="text-xs text-destructive">{errors.confirmPassword}</p>
-                  ) : null}
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={confirmPasswordVisible ? "text" : "password"}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          disabled={isLoading}
+                          aria-invalid={!!errors.confirmPassword}
+                          className={cn("pr-14", errors.confirmPassword && "border-destructive")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 px-2 text-muted-foreground"
+                          onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                        >
+                          {confirmPasswordVisible ? "Hide" : "Show"}
+                        </Button>
+                      </div>
+                      {errors.confirmPassword ? (
+                        <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
 
                 <div className="space-y-2">
                   <Label htmlFor="promoCode">Promo Code (Optional)</Label>
@@ -660,8 +789,19 @@ export default function SignupPage() {
                   ) : null}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                  {isLoading ? "Creating Account…" : "Create Account"}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isLoading || googleLoading}
+                >
+                  {isLoading
+                    ? oauthUser
+                      ? "Saving profile…"
+                      : "Creating Account…"
+                    : oauthUser
+                      ? "Complete profile"
+                      : "Create Account"}
                 </Button>
               </CardContent>
             </Card>
@@ -679,6 +819,8 @@ export default function SignupPage() {
               Select an account type above to continue
             </CardContent>
           </Card>
+        )}
+          </>
         )}
       </div>
     </div>
