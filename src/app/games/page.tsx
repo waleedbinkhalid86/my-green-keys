@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Nunito } from "next/font/google";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -30,6 +31,7 @@ type GameCardDef = {
   emoji: string;
   name: string;
   description: string;
+  imageSrc: string;
   unlockLessons: number;
   requiresPaid: boolean;
   gradient: string;
@@ -43,6 +45,7 @@ const GAMES: GameCardDef[] = [
     emoji: "🍂",
     name: "Falling Leaves",
     description: "Catch enchanted leaves by typing lesson words—save the forest!",
+    imageSrc: "/images/games/game-falling-leaves.jpg",
     unlockLessons: 0,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #F39C12 0%, #E67E22 100%)",
@@ -54,6 +57,7 @@ const GAMES: GameCardDef[] = [
     emoji: "🗑️",
     name: "Sort Recycling",
     description: "Eco Hero City: sort waste into plastic, paper, organic, and glass!",
+    imageSrc: "/images/games/game-sort-recycling.jpg",
     unlockLessons: 5,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #1ABC9C 0%, #16A085 100%)",
@@ -65,6 +69,7 @@ const GAMES: GameCardDef[] = [
     emoji: "🌊",
     name: "Save the Ocean",
     description: "Clear plastic by typing fast and free Zara the sea turtle 🐢!",
+    imageSrc: "/images/games/game-save-ocean.jpg",
     unlockLessons: 40,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #3498DB 0%, #2980B9 100%)",
@@ -76,6 +81,7 @@ const GAMES: GameCardDef[] = [
     emoji: "🌱",
     name: "Eco Garden",
     description: "Grow a magical garden—type raindrops, unlock visitors, watch it bloom!",
+    imageSrc: "/images/games/game-eco-garden.jpg",
     unlockLessons: 20,
     requiresPaid: true,
     gradient: "linear-gradient(160deg, #2ECC71 0%, #27AE60 100%)",
@@ -87,6 +93,7 @@ const GAMES: GameCardDef[] = [
     emoji: "💝",
     name: "Kind World Academy",
     description: "Spread kindness around the world—typing adventure awaits!",
+    imageSrc: "/images/games/game-kind-world.jpg",
     unlockLessons: 60,
     requiresPaid: true,
     gradient: "linear-gradient(160deg, #9B59B6 0%, #8E44AD 100%)",
@@ -785,9 +792,9 @@ export default function GamesHubPage() {
                     className={`games-hub-game-card games-hub-card-animate`}
                     style={{
                       position: "relative",
-                      height: 280,
+                      height: 380,
                       borderRadius: 24,
-                      padding: 16,
+                      padding: 0,
                       boxSizing: "border-box",
                       background: g.gradient,
                       boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
@@ -820,93 +827,105 @@ export default function GamesHubPage() {
                           right: 12,
                           fontSize: 26,
                           filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
+                          zIndex: 4,
                         }}
                       >
                         👑
                       </div>
                     )}
 
-                    {/* Decorative */}
-                    <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-                      {g.decor.map((d, di) => (
-                        <span
-                          key={di}
+                    <div
+                      style={{
+                        position: "relative",
+                        flex: "0 0 60%",
+                        minHeight: 0,
+                        width: "100%",
+                      }}
+                    >
+                      <Image
+                        src={g.imageSrc}
+                        alt={`${g.name} game artwork`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        style={{ objectFit: "cover" }}
+                        priority={i < 3}
+                      />
+                      <div
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: "70%",
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 100%)",
+                          pointerEvents: "none",
+                          zIndex: 1,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          padding: "14px 16px 16px",
+                          zIndex: 2,
+                          textAlign: "center",
+                        }}
+                      >
+                        <h3
                           style={{
-                            position: "absolute",
-                            fontSize: 16 + (di % 2) * 4,
-                            opacity: 0.35,
-                            left: `${12 + di * 28}%`,
-                            top: `${18 + (di * 17) % 40}%`,
-                            animation: `gamesHubFloatSlow ${5 + di}s ease-in-out infinite`,
-                            animationDelay: `${di * 0.4}s`,
+                            color: "#ffffff",
+                            fontSize: 22,
+                            fontWeight: 800,
+                            margin: "0 0 6px",
+                            lineHeight: 1.2,
+                            textShadow: "0 2px 12px rgba(0,0,0,0.55)",
                           }}
                         >
-                          {d}
-                        </span>
-                      ))}
+                          <span aria-hidden style={{ marginRight: 8 }}>
+                            {g.emoji}
+                          </span>
+                          {g.name}
+                        </h3>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontWeight: 700,
+                            fontSize: 12,
+                            lineHeight: 1.45,
+                            color: "#ffffff",
+                            opacity: 0.98,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical" as const,
+                            overflow: "hidden",
+                            textShadow: "0 1px 8px rgba(0,0,0,0.5)",
+                          }}
+                        >
+                          {g.description}
+                        </p>
+                      </div>
                     </div>
 
-                    <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center" }}>
-                      <span
-                        style={{
-                          fontSize: 70,
-                          lineHeight: 1,
-                          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-                        }}
-                      >
-                        {g.emoji}
-                      </span>
-                    </div>
-
-                    <div style={{ position: "relative", zIndex: 1, flex: 1, textAlign: "center", marginTop: 8, minHeight: 0 }}>
-                      <h3
-                        style={{
-                          color: "#ffffff",
-                          fontSize: 22,
-                          fontWeight: 800,
-                          margin: "0 0 6px",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {g.name}
-                      </h3>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontWeight: 700,
-                          fontSize: 12,
-                          lineHeight: 1.45,
-                          color: "#ffffff",
-                          opacity: 0.96,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical" as const,
-                          overflow: "hidden",
-                        }}
-                      >
-                        {g.description}
-                      </p>
-                      {g.slug === "/games/eco-garden" &&
-                        ecoGardenPlantCount != null &&
-                        ecoGardenPlantCount > 0 &&
-                        unlocked && (
-                          <p
-                            style={{
-                              marginTop: 6,
-                              fontSize: 11,
-                              fontWeight: 800,
-                              background: "rgba(255,255,255,0.25)",
-                              padding: "6px 8px",
-                              borderRadius: 10,
-                            }}
-                          >
-                            Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}! 🌿
-                          </p>
-                        )}
-                    </div>
-
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        flex: "1 1 40%",
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
+                        padding: "12px 16px 16px",
+                        boxSizing: "border-box",
+                        background: g.gradient,
+                      }}
+                    >
                     {stars != null && unlocked && mode === "play" && (
-                      <div style={{ position: "relative", zIndex: 1, marginTop: 6, fontSize: 16, letterSpacing: 3 }}>
+                      <div style={{ textAlign: "center", marginBottom: 6, fontSize: 16, letterSpacing: 3 }}>
                         {[0, 1, 2].map((si) => (
                           <span key={si} style={{ opacity: si < stars ? 1 : 0.35 }}>
                             ⭐
@@ -914,8 +933,26 @@ export default function GamesHubPage() {
                         ))}
                       </div>
                     )}
+                      {g.slug === "/games/eco-garden" &&
+                        ecoGardenPlantCount != null &&
+                        ecoGardenPlantCount > 0 &&
+                        unlocked && (
+                          <p
+                            style={{
+                              margin: "0 0 8px",
+                              fontSize: 11,
+                              fontWeight: 800,
+                              background: "rgba(255,255,255,0.25)",
+                              padding: "6px 8px",
+                              borderRadius: 10,
+                              textAlign: "center",
+                            }}
+                          >
+                            Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}! 🌿
+                          </p>
+                        )}
 
-                    <div style={{ position: "relative", zIndex: 1, marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
+                    <div style={{ marginTop: "auto", flexShrink: 0 }}>
                       {mode === "play" && (
                         <Link
                           href={g.slug}
@@ -1028,6 +1065,7 @@ export default function GamesHubPage() {
                           Coming soon!
                         </div>
                       )}
+                    </div>
                     </div>
                   </article>
                 );

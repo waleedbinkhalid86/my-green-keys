@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React from "react";
 
 /* ── SVG icon primitives ─────────────────────────────────────────────────── */
@@ -257,8 +258,40 @@ export default function HomePage() {
           overflow: "hidden",
         }}
       >
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <Image
+            src="/images/homepage/homepage-hero.jpg"
+            alt="Lush green forest landscape"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: "cover" }}
+          />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(22,45,30,0.72) 0%, rgba(31,77,53,0.55) 35%, rgba(45,106,79,0.42) 65%, rgba(129,201,158,0.5) 100%)",
+            }}
+          />
+        </div>
         {/* Sun */}
-        <div className="animate-sun-pulse" style={{ position: "absolute", top: 72, right: "9%", width: 96, height: 96, background: "radial-gradient(circle,#FFEB3B 38%,#FDD835 65%,transparent 100%)", borderRadius: "50%" }} />
+        <div
+          className="animate-sun-pulse"
+          style={{
+            position: "absolute",
+            top: 72,
+            right: "9%",
+            width: 96,
+            height: 96,
+            background: "radial-gradient(circle,#FFEB3B 38%,#FDD835 65%,transparent 100%)",
+            borderRadius: "50%",
+            zIndex: 2,
+            opacity: 0.35,
+          }}
+        />
 
         {/* Clouds (hidden on very small screens) */}
         <div className="hidden sm:block">
@@ -420,6 +453,137 @@ export default function HomePage() {
                 </div>
               </React.Fragment>
             ))}
+          </div>
+        </Inner>
+      </section>
+
+      {/* ── KIDS · ECO · PET SPOTLIGHTS ───────────────────────────── */}
+      <section style={{ background: "#ffffff", padding: "96px 0" }}>
+        <Inner>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 56,
+              alignItems: "center",
+            }}
+          >
+            <div style={{ order: 1 }}>
+              <SectionLabel color="#4CAF50">For kids</SectionLabel>
+              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
+                Typing that feels like play
+              </h2>
+              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
+                Colorful lessons, gentle pacing, and rewards that keep young learners motivated—without losing the rigor they need to build real skills.
+              </p>
+            </div>
+            <div
+              style={{
+                order: 2,
+                position: "relative",
+                borderRadius: 24,
+                overflow: "hidden",
+                minHeight: 280,
+                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Image
+                src="/images/homepage/homepage-kids.jpg"
+                alt="Children learning to type with My Green Keys"
+                fill
+                sizes="(max-width: 900px) 100vw, 480px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+          </div>
+        </Inner>
+      </section>
+
+      <section style={{ background: "#f5f7fa", padding: "96px 0" }}>
+        <Inner>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 56,
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                order: 2,
+                position: "relative",
+                borderRadius: 24,
+                overflow: "hidden",
+                minHeight: 280,
+                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+              }}
+              className="eco-spotlight-visual"
+            >
+              <Image
+                src="/images/homepage/homepage-eco.jpg"
+                alt="Eco and sustainability themed learning"
+                fill
+                sizes="(max-width: 900px) 100vw, 480px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+            <div style={{ order: 1 }} className="eco-spotlight-copy">
+              <SectionLabel color="#2196F3">Planet care</SectionLabel>
+              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
+                Every keystroke supports the Earth
+              </h2>
+              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
+                Passages weave in climate, recycling, and nature so kids practice typing while building habits that help the planet.
+              </p>
+            </div>
+          </div>
+          <style>{`
+            @media (min-width: 900px) {
+              .eco-spotlight-visual { order: 1 !important; }
+              .eco-spotlight-copy { order: 2 !important; }
+            }
+          `}</style>
+        </Inner>
+      </section>
+
+      <section style={{ background: "#ffffff", padding: "96px 0" }}>
+        <Inner>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 56,
+              alignItems: "center",
+            }}
+          >
+            <div style={{ order: 1 }}>
+              <SectionLabel color="#E91E63">Friendly companions</SectionLabel>
+              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
+                Meet your eco adventure pals
+              </h2>
+              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
+                Cheerful characters and pet friends celebrate wins, nudge learners forward, and make practice feel warm—not like homework.
+              </p>
+            </div>
+            <div
+              style={{
+                order: 2,
+                position: "relative",
+                borderRadius: 24,
+                overflow: "hidden",
+                minHeight: 280,
+                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+              }}
+            >
+              <Image
+                src="/images/homepage/homepage-pet.jpg"
+                alt="Cute pet companion in My Green Keys"
+                fill
+                sizes="(max-width: 900px) 100vw, 480px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
           </div>
         </Inner>
       </section>

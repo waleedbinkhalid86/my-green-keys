@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { lessons, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
@@ -407,21 +408,56 @@ export default function LessonMapPage() {
                   <div key={p.id}>
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        margin: "10px 0 10px",
-                        color: "rgba(255,255,255,0.95)",
-                        fontWeight: 900,
-                        fontSize: 18,
-                        textShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                        position: "relative",
+                        width: "100%",
+                        height: 120,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        margin: "10px 0 12px",
+                        boxShadow: "0 12px 34px rgba(0,0,0,0.18)",
+                        border: "1px solid rgba(255,255,255,0.22)",
                       }}
                     >
-                      <span style={{ fontSize: 20 }}>{p.icon}</span>
-                      <span>{p.title}</span>
-                      <span style={{ opacity: 0.75, fontSize: 13, fontWeight: 800 }}>
-                        — Lessons {start}-{end}
-                      </span>
+                      <Image
+                        src={`/images/lessons/lesson-phase-${p.id}.jpg`}
+                        alt={p.title}
+                        fill
+                        sizes="(max-width: 1200px) 100vw, 1200px"
+                        style={{ objectFit: "cover" }}
+                        priority={p.id <= 2}
+                      />
+                      <div
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background:
+                            "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.12) 100%)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "0 18px",
+                          color: "#fff",
+                          fontWeight: 900,
+                          fontSize: 18,
+                          textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                        }}
+                      >
+                        <span style={{ fontSize: 22 }} aria-hidden>
+                          {p.icon}
+                        </span>
+                        <span>{p.title}</span>
+                        <span style={{ opacity: 0.88, fontSize: 13, fontWeight: 800 }}>
+                          — Lessons {start}-{end}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="lesson-grid">
