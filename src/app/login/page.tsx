@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
-import { Eye, EyeOff } from "lucide-react";
+import { BookOpen, Leaf, Sparkles, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import "../globals.css";
 
 const LOGIN_TIMEOUT_MS = 10_000;
-const LOGIN_TIMEOUT_MESSAGE =
-  "Connection timeout. Please try again or contact support.";
+const LOGIN_TIMEOUT_MESSAGE = "Connection timeout. Please try again or contact support.";
+const DARK = "#1A2F23";
 
 interface LoginForm {
   emailOrUsername: string;
@@ -89,7 +90,7 @@ function FormErrorBanner({ message }: { message: string }) {
     <div
       role="alert"
       aria-live="polite"
-      className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm whitespace-pre-wrap break-words text-destructive"
+      className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm whitespace-pre-wrap break-words text-destructive"
     >
       {message}
     </div>
@@ -97,6 +98,7 @@ function FormErrorBanner({ message }: { message: string }) {
 }
 
 export default function LoginPage() {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState<LoginForm>({
     emailOrUsername: "",
     password: "",
@@ -111,9 +113,12 @@ export default function LoginPage() {
     if (typeof window === "undefined") return;
     const err = new URLSearchParams(window.location.search).get("error");
     if (err) {
-      setErrors({ form: decodeURIComponent(err) });
+      const decoded = decodeURIComponent(err);
+      setErrors({ form: decoded });
+      showToast("error", decoded);
       window.history.replaceState({}, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- parse URL error once on mount
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,7 +166,6 @@ export default function LoginPage() {
     try {
       await withTimeout(
         (async () => {
-          console.log("Starting login...");
           const supabase = createClient();
 
           let authData: { user: User | null; session: Session | null } | null = null;
@@ -175,20 +179,23 @@ export default function LoginPage() {
             authData = result.data;
             authError = result.error;
           } catch (signInThrown) {
-            console.log("Supabase response:", signInThrown, null);
-            setErrors({ form: formatUnknownError(signInThrown) });
+            const msg = formatUnknownError(signInThrown);
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
-          console.log("Supabase response:", authError, authData);
-
           if (authError) {
-            setErrors({ form: formatAuthError(authError) });
+            const msg = formatAuthError(authError);
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
           if (!authData?.user) {
-            setErrors({ form: "Sign-in succeeded but no user was returned." });
+            const msg = "Sign-in succeeded but no user was returned.";
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
@@ -209,20 +216,23 @@ export default function LoginPage() {
             profile = profileResult.data;
             profileError = profileResult.error;
           } catch (profileThrown) {
-            console.log("Profile fetch response:", profileThrown, null);
-            setErrors({ form: formatUnknownError(profileThrown) });
+            const msg = formatUnknownError(profileThrown);
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
-          console.log("Profile fetch response:", profileError, profile);
-
           if (profileError) {
-            setErrors({ form: formatPostgrestError(profileError) });
+            const msg = formatPostgrestError(profileError);
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
           if (!profile) {
-            setErrors({ form: "No profile row found for this user." });
+            const msg = "No profile row found for this user.";
+            setErrors({ form: msg });
+            showToast("error", msg);
             return;
           }
 
@@ -233,14 +243,16 @@ export default function LoginPage() {
           };
 
           const redirectPath = accountTypeRedirectMap[profile.account_type] || "/lesson";
-          console.log("Redirecting to:", redirectPath);
+          showToast("success", "Welcome back!");
           window.location.href = redirectPath;
         })(),
         LOGIN_TIMEOUT_MS,
         LOGIN_TIMEOUT_MESSAGE
       );
     } catch (error) {
-      setErrors({ form: formatUnknownError(error) });
+      const msg = formatUnknownError(error);
+      setErrors({ form: msg });
+      showToast("error", msg);
     } finally {
       setIsLoading(false);
     }
@@ -258,131 +270,155 @@ export default function LoginPage() {
         },
       });
       if (error) {
-        setErrors({ form: formatAuthError(error) });
+        const msg = formatAuthError(error);
+        setErrors({ form: msg });
+        showToast("error", msg);
       }
     } catch (e) {
-      setErrors({ form: formatUnknownError(e) });
+      const msg = formatUnknownError(e);
+      setErrors({ form: msg });
+      showToast("error", msg);
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <nav className="flex items-center justify-between border-b border-white/10 bg-[var(--mgk-dark)] px-6 py-4 shadow-sm">
-        <Link href="/" className="flex items-center gap-3 no-underline">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg">
-            🌿
+    <div className="flex min-h-screen font-sans">
+      <div
+        className="relative hidden w-1/2 flex-col justify-between p-12 text-white lg:flex"
+        style={{ background: DARK }}
+      >
+        <div>
+          <Link href="/" className="flex items-center gap-3 text-white no-underline">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-[#2ECC71] text-2xl">🌿</div>
+            <span className="font-heading text-2xl font-extrabold tracking-tight">My Green Keys</span>
+          </Link>
+          <p className="mt-10 max-w-md text-2xl font-extrabold leading-tight" style={{ fontFamily: "var(--font-nunito)" }}>
+            Learn to Type. Help the Planet.
+          </p>
+          <div className="relative mt-10 overflow-hidden rounded-[20px] shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+            <Image
+              src="/images/homepage/homepage-kids.jpg"
+              alt="Children learning with My Green Keys"
+              width={520}
+              height={340}
+              className="h-auto w-full object-cover"
+              priority
+            />
           </div>
-          <span className="font-heading text-base font-bold text-white">My Green Keys</span>
-        </Link>
-        <Link href="/signup" className="text-sm font-semibold text-white/90 hover:text-primary">
-          Don&apos;t have an account? Sign Up
-        </Link>
-      </nav>
-
-      <div className="mx-auto max-w-md px-6 py-14">
-        <div className="mb-8 text-center">
-          <h1 className="font-heading text-3xl font-bold text-foreground">Log In</h1>
-          <p className="mt-2 text-muted-foreground">Welcome back to My Green Keys</p>
+          <ul className="mt-10 space-y-4 text-base font-semibold">
+            <li className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
+                <BookOpen className="size-5" />
+              </span>
+              100 typing lessons
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
+                <Sparkles className="size-5" />
+              </span>
+              Virtual pet companion
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-white/10">
+                <Leaf className="size-5" />
+              </span>
+              Real eco rewards
+            </li>
+          </ul>
         </div>
+        <p className="max-w-md text-sm italic leading-relaxed text-white/75">
+          &ldquo;My kids ask to practice typing every day. The eco stories are a brilliant touch.&rdquo;
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <Card className="border-border/80 shadow-md">
-            <CardHeader>
-              <CardTitle className="font-heading text-lg">Sign in</CardTitle>
-              <CardDescription>Use the email and password for your account.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <FormErrorBanner message={errors.form ?? ""} />
+      <div className="flex w-full flex-col justify-center bg-white px-6 py-12 lg:w-1/2">
+        <div className="mx-auto w-full max-w-[400px]">
+          <h1 className="font-heading text-[28px] font-extrabold text-[#1A2F23]">Welcome back!</h1>
+          <p className="mt-2 text-base font-semibold text-[#64748b]">Sign in to continue your eco journey</p>
 
-              <GoogleSignInButton
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || googleLoading}
+          <form className="mt-10 space-y-5" onSubmit={handleSubmit}>
+            <FormErrorBanner message={errors.form ?? ""} />
+
+            <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading || googleLoading} />
+            <AuthOrDivider />
+
+            <div className="space-y-2">
+              <Label htmlFor="emailOrUsername">Email</Label>
+              <Input
+                id="emailOrUsername"
+                type="email"
+                name="emailOrUsername"
+                value={formData.emailOrUsername}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                placeholder="you@example.com"
+                aria-invalid={!!errors.emailOrUsername}
+                className={cn("h-[52px] rounded-xl px-4 text-base", errors.emailOrUsername && "border-destructive")}
               />
-              <AuthOrDivider />
+              {errors.emailOrUsername ? <p className="text-xs text-destructive">{errors.emailOrUsername}</p> : null}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="emailOrUsername">Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
                 <Input
-                  id="emailOrUsername"
-                  type="email"
-                  name="emailOrUsername"
-                  value={formData.emailOrUsername}
+                  id="password"
+                  type={passwordVisible ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
                   onChange={handleInputChange}
                   disabled={isLoading}
-                  placeholder="Enter your email"
-                  aria-invalid={!!errors.emailOrUsername}
-                  className={cn(errors.emailOrUsername && "border-destructive")}
+                  placeholder="••••••••"
+                  aria-invalid={!!errors.password}
+                  className={cn("h-[52px] rounded-xl pr-12 text-base", errors.password && "border-destructive")}
                 />
-                {errors.emailOrUsername ? (
-                  <p className="text-xs text-destructive">{errors.emailOrUsername}</p>
-                ) : null}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  aria-label={passwordVisible ? "Hide password" : "Show password"}
+                >
+                  {passwordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
               </div>
+              {errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : null}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={passwordVisible ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    placeholder="Enter your password"
-                    aria-invalid={!!errors.password}
-                    className={cn("pr-10", errors.password && "border-destructive")}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    onClick={() => setPasswordVisible(!passwordVisible)}
-                    aria-label={passwordVisible ? "Hide password" : "Show password"}
-                  >
-                    {passwordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </Button>
-                </div>
-                {errors.password ? (
-                  <p className="text-xs text-destructive">{errors.password}</p>
-                ) : null}
-              </div>
+            <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+              <label className="flex cursor-pointer items-center gap-2 text-[#64748b]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="size-4 rounded border-input accent-[#2ECC71]"
+                />
+                Remember me
+              </label>
+              <a href="#" className="text-[#2ECC71] hover:underline">
+                Forgot password?
+              </a>
+            </div>
 
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <label className="flex cursor-pointer items-center gap-2 text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="size-4 rounded border-input accent-primary"
-                  />
-                  Remember me
-                </label>
-                <a href="#" className="font-semibold text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
+            <Button
+              type="submit"
+              className="h-[52px] w-full rounded-[50px] bg-[#2ECC71] text-base font-extrabold text-white hover:bg-[#27ae60]"
+              disabled={isLoading || googleLoading}
+            >
+              {isLoading ? "Logging In…" : "Log In"}
+            </Button>
+          </form>
 
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={isLoading || googleLoading}
-              >
-                {isLoading ? "Logging In…" : "Log In"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-8 text-center text-sm font-semibold text-[#64748b]">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Sign up here
+            <Link href="/signup" className="text-[#2ECC71] hover:underline">
+              Sign up
             </Link>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );

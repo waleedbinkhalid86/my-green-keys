@@ -3,16 +3,10 @@ import Image from "next/image";
 export default function Loading() {
   return (
     <div
+      className="flex min-h-screen flex-col items-center justify-center px-6 py-12"
       style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-        boxSizing: "border-box",
-        background: "linear-gradient(180deg, #e3f2fd 0%, #e8f5e9 50%, #fffde7 100%)",
-        color: "#1b4d30",
+        background: "linear-gradient(180deg, #E8F5E9 0%, #FAFAFA 100%)",
+        color: "#1A2F23",
         textAlign: "center",
       }}
     >
@@ -28,7 +22,7 @@ export default function Loading() {
           height: 8px;
           margin: 0 4px;
           border-radius: 999px;
-          background: #2e7d32;
+          background: #2ECC71;
           animation: mgkLoadingDots 1.2s ease-in-out infinite;
         }
         .mgk-loading-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -37,35 +31,22 @@ export default function Loading() {
           .mgk-loading-dot { animation: none; opacity: 0.85; }
         }
       `}</style>
-      <div
-        style={{
-          position: "relative",
-          width: "min(100%, 320px)",
-          aspectRatio: "1",
-          maxWidth: 320,
-          marginBottom: 24,
-        }}
-      >
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#2ECC71] text-2xl text-white">🌿</div>
+        <span className="font-heading text-xl font-extrabold text-[#1A2F23]">My Green Keys</span>
+      </div>
+      <div className="relative mx-auto mb-6 w-[200px]">
         <Image
           src="/images/ui/ui-loading.jpg"
           alt=""
-          fill
-          sizes="(max-width: 360px) 100vw, 320px"
-          style={{ objectFit: "contain" }}
+          width={200}
+          height={200}
+          className="h-auto w-full rounded-[16px] object-contain"
           priority
         />
       </div>
-      <p
-        style={{
-          fontSize: "clamp(1.05rem, 2.8vw, 1.25rem)",
-          fontWeight: 800,
-          margin: 0,
-          color: "#2c3e50",
-        }}
-      >
-        Loading your eco adventure... 🌿
-      </p>
-      <div style={{ marginTop: 18 }} aria-hidden>
+      <p className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">Loading your eco adventure...</p>
+      <div className="mt-5" aria-hidden>
         <span className="mgk-loading-dot" />
         <span className="mgk-loading-dot" />
         <span className="mgk-loading-dot" />

@@ -1,8 +1,21 @@
 "use client";
 
 import React, { useEffect, useMemo, startTransition, useState } from "react";
+import Image from "next/image";
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  FileText,
+  Home,
+  Leaf,
+  LogOut,
+  Settings,
+  Users,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts } from "@/data/ecoFacts";
+import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,42 +59,20 @@ const LeafIcon = () => (
   </svg>
 );
 
-const BellIcon = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-  </svg>
-);
-
-const SettingsIcon = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
-  </svg>
-);
-
 const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
 const statCardClass =
-  "rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
+  "mgk-card-ds rounded-[20px] border border-[#E5E7EB] bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.08)]";
 
 const SIDEBAR_LINKS = [
-  { href: "#parent-overview", label: "Overview" },
-  { href: "#parent-children", label: "Children" },
-  { href: "#parent-progress", label: "Progress" },
-  { href: "#parent-lessons", label: "Custom lessons" },
-  { href: "#parent-eco", label: "Eco photos" },
-  { href: "#parent-summary", label: "Weekly summary" },
-  { href: "#parent-billing", label: "Subscription" },
+  { href: "#parent-overview", label: "Overview", Icon: Home },
+  { href: "#parent-children", label: "My Children", Icon: Users },
+  { href: "#parent-progress", label: "Progress", Icon: BarChart3 },
+  { href: "#parent-eco", label: "Eco Actions", Icon: Leaf },
+  { href: "#parent-lessons", label: "Custom Lessons", Icon: BookOpen },
+  { href: "#parent-summary", label: "Reports", Icon: FileText },
+  { href: "#parent-billing", label: "Settings", Icon: Settings },
 ] as const;
 
 interface Child {
@@ -169,6 +160,9 @@ function toChildDashboard(row: ChildRow): Child {
 }
 
 export default function ParentDashboard() {
+  const { showToast } = useToast();
+  const [hash, setHash] = useState("");
+  const [parentName, setParentName] = useState("");
   const [children, setChildren] = useState<Child[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(true);
   const [childrenError, setChildrenError] = useState("");
@@ -385,6 +379,42 @@ export default function ParentDashboard() {
     });
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setHash(window.location.hash || "#parent-overview");
+    const onHash = () => setHash(window.location.hash || "#parent-overview");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  useEffect(() => {
+    startTransition(() => {
+      void (async () => {
+        try {
+          const supabase = createClient();
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) return;
+          const { data } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", userData.user.id)
+            .maybeSingle();
+          const n = (data as { full_name?: string } | null)?.full_name?.trim();
+          setParentName(n || "there");
+        } catch {
+          setParentName("there");
+        }
+      })();
+    });
+  }, []);
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }, []);
+
   const handleAddChild = async () => {
     setAddChildError("");
     setAddChildLoading(true);
@@ -486,6 +516,7 @@ export default function ParentDashboard() {
 
       setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
       setEcoSuccess("Approved! Eco points awarded to the student 🌿");
+      showToast("success", "Photo approved — eco points awarded!");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to approve photo.";
       setEcoError(message);
@@ -507,6 +538,7 @@ export default function ParentDashboard() {
       if (error) throw error;
       setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
       setEcoSuccess("Rejected. The student can submit a new photo if needed.");
+      showToast("info", "Photo rejected.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to reject photo.";
       setEcoError(message);
@@ -602,56 +634,94 @@ export default function ParentDashboard() {
         </DialogContent>
       </Dialog>
 
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-[var(--mgk-dark)]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <div className="mx-auto flex w-full max-w-[1400px]">
+        <aside
+          className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
+          aria-label="Dashboard sections"
+        >
+          <div className="mb-8 flex items-center gap-3 px-2">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-white">
               <LeafIcon />
             </div>
             <div>
-              <p className="font-heading text-sm font-bold text-white">My Green Keys</p>
-              <p className="text-xs text-white/70">Parent dashboard</p>
+              <p className="font-heading text-sm font-extrabold text-[#1A2F23]">My Green Keys</p>
+              <p className="text-xs font-semibold text-[#64748b]">Parent</p>
             </div>
           </div>
-          <p className="text-sm font-medium text-white">Welcome back, Sarah&apos;s Mom 👋</p>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon-sm" className="text-white hover:bg-white/10" title="Notifications">
-              <BellIcon />
-            </Button>
-            <Button variant="ghost" size="icon-sm" className="text-white hover:bg-white/10" title="Settings">
-              <SettingsIcon />
-            </Button>
-            <Button variant="outline" size="sm" className="border-white/40 bg-transparent text-white hover:bg-white/10">
-              <span className="flex items-center gap-2">
-                <LogoutIcon /> Logout
-              </span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto flex w-full max-w-7xl">
-        <aside
-          className="sticky top-[73px] hidden h-[calc(100vh-73px)] w-64 shrink-0 flex-col border-r border-[#E5E7EB] bg-[#FAFAFA] py-8 pl-6 pr-4 lg:flex"
-          aria-label="Dashboard sections"
-        >
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
-            Navigate
-          </p>
-          <nav className="flex flex-col gap-0.5">
-            {SIDEBAR_LINKS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:bg-white hover:text-[#15803d] hover:shadow-sm"
-              >
-                {item.label}
-              </a>
-            ))}
+          <nav className="flex flex-col gap-1">
+            {SIDEBAR_LINKS.map((item) => {
+              const active = hash === item.href;
+              const Icon = item.Icon;
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
+                    active
+                      ? "bg-[#2ECC71]/12 text-[#15803d]"
+                      : "text-[#374151] hover:bg-[#FAFAFA] hover:text-[#1A2F23]"
+                  )}
+                >
+                  <Icon className={cn("size-5 shrink-0", active ? "text-[#2ECC71]" : "text-[#64748b]")} strokeWidth={2.25} />
+                  {item.label}
+                </a>
+              );
+            })}
           </nav>
+          <div className="mt-auto pt-8">
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+            >
+              <LogOut className="size-5" strokeWidth={2.25} />
+              Logout
+            </button>
+          </div>
         </aside>
 
-        <div className="min-w-0 flex-1 space-y-10 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">
+                  {greeting}, {parentName}!
+                </p>
+                <p className="text-sm font-semibold text-[#64748b]">
+                  {new Date().toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon-sm" className="text-[#1A2F23] hover:bg-[#F1F5F9]" title="Notifications">
+                  <Bell className="size-5" strokeWidth={2} />
+                </Button>
+                <a
+                  href="#parent-billing"
+                  title="Settings"
+                  className="inline-flex size-9 items-center justify-center rounded-xl text-[#1A2F23] hover:bg-[#F1F5F9] lg:hidden"
+                >
+                  <Settings className="size-5" strokeWidth={2} />
+                </a>
+                <div
+                  className="flex size-10 items-center justify-center rounded-full bg-[#2ECC71]/20 text-sm font-extrabold text-[#15803d]"
+                  aria-hidden
+                >
+                  {parentName.slice(0, 1).toUpperCase() || "P"}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div className="space-y-10 px-4 py-8 sm:px-8 sm:py-10">
         {childrenError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
             {childrenError}
@@ -704,17 +774,26 @@ export default function ParentDashboard() {
         ) : null}
 
         {childrenLoading ? (
-          <Card>
-            <CardContent className="py-8 text-muted-foreground">Loading children…</CardContent>
-          </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="mgk-skeleton h-28 rounded-[20px]" />
+            ))}
+          </div>
         ) : children.length === 0 ? (
-          <Card className="border-primary/40 bg-primary/5">
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
-              <div>
-                <CardTitle className="font-heading text-base">Add your first child</CardTitle>
-                <CardDescription>Create a linked child profile to track progress.</CardDescription>
+          <Card className="mgk-card-ds overflow-hidden border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+            <CardContent className="flex flex-col items-center gap-4 py-10 text-center sm:flex-row sm:text-left">
+              <div className="relative h-40 w-full max-w-[200px] shrink-0 overflow-hidden rounded-2xl">
+                <Image src="/images/ui/ui-empty-state.jpg" alt="" fill className="object-cover" sizes="200px" />
               </div>
-              <Button onClick={() => setShowAddChildModal(true)}>Add child</Button>
+              <div className="flex-1 space-y-3">
+                <CardTitle className="font-heading text-xl">Add your first child</CardTitle>
+                <CardDescription className="text-base font-semibold">
+                  Create a linked child profile to track typing progress and eco actions.
+                </CardDescription>
+                <Button className="rounded-[50px]" onClick={() => setShowAddChildModal(true)}>
+                  Add child
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -725,39 +804,44 @@ export default function ParentDashboard() {
             <div className={statCardClass}>
               <div className="text-2xl">📚</div>
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
-              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
                 {selectedChild?.lessonsCompleted ?? 0}
               </p>
             </div>
             <div className={statCardClass}>
               <div className="text-2xl">⚡</div>
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Average WPM</p>
-              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#1A2F23]">
                 {selectedChild?.avgWpm ?? 0}
               </p>
             </div>
             <div className={statCardClass}>
               <div className="text-2xl">🎯</div>
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Accuracy</p>
-              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+              <p
+                className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none"
+                style={{ color: (selectedChild?.accuracy ?? 0) >= 90 ? "#2ECC71" : "#D97706" }}
+              >
                 {selectedChild?.accuracy ?? 0}%
               </p>
             </div>
             <div className={statCardClass}>
               <div className="text-2xl">🌿</div>
-              <p className="mt-3 text-sm font-normal text-[#6B7280]">Eco actions</p>
-              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+              <p className="mt-3 text-sm font-normal text-[#6B7280]">Eco Points</p>
+              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
                 {selectedChild?.ecoPhotos ?? 0}
               </p>
             </div>
           </div>
-          <div className={cn(statCardClass, "mt-4")}>
+          <div
+            className={cn(statCardClass, "mt-4 border-0 bg-gradient-to-br from-[#1B5E20] to-[#2ECC71] text-white")}
+          >
             <div className="flex items-center gap-2">
               <span className="text-2xl">{todaysFact.emoji}</span>
-              <p className="font-heading text-[20px] font-bold text-foreground">Today&apos;s eco fact</p>
+              <p className="font-heading text-[20px] font-bold text-white">Today&apos;s eco fact</p>
             </div>
-            <p className="mt-3 text-base leading-relaxed text-foreground">{todaysFact.fact}</p>
-            <p className="mt-2 text-sm font-medium text-[#6B7280]">Source: {todaysFact.source}</p>
+            <p className="mt-3 text-base font-semibold leading-relaxed text-white/95">{todaysFact.fact}</p>
+            <p className="mt-2 text-sm font-semibold text-white/70">Source: {todaysFact.source}</p>
           </div>
         </section>
 
@@ -770,9 +854,16 @@ export default function ParentDashboard() {
               </Button>
             </div>
             <Tabs value={selectedChildId} onValueChange={setSelectedChildId}>
-              <TabsList variant="line" className="h-auto min-h-9 w-full flex-wrap justify-start sm:w-auto">
+              <TabsList
+                variant="line"
+                className="h-auto min-h-10 w-full flex-wrap justify-start gap-2 rounded-[50px] bg-[#F1F5F9] p-1 sm:w-auto"
+              >
                 {children.map((child) => (
-                  <TabsTrigger key={child.id} value={child.id} className="gap-2">
+                  <TabsTrigger
+                    key={child.id}
+                    value={child.id}
+                    className="gap-2 rounded-[50px] data-[state=active]:bg-[#2ECC71] data-[state=active]:text-white"
+                  >
                     <span>{child.avatar}</span>
                     <span>{child.name}</span>
                     {child.username ? (
@@ -989,8 +1080,15 @@ export default function ParentDashboard() {
           ) : null}
         </section>
 
-        <section className="space-y-4">
-          <h2 className="font-heading text-xl font-bold">Eco photos awaiting approval</h2>
+        <section id="parent-eco" className="scroll-mt-28 space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="font-heading text-xl font-bold">Eco photos awaiting approval</h2>
+            {!ecoLoading && pendingPhotos.length > 0 ? (
+              <span className="rounded-full bg-[#2ECC71] px-3 py-1 text-xs font-extrabold text-white">
+                {pendingPhotos.length} pending
+              </span>
+            ) : null}
+          </div>
           <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
             <defs>
               <filter id="kidsPencilFilterParent" x="-10%" y="-10%" width="120%" height="120%">
@@ -1042,14 +1140,21 @@ export default function ParentDashboard() {
           ) : null}
 
           {ecoLoading ? (
-            <Card>
-              <CardContent className="py-8 text-muted-foreground">Loading pending photos…</CardContent>
-            </Card>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="mgk-skeleton h-72 rounded-[20px]" />
+              ))}
+            </div>
           ) : pendingPhotos.length === 0 ? (
-            <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="py-10 text-center">
-                <p className="text-lg font-semibold text-primary">No pending photos</p>
-                <p className="mt-2 text-sm text-muted-foreground">All eco actions have been reviewed.</p>
+            <Card className="mgk-card-ds overflow-hidden border-0">
+              <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+                <div className="relative h-44 w-full max-w-[280px] overflow-hidden rounded-2xl">
+                  <Image src="/images/ui/ui-empty-garden.jpg" alt="" fill className="object-cover" sizes="280px" />
+                </div>
+                <p className="font-heading text-lg font-extrabold text-[#1A2F23]">No pending photos</p>
+                <p className="max-w-md text-sm font-semibold text-muted-foreground">
+                  When your children submit eco actions, they&apos;ll show up here for approval.
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -1081,7 +1186,7 @@ export default function ParentDashboard() {
                     <div className="flex gap-2">
                       <Button
                         type="button"
-                        className="flex-1"
+                        className="flex-1 bg-[#2ECC71] hover:bg-[#27ae60]"
                         size="sm"
                         disabled={ecoApprovingId === photo.id}
                         onClick={() => void handleApprovePhoto(photo)}
@@ -1090,7 +1195,7 @@ export default function ParentDashboard() {
                       </Button>
                       <Button
                         type="button"
-                        className="flex-1"
+                        className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
                         size="sm"
                         variant="outline"
                         disabled={ecoApprovingId === photo.id}
@@ -1175,6 +1280,7 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
         </section>
+          </div>
         </div>
       </div>
     </div>

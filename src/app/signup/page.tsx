@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { Check, Shield } from "lucide-react";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import "../globals.css";
+
+const DARK = "#1A2F23";
 
 type AccountType = "student" | "parent" | "teacher" | null;
 
@@ -45,6 +50,7 @@ const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SignupPage() {
+  const { showToast } = useToast();
   const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -370,6 +376,7 @@ export default function SignupPage() {
       }
 
       setSuccessMessage("Account created successfully! Redirecting you to your dashboard...");
+      showToast("success", "Account created! Redirecting…");
 
       setTimeout(() => {
         const redirectPath =
@@ -387,11 +394,11 @@ export default function SignupPage() {
       const isNetworkishFetchFailure =
         error instanceof TypeError && /fetch/i.test(error.message);
 
-      setErrors({
-        form: isNetworkishFetchFailure
-          ? "Couldn't reach Supabase (network error). Double-check NEXT_PUBLIC_SUPABASE_URL, your internet connection, and that your Supabase project is reachable."
-          : message,
-      });
+      const errMsg = isNetworkishFetchFailure
+        ? "Couldn't reach Supabase (network error). Double-check NEXT_PUBLIC_SUPABASE_URL, your internet connection, and that your Supabase project is reachable."
+        : message;
+      setErrors({ form: errMsg });
+      showToast("error", errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -400,23 +407,51 @@ export default function SignupPage() {
   const stepProgress = accountType ? 66 : 33;
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <nav className="flex items-center justify-between border-b border-white/10 bg-[var(--mgk-dark)] px-6 py-4 shadow-sm">
-        <Link href="/" className="flex items-center gap-3 no-underline">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg">
-            🌿
+    <div className="flex min-h-screen bg-background font-sans">
+      <div
+        className="relative hidden w-1/2 flex-col justify-between p-12 text-white lg:flex"
+        style={{ background: DARK }}
+      >
+        <div>
+          <p className="font-heading text-3xl font-extrabold leading-tight">Join 10,000+ families</p>
+          <p className="mt-4 max-w-md text-base font-semibold text-white/80">
+            Start your child&apos;s typing journey with planet-friendly lessons.
+          </p>
+          <div className="relative mt-8 overflow-hidden rounded-[20px] shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+            <Image
+              src="/images/homepage/homepage-eco.jpg"
+              alt="Eco learning with My Green Keys"
+              width={520}
+              height={340}
+              className="h-auto w-full object-cover"
+              priority
+            />
           </div>
-          <span className="font-heading text-base font-bold text-white">My Green Keys</span>
-        </Link>
-        <Link href="/login" className="text-sm font-semibold text-white/90 hover:text-primary">
+          <ul className="mt-10 space-y-4 text-base font-semibold">
+            <li className="flex items-center gap-3">
+              <Check className="size-5 shrink-0 text-[#2ECC71]" strokeWidth={3} />
+              Start free, no credit card
+            </li>
+            <li className="flex items-center gap-3">
+              <Check className="size-5 shrink-0 text-[#2ECC71]" strokeWidth={3} />
+              Cancel anytime
+            </li>
+            <li className="flex items-center gap-3">
+              <Shield className="size-5 shrink-0 text-[#2ECC71]" />
+              COPPA &amp; GDPR compliant
+            </li>
+          </ul>
+        </div>
+        <Link href="/login" className="text-sm font-bold text-[#2ECC71] hover:underline">
           Already have an account? Log In
         </Link>
-      </nav>
+      </div>
 
-      <div className="mx-auto max-w-xl px-6 py-10">
-        <div className="mb-8 text-center">
-          <h1 className="font-heading text-3xl font-bold text-foreground">Create Your Account</h1>
-          <p className="mt-2 text-muted-foreground">Choose your account type to get started</p>
+      <div className="flex w-full flex-col bg-white px-6 py-10 lg:w-1/2 lg:overflow-y-auto">
+        <div className="mx-auto w-full max-w-xl">
+        <div className="mb-8">
+          <h1 className="font-heading text-3xl font-extrabold text-[#1A2F23]">Create your account</h1>
+          <p className="mt-2 text-base font-semibold text-[#64748b]">Choose how you&apos;ll use My Green Keys</p>
         </div>
 
         {googleGateLoading ? (
@@ -476,7 +511,7 @@ export default function SignupPage() {
             [
               { type: "student" as const, icon: "👦", label: "Student", desc: "I want to learn typing" },
               { type: "parent" as const, icon: "👨‍👩‍👧", label: "Parent", desc: "I want to track my child" },
-              { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher/School", desc: "I manage a classroom" },
+              { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher", desc: "I manage a classroom" },
             ] as const
           ).map((option) => (
             <Card
@@ -491,14 +526,19 @@ export default function SignupPage() {
                 }
               }}
               className={cn(
-                "cursor-pointer transition-shadow",
+                "mgk-card-ds cursor-pointer border-2 border-transparent transition-shadow",
                 googleGateLoading && "pointer-events-none opacity-50",
                 accountType === option.type
-                  ? "border-2 border-primary shadow-md ring-2 ring-primary/20"
-                  : "border-border hover:border-primary/40"
+                  ? "border-[#2ECC71] shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-2 ring-[#2ECC71]/25"
+                  : "hover:border-[#2ECC71]/40"
               )}
             >
-              <CardHeader className="pb-2 text-center">
+              <CardHeader className="relative pb-2 text-center">
+                {accountType === option.type ? (
+                  <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-[#2ECC71] text-sm text-white" aria-hidden>
+                    ✓
+                  </span>
+                ) : null}
                 <div className="text-3xl">{option.icon}</div>
                 <CardTitle className="font-heading text-sm">{option.label}</CardTitle>
                 <CardDescription className="text-xs">{option.desc}</CardDescription>
@@ -791,8 +831,7 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  className="w-full"
-                  size="lg"
+                  className="h-[52px] w-full rounded-[50px] bg-[#2ECC71] text-base font-extrabold text-white hover:bg-[#27ae60]"
                   disabled={isLoading || googleLoading}
                 >
                   {isLoading
@@ -803,12 +842,23 @@ export default function SignupPage() {
                       ? "Complete profile"
                       : "Create Account"}
                 </Button>
+                <p className="text-center text-xs font-semibold leading-relaxed text-[#64748b]">
+                  By creating an account you agree to our{" "}
+                  <Link href="/terms" className="text-[#2ECC71] hover:underline">
+                    Terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-[#2ECC71] hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
               </CardContent>
             </Card>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="font-semibold text-primary hover:underline">
+              <Link href="/login" className="font-semibold text-[#2ECC71] hover:underline">
                 Log in here
               </Link>
             </p>
@@ -822,6 +872,7 @@ export default function SignupPage() {
         )}
           </>
         )}
+        </div>
       </div>
     </div>
   );

@@ -1,83 +1,50 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function NotFound() {
+  const router = useRouter();
+
   return (
     <div
+      className="flex min-h-screen flex-col items-center justify-center px-6 py-12"
       style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-        boxSizing: "border-box",
-        background: "linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 45%, #a5d6a7 100%)",
-        color: "#1b4d30",
+        background: "#FAFAFA",
+        color: "#1A2F23",
         textAlign: "center",
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: "min(100%, 360px)",
-          aspectRatio: "1",
-          maxWidth: 360,
-          marginBottom: 28,
-        }}
-      >
+      <div className="relative mx-auto mb-8 w-[300px] shrink-0">
         <Image
           src="/images/ui/ui-404.jpg"
           alt="Friendly panda lost in the forest"
-          fill
-          sizes="(max-width: 400px) 100vw, 360px"
-          style={{ objectFit: "contain" }}
+          width={300}
+          height={300}
+          className="h-auto w-full rounded-[20px] object-contain shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
           priority
         />
       </div>
-      <h1
-        style={{
-          fontSize: "clamp(1.75rem, 5vw, 2.35rem)",
-          fontWeight: 900,
-          margin: "0 0 12px",
-          lineHeight: 1.2,
-          color: "#2c3e50",
-        }}
-      >
-        Oops! Page not found 🐼
-      </h1>
-      <p
-        style={{
-          fontSize: "clamp(1rem, 2.5vw, 1.15rem)",
-          fontWeight: 600,
-          margin: "0 0 32px",
-          maxWidth: 420,
-          lineHeight: 1.6,
-          color: "#37474f",
-        }}
-      >
+      <h1 className="font-heading text-3xl font-black tracking-tight sm:text-4xl">Oops! Page not found</h1>
+      <p className="mt-3 max-w-md text-base font-semibold text-[#64748b] sm:text-lg">
         Looks like our panda got lost in the forest!
       </p>
-      <Link
-        href="/"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: 52,
-          padding: "0 32px",
-          borderRadius: 999,
-          background: "#2e7d32",
-          color: "#ffffff",
-          fontWeight: 800,
-          fontSize: "1rem",
-          textDecoration: "none",
-          boxShadow: "0 10px 28px rgba(46, 125, 50, 0.35)",
-          border: "2px solid rgba(255,255,255,0.35)",
-        }}
-      >
-        Go Home
-      </Link>
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/"
+          className="inline-flex h-[52px] min-w-[160px] items-center justify-center rounded-[50px] bg-[#2ECC71] px-8 text-base font-extrabold text-white shadow-[0_4px_24px_rgba(46,204,113,0.35)] transition-transform duration-200 ease-in-out hover:-translate-y-0.5 active:scale-[0.97]"
+        >
+          Go Home
+        </Link>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="text-base font-extrabold text-[#2ECC71] underline-offset-4 transition-opacity hover:underline"
+        >
+          Go Back
+        </button>
+      </div>
     </div>
   );
 }

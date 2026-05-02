@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, startTransition, useState } from "react";
+import {
+  BookOpen,
+  Copy,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { loadReportBranding, saveReportBranding } from "@/lib/report/branding";
+import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +39,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+
+const TEACHER_SIDEBAR = [
+  { href: "#teacher-overview", label: "Overview", Icon: LayoutDashboard },
+  { href: "#teacher-classes", label: "My Classes", Icon: GraduationCap },
+  { href: "#teacher-students", label: "Students", Icon: Users },
+  { href: "#teacher-leaderboard", label: "Leaderboard", Icon: Trophy },
+  { href: "#teacher-lessons", label: "Custom Lessons", Icon: BookOpen },
+  { href: "#teacher-reports", label: "Reports", Icon: FileText },
+  { href: "#teacher-school", label: "School Settings", Icon: Settings },
+] as const;
 
 const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export default function TeacherDashboard() {
+  const { showToast } = useToast();
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [assignmentText, setAssignmentText] = useState("");
   const [lessonName, setLessonName] = useState("");
@@ -40,6 +62,9 @@ export default function TeacherDashboard() {
   const [assignTo, setAssignTo] = useState("class");
   const [schedule, setSchedule] = useState("now");
   const [searchStudent, setSearchStudent] = useState("");
+  const [studentPage, setStudentPage] = useState(1);
+  const [hash, setHash] = useState("");
+  const STUDENT_PAGE_SIZE = 5;
   const [schoolName, setSchoolName] = useState("Green Valley Primary School");
   const [schoolLogoDataUrl, setSchoolLogoDataUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#2ECC71");
@@ -70,16 +95,16 @@ export default function TeacherDashboard() {
   }, []);
 
   const leaderboardData = [
-    { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, streak: 7, badge: "🏆" },
-    { rank: 2, name: "Omar Khan", wpm: 38, accuracy: 94, lessons: 25, streak: 5, badge: "⭐" },
-    { rank: 3, name: "Fatima Ali", wpm: 35, accuracy: 91, lessons: 22, streak: 4, badge: "🌿" },
-    { rank: 4, name: "Zahra Hassan", wpm: 33, accuracy: 90, lessons: 20, streak: 3, badge: "" },
-    { rank: 5, name: "Amir Ibrahim", wpm: 31, accuracy: 88, lessons: 19, streak: 2, badge: "" },
-    { rank: 6, name: "Noor Rashid", wpm: 29, accuracy: 87, lessons: 18, streak: 2, badge: "" },
-    { rank: 7, name: "Hana Karim", wpm: 28, accuracy: 86, lessons: 17, streak: 1, badge: "" },
-    { rank: 8, name: "Karim Saleh", wpm: 26, accuracy: 84, lessons: 16, streak: 1, badge: "" },
-    { rank: 9, name: "Layla Ahmed", wpm: 25, accuracy: 83, lessons: 15, streak: 0, badge: "" },
-    { rank: 10, name: "Hassan Ali", wpm: 24, accuracy: 82, lessons: 14, streak: 0, badge: "" },
+    { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "🏆" },
+    { rank: 2, name: "Omar Khan", wpm: 38, accuracy: 94, lessons: 25, ecoPoints: 380, streak: 5, badge: "⭐" },
+    { rank: 3, name: "Fatima Ali", wpm: 35, accuracy: 91, lessons: 22, ecoPoints: 340, streak: 4, badge: "🌿" },
+    { rank: 4, name: "Zahra Hassan", wpm: 33, accuracy: 90, lessons: 20, ecoPoints: 310, streak: 3, badge: "" },
+    { rank: 5, name: "Amir Ibrahim", wpm: 31, accuracy: 88, lessons: 19, ecoPoints: 290, streak: 2, badge: "" },
+    { rank: 6, name: "Noor Rashid", wpm: 29, accuracy: 87, lessons: 18, ecoPoints: 260, streak: 2, badge: "" },
+    { rank: 7, name: "Hana Karim", wpm: 28, accuracy: 86, lessons: 17, ecoPoints: 240, streak: 1, badge: "" },
+    { rank: 8, name: "Karim Saleh", wpm: 26, accuracy: 84, lessons: 16, ecoPoints: 220, streak: 1, badge: "" },
+    { rank: 9, name: "Layla Ahmed", wpm: 25, accuracy: 83, lessons: 15, ecoPoints: 200, streak: 0, badge: "" },
+    { rank: 10, name: "Hassan Ali", wpm: 24, accuracy: 82, lessons: 14, ecoPoints: 180, streak: 0, badge: "" },
   ];
 
   const allStudentsData = [
@@ -110,6 +135,34 @@ export default function TeacherDashboard() {
   const filteredStudents = allStudentsData.filter((s) =>
     s.name.toLowerCase().includes(searchStudent.toLowerCase())
   );
+
+  const studentPageCount = Math.max(1, Math.ceil(filteredStudents.length / STUDENT_PAGE_SIZE));
+  const pagedStudents = filteredStudents.slice(
+    (studentPage - 1) * STUDENT_PAGE_SIZE,
+    studentPage * STUDENT_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    setStudentPage(1);
+  }, [searchStudent]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setHash(window.location.hash || "#teacher-overview");
+    const onHash = () => setHash(window.location.hash || "#teacher-overview");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const activeClass = classes.find((c) => c.id === selectedClassId);
+
+  const initials = (name: string) =>
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("") || "?";
 
   const loadClasses = async () => {
     setClassesLoading(true);
@@ -314,41 +367,133 @@ export default function TeacherDashboard() {
         </DialogContent>
       </Dialog>
 
-      <header className="sticky top-0 z-40 border-b border-primary/20 bg-[var(--mgk-dark)]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="font-heading text-xl font-bold text-primary">🌿 My Green Keys</div>
-            <Separator orientation="vertical" className="hidden h-8 bg-white/20 md:block" />
+      <div className="flex min-h-screen bg-[#FAFAFA] font-sans">
+        <aside
+          className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
+          aria-label="Teacher navigation"
+        >
+          <div className="mb-8 flex items-center gap-3 px-2">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-lg text-white">🌿</div>
             <div>
-              <h1 className="font-heading text-lg font-semibold text-white">Teacher Dashboard</h1>
-              <p className="text-sm text-white/70">Welcome back, Ms. Ahmed 👋</p>
+              <p className="font-heading text-sm font-extrabold text-[#1A2F23]">My Green Keys</p>
+              <p className="text-xs font-semibold text-[#64748b]">Teacher</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-semibold text-white">{schoolName}</p>
-              <p className="text-xs text-primary">School profile</p>
-            </div>
-            <Button variant="secondary" size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-6xl space-y-10 px-6 py-8">
-        <section>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-heading text-xl font-bold text-foreground">Classes</h2>
-            <Button
-              size="sm"
-              onClick={() => {
-                setCreateClassError("");
-                setShowCreateClass(true);
+          <nav className="flex flex-col gap-1">
+            {TEACHER_SIDEBAR.map((item) => {
+              const active = hash === item.href;
+              const Icon = item.Icon;
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
+                    active ? "bg-[#2ECC71]/12 text-[#15803d]" : "text-[#374151] hover:bg-[#FAFAFA]"
+                  )}
+                >
+                  <Icon className={cn("size-5 shrink-0", active ? "text-[#2ECC71]" : "text-[#64748b]")} strokeWidth={2.25} />
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
+          <div className="mt-auto pt-8">
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = "/login";
               }}
             >
-              Create class
-            </Button>
+              <LogOut className="size-5 shrink-0" strokeWidth={2.25} />
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-6 py-4 backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">Teacher Dashboard</h1>
+                <p className="text-sm font-semibold text-[#64748b]">
+                  {schoolName} ·{" "}
+                  {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                </p>
+              </div>
+              <div className="flex size-10 items-center justify-center rounded-full bg-[#2ECC71]/20 text-sm font-extrabold text-[#15803d]" aria-hidden>
+                A
+              </div>
+            </div>
+          </header>
+
+          <div className="mx-auto max-w-6xl space-y-10 px-6 py-8">
+        <section id="teacher-overview" className="scroll-mt-24">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: "👥", label: "Total Students", value: "48" },
+              { icon: "✨", label: "Active Today", value: "32" },
+              { icon: "⚡", label: "Class Average WPM", value: "28" },
+              { icon: "📚", label: "Lessons Completed Today", value: "127" },
+            ].map((card) => (
+              <Card key={card.label} className="mgk-card-ds border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+                <CardHeader className="pb-2">
+                  <div className="text-2xl">{card.icon}</div>
+                  <CardDescription className="font-semibold">{card.label}</CardDescription>
+                  <CardTitle className="font-heading text-3xl text-[#2ECC71]">{card.value}</CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="teacher-classes" className="scroll-mt-24">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-heading text-xl font-bold text-foreground">Class overview</h2>
+              {activeClass ? (
+                <p className="mt-1 text-sm font-semibold text-muted-foreground">
+                  <span className="font-mono font-bold text-[#1A2F23]">{activeClass.name}</span>
+                  <span className="mx-2 text-[#CBD5E1]">·</span>
+                  Code{" "}
+                  <span className="font-mono font-extrabold tracking-widest text-[#2ECC71]">{activeClass.code}</span>
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {activeClass ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-[50px] border-[#2ECC71]/40 font-bold"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(activeClass.code);
+                      showToast("success", "Class code copied!");
+                    } catch {
+                      showToast("error", "Could not copy code.");
+                    }
+                  }}
+                >
+                  <Copy className="mr-2 size-4" strokeWidth={2.5} />
+                  Copy code
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                className="rounded-[50px] bg-[#2ECC71] font-bold hover:bg-[#27ae60]"
+                onClick={() => {
+                  setCreateClassError("");
+                  setShowCreateClass(true);
+                }}
+              >
+                Create New Class
+              </Button>
+            </div>
           </div>
 
           {classesError ? (
@@ -448,61 +593,48 @@ export default function TeacherDashboard() {
           )}
         </section>
 
-        <section>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: "👥", label: "Total students", value: "48" },
-              { icon: "📚", label: "Lessons completed today", value: "127" },
-              { icon: "⚡", label: "Class average WPM", value: "28" },
-              { icon: "🌿", label: "Eco actions this week", value: "12" },
-            ].map((card) => (
-              <Card key={card.label}>
-                <CardHeader className="pb-2">
-                  <div className="text-2xl">{card.icon}</div>
-                  <CardDescription>{card.label}</CardDescription>
-                  <CardTitle className="font-heading text-3xl">{card.value}</CardTitle>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-heading mb-4 text-xl font-bold">Class leaderboard</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Rank</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>WPM</TableHead>
-                <TableHead>Accuracy</TableHead>
-                <TableHead>Lessons</TableHead>
-                <TableHead>Streak</TableHead>
-                <TableHead>Badge</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leaderboardData.map((student) => (
-                <TableRow
-                  key={student.rank}
-                  className={cn(student.rank <= 3 && "bg-primary/5")}
-                >
-                  <TableCell className="font-semibold">
-                    {student.rank === 1 ? "🥇" : student.rank === 2 ? "🥈" : student.rank === 3 ? "🥉" : student.rank}
-                  </TableCell>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell className="font-semibold text-primary">{student.wpm} WPM</TableCell>
-                  <TableCell>{student.accuracy}%</TableCell>
-                  <TableCell>{student.lessons}</TableCell>
-                  <TableCell>{student.streak > 0 ? `🔥${student.streak}` : "—"}</TableCell>
-                  <TableCell className="text-lg">{student.badge}</TableCell>
+        <section id="teacher-leaderboard" className="scroll-mt-24">
+          <h2 className="font-heading mb-4 text-xl font-bold">Student leaderboard</h2>
+          <Card className="overflow-x-auto border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Rank</TableHead>
+                  <TableHead>Avatar</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>WPM</TableHead>
+                  <TableHead>Lessons</TableHead>
+                  <TableHead>Eco Points</TableHead>
+                  <TableHead>Badge</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {leaderboardData.map((student) => (
+                  <TableRow
+                    key={student.rank}
+                    className={cn(student.rank <= 3 && "bg-primary/5")}
+                  >
+                    <TableCell className="font-semibold">
+                      {student.rank === 1 ? "🥇" : student.rank === 2 ? "🥈" : student.rank === 3 ? "🥉" : student.rank}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex size-9 items-center justify-center rounded-full bg-[#2ECC71]/20 text-xs font-extrabold text-[#15803d]">
+                        {initials(student.name)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell className="font-semibold text-primary">{student.wpm}</TableCell>
+                    <TableCell>{student.lessons}</TableCell>
+                    <TableCell className="font-semibold text-[#15803d]">{student.ecoPoints}</TableCell>
+                    <TableCell className="text-lg">{student.badge}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
         </section>
 
-        <section>
+        <section id="teacher-students" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-heading text-xl font-bold">All students</h2>
             <Button variant="outline" size="sm">
@@ -519,34 +651,75 @@ export default function TeacherDashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Age</TableHead>
                 <TableHead>WPM</TableHead>
                 <TableHead>Accuracy</TableHead>
                 <TableHead>Lessons</TableHead>
-                <TableHead>Last active</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredStudents.map((student) => (
+              {pagedStudents.map((student) => (
                 <TableRow
                   key={student.id}
                   className="cursor-pointer"
                   onClick={() => setSelectedStudent(selectedStudent === student.id ? null : student.id)}
                 >
                   <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.gender}</TableCell>
-                  <TableCell>{student.age}</TableCell>
                   <TableCell className="font-semibold text-primary">{student.wpm}</TableCell>
                   <TableCell>{student.accuracy}%</TableCell>
                   <TableCell>{student.lessons}</TableCell>
                   <TableCell className="text-muted-foreground">{student.lastActive}</TableCell>
-                  <TableCell>{statusBadge(student.status)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex flex-wrap justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-[#2ECC71]/40 font-semibold text-[#15803d]"
+                        onClick={() => window.open(`/report/${student.id}`, "_blank", "noopener,noreferrer")}
+                      >
+                        View Report
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => showToast("info", "Messaging coming soon — contact via school email.")}
+                      >
+                        Send Message
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
+            <span>
+              Page {studentPage} of {studentPageCount}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={studentPage <= 1}
+                onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={studentPage >= studentPageCount}
+                onClick={() => setStudentPage((p) => Math.min(studentPageCount, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
 
           {selectedStudent ? (
             <Card className="mt-4 border-primary/40">
@@ -572,7 +745,7 @@ export default function TeacherDashboard() {
           ) : null}
         </section>
 
-        <section>
+        <section id="teacher-lessons" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">Assign a lesson</h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
@@ -654,7 +827,7 @@ export default function TeacherDashboard() {
           ) : null}
         </section>
 
-        <section>
+        <section id="teacher-eco-feed" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">Recent eco actions</h2>
           <div className="space-y-3">
             {ecoFeedData.map((item) => (
@@ -673,7 +846,7 @@ export default function TeacherDashboard() {
           </Button>
         </section>
 
-        <section>
+        <section id="teacher-school" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">School customization</h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
@@ -731,7 +904,7 @@ export default function TeacherDashboard() {
           </Card>
         </section>
 
-        <section className="pb-16">
+        <section id="teacher-reports" className="scroll-mt-24 pb-16">
           <h2 className="font-heading mb-4 text-xl font-bold">Generate reports</h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
@@ -759,6 +932,8 @@ export default function TeacherDashboard() {
             </CardContent>
           </Card>
         </section>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
-/* ── SVG icon primitives ─────────────────────────────────────────────────── */
+const DARK = "#1A2F23";
+const PRIMARY = "#2ECC71";
+const BG = "#FAFAFA";
 
 type IconProps = { size?: number; color?: string; strokeWidth?: number };
 
@@ -23,45 +26,10 @@ const ic = (paths: string, vb = "0 0 24 24") =>
     );
   };
 
-const KeyboardIcon = ic(
-  '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>'
-);
-const GlobeIcon = ic(
-  '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
-);
-const HeartIcon = ic(
-  '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
-);
-const SparkleIcon = ic(
-  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'
-);
-const TrophyIcon = ic(
-  '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
-);
-const BarChartIcon = ic(
-  '<rect x="3" y="12" width="4" height="8"/><rect x="10" y="6" width="4" height="14"/><rect x="17" y="2" width="4" height="18"/>'
-);
-const UsersIcon = ic(
-  '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
-);
-const BuildingIcon = ic(
-  '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6M3 15h6M15 6h2M15 12h2M15 18h2"/>'
-);
-const BookIcon = ic(
-  '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'
-);
 const CheckIcon = ic('<polyline points="20 6 9 17 4 12"/>');
-const ArrowRightIcon = ic(
-  '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>'
-);
-const ZapIcon = ic(
-  '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'
-);
 const LeafIcon = ic(
   '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'
 );
-
-/* ── Layout helpers ─────────────────────────────────────────────────────── */
 
 function Inner({ children }: { children: React.ReactNode }) {
   return (
@@ -70,48 +38,6 @@ function Inner({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-function SectionLabel({ children, color = "#4CAF50" }: { children: React.ReactNode; color?: string }) {
-  return (
-    <p className="label-tag" style={{ color }}>
-      {children}
-    </p>
-  );
-}
-
-function SectionHead({
-  label,
-  labelColor,
-  title,
-  sub,
-}: {
-  label: string;
-  labelColor?: string;
-  title: React.ReactNode;
-  sub: string;
-}) {
-  return (
-    <div style={{ textAlign: "center", marginBottom: 56 }}>
-      <SectionLabel color={labelColor}>{label}</SectionLabel>
-      <h2
-        style={{
-          fontSize: "clamp(1.65rem, 3vw, 2.25rem)",
-          fontWeight: 800,
-          color: "#2c3e50",
-          lineHeight: 1.2,
-          marginBottom: 12,
-        }}
-      >
-        {title}
-      </h2>
-      <p style={{ fontSize: "1.05rem", color: "#6b7280", fontWeight: 400, maxWidth: 520, margin: "0 auto" }}>
-        {sub}
-      </p>
-    </div>
-  );
-}
-
-/* ── Hero sub-components ─────────────────────────────────────────────────── */
 
 function CloudShape({ style }: { style: React.CSSProperties }) {
   return (
@@ -122,7 +48,7 @@ function CloudShape({ style }: { style: React.CSSProperties }) {
         style={{ width: "100%", height: "100%", display: "block" }}
       >
         <ellipse cx="100" cy="50" rx="90" ry="30" fill="rgba(255,255,255,0.88)" />
-        <ellipse cx="70"  cy="38" rx="45" ry="32" fill="rgba(255,255,255,0.88)" />
+        <ellipse cx="70" cy="38" rx="45" ry="32" fill="rgba(255,255,255,0.88)" />
         <ellipse cx="115" cy="32" rx="38" ry="28" fill="rgba(255,255,255,0.88)" />
       </svg>
     </div>
@@ -144,13 +70,9 @@ function Tree({ style, scale = 1, delay = "0s" }: { style: React.CSSProperties; 
       }}
     >
       <svg width={W} height={H} viewBox="0 0 68 160" fill="none">
-        {/* Trunk — tall brown rectangle */}
         <rect x="28" y="112" width="12" height="48" rx="3" fill="#6b3f1e" />
-        {/* Bottom tier — widest, lightest */}
         <polygon points="34,54 66,114 2,114" fill="#40916c" />
-        {/* Middle tier */}
-        <polygon points="34,30 60,82 8,82"  fill="#2d6a4f" />
-        {/* Top tier — narrowest, darkest */}
+        <polygon points="34,30 60,82 8,82" fill="#2d6a4f" />
         <polygon points="34,5  52,48 16,48" fill="#1b4d30" />
       </svg>
     </div>
@@ -159,51 +81,148 @@ function Tree({ style, scale = 1, delay = "0s" }: { style: React.CSSProperties; 
 
 function Flower({ style, color = "#FF6B6B", delay = "0s" }: { style: React.CSSProperties; color?: string; delay?: string }) {
   return (
-    <div style={{ position: "absolute", ...style, display: "flex", flexDirection: "column", alignItems: "center", animation: `flower-bob 2.5s ease-in-out ${delay} infinite` }}>
+    <div
+      style={{
+        position: "absolute",
+        ...style,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        animation: `flower-bob 2.5s ease-in-out ${delay} infinite`,
+      }}
+    >
       <div style={{ position: "relative", width: 22, height: 22 }}>
         {[0, 60, 120, 180, 240, 300].map((deg) => (
-          <div key={deg} style={{ position: "absolute", top: "50%", left: "50%", width: 8, height: 12, background: color, borderRadius: "50%", transform: `translate(-50%,-50%) rotate(${deg}deg) translateY(-9px)`, opacity: 0.9 }} />
+          <div
+            key={deg}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 8,
+              height: 12,
+              background: color,
+              borderRadius: "50%",
+              transform: `translate(-50%,-50%) rotate(${deg}deg) translateY(-9px)`,
+              opacity: 0.9,
+            }}
+          />
         ))}
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 9, height: 9, background: "#FFEB3B", borderRadius: "50%", zIndex: 2 }} />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%,-50%)",
+            width: 9,
+            height: 9,
+            background: "#FFEB3B",
+            borderRadius: "50%",
+            zIndex: 2,
+          }}
+        />
       </div>
       <div style={{ width: 2, height: 16, background: "#52b788", marginTop: 2 }} />
     </div>
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   PAGE
-════════════════════════════════════════════════════════════════════════════ */
+const PREVIEW_GAMES = [
+  { name: "Falling Leaves", desc: "Catch leaves by typing words", img: "/images/games/game-falling-leaves.jpg", href: "/games/falling-leaves" },
+  { name: "Sort Recycling", desc: "Sort waste into the right bins", img: "/images/games/game-sort-recycling.jpg", href: "/games/sort-recycling" },
+  { name: "Save the Ocean", desc: "Free the turtle with fast typing", img: "/images/games/game-save-ocean.jpg", href: "/games/save-the-ocean" },
+  { name: "Eco Garden", desc: "Grow a garden with every key", img: "/images/games/game-eco-garden.jpg", href: "/games/eco-garden" },
+  { name: "Kind World Academy", desc: "Spread kindness around the world", img: "/images/games/game-kind-world.jpg", href: "/games/kind-world-academy" },
+] as const;
+
+function FeatureList({ items, color }: { items: string[]; color: string }) {
+  return (
+    <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+      {items.map((t) => (
+        <li key={t} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: "0.95rem", color: "#374151", fontWeight: 600 }}>
+          <span
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              background: `${PRIMARY}18`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              marginTop: 2,
+            }}
+          >
+            <CheckIcon size={12} color={color} strokeWidth={3} />
+          </span>
+          {t}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <>
-      {/* ── NAV ─────────────────────────────────────────────────────── */}
-      <nav style={{ background: "#2c3e50", position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, boxShadow: "0 1px 0 rgba(255,255,255,0.06)" }}>
+      <nav
+        style={{
+          background: DARK,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          boxShadow: "0 1px 0 rgba(255,255,255,0.06)",
+        }}
+      >
         <Inner>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
-            {/* Logo */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: "#4CAF50", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  background: PRIMARY,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <LeafIcon size={20} color="#fff" strokeWidth={2.5} />
               </div>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
-            </div>
+            </Link>
 
-            {/* Links */}
             <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
-              {["Features", "Modules", "Schools"].map((l) => (
-                <a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>
-              ))}
-              <a href="/pricing" className="nav-link">Pricing</a>
+              <a href="#how-it-works" className="nav-link">
+                How it works
+              </a>
+              <a href="#features" className="nav-link">
+                Features
+              </a>
+              <a href="#games-preview" className="nav-link">
+                Games
+              </a>
+              <Link href="/pricing" className="nav-link">
+                Pricing
+              </Link>
             </div>
 
-            {/* Actions */}
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <a href="/login" className="nav-link hidden md:block">Log In</a>
-              <a href="/signup" className="btn-primary" style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem" }}>Start Free Trial</a>
+              <Link href="/login" className="nav-link hidden md:block">
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-primary"
+                style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem", height: 44, display: "inline-flex", alignItems: "center" }}
+              >
+                Start Free Today
+              </Link>
               <button
                 type="button"
                 className="md:hidden inline-flex items-center justify-center rounded-lg px-3 py-2 text-white/90 hover:text-white hover:bg-white/10"
@@ -216,27 +235,25 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Mobile menu */}
           {mobileMenuOpen && (
             <div className="md:hidden pb-4">
               <div className="mt-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
                 <div className="flex flex-col gap-3">
-                  {["Features", "Modules", "Schools"].map((l) => (
-                    <a
-                      key={l}
-                      href={`#${l.toLowerCase()}`}
-                      className="nav-link"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {l}
-                    </a>
-                  ))}
-                  <a href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    How it works
+                  </a>
+                  <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Features
+                  </a>
+                  <a href="#games-preview" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Games
+                  </a>
+                  <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     Pricing
-                  </a>
-                  <a href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  </Link>
+                  <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     Log In
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -244,12 +261,12 @@ export default function HomePage() {
         </Inner>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────── */}
+      {/* HERO */}
       <section
         style={{
           position: "relative",
           minHeight: "100vh",
-          background: "linear-gradient(180deg,#162d1e 0%,#1f4d35 25%,#2d6a4f 55%,#52b788 80%,#81c99e 100%)",
+          background: "linear-gradient(180deg, #0A1F0F 0%, #1A3D1F 100%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -261,23 +278,22 @@ export default function HomePage() {
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <Image
             src="/images/homepage/homepage-hero.jpg"
-            alt="Lush green forest landscape"
+            alt=""
             fill
             priority
             sizes="100vw"
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: "cover", opacity: 0.15 }}
           />
           <div
             aria-hidden
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(22,45,30,0.72) 0%, rgba(31,77,53,0.55) 35%, rgba(45,106,79,0.42) 65%, rgba(129,201,158,0.5) 100%)",
+              background: "linear-gradient(180deg, rgba(10,31,15,0.85) 0%, rgba(26,61,31,0.75) 100%)",
             }}
           />
         </div>
-        {/* Sun */}
+
         <div
           className="animate-sun-pulse"
           style={{
@@ -289,78 +305,87 @@ export default function HomePage() {
             background: "radial-gradient(circle,#FFEB3B 38%,#FDD835 65%,transparent 100%)",
             borderRadius: "50%",
             zIndex: 2,
-            opacity: 0.35,
+            opacity: 0.28,
           }}
         />
 
-        {/* Clouds (hidden on very small screens) */}
         <div className="hidden sm:block">
-          <CloudShape style={{ top: 88,  left: 0,    width: 200, height: 70,  animationDuration: "30s", animationDelay: "0s"  }} />
-          <CloudShape style={{ top: 128, left: 0,    width: 145, height: 50,  animationDuration: "38s", animationDelay: "11s" }} />
-          <CloudShape style={{ top: 70,  left: 0,    width: 240, height: 80,  animationDuration: "46s", animationDelay: "20s" }} />
+          <CloudShape style={{ top: 88, left: 0, width: 200, height: 70, animationDuration: "30s", animationDelay: "0s" }} />
+          <CloudShape style={{ top: 128, left: 0, width: 145, height: 50, animationDuration: "38s", animationDelay: "11s" }} />
+          <CloudShape style={{ top: 70, left: 0, width: 240, height: 80, animationDuration: "46s", animationDelay: "20s" }} />
         </div>
 
-        {/* Fireflies */}
-        {([
-          ["28%","7%","3.2s","0s"],["44%","14%","4.1s","1s"],["24%","79%","3.7s","0.5s"],
-          ["54%","87%","4.8s","2s"],["37%","69%","3.0s","1.5s"],["61%","4%","5.2s","3s"],
-          ["19%","59%","2.9s","0.8s"],["68%","74%","4.4s","2.2s"],
-        ] as [string,string,string,string][]).map(([top,left,dur,delay],i) => (
+        {(
+          [
+            ["28%", "7%", "3.2s", "0s"],
+            ["44%", "14%", "4.1s", "1s"],
+            ["24%", "79%", "3.7s", "0.5s"],
+            ["54%", "87%", "4.8s", "2s"],
+            ["37%", "69%", "3.0s", "1.5s"],
+            ["61%", "4%", "5.2s", "3s"],
+            ["19%", "59%", "2.9s", "0.8s"],
+            ["68%", "74%", "4.4s", "2.2s"],
+          ] as [string, string, string, string][]
+        ).map(([top, left, dur, delay], i) => (
           <div key={i} className="firefly" style={{ top, left, animationDuration: dur, animationDelay: delay }} />
         ))}
 
-        {/* Falling leaves */}
-        {([
-          ["5%","#1b4d30","7s","0s"],["14%","#40916c","9s","2s"],["27%","#52b788","6s","4s"],
-          ["41%","#4CAF50","11s","1s"],["57%","#2d6a4f","8s","3s"],["71%","#52b788","10s","5s"],
-          ["84%","#1b4d30","7.5s","1.5s"],["92%","#74c69d","9.5s","6s"],
-        ] as [string,string,string,string][]).map(([left,bg,dur,delay],i) => (
+        {(
+          [
+            ["5%", "#1b4d30", "7s", "0s"],
+            ["14%", "#40916c", "9s", "2s"],
+            ["27%", "#52b788", "6s", "4s"],
+            ["41%", "#4CAF50", "11s", "1s"],
+            ["57%", "#2d6a4f", "8s", "3s"],
+            ["71%", "#52b788", "10s", "5s"],
+            ["84%", "#1b4d30", "7.5s", "1.5s"],
+            ["92%", "#74c69d", "9.5s", "6s"],
+          ] as [string, string, string, string][]
+        ).map(([left, bg, dur, delay], i) => (
           <div key={i} className="leaf" style={{ left, top: "-20px", background: bg, animationDuration: dur, animationDelay: delay }} />
         ))}
 
-        {/* Bird */}
         <div style={{ position: "absolute", top: "17%", left: 0, animation: "bird-fly 18s linear 4s infinite", pointerEvents: "none" }}>
           <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
-            <path d="M2 10 Q8 2 16 10 Q24 2 30 10" stroke="rgba(255,255,255,0.8)" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            <path d="M2 10 Q8 2 16 10 Q24 2 30 10" stroke="rgba(255,255,255,0.8)" strokeWidth="2" fill="none" strokeLinecap="round" />
           </svg>
         </div>
 
-        {/* Butterfly */}
         <div style={{ position: "absolute", top: "43%", left: "5%", animation: "butterfly 14s ease-in-out 2s infinite", pointerEvents: "none" }}>
           <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
-            <ellipse cx="7"  cy="10" rx="7"  ry="9"  fill="rgba(255,235,59,0.75)" />
-            <ellipse cx="23" cy="10" rx="7"  ry="9"  fill="rgba(255,152,0,0.75)"  />
-            <ellipse cx="7"  cy="18" rx="5"  ry="6"  fill="rgba(255,235,59,0.55)" />
-            <ellipse cx="23" cy="18" rx="5"  ry="6"  fill="rgba(255,152,0,0.55)"  />
-            <line x1="15" y1="2" x2="15" y2="22" stroke="#333" strokeWidth="1.5" strokeLinecap="round"/>
+            <ellipse cx="7" cy="10" rx="7" ry="9" fill="rgba(255,235,59,0.75)" />
+            <ellipse cx="23" cy="10" rx="7" ry="9" fill="rgba(255,152,0,0.75)" />
+            <ellipse cx="7" cy="18" rx="5" ry="6" fill="rgba(255,235,59,0.55)" />
+            <ellipse cx="23" cy="18" rx="5" ry="6" fill="rgba(255,152,0,0.55)" />
+            <line x1="15" y1="2" x2="15" y2="22" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
 
-        {/* Hero copy */}
         <div
-          className="pb-28 sm:pb-56"
-          style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 820, margin: "0 auto" }}
+          className="pb-32 sm:pb-40"
+          style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 900, margin: "0 auto" }}
         >
           <div
             style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)",
-              borderRadius: 50, padding: "6px 18px", marginBottom: 24,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              border: `2px solid ${PRIMARY}`,
+              borderRadius: 50,
+              padding: "8px 20px",
+              marginBottom: 28,
               animation: "fade-in 0.8s ease 0.2s both",
             }}
           >
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FFEB3B", display: "block" }} />
-            <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.8rem", fontWeight: 600 }}>
-              Trusted by 10,000+ young learners worldwide
-            </span>
+            <span style={{ color: "#fff", fontSize: "0.8rem", fontWeight: 700 }}>Trusted by 10,000+ kids worldwide</span>
           </div>
 
           <h1
             style={{
-              fontSize: "clamp(2.5rem,6.5vw,4.75rem)",
+              fontSize: "clamp(3rem, 8vw, 5.5rem)",
               fontWeight: 900,
               color: "#fff",
-              lineHeight: 1.08,
+              lineHeight: 1.1,
               letterSpacing: "-0.02em",
               marginBottom: 24,
               textShadow: "0 4px 24px rgba(0,0,0,0.25)",
@@ -369,483 +394,501 @@ export default function HomePage() {
           >
             Learn to Type.
             <br />
-            <span style={{ color: "#FFEB3B" }}>Help the Planet.</span>
+            Help the Planet.
           </h1>
 
           <p
             style={{
-              fontSize: "clamp(1rem,2vw,1.2rem)",
+              fontSize: "1.25rem",
               color: "rgba(255,255,255,0.85)",
-              fontWeight: 400,
-              lineHeight: 1.72,
-              maxWidth: 520,
-              margin: "0 auto 40px",
+              fontWeight: 600,
+              lineHeight: 1.65,
+              maxWidth: 560,
+              margin: "0 auto 36px",
               animation: "float-up 0.9s ease 0.5s both",
             }}
           >
-            A joyful typing adventure for kids aged 6–14. Build real keyboard skills
-            while learning about sustainability, health, and good manners.
+            The only typing platform where every word your child types helps save the planet
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
-            <a href="#" className="btn-primary" style={{ fontSize: "1rem", padding: "0.9rem 2.2rem", boxShadow: "0 8px 32px rgba(76,175,80,0.4)" }}>
-              Start for Free
-            </a>
-            <a href="#" className="btn-ghost" style={{ fontSize: "1rem", padding: "0.9rem 2.2rem" }}>
-              Watch a Demo
+            <Link
+              href="/signup"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 52,
+                padding: "0 28px",
+                borderRadius: 50,
+                background: "#fff",
+                color: DARK,
+                fontWeight: 800,
+                fontSize: "1rem",
+                textDecoration: "none",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
+              className="hover:-translate-y-0.5 active:scale-[0.97]"
+            >
+              Start Free Today
+            </Link>
+            <a
+              href="#games-preview"
+              className="btn-ghost"
+              style={{ fontSize: "1rem", padding: "0 28px", height: 52, display: "inline-flex", alignItems: "center" }}
+            >
+              Watch Demo
             </a>
           </div>
+          <p style={{ marginTop: 20, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+            No credit card required. Free forever.
+          </p>
         </div>
 
-        {/* Ground scene */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 210, pointerEvents: "none" }}>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 130, background: "linear-gradient(180deg,transparent 0%,#235c2a 100%)" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 62, background: "#2d6e1e", borderTopLeftRadius: "50% 18px", borderTopRightRadius: "50% 18px" }} />
 
-          <Tree style={{ left: "2%",  bottom: 42 }} scale={1.2} />
-          <Tree style={{ left: "9%",  bottom: 32 }} scale={0.9}  delay="0.5s" />
-          <Tree style={{ left: "17%", bottom: 50 }} scale={1.5}  delay="1s" />
-          <Tree style={{ left: "26%", bottom: 36 }} scale={1.0}  delay="0.3s" />
-          <Tree style={{ left: "37%", bottom: 46 }} scale={1.3}  delay="0.8s" />
+          <Tree style={{ left: "2%", bottom: 42 }} scale={1.2} />
+          <Tree style={{ left: "9%", bottom: 32 }} scale={0.9} delay="0.5s" />
+          <Tree style={{ left: "17%", bottom: 50 }} scale={1.5} delay="1s" />
+          <Tree style={{ left: "26%", bottom: 36 }} scale={1.0} delay="0.3s" />
+          <Tree style={{ left: "37%", bottom: 46 }} scale={1.3} delay="0.8s" />
           <Tree style={{ left: "49%", bottom: 32 }} scale={0.85} delay="0.2s" />
-          <Tree style={{ left: "59%", bottom: 50 }} scale={1.4}  delay="1.2s" />
-          <Tree style={{ left: "69%", bottom: 36 }} scale={1.0}  delay="0.6s" />
-          <Tree style={{ left: "78%", bottom: 46 }} scale={1.2}  delay="0.9s" />
-          <Tree style={{ left: "87%", bottom: 32 }} scale={0.9}  delay="0.4s" />
-          <Tree style={{ left: "93%", bottom: 42 }} scale={1.1}  delay="1.1s" />
+          <Tree style={{ left: "59%", bottom: 50 }} scale={1.4} delay="1.2s" />
+          <Tree style={{ left: "69%", bottom: 36 }} scale={1.0} delay="0.6s" />
+          <Tree style={{ left: "78%", bottom: 46 }} scale={1.2} delay="0.9s" />
+          <Tree style={{ left: "87%", bottom: 32 }} scale={0.9} delay="0.4s" />
+          <Tree style={{ left: "93%", bottom: 42 }} scale={1.1} delay="1.1s" />
 
-          <Flower style={{ left: "6%",  bottom: 58 }} color="#FF6B6B" />
+          <Flower style={{ left: "6%", bottom: 58 }} color="#FF6B6B" />
           <Flower style={{ left: "22%", bottom: 60 }} color="#FFEB3B" delay="0.7s" />
           <Flower style={{ left: "44%", bottom: 58 }} color="#FF8E53" delay="1.3s" />
           <Flower style={{ left: "65%", bottom: 62 }} color="#e91e63" delay="0.4s" />
           <Flower style={{ left: "83%", bottom: 58 }} color="#FFEB3B" delay="1s" />
         </div>
+
+        <div
+          className="hidden sm:flex"
+          style={{
+            position: "absolute",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 12,
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 6,
+            color: "rgba(255,255,255,0.7)",
+            fontSize: 12,
+            fontWeight: 700,
+            animation: "float-up 1s ease 1s both",
+          }}
+          aria-hidden
+        >
+          <span>Scroll</span>
+          <span style={{ fontSize: 22, lineHeight: 1, animation: "flower-bob 2s ease-in-out infinite" }}>↓</span>
+        </div>
       </section>
 
-      {/* ── STATS BAND ──────────────────────────────────────────────── */}
-      <section style={{ background: "#1565C0" }}>
+      {/* SOCIAL PROOF */}
+      <section style={{ background: "#fff", padding: "48px 0" }}>
         <Inner>
-          <div style={{ display: "flex", alignItems: "stretch" }}>
-            {([
-              { Icon: UsersIcon,    num: "10,000+", label: "Active Learners"     },
-              { Icon: BuildingIcon, num: "500+",    label: "Schools Enrolled"    },
-              { Icon: BookIcon,     num: "4",       label: "Learning Modules"    },
-              { Icon: SparkleIcon,  num: "98%",     label: "Parent Satisfaction" },
-            ] as { Icon: typeof UsersIcon; num: string; label: string }[]).map((s, i) => (
-              <React.Fragment key={s.label}>
-                {i > 0 && (
-                  <div style={{ width: 1, background: "rgba(255,255,255,0.2)", flexShrink: 0, margin: "32px 0" }} />
-                )}
-                <div
-                  style={{
-                    flex: 1,
-                    padding: "52px 24px",
-                    textAlign: "center",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <s.Icon size={22} color="rgba(255,255,255,0.65)" strokeWidth={1.75} />
-                  <div style={{ color: "#fff", fontWeight: 900, fontSize: "48px", lineHeight: 1 }}>{s.num}</div>
-                  <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.88rem", fontWeight: 500, letterSpacing: "0.01em" }}>{s.label}</div>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        </Inner>
-      </section>
-
-      {/* ── KIDS · ECO · PET SPOTLIGHTS ───────────────────────────── */}
-      <section style={{ background: "#ffffff", padding: "96px 0" }}>
-        <Inner>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 56,
-              alignItems: "center",
-            }}
-          >
-            <div style={{ order: 1 }}>
-              <SectionLabel color="#4CAF50">For kids</SectionLabel>
-              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
-                Typing that feels like play
-              </h2>
-              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
-                Colorful lessons, gentle pacing, and rewards that keep young learners motivated—without losing the rigor they need to build real skills.
-              </p>
-            </div>
-            <div
-              style={{
-                order: 2,
-                position: "relative",
-                borderRadius: 24,
-                overflow: "hidden",
-                minHeight: 280,
-                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-              }}
-            >
-              <Image
-                src="/images/homepage/homepage-kids.jpg"
-                alt="Children learning to type with My Green Keys"
-                fill
-                sizes="(max-width: 900px) 100vw, 480px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-          </div>
-        </Inner>
-      </section>
-
-      <section style={{ background: "#f5f7fa", padding: "96px 0" }}>
-        <Inner>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 56,
-              alignItems: "center",
-            }}
-          >
-            <div
-              style={{
-                order: 2,
-                position: "relative",
-                borderRadius: 24,
-                overflow: "hidden",
-                minHeight: 280,
-                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-              }}
-              className="eco-spotlight-visual"
-            >
-              <Image
-                src="/images/homepage/homepage-eco.jpg"
-                alt="Eco and sustainability themed learning"
-                fill
-                sizes="(max-width: 900px) 100vw, 480px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-            <div style={{ order: 1 }} className="eco-spotlight-copy">
-              <SectionLabel color="#2196F3">Planet care</SectionLabel>
-              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
-                Every keystroke supports the Earth
-              </h2>
-              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
-                Passages weave in climate, recycling, and nature so kids practice typing while building habits that help the planet.
-              </p>
-            </div>
-          </div>
-          <style>{`
-            @media (min-width: 900px) {
-              .eco-spotlight-visual { order: 1 !important; }
-              .eco-spotlight-copy { order: 2 !important; }
-            }
-          `}</style>
-        </Inner>
-      </section>
-
-      <section style={{ background: "#ffffff", padding: "96px 0" }}>
-        <Inner>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 56,
-              alignItems: "center",
-            }}
-          >
-            <div style={{ order: 1 }}>
-              <SectionLabel color="#E91E63">Friendly companions</SectionLabel>
-              <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.2, margin: "12px 0 14px" }}>
-                Meet your eco adventure pals
-              </h2>
-              <p style={{ fontSize: "0.98rem", color: "#6b7280", lineHeight: 1.75, margin: 0, maxWidth: 520 }}>
-                Cheerful characters and pet friends celebrate wins, nudge learners forward, and make practice feel warm—not like homework.
-              </p>
-            </div>
-            <div
-              style={{
-                order: 2,
-                position: "relative",
-                borderRadius: 24,
-                overflow: "hidden",
-                minHeight: 280,
-                boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-              }}
-            >
-              <Image
-                src="/images/homepage/homepage-pet.jpg"
-                alt="Cute pet companion in My Green Keys"
-                fill
-                sizes="(max-width: 900px) 100vw, 480px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-          </div>
-        </Inner>
-      </section>
-
-      {/* ── FEATURES ────────────────────────────────────────────────── */}
-      <section id="features" style={{ background: "#ffffff", padding: "96px 0" }}>
-        <Inner>
-          <SectionHead
-            label="Why My Green Keys"
-            title="Everything a Young Typist Needs"
-            sub="Designed by educators. Loved by kids. Trusted by parents and schools."
-          />
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 24 }}>
-            {([
-              { Icon: ZapIcon,      color: "#4CAF50", bg: "#e8f5e9", title: "Adaptive Typing Lessons",  desc: "Lessons that match each child's pace — from home row basics to full sentences, building confidence every step." },
-              { Icon: GlobeIcon,    color: "#2196F3", bg: "#e3f2fd", title: "Planet Sustainability",     desc: "Typed passages teach kids about climate, recycling, and how small actions can help protect our planet." },
-              { Icon: HeartIcon,    color: "#FF9800", bg: "#fff3e0", title: "Kids Health Tips",          desc: "Fun facts on nutrition, sleep, exercise, and screen balance woven naturally into every lesson." },
-              { Icon: SparkleIcon,  color: "#9C27B0", bg: "#f3e5f5", title: "Manners & Kindness",       desc: "Lessons on digital etiquette, empathy, and real-world manners that go far beyond the keyboard." },
-              { Icon: TrophyIcon,   color: "#F59E0B", bg: "#fffbeb", title: "Badges & Rewards",         desc: "Kids earn planet-themed badges and printable certificates that keep motivation high week after week." },
-              { Icon: BarChartIcon, color: "#009688", bg: "#e0f2f1", title: "Progress Dashboard",       desc: "Parents and teachers get a real-time view of speed, accuracy, and lesson streaks — all in one place." },
-            ] as { Icon: typeof ZapIcon; color: string; bg: string; title: string; desc: string }[]).map((f) => (
-              <div key={f.title} className="feature-card">
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    background: f.bg,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 22,
-                  }}
-                >
-                  <f.Icon size={24} color={f.color} strokeWidth={2} />
-                </div>
-                <h3 style={{ fontWeight: 700, fontSize: "1.05rem", color: "#2c3e50", marginBottom: 10 }}>{f.title}</h3>
-                <p style={{ fontSize: "0.9rem", color: "#6b7280", lineHeight: 1.65, fontWeight: 400 }}>{f.desc}</p>
+          <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
+            Join thousands of families already learning
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 20 }}>
+            {[
+              { bg: "#E8F5E9", t: "SM" },
+              { bg: "#E3F2FD", t: "AK" },
+              { bg: "#FFF3E0", t: "FK" },
+              { bg: "#F3E5F5", t: "ZH" },
+              { bg: "#E0F2F1", t: "OR" },
+            ].map((a) => (
+              <div
+                key={a.t}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: a.bg,
+                  color: DARK,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 14,
+                  border: "3px solid #fff",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                }}
+              >
+                {a.t}
               </div>
             ))}
+            <span style={{ fontWeight: 800, color: "#64748b", fontSize: "1rem" }}>+9,847 families</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 24, marginTop: 28 }}>
+            <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#F59E0B" }}>★★★★★</span>
+            <span style={{ fontWeight: 700, color: DARK }}>4.9/5 from 2,000+ reviews</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16, marginTop: 24 }}>
+            {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
+              <span
+                key={b}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: 50,
+                  background: BG,
+                  fontSize: "0.8rem",
+                  fontWeight: 800,
+                  color: "#475569",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                {b}
+              </span>
+            ))}
           </div>
         </Inner>
       </section>
 
-      {/* ── MODULES ─────────────────────────────────────────────────── */}
-      <section id="modules" style={{ background: "#fff", padding: "96px 0" }}>
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" style={{ background: "#F8F9FA", padding: "88px 0" }}>
         <Inner>
-          <SectionHead
-            label="4 Core Modules"
-            title="One Platform. Four Superpowers."
-            sub="Each module is a complete learning journey on its own."
-          />
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(500px,1fr))", gap: 24 }}>
-            {([
-              {
-                Icon: KeyboardIcon, borderColor: "#4CAF50", iconBg: "#e8f5e9", iconColor: "#4CAF50",
-                num: "01", title: "Keyboard Typing",
-                desc: "From proper posture to blazing speed — a full typing curriculum built for young hands.",
-                items: ["Finger placement & posture", "Speed & accuracy drills", "Timed typing tests", "Printable certificate"],
-              },
-              {
-                Icon: GlobeIcon, borderColor: "#2196F3", iconBg: "#e3f2fd", iconColor: "#2196F3",
-                num: "02", title: "Planet Sustainability",
-                desc: "Every passage is a lesson on protecting the planet — recycling, energy, and nature.",
-                items: ["Climate change basics", "Recycling & composting", "Renewable energy", "Eco-friendly daily habits"],
-              },
-              {
-                Icon: HeartIcon, borderColor: "#FF9800", iconBg: "#fff3e0", iconColor: "#FF9800",
-                num: "03", title: "Kids Health Tips",
-                desc: "Kids type their way to healthier habits with facts about food, rest, and movement.",
-                items: ["Nutrition & hydration", "Sleep & rest habits", "Exercise & movement", "Screen-time balance"],
-              },
-              {
-                Icon: SparkleIcon, borderColor: "#E91E63", iconBg: "#fce4ec", iconColor: "#E91E63",
-                num: "04", title: "Manners & Kindness",
-                desc: "Build character alongside keyboarding with lessons on empathy, etiquette, and respect.",
-                items: ["Online & offline etiquette", "Real-world manners", "Empathy & kindness", "Resolving conflict calmly"],
-              },
-            ] as {
-              Icon: typeof KeyboardIcon; borderColor: string; iconBg: string; iconColor: string;
-              num: string; title: string; desc: string; items: string[];
-            }[]).map((m) => (
-              <div key={m.num} className="module-card" style={{ borderLeft: `4px solid ${m.borderColor}` }}>
-                <div style={{ padding: "32px 32px 28px 28px" }}>
-                  {/* Header */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: m.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <m.Icon size={20} color={m.iconColor} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: m.borderColor, letterSpacing: "0.1em", textTransform: "uppercase" }}>Module {m.num}</div>
-                      <div style={{ fontWeight: 800, fontSize: "1.15rem", color: "#2c3e50" }}>{m.title}</div>
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize: "0.9rem", color: "#6b7280", lineHeight: 1.65, marginBottom: 20 }}>{m.desc}</p>
-
-                  {/* Items */}
-                  <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                    {m.items.map((item) => (
-                      <li key={item} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ width: 20, height: 20, borderRadius: "50%", background: m.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <CheckIcon size={11} color={m.borderColor} strokeWidth={3} />
-                        </span>
-                        <span style={{ fontSize: "0.875rem", color: "#374151", fontWeight: 500 }}>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Link */}
-                  <a
-                    href="#"
+          <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 48 }}>
+            Learning that actually works
+          </h2>
+          <div className="relative">
+            <div
+              className="hidden lg:block"
+              style={{
+                position: "absolute",
+                top: 72,
+                left: "12%",
+                right: "12%",
+                height: 3,
+                background: `linear-gradient(90deg, ${PRIMARY}33, ${PRIMARY})`,
+                borderRadius: 2,
+                zIndex: 0,
+              }}
+              aria-hidden
+            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: 28,
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              {[
+                { n: "1", emoji: "✨", title: "Sign Up Free", desc: "Create account in 60 seconds" },
+                { n: "2", emoji: "⌨️", title: "Start Typing", desc: "100 lessons from beginner to expert" },
+                { n: "3", emoji: "🌍", title: "Help the Planet", desc: "Earn eco points, plant trees" },
+              ].map((s) => (
+                <div
+                  key={s.n}
+                  className="mgk-card-ds"
+                  style={{ padding: "32px 28px", textAlign: "center" }}
+                >
+                  <div
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      color: m.borderColor, fontWeight: 700, fontSize: "0.875rem",
-                      textDecoration: "none",
+                      width: 44,
+                      height: 44,
+                      borderRadius: "50%",
+                      background: PRIMARY,
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 900,
+                      margin: "0 auto 16px",
                     }}
                   >
-                    Explore Module <ArrowRightIcon size={14} color={m.borderColor} />
-                  </a>
+                    {s.n}
+                  </div>
+                  <div style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }} aria-hidden>
+                    {s.emoji}
+                  </div>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 900, color: DARK, marginBottom: 10 }}>{s.title}</h3>
+                  <p style={{ color: "#64748b", fontWeight: 600, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </Inner>
+      </section>
+
+      {/* FEATURES */}
+      <section id="features" style={{ background: "#fff", padding: "88px 0" }}>
+        <Inner>
+          <h2
+            style={{
+              textAlign: "center",
+              fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
+              fontWeight: 900,
+              color: DARK,
+              maxWidth: 720,
+              margin: "0 auto 56px",
+              lineHeight: 1.2,
+            }}
+          >
+            Everything your child needs to become a typing champion
+          </h2>
+
+          {[
+            {
+              badge: "Engaging Lessons",
+              title: "100 lessons designed by education experts",
+              desc: "Progressive curriculum from home row to advanced typing. Every lesson includes eco-friendly sentences that teach kids about the planet.",
+              items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback system", "4 learning modules"],
+              img: "/images/homepage/homepage-kids.jpg",
+              alt: "Children learning to type",
+              imageLeft: true,
+            },
+            {
+              badge: "Eco Rewards",
+              title: "The world's first typing platform with real eco rewards",
+              desc: "Kids upload photos of real eco actions - planting trees, watering plants, helping nature. Parents approve and kids earn eco points.",
+              items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real world impact tracking"],
+              img: "/images/homepage/homepage-eco.jpg",
+              alt: "Eco themed learning",
+              imageLeft: false,
+            },
+            {
+              badge: "Virtual Pet",
+              title: "Meet your typing companion",
+              desc: "Choose a Panda or Turtle as your pet. Type every day to keep them happy and healthy. Miss a day and they get sad - kids love coming back!",
+              items: ["Panda or Turtle companion", "Daily health system", "Emotional engagement", "Drives daily retention"],
+              img: "/images/homepage/homepage-pet.jpg",
+              alt: "Virtual pet companion",
+              imageLeft: true,
+            },
+          ].map((block) => (
+            <div
+              key={block.title}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 40,
+                alignItems: "center",
+                marginBottom: 72,
+              }}
+            >
+              <div style={{ order: block.imageLeft ? 1 : 2 }}>
+                <div
+                  className="mgk-card-ds"
+                  style={{ position: "relative", minHeight: 320, overflow: "hidden", padding: 0 }}
+                >
+                  <Image src={block.img} alt={block.alt} fill sizes="(max-width: 900px) 100vw, 520px" style={{ objectFit: "cover" }} />
+                </div>
+              </div>
+              <div style={{ order: block.imageLeft ? 2 : 1 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 14px",
+                    borderRadius: 50,
+                    background: `${PRIMARY}18`,
+                    color: "#15803d",
+                    fontSize: "0.75rem",
+                    fontWeight: 900,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    marginBottom: 14,
+                  }}
+                >
+                  {block.badge}
+                </span>
+                <h3 style={{ fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)", fontWeight: 900, color: DARK, lineHeight: 1.2, marginBottom: 16 }}>
+                  {block.title}
+                </h3>
+                <p style={{ fontSize: "1rem", color: "#64748b", fontWeight: 600, lineHeight: 1.75, marginBottom: 22 }}>{block.desc}</p>
+                <FeatureList items={block.items} color={PRIMARY} />
+              </div>
+            </div>
+          ))}
+        </Inner>
+      </section>
+
+      {/* GAMES */}
+      <section id="games-preview" style={{ background: DARK, padding: "88px 0" }}>
+        <Inner>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
+            Learning through play
+          </h2>
+          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 40, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+            5 eco-themed games that make typing practice addictive
+          </p>
+          <div
+            className="flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible"
+            style={{ scrollSnapType: "x mandatory" }}
+          >
+            {PREVIEW_GAMES.map((g) => (
+              <Link
+                key={g.name}
+                href="/games"
+                className="mgk-card-ds shrink-0"
+                style={{
+                  width: "min(280px, 85vw)",
+                  scrollSnapAlign: "start",
+                  overflow: "hidden",
+                  padding: 0,
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <div style={{ position: "relative", height: 160 }}>
+                  <Image src={g.img} alt="" fill sizes="280px" style={{ objectFit: "cover" }} />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)",
+                    }}
+                  />
+                </div>
+                <div style={{ padding: "18px 20px" }}>
+                  <p style={{ fontWeight: 900, color: DARK, margin: 0, fontSize: "1.05rem" }}>{g.name}</p>
+                  <p style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>{g.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 36 }}>
+            <Link
+              href="/games"
+              className="btn-ghost"
+              style={{ display: "inline-flex", alignItems: "center", height: 52, padding: "0 32px" }}
+            >
+              Explore All Games
+            </Link>
+          </div>
+        </Inner>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section style={{ background: "#fff", padding: "88px 0" }}>
+        <Inner>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3.5vw, 2.25rem)", fontWeight: 900, color: DARK, marginBottom: 40 }}>
+            Parents and teachers love My Green Keys
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+            {[
+              {
+                quote: "My daughter types 45 WPM after just 3 months! She loves her panda and checks on it every day.",
+                who: "Sarah M., Mother of 2",
+              },
+              {
+                quote: "I use it with my entire class. The eco lessons spark amazing conversations about the environment.",
+                who: "Mr. Ahmed, Grade 4 Teacher",
+              },
+              {
+                quote: "Finally a typing app that teaches values too. My son learned about recycling while improving his typing!",
+                who: "Fatima K., Mother",
+              },
+            ].map((t) => (
+              <div key={t.who} className="mgk-card-ds" style={{ padding: "28px 24px" }}>
+                <p style={{ fontSize: "0.95rem", color: "#334155", fontWeight: 600, lineHeight: 1.7, margin: "0 0 16px" }}>&ldquo;{t.quote}&rdquo;</p>
+                <p style={{ fontWeight: 900, color: DARK, margin: 0 }}>{t.who}</p>
+                <p style={{ margin: "10px 0 0", color: "#F59E0B", fontSize: "1rem" }}>★★★★★</p>
               </div>
             ))}
           </div>
         </Inner>
       </section>
 
-      {/* ── SCHOOLS ─────────────────────────────────────────────────── */}
-      <section id="schools" style={{ background: "#f5f7fa", padding: "96px 0" }}>
+      {/* PRICING PREVIEW */}
+      <section style={{ background: BG, padding: "88px 0" }}>
         <Inner>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }} className="lg:grid-cols-2 grid-cols-1">
-            {/* Left */}
-            <div>
-              <SectionLabel color="#2196F3">For Schools &amp; Districts</SectionLabel>
-              <h2 style={{ fontSize: "clamp(1.7rem,3.5vw,2.6rem)", fontWeight: 800, color: "#2c3e50", lineHeight: 1.18, marginBottom: 16 }}>
-                Give Every Student a{" "}
-                <span style={{ color: "#4CAF50" }}>Green Advantage</span>
-              </h2>
-              <p style={{ fontSize: "0.97rem", color: "#6b7280", lineHeight: 1.75, marginBottom: 36 }}>
-                My Green Keys integrates seamlessly into your school's digital curriculum.
-                Bulk licences, teacher dashboards, and progress reports make it effortless
-                to track every student's journey.
-              </p>
-
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16, marginBottom: 40 }}>
-                {([
-                  { Icon: BuildingIcon, text: "Bulk classroom & district licencing" },
-                  { Icon: BarChartIcon, text: "Teacher admin dashboard & reports" },
-                  { Icon: KeyboardIcon, text: "LMS integration (Google Classroom, Canvas)" },
-                  { Icon: BookIcon,     text: "Curriculum-aligned lesson packs" },
-                  { Icon: UsersIcon,    text: "Dedicated school success manager" },
-                ] as { Icon: typeof UsersIcon; text: string }[]).map((row) => (
-                  <li key={row.text} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 10, background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <row.Icon size={18} color="#4CAF50" strokeWidth={2} />
-                    </span>
-                    <span style={{ fontSize: "0.93rem", color: "#374151", fontWeight: 500 }}>{row.text}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}>
-                <a href="#" className="btn-primary" style={{ fontSize: "0.95rem", padding: "0.85rem 2rem" }}>Request a Demo</a>
-                <a href="#" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#2196F3", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
-                  View Pricing <ArrowRightIcon size={14} color="#2196F3" />
-                </a>
-              </div>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 40 }}>
+            Simple pricing for every family
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, maxWidth: 800, margin: "0 auto" }}>
+            <div className="mgk-card-ds" style={{ padding: 32 }}>
+              <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
+              <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
+              <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
+              <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                Start free
+              </Link>
             </div>
-
-            {/* Right card */}
-            <div style={{ background: "linear-gradient(145deg,#1565C0,#2196F3)", borderRadius: 24, padding: 48, color: "#fff", textAlign: "center" }}>
-              <div style={{ width: 68, height: 68, borderRadius: 18, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                <BuildingIcon size={34} color="#fff" strokeWidth={1.5} />
-              </div>
-              <h3 style={{ fontWeight: 800, fontSize: "1.5rem", marginBottom: 8 }}>School Plan</h3>
-              <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.9rem", marginBottom: 32, lineHeight: 1.6 }}>
-                Everything your school needs for a world-class typing programme
+            <div className="mgk-card-ds" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
+              <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
+              <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 32 }}>
-                {([
-                  { Icon: UsersIcon,    label: "Unlimited Students" },
-                  { Icon: BookIcon,     label: "All 4 Modules" },
-                  { Icon: BarChartIcon, label: "Admin Dashboard" },
-                  { Icon: ZapIcon,      label: "Priority Support" },
-                ] as { Icon: typeof UsersIcon; label: string }[]).map((item) => (
-                  <div key={item.label} style={{ background: "rgba(255,255,255,0.12)", borderRadius: 12, padding: "16px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <item.Icon size={22} color="rgba(255,255,255,0.85)" strokeWidth={1.75} />
-                    <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#fff" }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-              <a href="#" className="btn-ghost" style={{ width: "100%", textAlign: "center", display: "block", padding: "0.85rem" }}>Get School Pricing</a>
+              <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
+              <Link href="/pricing" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                View Family Plan
+              </Link>
             </div>
           </div>
+          <p style={{ textAlign: "center", marginTop: 28 }}>
+            <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
+              See all plans →
+            </Link>
+          </p>
         </Inner>
       </section>
 
-      {/* ── CTA / SUBSCRIBE ─────────────────────────────────────────── */}
-      <section style={{ background: "linear-gradient(135deg,#2d6a4f 0%,#4CAF50 100%)", padding: "96px 0", textAlign: "center" }}>
+      {/* FINAL CTA */}
+      <section
+        style={{
+          background: "linear-gradient(135deg, #1B5E20 0%, #2ECC71 55%, #58D68D 100%)",
+          padding: "88px 0",
+          textAlign: "center",
+        }}
+      >
         <Inner>
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <div style={{ width: 64, height: 64, borderRadius: 18, background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-              <LeafIcon size={30} color="#fff" strokeWidth={2} />
-            </div>
-            <h2 style={{ fontSize: "clamp(1.75rem,4vw,2.75rem)", fontWeight: 900, color: "#fff", lineHeight: 1.18, marginBottom: 14 }}>
-              Ready to Start Your Child's Typing Journey?
+          <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <h2 style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 28 }}>
+              Ready to start your child&apos;s typing journey?
             </h2>
-            <p style={{ color: "rgba(255,255,255,0.82)", fontSize: "1rem", lineHeight: 1.72, marginBottom: 40 }}>
-              Join 10,000+ kids already learning to type and love the planet.
-              7-day free trial. No credit card required.
-            </p>
-
             <form
-              style={{ display: "flex", gap: 12, maxWidth: 460, margin: "0 auto 16px" }}
+              style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 480, margin: "0 auto" }}
               onSubmit={(e) => e.preventDefault()}
             >
-              <input
-                type="email"
-                placeholder="Your email address"
-                style={{
-                  flex: 1,
-                  padding: "14px 20px",
-                  borderRadius: 50,
-                  border: "2px solid transparent",
-                  background: "rgba(255,255,255,0.95)",
-                  fontSize: "0.9rem",
-                  fontFamily: "inherit",
-                  fontWeight: 500,
-                  color: "#2c3e50",
-                  outline: "none",
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  background: "#FFEB3B",
-                  color: "#2c3e50",
-                  fontFamily: "inherit",
-                  fontWeight: 800,
-                  fontSize: "0.9rem",
-                  padding: "14px 28px",
-                  borderRadius: 50,
-                  border: "none",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  transition: "transform 0.15s, box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-              >
-                Start Free
-              </button>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  style={{
+                    flex: "1 1 200px",
+                    minHeight: 52,
+                    padding: "0 22px",
+                    borderRadius: 50,
+                    border: "2px solid transparent",
+                    fontWeight: 600,
+                    color: DARK,
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    minHeight: 52,
+                    padding: "0 28px",
+                    borderRadius: 50,
+                    border: "none",
+                    background: "#fff",
+                    color: DARK,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    transition: "transform 0.2s ease",
+                  }}
+                  className="hover:-translate-y-0.5 active:scale-[0.97]"
+                >
+                  Start Free
+                </button>
+              </div>
             </form>
-
-            <p style={{ color: "rgba(255,255,255,0.52)", fontSize: "0.8rem" }}>No spam. Unsubscribe anytime.</p>
+            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.85rem", fontWeight: 600, marginTop: 16 }}>No spam. Unsubscribe anytime.</p>
           </div>
         </Inner>
       </section>
-
     </>
   );
 }

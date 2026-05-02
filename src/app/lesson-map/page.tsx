@@ -24,12 +24,12 @@ type CertificateRow = {
 };
 
 const PHASES = [
-  { id: 1, icon: "🟢", title: "Phase 1: Home Row", range: [1, 20] as const },
-  { id: 2, icon: "🔵", title: "Phase 2: Top Row", range: [21, 45] as const },
-  { id: 3, icon: "🟠", title: "Phase 3: Bottom Row", range: [46, 65] as const },
-  { id: 4, icon: "🟣", title: "Phase 4: Numbers", range: [66, 70] as const },
-  { id: 5, icon: "🩷", title: "Phase 5: Capital Letters", range: [71, 85] as const },
-  { id: 6, icon: "🔴", title: "Phase 6: Speed Drills", range: [86, 100] as const },
+  { id: 1, icon: "🟢", title: "Phase 1: Home Row", desc: "Build muscle memory on ASDF JKL;", range: [1, 20] as const },
+  { id: 2, icon: "🔵", title: "Phase 2: Top Row", desc: "Reach up to Q through P with confidence", range: [21, 45] as const },
+  { id: 3, icon: "🟠", title: "Phase 3: Bottom Row", desc: "Complete the alphabet with bottom keys", range: [46, 65] as const },
+  { id: 4, icon: "🟣", title: "Phase 4: Numbers", desc: "Type digits and symbols smoothly", range: [66, 70] as const },
+  { id: 5, icon: "🩷", title: "Phase 5: Capital Letters", desc: "Shift skills and uppercase fluency", range: [71, 85] as const },
+  { id: 6, icon: "🔴", title: "Phase 6: Speed Drills", desc: "Push WPM and accuracy to champion level", range: [86, 100] as const },
 ];
 
 function clamp(n: number, min: number, max: number) {
@@ -410,7 +410,7 @@ export default function LessonMapPage() {
                       style={{
                         position: "relative",
                         width: "100%",
-                        height: 120,
+                        height: 140,
                         borderRadius: 16,
                         overflow: "hidden",
                         margin: "10px 0 12px",
@@ -441,22 +441,24 @@ export default function LessonMapPage() {
                           position: "absolute",
                           inset: 0,
                           display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          padding: "0 18px",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          gap: 6,
+                          padding: "0 20px",
                           color: "#fff",
-                          fontWeight: 900,
-                          fontSize: 18,
                           textShadow: "0 2px 14px rgba(0,0,0,0.45)",
                         }}
                       >
-                        <span style={{ fontSize: 22 }} aria-hidden>
-                          {p.icon}
-                        </span>
-                        <span>{p.title}</span>
-                        <span style={{ opacity: 0.88, fontSize: 13, fontWeight: 800 }}>
-                          — Lessons {start}-{end}
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 22 }} aria-hidden>
+                            {p.icon}
+                          </span>
+                          <span style={{ fontWeight: 900, fontSize: 18 }}>{p.title}</span>
+                          <span style={{ opacity: 0.88, fontSize: 13, fontWeight: 800 }}>
+                            — Lessons {start}-{end}
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, opacity: 0.92, maxWidth: 720 }}>{p.desc}</p>
                       </div>
                     </div>
 

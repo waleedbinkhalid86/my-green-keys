@@ -792,14 +792,16 @@ export default function GamesHubPage() {
                     className={`games-hub-game-card games-hub-card-animate`}
                     style={{
                       position: "relative",
-                      height: 380,
+                      minHeight: 420,
                       borderRadius: 24,
                       padding: 0,
                       boxSizing: "border-box",
-                      background: g.gradient,
-                      boxShadow: "0 12px 32px rgba(0,0,0,0.15)",
-                      border: dimmed && mode !== "paid_lock" ? "3px solid rgba(255,255,255,0.35)" : "3px solid rgba(255,255,255,0.5)",
-                      color: "#fff",
+                      background: "#fff",
+                      boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                      border:
+                        dimmed && mode !== "paid_lock"
+                          ? "2px solid rgba(26,47,35,0.12)"
+                          : "2px solid rgba(46,204,113,0.35)",
                       display: "flex",
                       flexDirection: "column",
                       opacity: mode === "paid_lock" ? 1 : dimmed ? 0.72 : 1,
@@ -837,8 +839,8 @@ export default function GamesHubPage() {
                     <div
                       style={{
                         position: "relative",
-                        flex: "0 0 60%",
-                        minHeight: 0,
+                        flex: "0 0 65%",
+                        minHeight: 200,
                         width: "100%",
                       }}
                     >
@@ -847,7 +849,7 @@ export default function GamesHubPage() {
                         alt={`${g.name} game artwork`}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        style={{ objectFit: "cover" }}
+                        style={{ objectFit: "cover", borderRadius: "24px 24px 0 0" }}
                         priority={i < 3}
                       />
                       <div
@@ -857,73 +859,55 @@ export default function GamesHubPage() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          height: "70%",
+                          height: "55%",
                           background:
-                            "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 100%)",
+                            "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%)",
                           pointerEvents: "none",
                           zIndex: 1,
+                          borderRadius: "24px 24px 0 0",
                         }}
                       />
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          padding: "14px 16px 16px",
-                          zIndex: 2,
-                          textAlign: "center",
-                        }}
-                      >
-                        <h3
-                          style={{
-                            color: "#ffffff",
-                            fontSize: 22,
-                            fontWeight: 800,
-                            margin: "0 0 6px",
-                            lineHeight: 1.2,
-                            textShadow: "0 2px 12px rgba(0,0,0,0.55)",
-                          }}
-                        >
-                          <span aria-hidden style={{ marginRight: 8 }}>
-                            {g.emoji}
-                          </span>
-                          {g.name}
-                        </h3>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontWeight: 700,
-                            fontSize: 12,
-                            lineHeight: 1.45,
-                            color: "#ffffff",
-                            opacity: 0.98,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical" as const,
-                            overflow: "hidden",
-                            textShadow: "0 1px 8px rgba(0,0,0,0.5)",
-                          }}
-                        >
-                          {g.description}
-                        </p>
-                      </div>
                     </div>
 
                     <div
                       style={{
                         position: "relative",
                         zIndex: 1,
-                        flex: "1 1 40%",
+                        flex: "1 1 35%",
                         minHeight: 0,
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "flex-end",
-                        padding: "12px 16px 16px",
+                        padding: "16px 18px 18px",
                         boxSizing: "border-box",
-                        background: g.gradient,
+                        background: "#fff",
                       }}
                     >
+                    <h3
+                      style={{
+                        color: "#1A2F23",
+                        fontSize: 18,
+                        fontWeight: 800,
+                        margin: "0 0 8px",
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      <span aria-hidden style={{ marginRight: 8 }}>
+                        {g.emoji}
+                      </span>
+                      {g.name}
+                    </h3>
+                    <p
+                      style={{
+                        margin: "0 0 12px",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        lineHeight: 1.5,
+                        color: "#64748b",
+                      }}
+                    >
+                      {g.description}
+                    </p>
                     {stars != null && unlocked && mode === "play" && (
                       <div style={{ textAlign: "center", marginBottom: 6, fontSize: 16, letterSpacing: 3 }}>
                         {[0, 1, 2].map((si) => (
@@ -989,7 +973,7 @@ export default function GamesHubPage() {
                               fontWeight: 800,
                               fontSize: 12,
                               textAlign: "center",
-                              color: "#ffffff",
+                              color: "#1A2F23",
                               lineHeight: 1.3,
                             }}
                           >
@@ -1001,8 +985,7 @@ export default function GamesHubPage() {
                               fontWeight: 700,
                               fontSize: 11,
                               textAlign: "center",
-                              color: "#ffffff",
-                              opacity: 0.92,
+                              color: "#64748b",
                               lineHeight: 1.3,
                             }}
                           >
@@ -1018,7 +1001,7 @@ export default function GamesHubPage() {
                               fontWeight: 800,
                               fontSize: 13,
                               textAlign: "center",
-                              color: "#ffffff",
+                              color: "#1A2F23",
                               lineHeight: 1.25,
                             }}
                           >
@@ -1056,10 +1039,10 @@ export default function GamesHubPage() {
                             height: 52,
                             minHeight: 52,
                             borderRadius: 999,
-                            background: "rgba(255,255,255,0.25)",
+                            background: "#F1F5F9",
                             fontWeight: 800,
                             fontSize: 15,
-                            color: "#ffffff",
+                            color: "#64748b",
                           }}
                         >
                           Coming soon!

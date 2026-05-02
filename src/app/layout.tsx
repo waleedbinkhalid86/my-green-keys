@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Nunito, Poppins } from "next/font/google";
 import "./globals.css";
-import SiteFooter from "@/components/SiteFooter";
+import ConditionalSiteFooter from "@/components/ConditionalSiteFooter";
+import { Providers } from "@/components/Providers";
 import { cn } from "@/lib/utils";
 
 const nunito = Nunito({
@@ -30,8 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("h-full", nunito.variable, poppins.variable)}>
       <body className="min-h-full flex flex-col font-sans antialiased">
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <Providers>
+          <main className="flex-1">{children}</main>
+          <ConditionalSiteFooter />
+        </Providers>
       </body>
     </html>
   );

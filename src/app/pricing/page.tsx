@@ -147,10 +147,10 @@ const SCHOOL_FEATURES = [
 ];
 
 const TRUST_SIGNALS = [
-  { icon: "🔒", label: "COPPA Compliant" },
-  { icon: "🛡️", label: "GDPR Certified" },
-  { icon: "⭐", label: "4.9/5 Rating" },
-  { icon: "🌍", label: "10,000+ Kids" },
+  { icon: "🔒", label: "COPPA" },
+  { icon: "🛡️", label: "GDPR" },
+  { icon: "🔐", label: "SSL" },
+  { icon: "🚫", label: "No Ads" },
 ];
 
 function PricingNav() {
@@ -374,8 +374,8 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing cards */}
-      <section className="px-4 pb-16 sm:px-6">
-        <div className="mx-auto max-w-[1100px]">
+      <section className="overflow-x-visible px-4 pb-16 sm:px-6">
+        <div className="mx-auto max-w-[1100px] px-0 sm:px-1">
           {checkoutError ? (
             <div
               className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
@@ -389,7 +389,7 @@ export default function PricingPage() {
             {/* Free — desktop first column */}
             <div
               className={cn(
-                "order-2 flex flex-col rounded-[24px] border-2 border-[#E5E7EB] bg-white p-10 shadow-sm transition-shadow duration-300 hover:shadow-lg lg:order-1"
+                "order-2 flex flex-col rounded-[24px] border-2 border-[#E5E7EB] bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg sm:p-10 lg:order-1"
               )}
             >
               <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Free Starter</p>
@@ -497,7 +497,10 @@ export default function PricingPage() {
               </button>
               <a
                 href="mailto:sales@mygreenkeys.com?subject=School%20plan%20inquiry"
-                className="mt-4 text-center text-base font-semibold text-[#1B5E20] underline-offset-4 hover:underline"
+                className={cn(
+                  pill,
+                  "mt-4 border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
+                )}
               >
                 Talk to Sales
               </a>
@@ -510,6 +513,13 @@ export default function PricingPage() {
                 Growth package (200 students)
               </button>
             </div>
+          </div>
+
+          <div className="mx-auto mt-14 max-w-3xl rounded-[20px] border-2 border-[#E5E7EB] bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+            <p className="text-lg font-extrabold leading-relaxed text-[#1A2F23] sm:text-xl">
+              &ldquo;Switched from TypingClub. My kids are 3x more engaged!&rdquo;
+            </p>
+            <p className="mt-4 text-base font-bold text-[#2ECC71]">— Ahmed Family, Karachi</p>
           </div>
         </div>
       </section>
@@ -627,12 +637,15 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-white px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="mb-10 text-center text-3xl font-extrabold text-[#1A2F23]">Frequently asked questions</h2>
+      <section className="bg-[#F8F9FA] px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-4 text-center text-4xl font-black tracking-tight text-[#1A2F23] sm:text-[2.75rem]">
+            Frequently asked questions
+          </h2>
+          <p className="mb-12 text-center text-lg font-semibold text-[#64748b]">Everything you need to know before you subscribe</p>
           <Accordion
             multiple={false}
-            className="pricing-page-faq w-full rounded-[24px] border-2 border-[#E5E7EB] bg-[#FAFAFA] px-2"
+            className="pricing-page-faq w-full rounded-[24px] border-[3px] border-[#1A2F23]/15 bg-white px-3 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
           >
             {FAQ_ITEMS.slice(0, 6).map((faq, idx) => (
               <AccordionItem key={faq.q} value={`item-${idx}`} className="border-[#E5E7EB] px-3">
