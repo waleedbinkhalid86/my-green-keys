@@ -138,23 +138,44 @@ function PricingNav() {
   );
 }
 
-function FeatureRow({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+function FeatureRow({
+  ok,
+  children,
+  variant = "light",
+}: {
+  ok: boolean;
+  children: React.ReactNode;
+  variant?: "light" | "onGradient" | "onDark";
+}) {
+  const muted =
+    variant === "light"
+      ? "text-muted-foreground"
+      : variant === "onGradient"
+        ? "text-white/65"
+        : "text-white/55";
+  const text = ok ? (variant === "light" ? "text-foreground" : "text-white") : muted;
+  const checkClass =
+    variant === "light" ? "text-[#22c55e]" : variant === "onGradient" ? "text-emerald-200" : "text-[#4ade80]";
   return (
-    <div
-      className={cn(
-        "flex items-start gap-2.5 text-sm",
-        ok ? "text-foreground" : "text-muted-foreground"
-      )}
-    >
+    <div className={cn("flex items-start gap-3 text-base leading-snug", text)}>
       {ok ? (
-        <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        <Check className={cn("mt-0.5 size-5 shrink-0 stroke-[2.5]", checkClass)} aria-hidden />
       ) : (
-        <X className="mt-0.5 size-4 shrink-0 text-border" aria-hidden />
+        <X
+          className={cn(
+            "mt-0.5 size-5 shrink-0",
+            variant === "light" ? "text-border" : "text-white/35"
+          )}
+          aria-hidden
+        />
       )}
       <span>{children}</span>
     </div>
   );
 }
+
+const pillCtaClass =
+  "flex h-[52px] w-full items-center justify-center rounded-full text-base font-semibold transition-opacity disabled:opacity-60";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -272,32 +293,32 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen w-full bg-white font-sans">
       <PricingNav />
       <div className="h-[72px]" aria-hidden />
 
-      <section className="border-b border-border/60 bg-white px-6 py-16 text-center md:py-20">
+      <section className="w-full border-b border-[#E5E7EB] bg-white px-4 py-14 text-center sm:px-6 md:py-20">
         <div className="mx-auto max-w-3xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-primary">
+          <p className="mb-4 text-sm font-bold uppercase tracking-widest text-[#22c55e]">
             Simple, transparent pricing
           </p>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-[#111827] md:text-5xl">
             Choose the perfect plan for your child
           </h1>
-          <p className="mt-4 text-base text-muted-foreground md:text-lg">
+          <p className="mt-5 text-lg text-[#6B7280] md:text-xl">
             Start free. Upgrade when you&apos;re ready. Cancel anytime.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Label htmlFor="billing-toggle" className="text-sm font-medium text-muted-foreground">
+            <Label htmlFor="billing-toggle" className="text-base font-medium text-[#6B7280]">
               Monthly
             </Label>
             <Switch id="billing-toggle" checked={isYearly} onCheckedChange={setIsYearly} />
             <div className="flex items-center gap-2">
-              <Label htmlFor="billing-toggle" className="text-sm font-medium text-foreground">
+              <Label htmlFor="billing-toggle" className="text-base font-medium text-[#111827]">
                 Yearly
               </Label>
-              <Badge variant="secondary" className="border-primary/20 bg-primary/10 text-primary">
+              <Badge variant="secondary" className="border-[#22c55e]/25 bg-[#22c55e]/10 text-[#15803d]">
                 Save 20%
               </Badge>
             </div>
@@ -305,122 +326,185 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-6xl">
+      <section className="w-full px-4 py-14 sm:px-6 sm:py-16">
+        <div className="mx-auto w-full max-w-7xl">
           {checkoutError ? (
             <div
-              className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+              className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-base font-medium text-destructive"
               role="alert"
             >
               {checkoutError}
             </div>
           ) : null}
 
-          <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-            <Card className="border-border bg-white shadow-sm">
-              <CardHeader>
-                <Badge variant="outline" className="w-fit font-semibold">
-                  Free
-                </Badge>
-                <CardTitle className="font-heading text-2xl">$0</CardTitle>
-                <CardDescription>Perfect to get started</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-6">
-                <Button
-                  variant="outline"
-                  className="w-full border-primary text-primary hover:bg-primary/10"
-                  disabled={checkoutBusy}
-                  onClick={() => router.push("/signup")}
-                >
-                  Start for Free
-                </Button>
-                <div className="flex flex-col gap-2.5">
-                  <FeatureRow ok>10 typing lessons</FeatureRow>
-                  <FeatureRow ok>Basic keyboard guide</FeatureRow>
-                  <FeatureRow ok>WPM &amp; accuracy tracking</FeatureRow>
-                  <FeatureRow ok>1 eco module preview</FeatureRow>
-                  <FeatureRow ok={false}>Custom lessons</FeatureRow>
-                  <FeatureRow ok={false}>Parent dashboard</FeatureRow>
-                  <FeatureRow ok={false}>Badges &amp; rewards</FeatureRow>
-                  <FeatureRow ok={false}>Eco photo rewards</FeatureRow>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid w-full grid-cols-1 items-stretch gap-8 md:grid-cols-3 md:gap-6">
+            {/* Free */}
+            <div
+              className="flex flex-col rounded-[20px] border border-[#D1D5DB] bg-white p-10 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+            >
+              <h2 className="text-[28px] font-bold leading-tight text-[#111827]">Free</h2>
+              <div className="mt-4 flex flex-wrap items-baseline gap-1">
+                <span className="text-[56px] font-bold leading-none tracking-tight text-[#111827]">$0</span>
+              </div>
+              <p className="mt-2 text-lg text-[#6B7280]">Perfect to get started</p>
+              <button
+                type="button"
+                className={cn(
+                  pillCtaClass,
+                  "mt-8 border-2 border-[#22c55e] bg-white text-[#15803d] hover:bg-[#f0fdf4]"
+                )}
+                disabled={checkoutBusy}
+                onClick={() => router.push("/signup")}
+              >
+                Start for Free
+              </button>
+              <div className="mt-8 flex flex-col gap-3">
+                <FeatureRow ok>10 typing lessons</FeatureRow>
+                <FeatureRow ok>Basic keyboard guide</FeatureRow>
+                <FeatureRow ok>WPM &amp; accuracy tracking</FeatureRow>
+                <FeatureRow ok>1 eco module preview</FeatureRow>
+                <FeatureRow ok={false}>Custom lessons</FeatureRow>
+                <FeatureRow ok={false}>Parent dashboard</FeatureRow>
+                <FeatureRow ok={false}>Badges &amp; rewards</FeatureRow>
+                <FeatureRow ok={false}>Eco photo rewards</FeatureRow>
+              </div>
+            </div>
 
-            <Card className="relative border-2 border-primary bg-white shadow-lg shadow-primary/15 lg:scale-[1.02]">
-              <CardHeader>
-                <Badge className="w-fit bg-primary font-semibold text-primary-foreground">
-                  Most popular
-                </Badge>
-                <CardTitle className="font-heading text-2xl">
+            {/* Family — most prominent */}
+            <div
+              className={cn(
+                "relative flex flex-col rounded-[20px] p-10 pt-14 shadow-[0_20px_50px_rgba(34,197,94,0.35)]",
+                "bg-gradient-to-br from-[#34d399] via-[#22c55e] to-[#15803d]"
+              )}
+            >
+              <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
+                <span className="inline-block whitespace-nowrap rounded-full bg-[#111827] px-5 py-2 text-sm font-bold uppercase tracking-wide text-white shadow-lg">
+                  Most Popular
+                </span>
+              </div>
+              <h2 className="text-[28px] font-bold leading-tight text-white">Family</h2>
+              <div className="mt-4 flex flex-wrap items-baseline gap-2">
+                <span className="text-[56px] font-bold leading-none tracking-tight text-white">
                   ${isYearly ? "7.99" : "9.99"}
-                  <span className="text-base font-normal text-muted-foreground">/month</span>
-                </CardTitle>
-                <CardDescription>Perfect for families</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-6">
-                <Button className="w-full" disabled={checkoutBusy} onClick={() => openCheckout("family")}>
-                  {checkoutBusy ? "Loading…" : "Get Started"}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  7-day free trial, no credit card required
-                </p>
-                <div className="flex flex-col gap-2.5">
-                  <FeatureRow ok>Unlimited typing lessons</FeatureRow>
-                  <FeatureRow ok>All 4 learning modules</FeatureRow>
-                  <FeatureRow ok>Parent dashboard</FeatureRow>
-                  <FeatureRow ok>Custom lesson text by parent</FeatureRow>
-                  <FeatureRow ok>Badges, streaks &amp; rewards</FeatureRow>
-                  <FeatureRow ok>Eco photo upload rewards</FeatureRow>
-                  <FeatureRow ok>Weekly progress reports</FeatureRow>
-                  <FeatureRow ok>Up to 3 children</FeatureRow>
-                  <FeatureRow ok>Pink/Blue personalization</FeatureRow>
-                  <FeatureRow ok={false}>Teacher dashboard</FeatureRow>
-                  <FeatureRow ok={false}>School branding</FeatureRow>
-                </div>
-              </CardContent>
-            </Card>
+                </span>
+                <span className="text-xl font-medium text-white/90">/month</span>
+              </div>
+              <p className="mt-2 text-lg text-white/90">Perfect for families</p>
+              <button
+                type="button"
+                className={cn(pillCtaClass, "mt-8 bg-white text-[#15803d] hover:bg-white/95")}
+                disabled={checkoutBusy}
+                onClick={() => void openCheckout("family")}
+              >
+                {checkoutBusy ? "Loading…" : "Get Started"}
+              </button>
+              <p className="mt-3 text-center text-sm text-white/85">7-day free trial, no credit card required</p>
+              <div className="mt-8 flex flex-col gap-3">
+                <FeatureRow ok variant="onGradient">
+                  Unlimited typing lessons
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  All 4 learning modules
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Parent dashboard
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Custom lesson text by parent
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Badges, streaks &amp; rewards
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Eco photo upload rewards
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Weekly progress reports
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Up to 3 children
+                </FeatureRow>
+                <FeatureRow ok variant="onGradient">
+                  Pink/Blue personalization
+                </FeatureRow>
+                <FeatureRow ok={false} variant="onGradient">
+                  Teacher dashboard
+                </FeatureRow>
+                <FeatureRow ok={false} variant="onGradient">
+                  School branding
+                </FeatureRow>
+              </div>
+            </div>
 
-            <Card className="border-border bg-white shadow-sm">
-              <CardHeader>
-                <Badge variant="outline" className="w-fit font-semibold">
-                  For schools
-                </Badge>
-                <CardTitle className="font-heading text-2xl">
-                  From <span className="text-primary">$299</span>
-                  <span className="text-base font-normal text-muted-foreground">/month</span>
-                </CardTitle>
-                <CardDescription>Perfect for classrooms</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-6">
-                <Button disabled={checkoutBusy} onClick={() => openCheckout("school_starter")}>
-                  {checkoutBusy ? "Loading…" : "Get Started (Starter)"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full border-primary text-primary hover:bg-primary/10"
-                  disabled={checkoutBusy}
-                  onClick={() => openCheckout("school_growth")}
-                >
-                  {checkoutBusy ? "Loading…" : "Get Started (Growth)"}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Available in 100 or 200 student packages
-                </p>
-                <div className="flex flex-col gap-2.5">
-                  <FeatureRow ok>Everything in Family plan</FeatureRow>
-                  <FeatureRow ok>Up to 200 students</FeatureRow>
-                  <FeatureRow ok>Teacher dashboard</FeatureRow>
-                  <FeatureRow ok>Custom lessons by teacher</FeatureRow>
-                  <FeatureRow ok>Class leaderboard</FeatureRow>
-                  <FeatureRow ok>School logo &amp; branding</FeatureRow>
-                  <FeatureRow ok>Lesson library</FeatureRow>
-                  <FeatureRow ok>Admin dashboard access</FeatureRow>
-                  <FeatureRow ok>Priority support</FeatureRow>
-                  <FeatureRow ok>Promo code system</FeatureRow>
-                </div>
-              </CardContent>
-            </Card>
+            {/* School */}
+            <div
+              className="flex flex-col rounded-[20px] bg-[#1a2f23] p-10 shadow-[0_12px_40px_rgba(0,0,0,0.2)]"
+            >
+              <h2 className="text-[28px] font-bold leading-tight text-white">School</h2>
+              <div className="mt-4 flex flex-wrap items-baseline gap-2">
+                <span className="text-xl font-semibold text-white/85">From</span>
+                <span className="text-[56px] font-bold leading-none tracking-tight text-white">$299</span>
+                <span className="text-xl font-medium text-white/80">/month</span>
+              </div>
+              <p className="mt-2 text-lg text-white/75">Perfect for classrooms</p>
+              <button
+                type="button"
+                className={cn(
+                  pillCtaClass,
+                  "mt-8 bg-[#22c55e] text-white hover:bg-[#16a34a]"
+                )}
+                disabled={checkoutBusy}
+                onClick={() => void openCheckout("school_starter")}
+              >
+                {checkoutBusy ? "Loading…" : "Get Started (Starter)"}
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  pillCtaClass,
+                  "mt-3 border-2 border-white/40 bg-transparent text-white hover:bg-white/10"
+                )}
+                disabled={checkoutBusy}
+                onClick={() => void openCheckout("school_growth")}
+              >
+                {checkoutBusy ? "Loading…" : "Get Started (Growth)"}
+              </button>
+              <p className="mt-3 text-center text-sm text-white/65">
+                Available in 100 or 200 student packages
+              </p>
+              <div className="mt-8 flex flex-col gap-3">
+                <FeatureRow ok variant="onDark">
+                  Everything in Family plan
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Up to 200 students
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Teacher dashboard
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Custom lessons by teacher
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Class leaderboard
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  School logo &amp; branding
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Lesson library
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Admin dashboard access
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Priority support
+                </FeatureRow>
+                <FeatureRow ok variant="onDark">
+                  Promo code system
+                </FeatureRow>
+              </div>
+            </div>
           </div>
         </div>
       </section>

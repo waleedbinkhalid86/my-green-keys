@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const LeafIcon = () => (
   <svg
@@ -69,6 +70,19 @@ const LogoutIcon = () => (
 
 const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
+
+const statCardClass =
+  "rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
+
+const SIDEBAR_LINKS = [
+  { href: "#parent-overview", label: "Overview" },
+  { href: "#parent-children", label: "Children" },
+  { href: "#parent-progress", label: "Progress" },
+  { href: "#parent-lessons", label: "Custom lessons" },
+  { href: "#parent-eco", label: "Eco photos" },
+  { href: "#parent-summary", label: "Weekly summary" },
+  { href: "#parent-billing", label: "Subscription" },
+] as const;
 
 interface Child {
   id: string;
@@ -564,7 +578,7 @@ export default function ParentDashboard() {
       </Dialog>
 
       <header className="sticky top-0 z-40 border-b border-border/60 bg-[var(--mgk-dark)]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-4">
             <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <LeafIcon />
@@ -591,7 +605,28 @@ export default function ParentDashboard() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl space-y-10 px-6 py-10">
+      <div className="mx-auto flex w-full max-w-7xl">
+        <aside
+          className="sticky top-[73px] hidden h-[calc(100vh-73px)] w-64 shrink-0 flex-col border-r border-[#E5E7EB] bg-[#FAFAFA] py-8 pl-6 pr-4 lg:flex"
+          aria-label="Dashboard sections"
+        >
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+            Navigate
+          </p>
+          <nav className="flex flex-col gap-0.5">
+            {SIDEBAR_LINKS.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:bg-white hover:text-[#15803d] hover:shadow-sm"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="min-w-0 flex-1 space-y-10 px-4 py-8 sm:px-6 sm:py-10">
         {childrenError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
             {childrenError}
@@ -659,53 +694,52 @@ export default function ParentDashboard() {
           </Card>
         ) : null}
 
-        <section>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="text-2xl">📚</div>
-                <CardDescription>Total lessons completed</CardDescription>
-                <CardTitle className="font-heading text-3xl">{selectedChild?.lessonsCompleted ?? 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="text-2xl">⚡</div>
-                <CardDescription>Average WPM</CardDescription>
-                <CardTitle className="font-heading text-3xl">{selectedChild?.avgWpm ?? 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="text-2xl">🎯</div>
-                <CardDescription>Accuracy</CardDescription>
-                <CardTitle className="font-heading text-3xl text-primary">{selectedChild?.accuracy ?? 0}%</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="text-2xl">🌿</div>
-                <CardDescription>Eco actions</CardDescription>
-                <CardTitle className="font-heading text-3xl">{selectedChild?.ecoPhotos ?? 0}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="border-primary/30 bg-primary/5 sm:col-span-2 lg:col-span-2">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{todaysFact.emoji}</span>
-                  <CardTitle className="font-heading text-base">Today&apos;s eco fact</CardTitle>
-                </div>
-                <CardDescription className="text-foreground">{todaysFact.fact}</CardDescription>
-                <p className="text-xs font-medium text-muted-foreground">Source: {todaysFact.source}</p>
-              </CardHeader>
-            </Card>
+        <section id="parent-overview" className="scroll-mt-28">
+          <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className={statCardClass}>
+              <div className="text-2xl">📚</div>
+              <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
+              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+                {selectedChild?.lessonsCompleted ?? 0}
+              </p>
+            </div>
+            <div className={statCardClass}>
+              <div className="text-2xl">⚡</div>
+              <p className="mt-3 text-sm font-normal text-[#6B7280]">Average WPM</p>
+              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+                {selectedChild?.avgWpm ?? 0}
+              </p>
+            </div>
+            <div className={statCardClass}>
+              <div className="text-2xl">🎯</div>
+              <p className="mt-3 text-sm font-normal text-[#6B7280]">Accuracy</p>
+              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+                {selectedChild?.accuracy ?? 0}%
+              </p>
+            </div>
+            <div className={statCardClass}>
+              <div className="text-2xl">🌿</div>
+              <p className="mt-3 text-sm font-normal text-[#6B7280]">Eco actions</p>
+              <p className="mt-2 text-[36px] font-bold leading-none text-[#22c55e]">
+                {selectedChild?.ecoPhotos ?? 0}
+              </p>
+            </div>
+          </div>
+          <div className={cn(statCardClass, "mt-4")}>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{todaysFact.emoji}</span>
+              <p className="font-heading text-[20px] font-bold text-foreground">Today&apos;s eco fact</p>
+            </div>
+            <p className="mt-3 text-base leading-relaxed text-foreground">{todaysFact.fact}</p>
+            <p className="mt-2 text-sm font-medium text-[#6B7280]">Source: {todaysFact.source}</p>
           </div>
         </section>
 
         {children.length > 0 ? (
-          <section className="space-y-4">
+          <section id="parent-children" className="scroll-mt-28 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-heading text-lg font-bold text-foreground">Children</h2>
+              <h2 className="font-heading text-[20px] font-bold text-foreground">Children</h2>
               <Button size="sm" onClick={() => setShowAddChildModal(true)}>
                 Add child
               </Button>
@@ -734,11 +768,13 @@ export default function ParentDashboard() {
         ) : null}
 
         {selectedChild ? (
-          <section className="space-y-6">
+          <section id="parent-progress" className="scroll-mt-28 space-y-6">
             <div className="flex flex-wrap items-center gap-4">
               <div className="text-4xl">{selectedChild.avatar}</div>
               <div>
-                <h2 className="font-heading text-2xl font-bold text-foreground">{selectedChild.name}&apos;s progress</h2>
+                <h2 className="font-heading text-[20px] font-bold text-foreground">
+                  {selectedChild.name}&apos;s progress
+                </h2>
                 <p className="text-sm text-muted-foreground">Typing skills and eco actions</p>
               </div>
             </div>
@@ -812,8 +848,10 @@ export default function ParentDashboard() {
           </section>
         ) : null}
 
-        <section className="space-y-4">
-          <h2 className="font-heading text-xl font-bold">Create a custom typing lesson</h2>
+        <section id="parent-lessons" className="scroll-mt-28 space-y-4">
+          <h2 className="font-heading text-[20px] font-bold text-foreground">
+            Create a custom typing lesson
+          </h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
               <div className="space-y-2">
@@ -1025,8 +1063,8 @@ export default function ParentDashboard() {
           )}
         </section>
 
-        <section className="space-y-4">
-          <h2 className="font-heading text-xl font-bold">This week&apos;s summary</h2>
+        <section id="parent-summary" className="scroll-mt-28 space-y-4">
+          <h2 className="font-heading text-[20px] font-bold text-foreground">This week&apos;s summary</h2>
           <Card>
             <CardContent className="space-y-6 pt-6">
               <Table>
@@ -1057,8 +1095,10 @@ export default function ParentDashboard() {
           </Card>
         </section>
 
-        <section className="space-y-4 pb-16">
-          <h2 className="font-heading text-xl font-bold">Subscription &amp; billing</h2>
+        <section id="parent-billing" className="scroll-mt-28 space-y-4 pb-16">
+          <h2 className="font-heading text-[20px] font-bold text-foreground">
+            Subscription &amp; billing
+          </h2>
           <Card>
             <CardContent className="space-y-6 pt-6">
               <div className="grid gap-8 lg:grid-cols-2">
@@ -1092,6 +1132,7 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
         </section>
+        </div>
       </div>
     </div>
   );
