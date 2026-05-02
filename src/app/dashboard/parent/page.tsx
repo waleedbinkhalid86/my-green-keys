@@ -91,6 +91,8 @@ interface Child {
   age: number;
   gender: "boy" | "girl";
   avatar: string;
+  /** Linked student auth/profile UUID when username matches profiles.email */
+  studentProfileId: string | null;
   lessonsCompleted: number;
   avgWpm: number;
   accuracy: number;
@@ -153,6 +155,7 @@ function toChildDashboard(row: ChildRow): Child {
     age,
     gender,
     avatar: gender === "girl" ? "👧" : "👦",
+    studentProfileId: null,
     lessonsCompleted: 0,
     avgWpm: 0,
     accuracy: 0,
@@ -302,34 +305,56 @@ export default function ParentDashboard() {
 
       if (error) throw error;
       const mapped = (data as ChildRow[] | null)?.map(toChildDashboard) ?? [];
-      setChildren(mapped);
-      if (mapped.length > 0) {
-        setSelectedChildId((prev) => prev || mapped[0].id);
-      } else {
-        setSelectedChildId("");
-      }
 
       const usernames = mapped.map((c) => c.username).filter(Boolean);
+      let withProfileIds: Child[] = mapped;
       if (usernames.length === 0) {
+        setChildren(mapped);
+        if (mapped.length > 0) {
+          setSelectedChildId((prev) => prev || mapped[0].id);
+        } else {
+          setSelectedChildId("");
+        }
         setPetWarnings([]);
         return;
       }
 
       const { data: petProfiles, error: petError } = await supabase
         .from("profiles")
-        .select("email, pet_type, pet_name, pet_health")
+        .select("id, email, pet_type, pet_name, pet_health")
         .in("email", usernames as string[]);
       if (petError) {
+        setChildren(mapped);
+        if (mapped.length > 0) {
+          setSelectedChildId((prev) => prev || mapped[0].id);
+        } else {
+          setSelectedChildId("");
+        }
         setPetWarnings([]);
         return;
       }
 
-      const profileRows = (petProfiles as PetProfileRow[] | null) ?? [];
-      const profileByEmail = new Map(profileRows.map((p) => [p.email, p]));
+      const profileRows = (petProfiles as Array<PetProfileRow & { id: string }> | null) ?? [];
+      const profileByEmail = new Map(
+        profileRows.map((p) => [String(p.email ?? "").trim().toLowerCase(), p])
+      );
+      withProfileIds = mapped.map((c) => {
+        const key = c.username.trim().toLowerCase();
+        const p = profileByEmail.get(key);
+        return { ...c, studentProfileId: p?.id ?? null };
+      });
+
+      setChildren(withProfileIds);
+      if (withProfileIds.length > 0) {
+        setSelectedChildId((prev) => prev || withProfileIds[0].id);
+      } else {
+        setSelectedChildId("");
+      }
+
       const warnings: Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }> = [];
-      for (const c of mapped) {
+      for (const c of withProfileIds) {
         if (!c.username) continue;
-        const p = profileByEmail.get(c.username);
+        const p = profileByEmail.get(c.username.trim().toLowerCase());
         if (!p) continue;
         const health = Number(p.pet_health ?? 100);
         if (Number.isFinite(health) && health < 40) {
@@ -769,14 +794,32 @@ export default function ParentDashboard() {
 
         {selectedChild ? (
           <section id="parent-progress" className="scroll-mt-28 space-y-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="text-4xl">{selectedChild.avatar}</div>
-              <div>
-                <h2 className="font-heading text-[20px] font-bold text-foreground">
-                  {selectedChild.name}&apos;s progress
-                </h2>
-                <p className="text-sm text-muted-foreground">Typing skills and eco actions</p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="text-4xl">{selectedChild.avatar}</div>
+                <div>
+                  <h2 className="font-heading text-[20px] font-bold text-foreground">
+                    {selectedChild.name}&apos;s progress
+                  </h2>
+                  <p className="text-sm text-muted-foreground">Typing skills and eco actions</p>
+                </div>
               </div>
+              {selectedChild.studentProfileId ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="shrink-0 border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
+                  onClick={() =>
+                    window.open(`/report/${selectedChild.studentProfileId}`, "_blank", "noopener,noreferrer")
+                  }
+                >
+                  📊 Download Report
+                </Button>
+              ) : (
+                <p className="max-w-xs text-right text-xs text-muted-foreground">
+                  Link your child&apos;s account email to unlock printable reports.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">

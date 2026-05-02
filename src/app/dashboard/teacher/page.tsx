@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, startTransition, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { loadReportBranding, saveReportBranding } from "@/lib/report/branding";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ export default function TeacherDashboard() {
   const [schedule, setSchedule] = useState("now");
   const [searchStudent, setSearchStudent] = useState("");
   const [schoolName, setSchoolName] = useState("Green Valley Primary School");
+  const [schoolLogoDataUrl, setSchoolLogoDataUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#2ECC71");
 
   const [teacherId, setTeacherId] = useState<string>("");
@@ -185,6 +187,12 @@ export default function TeacherDashboard() {
     startTransition(() => {
       void loadClasses();
     });
+  }, []);
+
+  useEffect(() => {
+    const b = loadReportBranding();
+    if (b.name.trim()) setSchoolName(b.name);
+    setSchoolLogoDataUrl(b.logoDataUrl);
   }, []);
 
   useEffect(() => {
@@ -408,6 +416,7 @@ export default function TeacherDashboard() {
                         <TableRow>
                           <TableHead>Student</TableHead>
                           <TableHead>Email</TableHead>
+                          <TableHead className="text-right">Report</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -415,6 +424,19 @@ export default function TeacherDashboard() {
                           <TableRow key={s.id}>
                             <TableCell className="font-medium">{s.full_name || s.id}</TableCell>
                             <TableCell className="text-muted-foreground">{s.email || "—"}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                                onClick={() =>
+                                  window.open(`/report/${s.id}`, "_blank", "noopener,noreferrer")
+                                }
+                              >
+                                📊 Generate Report
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -660,9 +682,23 @@ export default function TeacherDashboard() {
                 <Input id="school-name" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>School logo</Label>
-                <Button variant="secondary">Upload logo</Button>
-                <p className="text-xs text-muted-foreground">Placeholder · 200×200px recommended</p>
+                <Label htmlFor="teacher-school-logo">School logo (optional)</Label>
+                <Input
+                  id="teacher-school-logo"
+                  type="file"
+                  accept="image/*"
+                  className="cursor-pointer text-sm"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setSchoolLogoDataUrl(typeof reader.result === "string" ? reader.result : null);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">Saved with school name for PDF reports · ~200×200px works well</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -683,7 +719,12 @@ export default function TeacherDashboard() {
                   <div className="h-10 w-full rounded-md border" style={{ backgroundColor: primaryColor }} />
                 </div>
               </div>
-              <Button className="w-full" size="lg">
+              <Button
+                type="button"
+                className="w-full"
+                size="lg"
+                onClick={() => saveReportBranding({ name: schoolName.trim() || "School", logoDataUrl: schoolLogoDataUrl })}
+              >
                 Save changes
               </Button>
             </CardContent>

@@ -368,3 +368,34 @@ body {
     @apply font-sans;
   }
 }
+
+/* Printable student progress reports (A4) */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body.mgk-print-report > footer {
+    display: none !important;
+  }
+
+  .report-no-print {
+    display: none !important;
+  }
+
+  .report-print-root {
+    background: white !important;
+    min-height: auto !important;
+  }
+
+  .report-comment-lines .h-px {
+    border-top: 1px solid #e2e8f0;
+    background: transparent !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
