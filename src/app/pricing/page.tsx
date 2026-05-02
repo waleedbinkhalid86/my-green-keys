@@ -1,25 +1,54 @@
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
-import { LeafIcon, CheckIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const LeafIconCustom = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+  <svg
+    width={20}
+    height={20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="text-primary-foreground"
+  >
+    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
   </svg>
-);
-
-const CheckIconCustom = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-);
-
-const XIconCustom = () => (
-  <span style={{ color: "#e0e0e0", fontSize: "18px", fontWeight: "bold" }}>✕</span>
 );
 
 const PROMO_CODES: Record<string, { discount: string; type: string; applicable: string[] }> = {
@@ -30,84 +59,111 @@ const PROMO_CODES: Record<string, { discount: string; type: string; applicable: 
   WELCOME10: { discount: "10% off", type: "percent", applicable: ["All Plans"] },
 };
 
-const TYPING_RULES = [
+const FAQ_ITEMS = [
   {
     q: "Can I try before buying?",
-    a: "Yes! Start with our free plan — 10 full lessons, no credit card needed."
+    a: "Yes! Start with our free plan — 10 full lessons, no credit card needed.",
   },
   {
     q: "How does the promo code work?",
-    a: "Enter your code at checkout or on this page to apply your discount instantly."
+    a: "Enter your code at checkout or on this page to apply your discount instantly.",
   },
   {
     q: "Can I switch plans anytime?",
-    a: "Yes, upgrade or downgrade anytime. Changes take effect immediately."
+    a: "Yes, upgrade or downgrade anytime. Changes take effect immediately.",
   },
   {
     q: "How many children can use one Family account?",
-    a: "Up to 3 children per Family plan, each with their own profile and theme."
+    a: "Up to 3 children per Family plan, each with their own profile and theme.",
   },
   {
     q: "How does the school plan work?",
-    a: "Schools get a custom subdomain, teacher dashboard, and branded experience."
+    a: "Schools get a custom subdomain, teacher dashboard, and branded experience.",
   },
   {
     q: "Is there a free trial for schools?",
-    a: "Yes! Contact us for a 30-day free school trial with up to 30 students."
-  }
+    a: "Yes! Contact us for a 30-day free school trial with up to 30 students.",
+  },
 ];
 
-interface NavBarProps {
-  isFixed?: boolean;
-}
+const SCHOOL_ROWS = [
+  { label: "Price", starter: "$299/mo", growth: "$499/mo", enterprise: "Custom" },
+  { label: "Students", starter: "100", growth: "200", enterprise: "Unlimited" },
+  { label: "Teacher accounts", starter: "5", growth: "15", enterprise: "Unlimited" },
+  { label: "Custom lessons", starter: "✓", growth: "✓", enterprise: "✓" },
+  { label: "School branding", starter: "✓", growth: "✓", enterprise: "✓" },
+  { label: "Analytics", starter: "Basic", growth: "Advanced", enterprise: "Full" },
+  { label: "Support", starter: "Email", growth: "Priority", enterprise: "Dedicated" },
+];
 
-function Nav({ isFixed = true }: NavBarProps) {
+function PricingNav() {
   return (
-    <nav style={{
-      background: "#2c3e50",
-      position: isFixed ? "fixed" : "static",
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 50,
-      boxShadow: "0 1px 0 rgba(255,255,255,0.06)",
-    }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
-          {/* Logo */}
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#4CAF50", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <LeafIconCustom />
-            </div>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
-          </a>
-
-          {/* Links */}
-          <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
-            {["Features", "Modules", "Schools"].map((l) => (
-              <a key={l} href={`/#${l.toLowerCase()}`} style={{ color: "#fff", textDecoration: "none", fontSize: "0.95rem", transition: "color 0.2s" }} onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#4CAF50"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "#fff"; }}>{l}</a>
-            ))}
-            <a href="/pricing" style={{ color: "#4CAF50", textDecoration: "none", fontSize: "0.95rem", fontWeight: 600 }}>Pricing</a>
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[var(--mgk-dark)] shadow-sm">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <Link href="/" className="flex items-center gap-3 no-underline">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary">
+            <LeafIconCustom />
           </div>
-
-          {/* Actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <a href="/login" style={{ color: "#fff", textDecoration: "none", fontSize: "0.95rem", transition: "color 0.2s" }} onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#4CAF50"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "#fff"; }} className="hidden md:block">Log In</a>
-            <a href="/signup" style={{ background: "#4CAF50", color: "white", padding: "0.6rem 1.4rem", borderRadius: "6px", textDecoration: "none", fontSize: "0.85rem", fontWeight: 600, transition: "background 0.2s" }} onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}>Start Free Trial</a>
-          </div>
+          <span className="font-heading text-base font-bold tracking-tight text-white">
+            My Green Keys
+          </span>
+        </Link>
+        <div className="hidden items-center gap-8 md:flex">
+          {["Features", "Modules", "Schools"].map((l) => (
+            <Link
+              key={l}
+              href={`/#${l.toLowerCase()}`}
+              className="text-sm font-medium text-white/85 transition-colors hover:text-primary"
+            >
+              {l}
+            </Link>
+          ))}
+          <Link href="/pricing" className="text-sm font-semibold text-primary">
+            Pricing
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="hidden text-sm font-medium text-white/90 hover:text-primary md:inline"
+          >
+            Log In
+          </Link>
+          <Link href="/signup" className={buttonVariants({ size: "sm" })}>
+            Start Free Trial
+          </Link>
         </div>
       </div>
     </nav>
   );
 }
 
-function PricingPage() {
+function FeatureRow({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-2.5 text-sm",
+        ok ? "text-foreground" : "text-muted-foreground"
+      )}
+    >
+      {ok ? (
+        <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+      ) : (
+        <X className="mt-0.5 size-4 shrink-0 text-border" aria-hidden />
+      )}
+      <span>{children}</span>
+    </div>
+  );
+}
+
+export default function PricingPage() {
   const router = useRouter();
   const [isYearly, setIsYearly] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [promoResult, setPromoResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  const [checkoutError, setCheckoutError] = useState<string>("");
+  const [promoResult, setPromoResult] = useState<{ type: "success" | "error"; message: string } | null>(
+    null
+  );
+  const [checkoutError, setCheckoutError] = useState("");
   const [checkoutBusy, setCheckoutBusy] = useState(false);
 
   const priceIds = useMemo(() => {
@@ -120,8 +176,8 @@ function PricingPage() {
   useEffect(() => {
     const unsub = onPaddleEvent(async (event) => {
       if (event?.name !== "checkout.completed") return;
-      const payload = event.data as any;
-      const transactionId = payload?.transaction_id as string | undefined;
+      const payload = event.data as { transaction_id?: string };
+      const transactionId = payload?.transaction_id;
       if (!transactionId) return;
 
       try {
@@ -130,7 +186,7 @@ function PricingPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transactionId }),
         });
-        const json = (await res.json()) as any;
+        const json = (await res.json()) as { error?: string; redirectTo?: string };
         if (!res.ok) throw new Error(json?.error || "Failed to finalize purchase");
         router.push(json.redirectTo || "/dashboard/parent");
       } catch (err) {
@@ -168,9 +224,14 @@ function PricingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId, planType }),
       });
-      const checkoutJson = (await checkoutRes.json()) as any;
+      const checkoutJson = (await checkoutRes.json()) as { error?: string; transactionId?: string };
       if (!checkoutRes.ok) {
         throw new Error(checkoutJson?.error || "Failed to start checkout");
+      }
+
+      const transactionId = checkoutJson.transactionId;
+      if (!transactionId) {
+        throw new Error("Checkout did not return a transaction ID.");
       }
 
       const paddle = await getPaddle();
@@ -179,7 +240,7 @@ function PricingPage() {
       }
 
       paddle.Checkout.open({
-        transactionId: checkoutJson.transactionId,
+        transactionId,
         settings: {
           displayMode: "overlay",
           theme: "light",
@@ -199,553 +260,291 @@ function PricingPage() {
       const codeInfo = PROMO_CODES[code];
       setPromoResult({
         type: "success",
-        message: `✅ ${code} applied! You get ${codeInfo.discount}`
+        message: `${code} applied! You get ${codeInfo.discount}`,
       });
     } else {
       setPromoResult({
         type: "error",
-        message: "❌ Invalid code. Please try again."
+        message: "Invalid code. Please try again.",
       });
     }
     setTimeout(() => setPromoResult(null), 3000);
   };
 
   return (
-    <div style={{ background: "#fff", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
-      <Nav isFixed={true} />
-      
-      {/* Spacing for fixed nav */}
-      <div style={{ height: 70 }} />
+    <div className="min-h-screen bg-background font-sans">
+      <PricingNav />
+      <div className="h-[72px]" aria-hidden />
 
-      {/* HERO SECTION */}
-      <section style={{ paddingTop: 80, paddingBottom: 80, textAlign: "center", background: "linear-gradient(135deg, #fff 0%, #f5f7fa 100%)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-          <p style={{ color: "#4CAF50", fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 16, textTransform: "uppercase" }}>
-            SIMPLE, TRANSPARENT PRICING
+      <section className="border-b border-border/60 bg-white px-6 py-16 text-center md:py-20">
+        <div className="mx-auto max-w-3xl">
+          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-primary">
+            Simple, transparent pricing
           </p>
-          <h1 style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 900, color: "#2c3e50", marginBottom: 24, lineHeight: 1.2 }}>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
             Choose the perfect plan for your child
           </h1>
-          <p style={{ fontSize: "1.1rem", color: "#666", marginBottom: 40, maxWidth: 600, margin: "0 auto 40px" }}>
-            Start free. Upgrade when you're ready. Cancel anytime.
+          <p className="mt-4 text-base text-muted-foreground md:text-lg">
+            Start free. Upgrade when you&apos;re ready. Cancel anytime.
           </p>
 
-          {/* Toggle Switch */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 40 }}>
-            <span style={{ color: isYearly ? "#999" : "#2c3e50", fontWeight: 600 }}>Monthly</span>
-            <button
-              onClick={() => setIsYearly(!isYearly)}
-              style={{
-                width: 60,
-                height: 32,
-                borderRadius: 16,
-                background: isYearly ? "#4CAF50" : "#ddd",
-                border: "none",
-                cursor: "pointer",
-                position: "relative",
-                transition: "background 0.3s ease",
-              }}
-            >
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "white",
-                  position: "absolute",
-                  top: 2,
-                  left: isYearly ? 30 : 2,
-                  transition: "left 0.3s ease",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-              />
-            </button>
-            <span style={{ color: isYearly ? "#4CAF50" : "#999", fontWeight: 600 }}>Yearly <span style={{ background: "#E8F5E9", color: "#4CAF50", padding: "2px 8px", borderRadius: 12, fontSize: "0.8rem", marginLeft: 8 }}>Save 20%</span></span>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Label htmlFor="billing-toggle" className="text-sm font-medium text-muted-foreground">
+              Monthly
+            </Label>
+            <Switch id="billing-toggle" checked={isYearly} onCheckedChange={setIsYearly} />
+            <div className="flex items-center gap-2">
+              <Label htmlFor="billing-toggle" className="text-sm font-medium text-foreground">
+                Yearly
+              </Label>
+              <Badge variant="secondary" className="border-primary/20 bg-primary/10 text-primary">
+                Save 20%
+              </Badge>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* PRICING CARDS */}
-      <section style={{ padding: "80px 24px", background: "#fff" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          {checkoutError && (
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          {checkoutError ? (
             <div
-              style={{
-                marginBottom: 20,
-                background: "#ffebee",
-                border: "1px solid #ef5350",
-                color: "#c62828",
-                padding: "12px 16px",
-                borderRadius: 10,
-                fontSize: "0.95rem",
-                fontWeight: 600,
-              }}
+              className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+              role="alert"
             >
               {checkoutError}
             </div>
-          )}
+          ) : null}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32, position: "relative" }}>
-            {/* CARD 1: FREE STARTER */}
-            <div style={{
-              border: "1px solid #e0e0e0",
-              borderRadius: 12,
-              padding: 32,
-              background: "#f5f7fa",
-              position: "relative",
-            }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#666", background: "#e0e0e0", padding: "4px 12px", borderRadius: 20, display: "inline-block", marginBottom: 16 }}>FREE</div>
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2c3e50", marginBottom: 8 }}>$0</h3>
-              <p style={{ color: "#999", marginBottom: 24 }}>Perfect to get started</p>
-              
-              <button style={{
-                width: "100%",
-                padding: "12px 24px",
-                border: "2px solid #4CAF50",
-                background: "transparent",
-                color: "#4CAF50",
-                borderRadius: 8,
-                fontSize: "1rem",
-                fontWeight: 700,
-                cursor: "pointer",
-                marginBottom: 32,
-                transition: "all 0.2s ease",
-              }}
-              disabled={checkoutBusy}
-              onClick={() => router.push("/signup")}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E8F5E9"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}>
-                Start for Free
-              </button>
+          <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+            <Card className="border-border bg-white shadow-sm">
+              <CardHeader>
+                <Badge variant="outline" className="w-fit font-semibold">
+                  Free
+                </Badge>
+                <CardTitle className="font-heading text-2xl">$0</CardTitle>
+                <CardDescription>Perfect to get started</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <Button
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary/10"
+                  disabled={checkoutBusy}
+                  onClick={() => router.push("/signup")}
+                >
+                  Start for Free
+                </Button>
+                <div className="flex flex-col gap-2.5">
+                  <FeatureRow ok>10 typing lessons</FeatureRow>
+                  <FeatureRow ok>Basic keyboard guide</FeatureRow>
+                  <FeatureRow ok>WPM &amp; accuracy tracking</FeatureRow>
+                  <FeatureRow ok>1 eco module preview</FeatureRow>
+                  <FeatureRow ok={false}>Custom lessons</FeatureRow>
+                  <FeatureRow ok={false}>Parent dashboard</FeatureRow>
+                  <FeatureRow ok={false}>Badges &amp; rewards</FeatureRow>
+                  <FeatureRow ok={false}>Eco photo rewards</FeatureRow>
+                </div>
+              </CardContent>
+            </Card>
 
-              <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> 10 typing lessons
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Basic keyboard guide
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> WPM & accuracy tracking
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> 1 eco module preview
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> Custom lessons
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> Parent dashboard
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> Badges & rewards
-                </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> Eco photo rewards
-                </div>
-              </div>
-            </div>
-
-            {/* CARD 2: FAMILY PLAN (POPULAR) */}
-            <div style={{
-              border: "2px solid #4CAF50",
-              borderRadius: 12,
-              padding: 32,
-              background: "#fff",
-              position: "relative",
-              boxShadow: "0 8px 32px rgba(76,175,80,0.25)",
-              transform: "scale(1.05)",
-            }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", background: "#4CAF50", padding: "4px 12px", borderRadius: 20, display: "inline-block", marginBottom: 16 }}>MOST POPULAR</div>
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2c3e50", marginBottom: 8 }}>
-                ${isYearly ? "7.99" : "9.99"}<span style={{ fontSize: "0.9rem", color: "#999", fontWeight: 400 }}>/month</span>
-              </h3>
-              <p style={{ color: "#999", marginBottom: 24 }}>Perfect for families</p>
-              
-              <button style={{
-                width: "100%",
-                padding: "12px 24px",
-                background: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: 8,
-                fontSize: "1rem",
-                fontWeight: 700,
-                cursor: "pointer",
-                marginBottom: 12,
-                transition: "background 0.2s ease",
-              }}
-              disabled={checkoutBusy}
-              onClick={() => openCheckout("family")}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}>
-                {checkoutBusy ? "Loading..." : "Get Started"}
-              </button>
-              <p style={{ fontSize: "0.85rem", color: "#999", marginBottom: 24, textAlign: "center" }}>7-day free trial, no credit card required</p>
-
-              <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Unlimited typing lessons
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> All 4 learning modules
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Parent dashboard
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Custom lesson text by parent
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Badges, streaks & rewards
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Eco photo upload rewards
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Weekly progress reports
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Up to 3 children
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Pink/Blue personalization
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> Teacher dashboard
-                </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", color: "#999" }}>
-                  <XIconCustom /> School branding
-                </div>
-              </div>
-            </div>
-
-            {/* CARD 3: SCHOOL PLAN */}
-            <div style={{
-              border: "1px solid #e0e0e0",
-              borderRadius: 12,
-              padding: 32,
-              background: "#f5f7fa",
-              position: "relative",
-            }}>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#666", background: "#e0e0e0", padding: "4px 12px", borderRadius: 20, display: "inline-block", marginBottom: 16 }}>FOR SCHOOLS</div>
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2c3e50", marginBottom: 8 }}>Starting at <span style={{ fontSize: "1.8rem" }}>$299</span><span style={{ fontSize: "0.9rem", color: "#999", fontWeight: 400 }}>/month</span></h3>
-              <p style={{ color: "#999", marginBottom: 24 }}>Perfect for classrooms</p>
-              
-              <button style={{
-                width: "100%",
-                padding: "12px 24px",
-                background: "#2196F3",
-                color: "white",
-                border: "none",
-                borderRadius: 8,
-                fontSize: "1rem",
-                fontWeight: 700,
-                cursor: "pointer",
-                marginBottom: 12,
-                transition: "background 0.2s ease",
-              }}
-              disabled={checkoutBusy}
-              onClick={() => openCheckout("school_starter")}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#0b7dda"; }} onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#2196F3"; }}>
-                {checkoutBusy ? "Loading..." : "Get Started (Starter)"}
-              </button>
-              <button
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  background: "transparent",
-                  color: "#2196F3",
-                  border: "2px solid #2196F3",
-                  borderRadius: 8,
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  marginBottom: 12,
-                  transition: "all 0.2s ease",
-                }}
-                disabled={checkoutBusy}
-                onClick={() => openCheckout("school_growth")}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#E3F2FD"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
-              >
-                {checkoutBusy ? "Loading..." : "Get Started (Growth)"}
-              </button>
-              <p style={{ fontSize: "0.85rem", color: "#999", marginBottom: 24, textAlign: "center" }}>Available in 100 or 200 student packages</p>
-
-              <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Everything in Family plan
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Up to 200 students
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Teacher dashboard
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Custom lessons by teacher
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Class leaderboard
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> School logo & branding
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Lesson library
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Admin dashboard access
-                </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Priority support
-                </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <CheckIconCustom /> Promo code system
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROMO CODE SECTION */}
-      <section style={{ padding: "80px 24px", background: "#f5f7fa" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <div style={{
-            border: "2px solid #4CAF50",
-            borderRadius: 12,
-            padding: 40,
-            background: "white",
-            textAlign: "center",
-          }}>
-            <h3 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#2c3e50", marginBottom: 12 }}>🎟️ Have a promo code?</h3>
-            <p style={{ fontSize: "1rem", color: "#666", marginBottom: 24 }}>Enter your code below to get a special discount</p>
-            
-            <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Enter promo code..."
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: "2px solid #e0e0e0",
-                  borderRadius: 8,
-                  fontSize: "1rem",
-                  fontFamily: "Poppins, sans-serif",
-                  transition: "border-color 0.2s",
-                }}
-                onFocus={(e) => { e.target.style.borderColor = "#4CAF50"; }}
-                onBlur={(e) => { e.target.style.borderColor = "#e0e0e0"; }}
-              />
-              <button
-                onClick={handlePromoCode}
-                style={{
-                  padding: "12px 24px",
-                  background: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#45a049"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#4CAF50"; }}
-              >
-                Apply Code
-              </button>
-            </div>
-
-            {promoResult && (
-              <div style={{
-                padding: "12px 16px",
-                background: promoResult.type === "success" ? "#E8F5E9" : "#FFEBEE",
-                color: promoResult.type === "success" ? "#4CAF50" : "#c62828",
-                borderRadius: 8,
-                fontSize: "0.95rem",
-                marginBottom: 16,
-              }}>
-                {promoResult.message}
-              </div>
-            )}
-
-            <div style={{ textAlign: "left", background: "#f5f7fa", padding: 16, borderRadius: 8 }}>
-              <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#2c3e50", marginBottom: 8 }}>Available codes:</p>
-              {Object.entries(PROMO_CODES).map(([code, info]) => (
-                <p key={code} style={{ fontSize: "0.8rem", color: "#666", marginBottom: 4 }}>
-                  <strong>{code}</strong> — {info.discount} ({info.applicable.join(", ")})
+            <Card className="relative border-2 border-primary bg-white shadow-lg shadow-primary/15 lg:scale-[1.02]">
+              <CardHeader>
+                <Badge className="w-fit bg-primary font-semibold text-primary-foreground">
+                  Most popular
+                </Badge>
+                <CardTitle className="font-heading text-2xl">
+                  ${isYearly ? "7.99" : "9.99"}
+                  <span className="text-base font-normal text-muted-foreground">/month</span>
+                </CardTitle>
+                <CardDescription>Perfect for families</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <Button className="w-full" disabled={checkoutBusy} onClick={() => openCheckout("family")}>
+                  {checkoutBusy ? "Loading…" : "Get Started"}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  7-day free trial, no credit card required
                 </p>
-              ))}
-            </div>
+                <div className="flex flex-col gap-2.5">
+                  <FeatureRow ok>Unlimited typing lessons</FeatureRow>
+                  <FeatureRow ok>All 4 learning modules</FeatureRow>
+                  <FeatureRow ok>Parent dashboard</FeatureRow>
+                  <FeatureRow ok>Custom lesson text by parent</FeatureRow>
+                  <FeatureRow ok>Badges, streaks &amp; rewards</FeatureRow>
+                  <FeatureRow ok>Eco photo upload rewards</FeatureRow>
+                  <FeatureRow ok>Weekly progress reports</FeatureRow>
+                  <FeatureRow ok>Up to 3 children</FeatureRow>
+                  <FeatureRow ok>Pink/Blue personalization</FeatureRow>
+                  <FeatureRow ok={false}>Teacher dashboard</FeatureRow>
+                  <FeatureRow ok={false}>School branding</FeatureRow>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border bg-white shadow-sm">
+              <CardHeader>
+                <Badge variant="outline" className="w-fit font-semibold">
+                  For schools
+                </Badge>
+                <CardTitle className="font-heading text-2xl">
+                  From <span className="text-primary">$299</span>
+                  <span className="text-base font-normal text-muted-foreground">/month</span>
+                </CardTitle>
+                <CardDescription>Perfect for classrooms</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <Button disabled={checkoutBusy} onClick={() => openCheckout("school_starter")}>
+                  {checkoutBusy ? "Loading…" : "Get Started (Starter)"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary/10"
+                  disabled={checkoutBusy}
+                  onClick={() => openCheckout("school_growth")}
+                >
+                  {checkoutBusy ? "Loading…" : "Get Started (Growth)"}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Available in 100 or 200 student packages
+                </p>
+                <div className="flex flex-col gap-2.5">
+                  <FeatureRow ok>Everything in Family plan</FeatureRow>
+                  <FeatureRow ok>Up to 200 students</FeatureRow>
+                  <FeatureRow ok>Teacher dashboard</FeatureRow>
+                  <FeatureRow ok>Custom lessons by teacher</FeatureRow>
+                  <FeatureRow ok>Class leaderboard</FeatureRow>
+                  <FeatureRow ok>School logo &amp; branding</FeatureRow>
+                  <FeatureRow ok>Lesson library</FeatureRow>
+                  <FeatureRow ok>Admin dashboard access</FeatureRow>
+                  <FeatureRow ok>Priority support</FeatureRow>
+                  <FeatureRow ok>Promo code system</FeatureRow>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* SCHOOL PACKAGES TABLE */}
-      <section style={{ padding: "80px 24px", background: "#fff" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50", marginBottom: 48, textAlign: "center" }}>
+      <section className="border-t border-border/60 bg-white px-6 py-16">
+        <div className="mx-auto max-w-xl">
+          <Card className="border-primary/30 shadow-sm">
+            <CardHeader className="text-center">
+              <CardTitle className="font-heading text-xl">Have a promo code?</CardTitle>
+              <CardDescription>Enter your code below for a special discount.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter promo code…"
+                  className="flex-1"
+                />
+                <Button type="button" onClick={handlePromoCode} className="sm:w-auto">
+                  Apply
+                </Button>
+              </div>
+              {promoResult ? (
+                <div
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm font-medium",
+                    promoResult.type === "success"
+                      ? "border border-primary/30 bg-primary/10 text-primary"
+                      : "border border-destructive/30 bg-destructive/10 text-destructive"
+                  )}
+                >
+                  {promoResult.message}
+                </div>
+              ) : null}
+              <div className="rounded-lg bg-muted/50 p-4 text-left text-xs text-muted-foreground">
+                <p className="mb-2 font-semibold text-foreground">Available codes</p>
+                {Object.entries(PROMO_CODES).map(([code, info]) => (
+                  <p key={code} className="mb-1">
+                    <span className="font-mono font-semibold text-foreground">{code}</span> —{" "}
+                    {info.discount} ({info.applicable.join(", ")})
+                  </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-heading mb-10 text-center text-2xl font-bold text-foreground">
             School packages — detailed comparison
           </h2>
-
-          <div style={{ overflowX: "auto" }}>
-            <table style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              border: "1px solid #e0e0e0",
-              borderRadius: 8,
-            }}>
-              <thead>
-                <tr style={{ background: "#f5f7fa" }}>
-                  <th style={{ padding: 16, textAlign: "left", fontWeight: 700, color: "#2c3e50", borderBottom: "2px solid #e0e0e0" }}>Feature</th>
-                  <th style={{ padding: 16, textAlign: "left", fontWeight: 700, color: "#2c3e50", borderBottom: "2px solid #e0e0e0" }}>Starter (100 students)</th>
-                  <th style={{ padding: 16, textAlign: "left", fontWeight: 700, color: "#fff", background: "#4CAF50", borderBottom: "2px solid #4CAF50" }}>Growth (200 students)</th>
-                  <th style={{ padding: 16, textAlign: "left", fontWeight: 700, color: "#2c3e50", borderBottom: "2px solid #e0e0e0" }}>Enterprise</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { label: "Price", starter: "$299/mo", growth: "$499/mo", enterprise: "Custom" },
-                  { label: "Students", starter: "100", growth: "200", enterprise: "Unlimited" },
-                  { label: "Teacher accounts", starter: "5", growth: "15", enterprise: "Unlimited" },
-                  { label: "Custom lessons", starter: "✓", growth: "✓", enterprise: "✓" },
-                  { label: "School branding", starter: "✓", growth: "✓", enterprise: "✓" },
-                  { label: "Analytics", starter: "Basic", growth: "Advanced", enterprise: "Full" },
-                  { label: "Support", starter: "Email", growth: "Priority", enterprise: "Dedicated" },
-                ].map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #e0e0e0" }}>
-                    <td style={{ padding: 16, fontWeight: 600, color: "#2c3e50" }}>{row.label}</td>
-                    <td style={{ padding: 16, color: "#666" }}>{row.starter}</td>
-                    <td style={{ padding: 16, background: "#F1F8F6", color: "#2c3e50", fontWeight: 600 }}>{row.growth}</td>
-                    <td style={{ padding: 16, color: "#666" }}>{row.enterprise}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="font-semibold">Feature</TableHead>
+                <TableHead className="font-semibold">Starter (100)</TableHead>
+                <TableHead className="bg-primary/10 font-semibold text-primary">Growth (200)</TableHead>
+                <TableHead className="font-semibold">Enterprise</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {SCHOOL_ROWS.map((row) => (
+                <TableRow key={row.label}>
+                  <TableCell className="font-medium">{row.label}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.starter}</TableCell>
+                  <TableCell className="bg-primary/5 font-medium">{row.growth}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.enterprise}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </section>
 
-      {/* FAQ SECTION */}
-      <section style={{ padding: "80px 24px", background: "#f5f7fa" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#2c3e50", marginBottom: 48, textAlign: "center" }}>
+      <section className="border-t border-border/60 bg-white px-6 py-16">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="font-heading mb-8 text-center text-2xl font-bold text-foreground">
             Frequently asked questions
           </h2>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {TYPING_RULES.map((faq, idx) => (
-              <div key={idx} style={{
-                border: "1px solid #e0e0e0",
-                borderRadius: 8,
-                overflow: "hidden",
-                background: "white",
-              }}>
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                  style={{
-                    width: "100%",
-                    padding: 20,
-                    background: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    transition: "background 0.2s",
-                  }}
-                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#f5f7fa"; }}
-                  onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "white"; }}
-                >
-                  <span style={{ fontSize: "1rem", fontWeight: 700, color: "#2c3e50", textAlign: "left" }}>{faq.q}</span>
-                  <span style={{
-                    fontSize: "1.5rem",
-                    color: "#4CAF50",
-                    transition: "transform 0.3s ease",
-                    transform: expandedFaq === idx ? "rotate(180deg)" : "rotate(0deg)",
-                  }}>
-                    ▼
-                  </span>
-                </button>
-                {expandedFaq === idx && (
-                  <div style={{
-                    padding: 20,
-                    paddingTop: 0,
-                    borderTop: "1px solid #e0e0e0",
-                    color: "#666",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.6,
-                  }}>
-                    {faq.a}
-                  </div>
-                )}
-              </div>
+          <Accordion multiple={false} className="w-full rounded-xl border border-border bg-card px-2">
+            {FAQ_ITEMS.map((faq, idx) => (
+              <AccordionItem key={faq.q} value={`item-${idx}`} className="border-border px-2">
+                <AccordionTrigger className="py-4 text-left font-heading text-foreground hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-muted-foreground">{faq.a}</AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </div>
       </section>
 
-      {/* CTA SECTION */}
-      <section style={{
-        padding: "80px 24px",
-        background: "#1B5E20",
-        color: "white",
-        textAlign: "center",
-      }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: 16, lineHeight: 1.2 }}>
-            Ready to start your child's typing journey?
+      <section className="bg-[var(--mgk-dark)] px-6 py-16 text-center text-white">
+        <div className="mx-auto max-w-2xl space-y-6">
+          <h2 className="font-heading text-2xl font-bold md:text-3xl">
+            Ready to start your child&apos;s typing journey?
           </h2>
-          <p style={{ fontSize: "1.1rem", marginBottom: 40, opacity: 0.9 }}>
-            Join 10,000+ kids already learning to type and help the planet
+          <p className="text-white/85">
+            Join thousands of kids already learning to type and helping the planet.
           </p>
-          
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button style={{
-              padding: "14px 32px",
-              background: "#FFEB3B",
-              color: "#1B5E20",
-              border: "none",
-              borderRadius: 8,
-              fontSize: "1.05rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "transform 0.2s, box-shadow 0.2s",
-            }} onMouseEnter={(e) => {
-              (e.target as HTMLElement).style.transform = "translateY(-2px)";
-              (e.target as HTMLElement).style.boxShadow = "0 8px 16px rgba(0,0,0,0.2)";
-            }} onMouseLeave={(e) => {
-              (e.target as HTMLElement).style.transform = "translateY(0)";
-              (e.target as HTMLElement).style.boxShadow = "none";
-            }}>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              href="/signup"
+              className={buttonVariants({
+                variant: "secondary",
+                size: "lg",
+                className: "bg-primary text-primary-foreground hover:bg-primary/90",
+              })}
+            >
               Start Free Today
-            </button>
-            <button style={{
-              padding: "14px 32px",
-              background: "transparent",
-              color: "white",
-              border: "2px solid white",
-              borderRadius: 8,
-              fontSize: "1.05rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }} onMouseEnter={(e) => {
-              (e.target as HTMLElement).style.background = "rgba(255,255,255,0.1)";
-            }} onMouseLeave={(e) => {
-              (e.target as HTMLElement).style.background = "transparent";
-            }}>
+            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-white/40 bg-transparent text-white hover:bg-white/10"
+            >
               Talk to Sales
-            </button>
+            </Button>
           </div>
         </div>
       </section>
-
     </div>
   );
 }
-
-export default PricingPage;

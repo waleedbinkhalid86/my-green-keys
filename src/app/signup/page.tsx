@@ -1,8 +1,17 @@
 "use client";
+
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import "../globals.css";
 
 type AccountType = "student" | "parent" | "teacher" | null;
@@ -29,6 +38,9 @@ const VALID_PROMO_CODES: Record<string, { discount: string; message: string; dis
   SCHOOL100: { discount: "20%", message: "20% off school package applied!", discountPercent: 20 },
   BACK2SCHOOL: { discount: "50%", message: "50% off applied!", discountPercent: 50 },
 };
+
+const selectClassName =
+  "flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -65,9 +77,7 @@ export default function SignupPage() {
     setSuccessMessage("");
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -179,7 +189,6 @@ export default function SignupPage() {
       const { supabaseUrl } = getSupabasePublicEnv();
       const supabase = createClient();
 
-      // Sign up with Supabase Auth
       console.log("[signup] supabaseUrl =", supabaseUrl);
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -205,8 +214,7 @@ export default function SignupPage() {
         return;
       }
 
-      // Create profile in database
-      const profileData = {
+      const profileData: Record<string, unknown> = {
         id: authData.user.id,
         full_name: formData.fullName,
         email: formData.email,
@@ -222,9 +230,7 @@ export default function SignupPage() {
         Object.assign(profileData, { school_name: formData.schoolName });
       }
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert([profileData]);
+      const { error: profileError } = await supabase.from("profiles").insert([profileData]);
 
       if (profileError) {
         setErrors({ form: "Failed to create profile: " + profileError.message });
@@ -232,71 +238,61 @@ export default function SignupPage() {
         return;
       }
 
-      // Create subscription for new user
-      const discountPercent = formData.promoCode && VALID_PROMO_CODES[formData.promoCode]
-        ? VALID_PROMO_CODES[formData.promoCode].discountPercent
-        : 0;
+      const discountPercent =
+        formData.promoCode && VALID_PROMO_CODES[formData.promoCode]
+          ? VALID_PROMO_CODES[formData.promoCode].discountPercent
+          : 0;
 
-      const { error: subscriptionError } = await supabase
-        .from("subscriptions")
-        .insert([
-          {
-            user_id: authData.user.id,
-            plan_type: "free",
-            status: "active",
-            promo_code: formData.promoCode || null,
-            discount_percent: discountPercent,
-          },
-        ]);
+      const { error: subscriptionError } = await supabase.from("subscriptions").insert([
+        {
+          user_id: authData.user.id,
+          plan_type: "free",
+          status: "active",
+          promo_code: formData.promoCode || null,
+          discount_percent: discountPercent,
+        },
+      ]);
 
       if (subscriptionError) {
         console.error("Subscription creation warning:", subscriptionError);
-        // Don't fail the signup if subscription fails
       }
 
-      // Create child record if parent
       if (accountType === "parent") {
-        const { error: childError } = await supabase
-          .from("children")
-          .insert([
-            {
-              parent_id: authData.user.id,
-              full_name: formData.childName,
-              age: parseInt(formData.childAge),
-              gender: formData.childGender,
-            },
-          ]);
+        const { error: childError } = await supabase.from("children").insert([
+          {
+            parent_id: authData.user.id,
+            full_name: formData.childName,
+            age: parseInt(formData.childAge),
+            gender: formData.childGender,
+          },
+        ]);
 
         if (childError) {
           console.error("Child creation warning:", childError);
-          // Don't fail the signup if child creation fails
         }
       }
 
-      setSuccessMessage(
-        "Account created successfully! Redirecting you to your dashboard..."
-      );
+      setSuccessMessage("Account created successfully! Redirecting you to your dashboard...");
 
-      // Redirect based on account type
       setTimeout(() => {
-        const redirectPath = {
-          student: "/lesson",
-          parent: "/dashboard/parent",
-          teacher: "/dashboard/teacher",
-        }[accountType!] || "/lesson";
-        
+        const redirectPath =
+          {
+            student: "/lesson",
+            parent: "/dashboard/parent",
+            teacher: "/dashboard/teacher",
+          }[accountType!] || "/lesson";
+
         router.push(redirectPath);
       }, 2000);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An unexpected error occurred";
+      const message = error instanceof Error ? error.message : "An unexpected error occurred";
 
       const isNetworkishFetchFailure =
         error instanceof TypeError && /fetch/i.test(error.message);
 
       setErrors({
         form: isNetworkishFetchFailure
-          ? "Couldn’t reach Supabase (network error). Double-check NEXT_PUBLIC_SUPABASE_URL, your internet connection, and that your Supabase project is reachable."
+          ? "Couldn't reach Supabase (network error). Double-check NEXT_PUBLIC_SUPABASE_URL, your internet connection, and that your Supabase project is reachable."
           : message,
       });
     } finally {
@@ -304,919 +300,385 @@ export default function SignupPage() {
     }
   };
 
+  const stepProgress = accountType ? 66 : 33;
+
   return (
-    <div style={{ background: "white", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
-      {/* NAV BAR */}
-      <nav
-        style={{
-          background: "#2c3e50",
-          color: "white",
-          padding: "16px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: "#4CAF50",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "20px",
-            }}
-          >
+    <div className="min-h-screen bg-background font-sans">
+      <nav className="flex items-center justify-between border-b border-white/10 bg-[var(--mgk-dark)] px-6 py-4 shadow-sm">
+        <Link href="/" className="flex items-center gap-3 no-underline">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg">
             🌿
           </div>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem" }}>
-            My Green Keys
-          </span>
-        </div>
-
-        <a
-          href="/login"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
+          <span className="font-heading text-base font-bold text-white">My Green Keys</span>
+        </Link>
+        <Link href="/login" className="text-sm font-semibold text-white/90 hover:text-primary">
           Already have an account? Log In
-        </a>
+        </Link>
       </nav>
 
-      {/* MAIN CONTENT */}
-      <div style={{ maxWidth: 600, margin: "0 auto", padding: "40px 24px" }}>
-        <h1
-          style={{
-            fontSize: "32px",
-            fontWeight: 800,
-            color: "#2c3e50",
-            textAlign: "center",
-            marginBottom: "12px",
-          }}
-        >
-          Create Your Account
-        </h1>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "#666",
-            textAlign: "center",
-            marginBottom: "40px",
-          }}
-        >
-          Choose your account type to get started
-        </p>
+      <div className="mx-auto max-w-xl px-6 py-10">
+        <div className="mb-8 text-center">
+          <h1 className="font-heading text-3xl font-bold text-foreground">Create Your Account</h1>
+          <p className="mt-2 text-muted-foreground">Choose your account type to get started</p>
+        </div>
 
-        {/* ERROR MESSAGE */}
-        {errors.form && (
+        <div className="mb-8 space-y-3">
+          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            <span>Step 1 · Account type</span>
+            <span>Step 2 · Your details</span>
+          </div>
+          <Progress value={stepProgress} className="[&_[data-slot=progress-track]]:h-2" />
+        </div>
+
+        {errors.form ? (
           <div
-            style={{
-              background: "#ffebee",
-              border: "1px solid #ef5350",
-              color: "#c62828",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "24px",
-              fontSize: "14px",
-            }}
+            className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            role="alert"
           >
             {errors.form}
           </div>
-        )}
+        ) : null}
 
-        {/* SUCCESS MESSAGE */}
-        {successMessage && (
+        {successMessage ? (
           <div
-            style={{
-              background: "#e8f5e9",
-              border: "1px solid #4caf50",
-              color: "#2e7d32",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "24px",
-              fontSize: "14px",
-            }}
+            className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-primary"
+            role="status"
           >
             {successMessage}
           </div>
-        )}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
-          style={{
-            display: "grid",
-            gap: "16px",
-            marginBottom: "40px",
-          }}
-        >
-          {[
-            { type: "student" as const, icon: "👦", label: "Student", desc: "I want to learn typing" },
-            { type: "parent" as const, icon: "👨‍👩‍👧", label: "Parent", desc: "I want to track my child" },
-            { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher/School", desc: "I manage a classroom" },
-          ].map((option) => (
-            <div
+        ) : null}
+
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {(
+            [
+              { type: "student" as const, icon: "👦", label: "Student", desc: "I want to learn typing" },
+              { type: "parent" as const, icon: "👨‍👩‍👧", label: "Parent", desc: "I want to track my child" },
+              { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher/School", desc: "I manage a classroom" },
+            ] as const
+          ).map((option) => (
+            <Card
               key={option.type}
+              role="button"
+              tabIndex={0}
               onClick={() => handleAccountTypeSelect(option.type)}
-              style={{
-                padding: "20px",
-                borderRadius: "12px",
-                border:
-                  accountType === option.type
-                    ? "2px solid #4CAF50"
-                    : "2px solid #e0e0e0",
-                background:
-                  accountType === option.type
-                    ? "#E8F5E9"
-                    : "white",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                boxShadow:
-                  accountType === option.type
-                    ? "0 4px 24px rgba(76, 175, 80, 0.1)"
-                    : "0 4px 24px rgba(0, 0, 0, 0.08)",
-                textAlign: "center",
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleAccountTypeSelect(option.type);
+                }
               }}
+              className={cn(
+                "cursor-pointer transition-shadow",
+                accountType === option.type
+                  ? "border-2 border-primary shadow-md ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/40"
+              )}
             >
-              <div style={{ fontSize: "32px", marginBottom: "8px" }}>
-                {option.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  color: "#2c3e50",
-                  marginBottom: "4px",
-                }}
-              >
-                {option.label}
-              </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#999",
-                }}
-              >
-                {option.desc}
-              </div>
-            </div>
+              <CardHeader className="pb-2 text-center">
+                <div className="text-3xl">{option.icon}</div>
+                <CardTitle className="font-heading text-sm">{option.label}</CardTitle>
+                <CardDescription className="text-xs">{option.desc}</CardDescription>
+              </CardHeader>
+            </Card>
           ))}
         </div>
 
-        {/* FORM */}
-        {accountType && (
+        {accountType ? (
           <form onSubmit={handleSubmit}>
-            <div
-              style={{
-                background: "white",
-                border: "1px solid #e0e0e0",
-                borderRadius: "12px",
-                padding: "32px",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-              }}
-            >
-              {/* FULL NAME */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  disabled={isLoading}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    fontSize: "14px",
-                    border: errors.fullName
-                      ? "2px solid #f44336"
-                      : "2px solid #e0e0e0",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border 0.2s ease",
-                    boxSizing: "border-box",
-                    opacity: isLoading ? 0.6 : 1,
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#4CAF50";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.fullName
-                      ? "#f44336"
-                      : "#e0e0e0";
-                  }}
-                />
-                {errors.fullName && (
-                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                    {errors.fullName}
-                  </div>
-                )}
-              </div>
-
-              {/* EMAIL */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={isLoading}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    fontSize: "14px",
-                    border: errors.email
-                      ? "2px solid #f44336"
-                      : "2px solid #e0e0e0",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border 0.2s ease",
-                    boxSizing: "border-box",
-                    opacity: isLoading ? 0.6 : 1,
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#4CAF50";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.email
-                      ? "#f44336"
-                      : "#e0e0e0";
-                  }}
-                />
-                {errors.email && (
-                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                    {errors.email}
-                  </div>
-                )}
-              </div>
-
-              {/* GENDER */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  disabled={isLoading}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    fontSize: "14px",
-                    border: errors.gender
-                      ? "2px solid #f44336"
-                      : "2px solid #e0e0e0",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border 0.2s ease",
-                    boxSizing: "border-box",
-                    opacity: isLoading ? 0.6 : 1,
-                  }}
-                >
-                  <option value="">Select gender</option>
-                  <option value="boy">Boy</option>
-                  <option value="girl">Girl</option>
-                </select>
-                {errors.gender && (
-                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                    {errors.gender}
-                  </div>
-                )}
-              </div>
-
-              {/* STUDENT ACCOUNT FIELDS */}
-              {accountType === "student" && (
-                <>
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Age
-                    </label>
-                    <select
-                      name="age"
-                      value={formData.age}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.age
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                    >
-                      <option value="">Select age</option>
-                      {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
-                        <option key={age} value={age}>
-                          {age} years old
-                        </option>
-                      ))}
-                    </select>
-                    {errors.age && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.age}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.username
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.username
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.username && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.username}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* PARENT ACCOUNT FIELDS */}
-              {accountType === "parent" && (
-                <>
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Child's Name
-                    </label>
-                    <input
-                      type="text"
-                      name="childName"
-                      value={formData.childName}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.childName
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.childName
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.childName && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.childName}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Child's Age
-                    </label>
-                    <select
-                      name="childAge"
-                      value={formData.childAge}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.childAge
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                    >
-                      <option value="">Select age</option>
-                      {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
-                        <option key={age} value={age}>
-                          {age} years old
-                        </option>
-                      ))}
-                    </select>
-                    {errors.childAge && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.childAge}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Child's Gender
-                    </label>
-                    <select
-                      name="childGender"
-                      value={formData.childGender}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.childGender
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                    >
-                      <option value="">Select gender</option>
-                      <option value="boy">Boy</option>
-                      <option value="girl">Girl</option>
-                    </select>
-                    {errors.childGender && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.childGender}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* TEACHER ACCOUNT FIELDS */}
-              {accountType === "teacher" && (
-                <>
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      School Name
-                    </label>
-                    <input
-                      type="text"
-                      name="schoolName"
-                      value={formData.schoolName}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.schoolName
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.schoolName
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.schoolName && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.schoolName}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#2c3e50",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Number of Students
-                    </label>
-                    <input
-                      type="number"
-                      name="numStudents"
-                      value={formData.numStudents}
-                      onChange={handleInputChange}
-                      disabled={isLoading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "14px",
-                        border: errors.numStudents
-                          ? "2px solid #f44336"
-                          : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border 0.2s ease",
-                        boxSizing: "border-box",
-                        opacity: isLoading ? 0.6 : 1,
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#4CAF50";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = errors.numStudents
-                          ? "#f44336"
-                          : "#e0e0e0";
-                      }}
-                    />
-                    {errors.numStudents && (
-                      <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                        {errors.numStudents}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-              
-              {/* PASSWORD */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Password
-                </label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type={passwordVisible ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
+            <Card className="border-border/80 shadow-md">
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="font-heading text-lg">Your details</CardTitle>
+                  <CardDescription>We&apos;ll set up your profile securely.</CardDescription>
+                </div>
+                <Badge variant="secondary" className="capitalize">
+                  {accountType}
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      fontSize: "14px",
-                      border: errors.password
-                        ? "2px solid #f44336"
-                        : "2px solid #e0e0e0",
-                      borderRadius: "8px",
-                      outline: "none",
-                      transition: "border 0.2s ease",
-                      boxSizing: "border-box",
-                      paddingRight: "40px",
-                      opacity: isLoading ? 0.6 : 1,
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "#4CAF50";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = errors.password
-                        ? "#f44336"
-                        : "#e0e0e0";
-                    }}
+                    aria-invalid={!!errors.fullName}
+                    className={cn(errors.fullName && "border-destructive")}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setPasswordVisible(!passwordVisible)}
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "18px",
-                      color: "#999",
-                    }}
-                  >
-                    {passwordVisible ? "👁️" : "👁️‍🗨️"}
-                  </button>
+                  {errors.fullName ? (
+                    <p className="text-xs text-destructive">{errors.fullName}</p>
+                  ) : null}
                 </div>
-                {errors.password && (
-                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                    {errors.password}
-                  </div>
-                )}
-              </div>
 
-              {/* CONFIRM PASSWORD */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Confirm Password
-                </label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type={confirmPasswordVisible ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      fontSize: "14px",
-                      border: errors.confirmPassword
-                        ? "2px solid #f44336"
-                        : "2px solid #e0e0e0",
-                      borderRadius: "8px",
-                      outline: "none",
-                      transition: "border 0.2s ease",
-                      boxSizing: "border-box",
-                      paddingRight: "40px",
-                      opacity: isLoading ? 0.6 : 1,
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "#4CAF50";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = errors.confirmPassword
-                        ? "#f44336"
-                        : "#e0e0e0";
-                    }}
+                    aria-invalid={!!errors.email}
+                    className={cn(errors.email && "border-destructive")}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "18px",
-                      color: "#999",
-                    }}
-                  >
-                    {confirmPasswordVisible ? "👁️" : "👁️‍🗨️"}
-                  </button>
+                  {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
                 </div>
-                {errors.confirmPassword && (
-                  <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                    {errors.confirmPassword}
-                  </div>
-                )}
-              </div>
 
-              {/* PROMO CODE */}
-              <div style={{ marginBottom: "24px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "#2c3e50",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Promo Code (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="promoCode"
-                  value={formData.promoCode}
-                  onChange={handlePromoCodeChange}
-                  disabled={isLoading}
-                  placeholder="Enter promo code"
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    fontSize: "14px",
-                    border: "2px solid #e0e0e0",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border 0.2s ease",
-                    boxSizing: "border-box",
-                    opacity: isLoading ? 0.6 : 1,
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#4CAF50";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e0e0e0";
-                  }}
-                />
-                {promoStatus && (
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: promoStatus.valid ? "#4CAF50" : "#f44336",
-                      marginTop: "4px",
-                    }}
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    className={cn(selectClassName, errors.gender && "border-destructive")}
                   >
-                    {promoStatus.message}
+                    <option value="">Select gender</option>
+                    <option value="boy">Boy</option>
+                    <option value="girl">Girl</option>
+                  </select>
+                  {errors.gender ? <p className="text-xs text-destructive">{errors.gender}</p> : null}
+                </div>
+
+                {accountType === "student" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Age</Label>
+                      <select
+                        id="age"
+                        name="age"
+                        value={formData.age}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        className={cn(selectClassName, errors.age && "border-destructive")}
+                      >
+                        <option value="">Select age</option>
+                        {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
+                          <option key={age} value={age}>
+                            {age} years old
+                          </option>
+                        ))}
+                      </select>
+                      {errors.age ? <p className="text-xs text-destructive">{errors.age}</p> : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.username}
+                        className={cn(errors.username && "border-destructive")}
+                      />
+                      {errors.username ? (
+                        <p className="text-xs text-destructive">{errors.username}</p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
+
+                {accountType === "parent" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="childName">Child&apos;s Name</Label>
+                      <Input
+                        id="childName"
+                        name="childName"
+                        value={formData.childName}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.childName}
+                        className={cn(errors.childName && "border-destructive")}
+                      />
+                      {errors.childName ? (
+                        <p className="text-xs text-destructive">{errors.childName}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="childAge">Child&apos;s Age</Label>
+                      <select
+                        id="childAge"
+                        name="childAge"
+                        value={formData.childAge}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        className={cn(selectClassName, errors.childAge && "border-destructive")}
+                      >
+                        <option value="">Select age</option>
+                        {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
+                          <option key={age} value={age}>
+                            {age} years old
+                          </option>
+                        ))}
+                      </select>
+                      {errors.childAge ? (
+                        <p className="text-xs text-destructive">{errors.childAge}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="childGender">Child&apos;s Gender</Label>
+                      <select
+                        id="childGender"
+                        name="childGender"
+                        value={formData.childGender}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        className={cn(selectClassName, errors.childGender && "border-destructive")}
+                      >
+                        <option value="">Select gender</option>
+                        <option value="boy">Boy</option>
+                        <option value="girl">Girl</option>
+                      </select>
+                      {errors.childGender ? (
+                        <p className="text-xs text-destructive">{errors.childGender}</p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
+
+                {accountType === "teacher" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="schoolName">School Name</Label>
+                      <Input
+                        id="schoolName"
+                        name="schoolName"
+                        value={formData.schoolName}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.schoolName}
+                        className={cn(errors.schoolName && "border-destructive")}
+                      />
+                      {errors.schoolName ? (
+                        <p className="text-xs text-destructive">{errors.schoolName}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="numStudents">Number of Students</Label>
+                      <Input
+                        id="numStudents"
+                        type="number"
+                        name="numStudents"
+                        value={formData.numStudents}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.numStudents}
+                        className={cn(errors.numStudents && "border-destructive")}
+                      />
+                      {errors.numStudents ? (
+                        <p className="text-xs text-destructive">{errors.numStudents}</p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={passwordVisible ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.password}
+                      className={cn("pr-10", errors.password && "border-destructive")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      onClick={() => setPasswordVisible(!passwordVisible)}
+                    >
+                      {passwordVisible ? "Hide" : "Show"}
+                    </Button>
                   </div>
-                )}
-              </div>
+                  {errors.password ? (
+                    <p className="text-xs text-destructive">{errors.password}</p>
+                  ) : null}
+                </div>
 
-              {/* SIGN UP BUTTON */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  background: isLoading ? "#bbb" : "#4CAF50",
-                  color: "white",
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "background 0.2s ease",
-                  opacity: isLoading ? 0.7 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    e.currentTarget.style.background = "#45a049";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isLoading) {
-                    e.currentTarget.style.background = "#4CAF50";
-                  }
-                }}
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
-              </button>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={confirmPasswordVisible ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.confirmPassword}
+                      className={cn("pr-14", errors.confirmPassword && "border-destructive")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 text-muted-foreground"
+                      onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                    >
+                      {confirmPasswordVisible ? "Hide" : "Show"}
+                    </Button>
+                  </div>
+                  {errors.confirmPassword ? (
+                    <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                  ) : null}
+                </div>
 
-            {/* LOGIN LINK */}
-            <div
-              style={{
-                textAlign: "center",
-                marginTop: "24px",
-                fontSize: "14px",
-                color: "#666",
-              }}
-            >
+                <div className="space-y-2">
+                  <Label htmlFor="promoCode">Promo Code (Optional)</Label>
+                  <Input
+                    id="promoCode"
+                    name="promoCode"
+                    value={formData.promoCode}
+                    onChange={handlePromoCodeChange}
+                    disabled={isLoading}
+                    placeholder="Enter promo code"
+                  />
+                  {promoStatus ? (
+                    <p
+                      className={cn(
+                        "text-xs",
+                        promoStatus.valid ? "text-primary" : "text-destructive"
+                      )}
+                    >
+                      {promoStatus.message}
+                    </p>
+                  ) : null}
+                </div>
+
+                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                  {isLoading ? "Creating Account…" : "Create Account"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <a
-                href="/login"
-                style={{
-                  color: "#4CAF50",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = "underline";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = "none";
-                }}
-              >
+              <Link href="/login" className="font-semibold text-primary hover:underline">
                 Log in here
-              </a>
-            </div>
+              </Link>
+            </p>
           </form>
-        )}
-
-        {/* SELECT ACCOUNT TYPE MESSAGE */}
-        {!accountType && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "40px 24px",
-              color: "#999",
-              fontSize: "14px",
-            }}
-          >
-            Select an account type above to continue
-          </div>
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="py-10 text-center text-sm text-muted-foreground">
+              Select an account type above to continue
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

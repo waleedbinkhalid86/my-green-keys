@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Nunito, Poppins } from "next/font/google";
 import "./globals.css";
 import SiteFooter from "@/components/SiteFooter";
+import { cn } from "@/lib/utils";
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+  display: "swap",
+});
 
 const poppins = Poppins({
   weight: ["300", "400", "600", "700", "800", "900"],
@@ -20,8 +27,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-poppins">
+    <html lang="en" className={cn("h-full", nunito.variable, poppins.variable)}>
+      <body className="min-h-full flex flex-col font-sans antialiased">
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

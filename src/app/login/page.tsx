@@ -1,14 +1,20 @@
 "use client";
+
 import React, { useState } from "react";
+import Link from "next/link";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import "../globals.css";
 
 const LOGIN_TIMEOUT_MS = 10_000;
 const LOGIN_TIMEOUT_MESSAGE =
   "Connection timeout. Please try again or contact support.";
-
-type AccountType = "student" | "parent" | "teacher";
 
 interface LoginForm {
   emailOrUsername: string;
@@ -34,9 +40,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string)
 function formatAuthError(error: AuthError): string {
   const parts = [error.message];
   if (error.status !== undefined) parts.push(`status: ${error.status}`);
-  const code = "code" in error && typeof (error as { code?: string }).code === "string"
-    ? (error as { code: string }).code
-    : undefined;
+  const code =
+    "code" in error && typeof (error as { code?: string }).code === "string"
+      ? (error as { code: string }).code
+      : undefined;
   if (code) parts.push(`code: ${code}`);
   return parts.join(" · ");
 }
@@ -81,17 +88,7 @@ function FormErrorBanner({ message }: { message: string }) {
     <div
       role="alert"
       aria-live="polite"
-      style={{
-        background: "#ffebee",
-        border: "1px solid #ef5350",
-        color: "#c62828",
-        padding: "12px 16px",
-        borderRadius: "8px",
-        marginBottom: "16px",
-        fontSize: "14px",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}
+      className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm whitespace-pre-wrap break-words text-destructive"
     >
       {message}
     </div>
@@ -99,7 +96,6 @@ function FormErrorBanner({ message }: { message: string }) {
 }
 
 export default function LoginPage() {
-  const [accountType, setAccountType] = useState<AccountType>("student");
   const [formData, setFormData] = useState<LoginForm>({
     emailOrUsername: "",
     password: "",
@@ -240,305 +236,109 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ background: "white", minHeight: "100vh", fontFamily: "Poppins, sans-serif" }}>
-      {/* NAV BAR */}
-      <nav
-        style={{
-          background: "#2c3e50",
-          color: "white",
-          padding: "16px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: "#4CAF50",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "20px",
-            }}
-          >
+    <div className="min-h-screen bg-background font-sans">
+      <nav className="flex items-center justify-between border-b border-white/10 bg-[var(--mgk-dark)] px-6 py-4 shadow-sm">
+        <Link href="/" className="flex items-center gap-3 no-underline">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg">
             🌿
           </div>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem" }}>
-            My Green Keys
-          </span>
-        </div>
-
-        <a
-          href="/signup"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Don't have an account? Sign Up
-        </a>
+          <span className="font-heading text-base font-bold text-white">My Green Keys</span>
+        </Link>
+        <Link href="/signup" className="text-sm font-semibold text-white/90 hover:text-primary">
+          Don&apos;t have an account? Sign Up
+        </Link>
       </nav>
 
-      {/* MAIN CONTENT */}
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "60px 24px" }}>
-        <h1
-          style={{
-            fontSize: "32px",
-            fontWeight: 800,
-            color: "#2c3e50",
-            textAlign: "center",
-            marginBottom: "12px",
-          }}
-        >
-          Log In
-        </h1>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "#666",
-            textAlign: "center",
-            marginBottom: "40px",
-          }}
-        >
-          Welcome back to My Green Keys
-        </p>
+      <div className="mx-auto max-w-md px-6 py-14">
+        <div className="mb-8 text-center">
+          <h1 className="font-heading text-3xl font-bold text-foreground">Log In</h1>
+          <p className="mt-2 text-muted-foreground">Welcome back to My Green Keys</p>
+        </div>
 
-        {/* LOGIN FORM */}
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              background: "white",
-              border: "1px solid #e0e0e0",
-              borderRadius: "12px",
-              padding: "32px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            }}
-          >
-            <FormErrorBanner message={errors.form ?? ""} />
-            {/* EMAIL FIELD */}
-            <div style={{ marginBottom: "24px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#2c3e50",
-                  marginBottom: "8px",
-                }}
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                name="emailOrUsername"
-                value={formData.emailOrUsername}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="Enter your email"
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  fontSize: "14px",
-                  border: errors.emailOrUsername
-                    ? "2px solid #f44336"
-                    : "2px solid #e0e0e0",
-                  borderRadius: "8px",
-                  outline: "none",
-                  transition: "border 0.2s ease",
-                  boxSizing: "border-box",
-                  opacity: isLoading ? 0.6 : 1,
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#4CAF50";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = errors.emailOrUsername
-                    ? "#f44336"
-                    : "#e0e0e0";
-                }}
-              />
-              {errors.emailOrUsername && (
-                <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                  {errors.emailOrUsername}
-                </div>
-              )}
-            </div>
+          <Card className="border-border/80 shadow-md">
+            <CardHeader>
+              <CardTitle className="font-heading text-lg">Sign in</CardTitle>
+              <CardDescription>Use the email and password for your account.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <FormErrorBanner message={errors.form ?? ""} />
 
-            {/* PASSWORD FIELD */}
-            <div style={{ marginBottom: "12px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#2c3e50",
-                  marginBottom: "8px",
-                }}
-              >
-                Password
-              </label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={passwordVisible ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
+              <div className="space-y-2">
+                <Label htmlFor="emailOrUsername">Email</Label>
+                <Input
+                  id="emailOrUsername"
+                  type="email"
+                  name="emailOrUsername"
+                  value={formData.emailOrUsername}
                   onChange={handleInputChange}
                   disabled={isLoading}
-                  placeholder="Enter your password"
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    fontSize: "14px",
-                    border: errors.password
-                      ? "2px solid #f44336"
-                      : "2px solid #e0e0e0",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border 0.2s ease",
-                    boxSizing: "border-box",
-                    paddingRight: "40px",
-                    opacity: isLoading ? 0.6 : 1,
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#4CAF50";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = errors.password
-                      ? "#f44336"
-                      : "#e0e0e0";
-                  }}
+                  placeholder="Enter your email"
+                  aria-invalid={!!errors.emailOrUsername}
+                  className={cn(errors.emailOrUsername && "border-destructive")}
                 />
-                <button
-                  type="button"
-                  onClick={() => setPasswordVisible(!passwordVisible)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    color: "#999",
-                  }}
-                >
-                  {passwordVisible ? "👁️" : "👁️‍🗨️"}
-                </button>
+                {errors.emailOrUsername ? (
+                  <p className="text-xs text-destructive">{errors.emailOrUsername}</p>
+                ) : null}
               </div>
-              {errors.password && (
-                <div style={{ fontSize: "12px", color: "#f44336", marginTop: "4px" }}>
-                  {errors.password}
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={passwordVisible ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    placeholder="Enter your password"
+                    aria-invalid={!!errors.password}
+                    className={cn("pr-10", errors.password && "border-destructive")}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    aria-label={passwordVisible ? "Hide password" : "Show password"}
+                  >
+                    {passwordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </Button>
                 </div>
-              )}
-            </div>
+                {errors.password ? (
+                  <p className="text-xs text-destructive">{errors.password}</p>
+                ) : null}
+              </div>
 
-            {/* FORGOT PASSWORD & REMEMBER ME */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "24px",
-                fontSize: "14px",
-              }}
-            >
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ cursor: "pointer" }}
-                />
-                <span style={{ color: "#666" }}>Remember me</span>
-              </label>
-              <a
-                href="#"
-                style={{
-                  color: "#4CAF50",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = "underline";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = "none";
-                }}
-              >
-                Forgot password?
-              </a>
-            </div>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <label className="flex cursor-pointer items-center gap-2 text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="size-4 rounded border-input accent-primary"
+                  />
+                  Remember me
+                </label>
+                <a href="#" className="font-semibold text-primary hover:underline">
+                  Forgot password?
+                </a>
+              </div>
 
-            <FormErrorBanner message={errors.form ?? ""} />
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? "Logging In…" : "Log In"}
+              </Button>
+            </CardContent>
+          </Card>
 
-            {/* LOG IN BUTTON */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: "100%",
-                padding: "14px",
-                background: isLoading ? "#bbb" : "#4CAF50",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: 700,
-                border: "none",
-                borderRadius: "8px",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                transition: "background 0.2s ease",
-                opacity: isLoading ? 0.7 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = "#45a049";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = "#4CAF50";
-                }
-              }}
-            >
-              {isLoading ? "Logging In..." : "Log In"}
-            </button>
-          </div>
-
-          {/* SIGN UP LINK */}
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "24px",
-              fontSize: "14px",
-              color: "#666",
-            }}
-          >
-            Don't have an account?{" "}
-            <a
-              href="/signup"
-              style={{
-                color: "#4CAF50",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = "underline";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = "none";
-              }}
-            >
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
               Sign up here
-            </a>
-          </div>
+            </Link>
+          </p>
         </form>
       </div>
     </div>
