@@ -167,6 +167,26 @@ body {
   }
 }
 
+@keyframes mgk-bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: mgk-bounce-slow 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce-slow {
+    animation: none;
+  }
+}
+
 /* Reduce motion/animation load on mobile */
 @media (prefers-reduced-motion: reduce) {
   .leaf,

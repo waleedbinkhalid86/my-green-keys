@@ -5,6 +5,7 @@ import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
+import { PetWidget } from "@/components/PetWidget";
 import "../globals.css";
 
 const nunito = Nunito({
@@ -2209,8 +2210,11 @@ export default function LessonPage() {
             Games
           </button>
 
-          {/* Pet widget (nav — larger on desktop, compact on mobile) */}
-          <div className="nav-pet-wrap" style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 4 }}>
+          {/* Pet widget (compact — desktop uses PetWidget on typing card) */}
+          <div
+            className="nav-pet-wrap flex md:hidden"
+            style={{ alignItems: "center", gap: 10, paddingLeft: 4 }}
+          >
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.85, lineHeight: 1.1 }}>
                 {petName || "My Pet"}
@@ -2373,6 +2377,7 @@ export default function LessonPage() {
       <div className="lesson-main-pad" style={{ maxWidth: 860, margin: "0 auto", padding: "8px 8px 0" }}>
         {/* TYPING AREA (TypingClub style) */}
         <div
+          className="md:pr-[232px]"
           style={{
             position: "relative",
             maxWidth: "100%",
@@ -2384,55 +2389,13 @@ export default function LessonPage() {
             border: "1px solid rgba(0,0,0,0.06)",
           }}
         >
-          {/* Desktop pet — top-right of typing card (hidden on small screens) */}
-          <div
-            className="typing-area-pet hidden md:flex"
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 4,
-              pointerEvents: "none",
-            }}
-          >
-            <div
-              className={["pet", `pet-${petMood}`, petPulse ? "pet-pulse" : "", petDance ? "pet-dance" : ""].join(" ")}
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                display: "grid",
-                placeItems: "center",
-                fontSize: 28,
-                background: "linear-gradient(180deg, rgba(46,204,113,0.12), rgba(26,47,35,0.06))",
-                border: "1px solid rgba(46,204,113,0.25)",
-              }}
-              aria-hidden
-            >
-              {petEmoji}
-            </div>
-            <div
-              style={{
-                width: 48,
-                height: 5,
-                borderRadius: 999,
-                background: "rgba(26,47,35,0.12)",
-                overflow: "hidden",
-                border: "1px solid rgba(0,0,0,0.06)",
-              }}
-            >
-              <div
-                className="pet-health-fill"
-                style={{
-                  width: `${clamp(petHealth, 0, 100)}%`,
-                  height: "100%",
-                  background: petMood === "happy" ? "#2ECC71" : petMood === "neutral" ? "#F39C12" : "#E67E22",
-                }}
-              />
-            </div>
-          </div>
+          <PetWidget
+            petType={petType}
+            petName={petName}
+            health={petHealth}
+            pulse={petPulse}
+            dance={petDance}
+          />
           <div style={{ marginBottom: "7px" }}>
             <div style={{ fontSize: 11, fontWeight: 900, color: "#95A5A6", marginBottom: 4, letterSpacing: "0.08em" }}>
               DRILL TEXT
