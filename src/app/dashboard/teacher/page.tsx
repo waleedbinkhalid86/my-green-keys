@@ -2,15 +2,24 @@
 
 import { useEffect, useMemo, startTransition, useState } from "react";
 import {
+  Activity,
+  Bird,
   BookOpen,
   Copy,
+  Droplets,
+  FileBarChart,
   FileText,
   GraduationCap,
   LayoutDashboard,
+  Leaf,
   LogOut,
+  Recycle,
   Settings,
+  Sparkles,
+  Sprout,
   Trophy,
   Users,
+  Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { loadReportBranding, saveReportBranding } from "@/lib/report/branding";
@@ -95,16 +104,16 @@ export default function TeacherDashboard() {
   }, []);
 
   const leaderboardData = [
-    { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "🏆" },
-    { rank: 2, name: "Omar Khan", wpm: 38, accuracy: 94, lessons: 25, ecoPoints: 380, streak: 5, badge: "⭐" },
-    { rank: 3, name: "Fatima Ali", wpm: 35, accuracy: 91, lessons: 22, ecoPoints: 340, streak: 4, badge: "🌿" },
-    { rank: 4, name: "Zahra Hassan", wpm: 33, accuracy: 90, lessons: 20, ecoPoints: 310, streak: 3, badge: "" },
-    { rank: 5, name: "Amir Ibrahim", wpm: 31, accuracy: 88, lessons: 19, ecoPoints: 290, streak: 2, badge: "" },
-    { rank: 6, name: "Noor Rashid", wpm: 29, accuracy: 87, lessons: 18, ecoPoints: 260, streak: 2, badge: "" },
-    { rank: 7, name: "Hana Karim", wpm: 28, accuracy: 86, lessons: 17, ecoPoints: 240, streak: 1, badge: "" },
-    { rank: 8, name: "Karim Saleh", wpm: 26, accuracy: 84, lessons: 16, ecoPoints: 220, streak: 1, badge: "" },
-    { rank: 9, name: "Layla Ahmed", wpm: 25, accuracy: 83, lessons: 15, ecoPoints: 200, streak: 0, badge: "" },
-    { rank: 10, name: "Hassan Ali", wpm: 24, accuracy: 82, lessons: 14, ecoPoints: 180, streak: 0, badge: "" },
+    { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "trophy" as const },
+    { rank: 2, name: "Omar Khan", wpm: 38, accuracy: 94, lessons: 25, ecoPoints: 380, streak: 5, badge: "star" as const },
+    { rank: 3, name: "Fatima Ali", wpm: 35, accuracy: 91, lessons: 22, ecoPoints: 340, streak: 4, badge: "leaf" as const },
+    { rank: 4, name: "Zahra Hassan", wpm: 33, accuracy: 90, lessons: 20, ecoPoints: 310, streak: 3, badge: "" as const },
+    { rank: 5, name: "Amir Ibrahim", wpm: 31, accuracy: 88, lessons: 19, ecoPoints: 290, streak: 2, badge: "" as const },
+    { rank: 6, name: "Noor Rashid", wpm: 29, accuracy: 87, lessons: 18, ecoPoints: 260, streak: 2, badge: "" as const },
+    { rank: 7, name: "Hana Karim", wpm: 28, accuracy: 86, lessons: 17, ecoPoints: 240, streak: 1, badge: "" as const },
+    { rank: 8, name: "Karim Saleh", wpm: 26, accuracy: 84, lessons: 16, ecoPoints: 220, streak: 1, badge: "" as const },
+    { rank: 9, name: "Layla Ahmed", wpm: 25, accuracy: 83, lessons: 15, ecoPoints: 200, streak: 0, badge: "" as const },
+    { rank: 10, name: "Hassan Ali", wpm: 24, accuracy: 82, lessons: 14, ecoPoints: 180, streak: 0, badge: "" as const },
   ];
 
   const allStudentsData = [
@@ -119,11 +128,11 @@ export default function TeacherDashboard() {
   ];
 
   const ecoFeedData = [
-    { id: 1, studentName: "Sarah", action: "Watering plants", icon: "💧", time: "2 hours ago" },
-    { id: 2, studentName: "Omar", action: "Planted a tree", icon: "🌱", time: "Yesterday" },
-    { id: 3, studentName: "Fatima", action: "Water for birds", icon: "🐦", time: "2 days ago" },
-    { id: 4, studentName: "Zahra", action: "Recycling bin sort", icon: "♻️", time: "3 days ago" },
-    { id: 5, studentName: "Amir", action: "Composting", icon: "🌿", time: "4 days ago" },
+    { id: 1, studentName: "Sarah", action: "Watering plants", Icon: Droplets, time: "2 hours ago" },
+    { id: 2, studentName: "Omar", action: "Planted a tree", Icon: Sprout, time: "Yesterday" },
+    { id: 3, studentName: "Fatima", action: "Water for birds", Icon: Bird, time: "2 days ago" },
+    { id: 4, studentName: "Zahra", action: "Recycling bin sort", Icon: Recycle, time: "3 days ago" },
+    { id: 5, studentName: "Amir", action: "Composting", Icon: Leaf, time: "4 days ago" },
   ];
 
   const savedLessons = [
@@ -372,8 +381,10 @@ export default function TeacherDashboard() {
           className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
           aria-label="Teacher navigation"
         >
-          <div className="mb-8 flex items-center gap-3 px-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-lg text-white">🌿</div>
+            <div className="mb-8 flex items-center gap-3 px-2">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-white">
+              <Leaf className="h-6 w-6" strokeWidth={2.25} aria-hidden />
+            </div>
             <div>
               <p className="font-heading text-sm font-extrabold text-[#1A2F23]">My Green Keys</p>
               <p className="text-xs font-semibold text-[#64748b]">Teacher</p>
@@ -433,20 +444,25 @@ export default function TeacherDashboard() {
           <div className="mx-auto max-w-6xl space-y-10 px-6 py-8">
         <section id="teacher-overview" className="scroll-mt-24">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: "👥", label: "Total Students", value: "48" },
-              { icon: "✨", label: "Active Today", value: "32" },
-              { icon: "⚡", label: "Class Average WPM", value: "28" },
-              { icon: "📚", label: "Lessons Completed Today", value: "127" },
-            ].map((card) => (
+            {(
+              [
+                { Icon: Users, label: "Total Students", value: "48" },
+                { Icon: Activity, label: "Active Today", value: "32" },
+                { Icon: Zap, label: "Class Average WPM", value: "28" },
+                { Icon: BookOpen, label: "Lessons Completed Today", value: "127" },
+              ] as const
+            ).map((card) => {
+              const StatIcon = card.Icon;
+              return (
               <Card key={card.label} className="mgk-card-ds border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
                 <CardHeader className="pb-2">
-                  <div className="text-2xl">{card.icon}</div>
+                  <StatIcon className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
                   <CardDescription className="font-semibold">{card.label}</CardDescription>
                   <CardTitle className="font-heading text-3xl text-[#2ECC71]">{card.value}</CardTitle>
                 </CardHeader>
               </Card>
-            ))}
+            );
+            })}
           </div>
         </section>
 
@@ -579,7 +595,8 @@ export default function TeacherDashboard() {
                                   window.open(`/report/${s.id}`, "_blank", "noopener,noreferrer")
                                 }
                               >
-                                📊 Generate Report
+                                <FileBarChart className="mr-2 h-4 w-4" strokeWidth={2.25} aria-hidden />
+                                Generate Report
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -614,9 +631,7 @@ export default function TeacherDashboard() {
                     key={student.rank}
                     className={cn(student.rank <= 3 && "bg-primary/5")}
                   >
-                    <TableCell className="font-semibold">
-                      {student.rank === 1 ? "🥇" : student.rank === 2 ? "🥈" : student.rank === 3 ? "🥉" : student.rank}
-                    </TableCell>
+                    <TableCell className="font-semibold">{student.rank}</TableCell>
                     <TableCell>
                       <div className="flex size-9 items-center justify-center rounded-full bg-[#2ECC71]/20 text-xs font-extrabold text-[#15803d]">
                         {initials(student.name)}
@@ -626,7 +641,15 @@ export default function TeacherDashboard() {
                     <TableCell className="font-semibold text-primary">{student.wpm}</TableCell>
                     <TableCell>{student.lessons}</TableCell>
                     <TableCell className="font-semibold text-[#15803d]">{student.ecoPoints}</TableCell>
-                    <TableCell className="text-lg">{student.badge}</TableCell>
+                    <TableCell className="text-lg">
+                      {student.badge === "trophy" ? (
+                        <Trophy className="h-5 w-5 text-amber-600" strokeWidth={2.25} aria-label="Trophy" />
+                      ) : student.badge === "star" ? (
+                        <Sparkles className="h-5 w-5 text-amber-500" strokeWidth={2.25} aria-label="Star" />
+                      ) : student.badge === "leaf" ? (
+                        <Leaf className="h-5 w-5 text-green-600" strokeWidth={2.25} aria-label="Eco badge" />
+                      ) : null}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -830,16 +853,22 @@ export default function TeacherDashboard() {
         <section id="teacher-eco-feed" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">Recent eco actions</h2>
           <div className="space-y-3">
-            {ecoFeedData.map((item) => (
+            {ecoFeedData.map((item) => {
+              const EcoIcon = item.Icon;
+              return (
               <Card key={item.id} className="border-primary/25 bg-primary/5">
                 <CardContent className="py-4">
-                  <p className="font-medium">
-                    {item.studentName} uploaded: {item.action} {item.icon}
+                  <p className="flex flex-wrap items-center gap-2 font-medium">
+                    <EcoIcon className="h-5 w-5 shrink-0 text-green-700" strokeWidth={2} aria-hidden />
+                    <span>
+                      {item.studentName} uploaded: {item.action}
+                    </span>
                   </p>
                   <p className="text-sm text-muted-foreground">— {item.time}</p>
                 </CardContent>
               </Card>
-            ))}
+            );
+            })}
           </div>
           <Button variant="outline" className="mt-4 border-primary text-primary hover:bg-primary/10">
             View all

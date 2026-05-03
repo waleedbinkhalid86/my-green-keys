@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { Leaf, Menu } from "lucide-react";
 import React from "react";
 
 const DARK = "#1A2F23";
@@ -27,9 +28,6 @@ const ic = (paths: string, vb = "0 0 24 24") =>
   };
 
 const CheckIcon = ic('<polyline points="20 6 9 17 4 12"/>');
-const LeafIcon = ic(
-  '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'
-);
 
 function Inner({ children }: { children: React.ReactNode }) {
   return (
@@ -192,7 +190,7 @@ export default function HomePage() {
                   justifyContent: "center",
                 }}
               >
-                <LeafIcon size={20} color="#fff" strokeWidth={2.5} />
+                <Leaf className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
               </div>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
             </Link>
@@ -230,7 +228,7 @@ export default function HomePage() {
                 aria-label="Open menu"
                 aria-expanded={mobileMenuOpen}
               >
-                ☰
+                <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />
               </button>
             </div>
           </div>
@@ -554,69 +552,63 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" style={{ background: "#F8F9FA", padding: "88px 0" }}>
+      <section id="how-it-works" className="py-20" style={{ background: "#F8F9FA" }}>
         <Inner>
           <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 48 }}>
             Learning that actually works
           </h2>
-          <div className="relative">
-            <div
-              className="hidden lg:block"
-              style={{
-                position: "absolute",
-                top: 72,
-                left: "12%",
-                right: "12%",
-                height: 3,
-                background: `linear-gradient(90deg, ${PRIMARY}33, ${PRIMARY})`,
-                borderRadius: 2,
-                zIndex: 0,
-              }}
-              aria-hidden
-            />
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                gap: 28,
-                position: "relative",
-                zIndex: 1,
-              }}
-            >
-              {[
-                { n: "1", emoji: "✨", title: "Sign Up Free", desc: "Create account in 60 seconds" },
-                { n: "2", emoji: "⌨️", title: "Start Typing", desc: "100 lessons from beginner to expert" },
-                { n: "3", emoji: "🌍", title: "Help the Planet", desc: "Earn eco points, plant trees" },
-              ].map((s) => (
-                <div
-                  key={s.n}
-                  className="mgk-card-ds"
-                  style={{ padding: "32px 28px", textAlign: "center" }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: PRIMARY,
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 900,
-                      margin: "0 auto 16px",
-                    }}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {(
+              [
+                {
+                  step: 1,
+                  src: "/images/homepage/how-1-signup.jpg",
+                  alt: "Sign up for My Green Keys",
+                  title: "Sign Up Free",
+                  desc: "Create an account in 60 seconds and choose your virtual pet",
+                },
+                {
+                  step: 2,
+                  src: "/images/homepage/how-2-typing.jpg",
+                  alt: "Learn typing with eco-friendly lessons",
+                  title: "Start Typing",
+                  desc: "100 lessons from home row to advanced. Every lesson teaches the planet",
+                },
+                {
+                  step: 3,
+                  src: "/images/homepage/how-3-planet.jpg",
+                  alt: "Help the planet with eco rewards",
+                  title: "Help the Planet",
+                  desc: "Upload eco actions, earn points, and contribute to real tree planting",
+                },
+              ] as const
+            ).map((card) => (
+              <article
+                key={card.step}
+                className="overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="relative aspect-square w-full">
+                  <span
+                    className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
+                    style={{ background: PRIMARY }}
                   >
-                    {s.n}
-                  </div>
-                  <div style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }} aria-hidden>
-                    {s.emoji}
-                  </div>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 900, color: DARK, marginBottom: 10 }}>{s.title}</h3>
-                  <p style={{ color: "#64748b", fontWeight: 600, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+                    {card.step}
+                  </span>
+                  <Image
+                    src={card.src}
+                    alt={card.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority={false}
+                    className="object-cover"
+                  />
                 </div>
-              ))}
-            </div>
+                <div className="p-6">
+                  <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                  <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </Inner>
       </section>

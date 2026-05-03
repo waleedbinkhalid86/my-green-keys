@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Plus } from "lucide-react";
+import { Ban, Check, Leaf, Lock, Plus, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
@@ -163,11 +163,11 @@ const ENTERPRISE_FEATURES = [
 ];
 
 const TRUST_SIGNALS = [
-  { icon: "🔒", label: "COPPA" },
-  { icon: "🛡️", label: "GDPR" },
-  { icon: "🔐", label: "SSL" },
-  { icon: "🚫", label: "No Ads" },
-];
+  { Icon: Lock, label: "COPPA" },
+  { Icon: Shield, label: "GDPR" },
+  { Icon: Lock, label: "SSL" },
+  { Icon: Ban, label: "No Ads" },
+] as const;
 
 function PricingNav() {
   return (
@@ -366,7 +366,7 @@ export default function PricingPage() {
       <section className="bg-white px-4 pt-[80px] pb-[60px] text-center sm:px-6">
         <div className="mx-auto max-w-3xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-[50px] border border-[#E5E7EB] bg-[#FAFAFA] px-4 py-2 text-sm font-semibold text-[#374151] shadow-sm">
-            <span aria-hidden>🌿</span>
+            <Leaf className="h-5 w-5 shrink-0 text-green-600" strokeWidth={2.25} aria-hidden />
             Trusted by 10,000+ families
           </div>
           <h1 className="text-[40px] font-black leading-[1.1] tracking-tight text-[#1A2F23] sm:text-[48px]">
@@ -643,9 +643,7 @@ export default function PricingPage() {
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4">
           {TRUST_SIGNALS.map((s) => (
             <div key={s.label} className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
-              <span className="text-lg" aria-hidden>
-                {s.icon}
-              </span>
+              <s.Icon className="h-5 w-5 shrink-0 text-green-600" strokeWidth={2.25} aria-hidden />
               {s.label}
             </div>
           ))}
@@ -747,7 +745,7 @@ export default function PricingPage() {
             Ready to start your child&apos;s typing journey?
           </h2>
           <p className="text-lg text-white/90">
-            Join thousands of kids learning to type while helping the planet 🌿
+            Join thousands of kids learning to type while helping the planet.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

@@ -3,6 +3,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Nunito } from "next/font/google";
+import type { LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  Bug,
+  Check,
+  Crown,
+  Gamepad2,
+  Globe,
+  Heart,
+  Leaf,
+  Lock,
+  Play,
+  Recycle,
+  Sparkles,
+  Sprout,
+  Star,
+  Sun,
+  Target,
+  TreeDeciduous,
+  Waves,
+  Zap,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -23,81 +45,82 @@ const nunito = Nunito({
 
 const LEVEL_ORDER: GameLevelId[] = ["seedling", "explorer", "guardian", "champion"];
 
+const LEVEL_ICONS: Record<GameLevelId, LucideIcon> = {
+  seedling: Sprout,
+  explorer: Leaf,
+  guardian: TreeDeciduous,
+  champion: Zap,
+};
+
 const HUB_STARS_KEY = "mgk_hub_game_stars";
 
 type GameCardDef = {
   slug: string;
   key: string;
-  emoji: string;
+  Icon: LucideIcon;
   name: string;
   description: string;
   imageSrc: string;
   unlockLessons: number;
   requiresPaid: boolean;
   gradient: string;
-  decor: string[];
 };
 
 const GAMES: GameCardDef[] = [
   {
     slug: "/games/falling-leaves",
     key: "falling-leaves",
-    emoji: "🍂",
+    Icon: Leaf,
     name: "Falling Leaves",
     description: "Catch enchanted leaves by typing lesson words—save the forest!",
     imageSrc: "/images/games/game-falling-leaves.jpg",
     unlockLessons: 0,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #F39C12 0%, #E67E22 100%)",
-    decor: ["🍃", "✨", "🌤️"],
   },
   {
     slug: "/games/sort-recycling",
     key: "sort-recycling",
-    emoji: "🗑️",
+    Icon: Recycle,
     name: "Sort Recycling",
     description: "Eco Hero City: sort waste into plastic, paper, organic, and glass!",
     imageSrc: "/images/games/game-sort-recycling.jpg",
     unlockLessons: 5,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #1ABC9C 0%, #16A085 100%)",
-    decor: ["♻️", "📦", "🌍"],
   },
   {
     slug: "/games/save-the-ocean",
     key: "save-the-ocean",
-    emoji: "🌊",
+    Icon: Waves,
     name: "Save the Ocean",
-    description: "Clear plastic by typing fast and free Zara the sea turtle 🐢!",
+    description: "Clear plastic by typing fast and free Zara the sea turtle!",
     imageSrc: "/images/games/game-save-ocean.jpg",
     unlockLessons: 40,
     requiresPaid: false,
     gradient: "linear-gradient(160deg, #3498DB 0%, #2980B9 100%)",
-    decor: ["🐠", "💧", "🐚"],
   },
   {
     slug: "/games/eco-garden",
     key: "eco-garden",
-    emoji: "🌱",
+    Icon: Sprout,
     name: "Eco Garden",
     description: "Grow a magical garden—type raindrops, unlock visitors, watch it bloom!",
     imageSrc: "/images/games/game-eco-garden.jpg",
     unlockLessons: 20,
     requiresPaid: true,
     gradient: "linear-gradient(160deg, #2ECC71 0%, #27AE60 100%)",
-    decor: ["🌻", "🐝", "🌧️"],
   },
   {
     slug: "/games/kind-world-academy",
     key: "kind-world-academy",
-    emoji: "💝",
+    Icon: Heart,
     name: "Kind World Academy",
     description: "Spread kindness around the world—typing adventure awaits!",
     imageSrc: "/images/games/game-kind-world.jpg",
     unlockLessons: 60,
     requiresPaid: true,
     gradient: "linear-gradient(160deg, #9B59B6 0%, #8E44AD 100%)",
-    decor: ["🌈", "🤝", "⭐"],
   },
 ];
 
@@ -128,10 +151,10 @@ const LEVEL_THEMES: Record<
 };
 
 const COMING_SOON = [
-  { emoji: "🦋", name: "Butterfly Catch" },
-  { emoji: "🐾", name: "Animal Race" },
-  { emoji: "🌍", name: "Eco Quiz" },
-];
+  { Icon: Sparkles, name: "Butterfly Catch" },
+  { Icon: Target, name: "Animal Race" },
+  { Icon: Globe, name: "Eco Quiz" },
+] as const;
 
 function hasPaidPlan(planType: string | null | undefined): boolean {
   const p = (planType ?? "").toLowerCase().trim();
@@ -402,52 +425,53 @@ export default function GamesHubPage() {
             zIndex: 0,
           }}
         >
-          {[0, 1, 2, 3, 4, 5].map((i) => (
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const DecoIcon = i % 3 === 0 ? Leaf : i % 3 === 1 ? Sprout : Star;
+            return (
             <span
               key={i}
-              className="games-hub-leaf-fall"
+              className="games-hub-leaf-fall inline-flex text-white/90"
               style={{
                 position: "absolute",
                 left: `${8 + i * 16}%`,
                 top: "-10%",
-                fontSize: i % 2 === 0 ? 22 : 16,
                 animation: `gamesHubLeaf ${14 + i * 2}s linear infinite`,
                 animationDelay: `${i * 1.2}s`,
               }}
             >
-              {i % 3 === 0 ? "🍃" : i % 3 === 1 ? "🌿" : "⭐"}
+              <DecoIcon className={i % 2 === 0 ? "h-5 w-5" : "h-4 w-4"} strokeWidth={2} aria-hidden />
             </span>
-          ))}
+            );
+          })}
         </div>
 
         <div
-          className="games-hub-float"
+          className="games-hub-float text-white/90"
           style={{
             position: "absolute",
             right: "8%",
             top: "22%",
-            fontSize: 28,
             animation: "gamesHubFloat 4s ease-in-out infinite",
             pointerEvents: "none",
             opacity: 0.55,
             zIndex: 0,
           }}
         >
-          ⭐
+          <Star className="h-7 w-7 fill-white/20" strokeWidth={2} aria-hidden />
         </div>
         <div
+          className="text-white/90"
           style={{
             position: "absolute",
             left: "6%",
             top: "28%",
-            fontSize: 24,
             animation: "gamesHubFloatSlow 5.5s ease-in-out infinite",
             pointerEvents: "none",
             opacity: 0.5,
             zIndex: 0,
           }}
         >
-          🍃
+          <Leaf className="h-6 w-6" strokeWidth={2} aria-hidden />
         </div>
 
         <div
@@ -460,6 +484,7 @@ export default function GamesHubPage() {
           }}
         >
           <h1
+            className="flex flex-wrap items-center gap-3"
             style={{
               color: "#ffffff",
               fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
@@ -470,7 +495,8 @@ export default function GamesHubPage() {
                 "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
             }}
           >
-            🎮 Game Zone!
+            <Gamepad2 className="h-9 w-9 shrink-0 text-white/95 sm:h-11 sm:w-11" strokeWidth={2} aria-hidden />
+            <span>Game Zone!</span>
           </h1>
           <p
             style={{
@@ -527,12 +553,12 @@ export default function GamesHubPage() {
             zIndex: 1,
           }}
         >
-          <span>🌳</span>
-          <span>🌲</span>
-          <span>🦋</span>
-          <span>🌻</span>
-          <span>🐛</span>
-          <span>🌳</span>
+          <TreeDeciduous className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+          <Sprout className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+          <Leaf className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+          <Sun className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+          <Bug className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+          <TreeDeciduous className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
         </div>
       </header>
 
@@ -570,8 +596,9 @@ export default function GamesHubPage() {
           <>
             {/* Level selector */}
             <section className="games-hub-card-animate" style={{ marginBottom: 44, animationDelay: "0ms" }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 10px", color: "#1A2F23" }}>
-                Choose Your Level 🌟
+              <h2 className="flex flex-wrap items-center gap-2" style={{ fontSize: 24, fontWeight: 800, margin: "0 0 10px", color: "#1A2F23" }}>
+                <Sparkles className="h-7 w-7 text-amber-500" strokeWidth={2} aria-hidden />
+                <span>Choose Your Level</span>
               </h2>
               <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
@@ -593,6 +620,7 @@ export default function GamesHubPage() {
                 `}</style>
                 {LEVEL_ORDER.map((id) => {
                   const def = GAME_LEVELS[id];
+                  const LevelIcon = LEVEL_ICONS[id];
                   const isSel = selectedLevel.id === id;
                   const isRec = recommendedId === id;
                   const theme = LEVEL_THEMES[id];
@@ -651,15 +679,16 @@ export default function GamesHubPage() {
                             position: "absolute",
                             top: 8,
                             left: 8,
-                            fontSize: 18,
                             lineHeight: 1,
                           }}
                           aria-hidden
                         >
-                          ✓
+                          <Check className="h-5 w-5 text-[#1A2F23]" strokeWidth={3} />
                         </span>
                       )}
-                      <div style={{ fontSize: 32, lineHeight: 1, marginTop: isSel ? 8 : 0 }}>{def.emoji}</div>
+                      <div style={{ marginTop: isSel ? 8 : 0 }} className="flex justify-start">
+                        <LevelIcon className="h-8 w-8 text-green-700" strokeWidth={2.25} aria-hidden />
+                      </div>
                       <div style={{ fontSize: 18, fontWeight: 800, marginTop: 8 }}>{def.label}</div>
                       <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, opacity: 0.9, lineHeight: 1.45 }}>
                         Speed {def.speedMultiplier}× · {def.lives} lives · {def.roundSeconds}s ·{" "}
@@ -684,18 +713,19 @@ export default function GamesHubPage() {
                 animationDelay: "100ms",
               }}
             >
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", color: "#1A2F23" }}>
-                Your Progress 📚
+              <h2 className="flex flex-wrap items-center gap-2" style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", color: "#1A2F23" }}>
+                <BookOpen className="h-7 w-7 text-green-600" strokeWidth={2.25} aria-hidden />
+                <span>Your Progress</span>
               </h2>
               <p style={{ margin: "0 0 12px", fontWeight: 700, fontSize: "clamp(1rem, 2.2vw, 1.15rem)" }}>
                 <span style={{ color: "#1A8F4E" }}>{done}</span> lesson{done === 1 ? "" : "s"} completed!
                 {nextLessonUnlock != null && done < nextLessonUnlock ? (
                   <>
                     {" "}
-                    Next unlock at <strong>{nextLessonUnlock}</strong> lessons 🔓
+                    Next unlock at <strong>{nextLessonUnlock}</strong> lessons
                   </>
                 ) : (
-                  <> You&apos;ve reached every milestone here—legend status! 🏆</>
+                  <> You&apos;ve reached every milestone here—legend status!</>
                 )}
               </p>
               <div
@@ -721,7 +751,9 @@ export default function GamesHubPage() {
                     fontSize: 12,
                   }}
                 >
-                  {progressToNextPct > 18 && <span aria-hidden>🌿</span>}
+                  {progressToNextPct > 18 && (
+                    <Leaf className="h-3.5 w-3.5 text-white" strokeWidth={2.5} aria-hidden />
+                  )}
                 </div>
               </div>
               {nextLessonUnlock != null && done < nextLessonUnlock && (
@@ -731,14 +763,14 @@ export default function GamesHubPage() {
               )}
               {paidPlan && (
                 <p style={{ margin: "12px 0 0", fontSize: 14, color: "#1A8F4E", fontWeight: 700 }}>
-                  Family / school plan active—premium games unlock with your subscription ✓
+                  Family / school plan active—premium games unlock with your subscription.
                 </p>
               )}
             </section>
 
             {/* Games grid */}
             <h2
-              className="games-hub-card-animate"
+              className="games-hub-card-animate flex flex-wrap items-center gap-2"
               style={{
                 fontSize: 24,
                 fontWeight: 800,
@@ -747,7 +779,8 @@ export default function GamesHubPage() {
                 animationDelay: "150ms",
               }}
             >
-              Pick a game 🎯
+              <Target className="h-7 w-7 text-green-600" strokeWidth={2.25} aria-hidden />
+              <span>Pick a game</span>
             </h2>
             <div
               className="games-hub-games-grid"
@@ -770,6 +803,7 @@ export default function GamesHubPage() {
                 }
               `}</style>
               {GAMES.map((g, i) => {
+                const GameCardIcon = g.Icon;
                 const lessonOk = done >= g.unlockLessons;
                 const paidOk = !g.requiresPaid || paidPlan;
                 const unlocked = lessonOk && paidOk;
@@ -827,12 +861,11 @@ export default function GamesHubPage() {
                           position: "absolute",
                           top: 12,
                           right: 12,
-                          fontSize: 26,
                           filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
                           zIndex: 4,
                         }}
                       >
-                        👑
+                        <Crown className="h-7 w-7 text-amber-600" strokeWidth={2} aria-hidden />
                       </div>
                     )}
 
@@ -892,9 +925,7 @@ export default function GamesHubPage() {
                         lineHeight: 1.25,
                       }}
                     >
-                      <span aria-hidden style={{ marginRight: 8 }}>
-                        {g.emoji}
-                      </span>
+                      <GameCardIcon className="mr-2 inline h-5 w-5 shrink-0 align-[-2px] text-green-600" strokeWidth={2.25} aria-hidden />
                       {g.name}
                     </h3>
                     <p
@@ -909,11 +940,16 @@ export default function GamesHubPage() {
                       {g.description}
                     </p>
                     {stars != null && unlocked && mode === "play" && (
-                      <div style={{ textAlign: "center", marginBottom: 6, fontSize: 16, letterSpacing: 3 }}>
+                      <div className="mb-1.5 flex justify-center gap-1">
                         {[0, 1, 2].map((si) => (
-                          <span key={si} style={{ opacity: si < stars ? 1 : 0.35 }}>
-                            ⭐
-                          </span>
+                          <Star
+                            key={si}
+                            className="h-4 w-4 text-amber-500"
+                            strokeWidth={2}
+                            fill={si < stars ? "currentColor" : "none"}
+                            style={{ opacity: si < stars ? 1 : 0.35 }}
+                            aria-hidden
+                          />
                         ))}
                       </div>
                     )}
@@ -932,7 +968,7 @@ export default function GamesHubPage() {
                               textAlign: "center",
                             }}
                           >
-                            Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}! 🌿
+                            Your garden has {ecoGardenPlantCount} plant{ecoGardenPlantCount === 1 ? "" : "s"}.
                           </p>
                         )}
 
@@ -940,7 +976,7 @@ export default function GamesHubPage() {
                       {mode === "play" && (
                         <Link
                           href={g.slug}
-                          className="games-hub-play-pulse"
+                          className="games-hub-play-pulse inline-flex items-center justify-center gap-0"
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -959,13 +995,14 @@ export default function GamesHubPage() {
                             boxSizing: "border-box",
                           }}
                         >
-                          ▶ Play Now!
+                          <Play className="mr-2 h-5 w-5 fill-current" strokeWidth={2} aria-hidden />
+                          Play Now!
                         </Link>
                       )}
                       {mode === "lesson_lock" && (
                         <>
-                          <div style={{ textAlign: "center", fontSize: 28, marginBottom: 4, lineHeight: 1 }} aria-hidden>
-                            🔒
+                          <div className="mb-1 flex justify-center" aria-hidden>
+                            <Lock className="h-8 w-8 text-[#64748b]" strokeWidth={2} />
                           </div>
                           <p
                             style={{
@@ -1057,8 +1094,9 @@ export default function GamesHubPage() {
 
             {/* Coming soon teasers — same vibe as game cards, grayed out */}
             <section style={{ marginTop: 52 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 22px", color: "#1A2F23" }}>
-                Coming Soon ✨
+              <h2 className="flex flex-wrap items-center gap-2" style={{ fontSize: 24, fontWeight: 800, margin: "0 0 22px", color: "#1A2F23" }}>
+                <Sparkles className="h-7 w-7 text-amber-500" strokeWidth={2} aria-hidden />
+                <span>Coming Soon</span>
               </h2>
               <div
                 className="games-hub-coming-grid"
@@ -1080,7 +1118,9 @@ export default function GamesHubPage() {
                     }
                   }
                 `}</style>
-                {COMING_SOON.map((c, ci) => (
+                {COMING_SOON.map((c, ci) => {
+                  const ComingIcon = c.Icon;
+                  return (
                   <article
                     key={c.name}
                     className="games-hub-card-animate games-hub-game-card"
@@ -1104,19 +1144,17 @@ export default function GamesHubPage() {
                     }}
                   >
                     <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.2 }}>
-                      <span style={{ position: "absolute", left: "12%", top: "20%", fontSize: 22 }}>✨</span>
-                      <span style={{ position: "absolute", right: "14%", top: "35%", fontSize: 18 }}>🌿</span>
+                      <Sparkles className="absolute left-[12%] top-[20%] h-6 w-6 text-white" strokeWidth={2} />
+                      <Leaf className="absolute right-[14%] top-[35%] h-5 w-5 text-white" strokeWidth={2} />
                     </div>
                     <span
+                      className="relative z-[1] flex items-center justify-center text-white"
                       style={{
-                        fontSize: 60,
                         lineHeight: 1,
                         filter: "grayscale(0.15)",
-                        position: "relative",
-                        zIndex: 1,
                       }}
                     >
-                      {c.emoji}
+                      <ComingIcon className="h-14 w-14" strokeWidth={2} aria-hidden />
                     </span>
                     <h3
                       style={{
@@ -1167,7 +1205,8 @@ export default function GamesHubPage() {
                       </div>
                     </div>
                   </article>
-                ))}
+                );
+                })}
               </div>
             </section>
           </>
@@ -1191,20 +1230,23 @@ export default function GamesHubPage() {
           {[0, 1, 2, 3].map((i) => (
             <span
               key={i}
+              className="inline-flex text-white/90"
               style={{
                 position: "absolute",
                 left: `${15 + i * 22}%`,
                 bottom: 6,
-                fontSize: 20,
                 animation: `gamesHubFloat ${3.5 + i * 0.5}s ease-in-out infinite`,
                 animationDelay: `${i * 0.3}s`,
               }}
             >
-              🍃
+              <Leaf className="h-5 w-5" strokeWidth={2} />
             </span>
           ))}
         </div>
-        <span style={{ position: "relative", zIndex: 1 }}>🌿 Every game you play helps the planet!</span>
+        <span className="relative z-[1] inline-flex items-center justify-center gap-2">
+          <Leaf className="h-5 w-5 shrink-0 text-white" strokeWidth={2} aria-hidden />
+          Every game you play helps the planet!
+        </span>
       </footer>
     </div>
   );

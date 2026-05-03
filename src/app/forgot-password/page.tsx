@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ForgotPasswordPage() {
@@ -23,9 +24,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-4 font-sans">
       <div className="w-full max-w-sm p-8">
         <div className="mb-8 flex justify-center">
-          <span className="flex h-10 w-10 items-center justify-center text-[40px] leading-none" aria-hidden>
-            🌿
-          </span>
+          <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
         </div>
 
         <h1 className="mb-3 text-center text-2xl font-semibold text-gray-900">Reset your password</h1>

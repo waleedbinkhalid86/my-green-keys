@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { Check, Shield } from "lucide-react";
+import { Check, GraduationCap, Leaf, School, Shield, Users } from "lucide-react";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
@@ -195,7 +195,7 @@ export default function SignupPage() {
     } else if (VALID_PROMO_CODES[code]) {
       setPromoStatus({
         valid: true,
-        message: `✅ ${VALID_PROMO_CODES[code].message}`,
+        message: VALID_PROMO_CODES[code].message,
       });
     } else if (code.length > 0) {
       setPromoStatus({
@@ -449,6 +449,9 @@ export default function SignupPage() {
 
       <div className="flex w-full flex-col bg-white px-6 py-10 lg:w-1/2 lg:overflow-y-auto">
         <div className="mx-auto w-full max-w-xl">
+        <div className="mb-6 flex justify-center lg:justify-start">
+          <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
+        </div>
         <div className="mb-8">
           <h1 className="font-heading text-3xl font-extrabold text-[#1A2F23]">Create your account</h1>
           <p className="mt-2 text-base font-semibold text-[#64748b]">Choose how you&apos;ll use My Green Keys</p>
@@ -509,9 +512,9 @@ export default function SignupPage() {
         <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {(
             [
-              { type: "student" as const, icon: "👦", label: "Student", desc: "I want to learn typing" },
-              { type: "parent" as const, icon: "👨‍👩‍👧", label: "Parent", desc: "I want to track my child" },
-              { type: "teacher" as const, icon: "👩‍🏫", label: "Teacher", desc: "I manage a classroom" },
+              { type: "student" as const, Icon: GraduationCap, label: "Student", desc: "I want to learn typing" },
+              { type: "parent" as const, Icon: Users, label: "Parent", desc: "I want to track my child" },
+              { type: "teacher" as const, Icon: School, label: "Teacher", desc: "I manage a classroom" },
             ] as const
           ).map((option) => (
             <Card
@@ -539,7 +542,9 @@ export default function SignupPage() {
                     ✓
                   </span>
                 ) : null}
-                <div className="text-3xl">{option.icon}</div>
+                <div className="flex justify-center text-green-600">
+                  <option.Icon className="h-8 w-8" strokeWidth={2} aria-hidden />
+                </div>
                 <CardTitle className="font-heading text-sm">{option.label}</CardTitle>
                 <CardDescription className="text-xs">{option.desc}</CardDescription>
               </CardHeader>

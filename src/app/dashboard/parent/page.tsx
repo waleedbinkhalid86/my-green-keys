@@ -7,11 +7,17 @@ import {
   Bell,
   BookOpen,
   FileText,
+  Flame,
+  Globe,
   Home,
   Leaf,
   LogOut,
+  PawPrint,
   Settings,
+  Target,
+  UserRound,
   Users,
+  Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts } from "@/data/ecoFacts";
@@ -145,7 +151,7 @@ function toChildDashboard(row: ChildRow): Child {
     username,
     age,
     gender,
-    avatar: gender === "girl" ? "👧" : "👦",
+    avatar: gender === "girl" ? "girl" : "boy",
     studentProfileId: null,
     lessonsCompleted: 0,
     avgWpm: 0,
@@ -167,7 +173,7 @@ export default function ParentDashboard() {
   const [childrenLoading, setChildrenLoading] = useState(true);
   const [childrenError, setChildrenError] = useState("");
   const [petWarnings, setPetWarnings] = useState<
-    Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }>
+    Array<{ childName: string; petName: string; petHealth: number }>
   >([]);
   const [certificateNotifs, setCertificateNotifs] = useState<
     Array<{ id: string; message: string; createdAt: string }>
@@ -198,9 +204,9 @@ export default function ParentDashboard() {
 
   const actionLabel = useMemo(() => {
     const map: Record<string, string> = {
-      planting_tree: "🌱 Planting a tree",
-      watering_plants: "💧 Watering plants",
-      water_for_birds: "🐦 Water on roof for birds",
+      planting_tree: "Planting a tree",
+      watering_plants: "Watering plants",
+      water_for_birds: "Water on roof for birds",
     };
     return (actionType: string) => map[actionType] || actionType;
   }, []);
@@ -280,7 +286,7 @@ export default function ParentDashboard() {
           setCertificateNotifs(
             ((notifs as ParentNotifRow[] | null) ?? []).map((n) => ({
               id: n.id,
-              message: n.message || "🏆 Your child earned a certificate!",
+              message: n.message || "Your child earned a certificate!",
               createdAt: n.created_at || "",
             }))
           );
@@ -345,18 +351,15 @@ export default function ParentDashboard() {
         setSelectedChildId("");
       }
 
-      const warnings: Array<{ childName: string; petEmoji: string; petName: string; petHealth: number }> = [];
+      const warnings: Array<{ childName: string; petName: string; petHealth: number }> = [];
       for (const c of withProfileIds) {
         if (!c.username) continue;
         const p = profileByEmail.get(c.username.trim().toLowerCase());
         if (!p) continue;
         const health = Number(p.pet_health ?? 100);
         if (Number.isFinite(health) && health < 40) {
-          const type = p.pet_type ?? "panda";
-          const emoji = type === "turtle" ? "🐢" : "🐼";
           warnings.push({
             childName: c.name,
-            petEmoji: emoji,
             petName: p.pet_name ?? "Pet",
             petHealth: health,
           });
@@ -515,7 +518,7 @@ export default function ParentDashboard() {
       if (awardError) throw awardError;
 
       setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
-      setEcoSuccess("Approved! Eco points awarded to the student 🌿");
+      setEcoSuccess("Approved! Eco points awarded to the student.");
       showToast("success", "Photo approved — eco points awarded!");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to approve photo.";
@@ -765,8 +768,11 @@ export default function ParentDashboard() {
           <div className="space-y-3">
             {petWarnings.map((w) => (
               <Card key={`${w.childName}-${w.petName}`} className="border-amber-200 bg-amber-50">
-                <CardContent className="py-4 text-sm font-semibold text-amber-900">
-                  {w.petEmoji} {w.petName} is hungry! Help {w.childName} type today!
+                <CardContent className="flex items-start gap-2 py-4 text-sm font-semibold text-amber-900">
+                  <PawPrint className="mt-0.5 h-5 w-5 shrink-0 text-amber-800" strokeWidth={2} aria-hidden />
+                  <span>
+                    {w.petName} is hungry! Help {w.childName} type today!
+                  </span>
                 </CardContent>
               </Card>
             ))}
@@ -802,21 +808,21 @@ export default function ParentDashboard() {
           <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className={statCardClass}>
-              <div className="text-2xl">📚</div>
+              <BookOpen className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
               <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
                 {selectedChild?.lessonsCompleted ?? 0}
               </p>
             </div>
             <div className={statCardClass}>
-              <div className="text-2xl">⚡</div>
+              <Zap className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Average WPM</p>
               <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#1A2F23]">
                 {selectedChild?.avgWpm ?? 0}
               </p>
             </div>
             <div className={statCardClass}>
-              <div className="text-2xl">🎯</div>
+              <Target className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Accuracy</p>
               <p
                 className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none"
@@ -826,7 +832,7 @@ export default function ParentDashboard() {
               </p>
             </div>
             <div className={statCardClass}>
-              <div className="text-2xl">🌿</div>
+              <Leaf className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Eco Points</p>
               <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
                 {selectedChild?.ecoPhotos ?? 0}
@@ -864,7 +870,14 @@ export default function ParentDashboard() {
                     value={child.id}
                     className="gap-2 rounded-[50px] data-[state=active]:bg-[#2ECC71] data-[state=active]:text-white"
                   >
-                    <span>{child.avatar}</span>
+                    <UserRound
+                      className={cn(
+                        "h-5 w-5 shrink-0",
+                        child.avatar === "girl" ? "text-pink-600" : "text-sky-600"
+                      )}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
                     <span>{child.name}</span>
                     {child.username ? (
                       <Badge variant="secondary" className="ml-1 font-normal">
@@ -887,7 +900,14 @@ export default function ParentDashboard() {
           <section id="parent-progress" className="scroll-mt-28 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-4">
-                <div className="text-4xl">{selectedChild.avatar}</div>
+                <UserRound
+                  className={cn(
+                    "h-10 w-10 shrink-0",
+                    selectedChild.avatar === "girl" ? "text-pink-600" : "text-sky-600"
+                  )}
+                  strokeWidth={2}
+                  aria-hidden
+                />
                 <div>
                   <h2 className="font-heading text-[20px] font-bold text-foreground">
                     {selectedChild.name}&apos;s progress
@@ -904,7 +924,8 @@ export default function ParentDashboard() {
                     window.open(`/report/${selectedChild.studentProfileId}`, "_blank", "noopener,noreferrer")
                   }
                 >
-                  📊 Download Report
+                  <BarChart3 className="mr-2 h-4 w-4" strokeWidth={2.25} aria-hidden />
+                  Download Report
                 </Button>
               ) : (
                 <p className="max-w-xs text-right text-xs text-muted-foreground">
@@ -951,8 +972,9 @@ export default function ParentDashboard() {
                   </div>
                   <Card className="bg-muted/40">
                     <CardContent className="py-4">
-                      <p className="font-heading text-lg font-bold">
-                        🔥 {selectedChild.currentStreak} day streak
+                      <p className="flex items-center gap-2 font-heading text-lg font-bold">
+                        <Flame className="h-5 w-5 shrink-0 text-orange-500" strokeWidth={2.25} aria-hidden />
+                        {selectedChild.currentStreak} day streak
                       </p>
                       <p className="text-sm text-muted-foreground">Keep it going!</p>
                     </CardContent>
@@ -1173,8 +1195,8 @@ export default function ParentDashboard() {
                       }}
                     />
                   ) : (
-                    <div className="flex h-48 items-center justify-center bg-primary text-4xl text-primary-foreground">
-                      🌍
+                    <div className="flex h-48 items-center justify-center bg-primary text-primary-foreground">
+                      <Globe className="h-12 w-12 opacity-90" strokeWidth={2} aria-hidden />
                     </div>
                   )}
                   <CardContent className="space-y-3 py-4">

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { Leaf } from "lucide-react";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -272,9 +273,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-4 font-sans">
       <div className="w-full max-w-sm p-8">
         <div className="mb-8 flex justify-center">
-          <span className="flex h-10 w-10 items-center justify-center text-[40px] leading-none" aria-hidden>
-            🌿
-          </span>
+          <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
         </div>
 
         <h1 className="mb-8 text-center text-2xl font-semibold text-gray-900">Log in</h1>
