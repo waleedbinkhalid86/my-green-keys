@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
@@ -133,17 +132,34 @@ const FAMILY_FEATURES = [
   "Priority email support",
 ];
 
-const SCHOOL_FEATURES = [
+const SCHOOL_STARTER_FEATURES = [
   "Everything in Family",
-  "Up to 200 students",
   "Teacher dashboard",
   "Custom lessons by teacher",
   "Class leaderboard",
   "School logo & branding",
   "Shared lesson library",
   "Admin dashboard access",
+  "Priority onboarding support",
+  "Get started from $299/month",
+];
+
+const SCHOOL_GROWTH_FEATURES = [
+  "Everything in School Starter",
+  "Up to 200 students",
+  "Expanded reporting & insights",
   "Priority & onboarding support",
-  "Volume & district pricing",
+  "Volume pricing options",
+  "Ideal for multi-class schools",
+];
+
+const ENTERPRISE_FEATURES = [
+  "Everything in School Growth",
+  "District-wide deployment",
+  "SSO & advanced security",
+  "Dedicated success manager",
+  "Custom integrations & SLAs",
+  "Contract & volume pricing",
 ];
 
 const TRUST_SIGNALS = [
@@ -217,6 +233,9 @@ function CompareCell({ value }: { value: Cell }) {
 
 const pill =
   "inline-flex min-h-[52px] w-full items-center justify-center rounded-[50px] px-6 text-base font-semibold transition-all duration-200 disabled:opacity-60";
+
+const cardShell =
+  "flex h-full flex-col rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -374,8 +393,8 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing cards */}
-      <section className="overflow-x-visible px-4 pb-16 sm:px-6">
-        <div className="mx-auto max-w-[1100px] px-0 sm:px-1">
+      <section className="px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-6xl">
           {checkoutError ? (
             <div
               className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
@@ -385,21 +404,16 @@ export default function PricingPage() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3 lg:gap-6 lg:items-start">
-            {/* Free — desktop first column */}
-            <div
-              className={cn(
-                "order-2 flex flex-col rounded-[24px] border-2 border-[#E5E7EB] bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg sm:p-10 lg:order-1"
-              )}
-            >
+          <div className="grid grid-cols-1 gap-8 pt-4 lg:grid-cols-3 lg:items-stretch lg:gap-8">
+            {/* Free */}
+            <div className={cn(cardShell, "border border-[#E5E7EB]")}>
               <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Free Starter</p>
               <div className="mt-4 flex flex-wrap items-end gap-2">
                 <span className="text-[64px] font-bold leading-none text-[#1A2F23]">$0</span>
                 <span className="pb-2 text-base text-[#6B7280]">/forever</span>
               </div>
               <p className="mt-3 text-lg text-[#374151]">Perfect for trying out</p>
-              <div className="my-8 h-px w-full bg-[#E5E7EB]" aria-hidden />
-              <ul className="flex flex-col gap-3.5 text-base text-[#374151]">
+              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
                 {FREE_FEATURES.map((t) => (
                   <li key={t} className="flex gap-3">
                     <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
@@ -409,73 +423,41 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                className={cn(
-                  pill,
-                  "mt-10 border-2 border-[#2ECC71] bg-white font-bold text-[#1B5E20] hover:bg-[#F0FDF4]"
-                )}
-                disabled={checkoutBusy}
-                onClick={() => router.push("/signup")}
-              >
-                Start Free
-              </button>
+              <div className="mt-auto pt-8">
+                <button
+                  type="button"
+                  className={cn(
+                    pill,
+                    "border-2 border-[#2ECC71] bg-white font-bold text-[#1B5E20] hover:bg-[#F0FDF4]"
+                  )}
+                  disabled={checkoutBusy}
+                  onClick={() => router.push("/signup")}
+                >
+                  Start Free
+                </button>
+              </div>
             </div>
 
-            {/* Family — featured */}
+            {/* Family — Most Popular */}
             <div
               className={cn(
-                "relative z-10 order-1 flex flex-col rounded-[24px] p-10 text-white shadow-[0_24px_64px_rgba(46,125,50,0.4)] transition-transform duration-300 hover:scale-[1.02] lg:order-2 lg:scale-105 lg:hover:scale-[1.06]",
-                "bg-gradient-to-br from-[#1B5E20] to-[#2E7D32]"
+                cardShell,
+                "relative z-10 border-2 border-[#2ECC71] lg:scale-105"
               )}
             >
-              <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
-                <span className="whitespace-nowrap rounded-[50px] bg-[#FFD700] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#1A2F23] shadow-md">
-                  Most Popular
+              <div className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
+                <span className="whitespace-nowrap rounded-full bg-[#2ECC71] px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                  MOST POPULAR
                 </span>
               </div>
-              <p className="mt-2 text-sm font-bold uppercase tracking-[0.12em] text-white/90">Family Plan</p>
+              <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Family Plan</p>
               <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-[64px] font-bold leading-none text-white">${familyDisplayPrice}</span>
-                <span className="pb-3 text-base font-medium text-white/90">/month</span>
-              </div>
-              <p className="mt-3 text-lg text-white/90">Perfect for families</p>
-              <div className="my-8 h-px w-full bg-white/25" aria-hidden />
-              <ul className="flex flex-col gap-3.5 text-base text-white">
-                {FAMILY_FEATURES.map((t) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="mt-0.5 shrink-0 text-white" aria-hidden>
-                      ✓
-                    </span>
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                className={cn(pill, "mt-10 bg-[#FFD700] font-extrabold text-[#1A2F23] hover:brightness-105")}
-                disabled={checkoutBusy}
-                onClick={() => void openCheckout("family")}
-              >
-                {checkoutBusy ? "Loading…" : "Start 7-Day Free Trial"}
-              </button>
-            </div>
-
-            {/* School */}
-            <div
-              className={cn(
-                "order-3 flex flex-col rounded-[24px] border-2 border-[#2ECC71] bg-[#F8FFFE] p-10 shadow-sm transition-shadow duration-300 hover:shadow-lg lg:order-3"
-              )}
-            >
-              <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">For Schools</p>
-              <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-[48px] font-bold leading-none text-[#1A2F23]">From $299</span>
+                <span className="text-[64px] font-bold leading-none text-[#1A2F23]">${familyDisplayPrice}</span>
                 <span className="pb-2 text-base text-[#6B7280]">/month</span>
               </div>
-              <p className="mt-3 text-lg text-[#374151]">Perfect for classrooms</p>
-              <div className="my-8 h-px w-full bg-[#C8E6C9]" aria-hidden />
-              <ul className="flex flex-col gap-3.5 text-base text-[#374151]">
-                {SCHOOL_FEATURES.map((t) => (
+              <p className="mt-3 text-lg text-[#374151]">Perfect for families</p>
+              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                {FAMILY_FEATURES.map((t) => (
                   <li key={t} className="flex gap-3">
                     <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
                       ✓
@@ -484,34 +466,166 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <button
+              <div className="mt-auto pt-8">
+                <button
+                  type="button"
+                  className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                  disabled={checkoutBusy}
+                  onClick={() => void openCheckout("family")}
+                >
+                  {checkoutBusy ? "Loading…" : "Start 7-Day Free Trial"}
+                </button>
+              </div>
+            </div>
+
+            {/* School Starter */}
+            <div className={cn(cardShell, "border border-[#E5E7EB]")}>
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">School Starter</p>
+              <div className="mt-4 flex flex-wrap items-end gap-2">
+                <span className="text-[48px] font-bold leading-none text-[#1A2F23]">From $299</span>
+                <span className="pb-2 text-base text-[#6B7280]">/month</span>
+              </div>
+              <p className="mt-3 text-lg text-[#374151]">Perfect for classrooms</p>
+              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                {SCHOOL_STARTER_FEATURES.map((t) => (
+                  <li key={t} className="flex gap-3">
+                    <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
+                      ✓
+                    </span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto flex flex-col gap-3 pt-8">
+                <button
+                  type="button"
+                  className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                  disabled={checkoutBusy}
+                  onClick={() => void openCheckout("school_starter")}
+                >
+                  {checkoutBusy ? "Loading…" : "Get Started"}
+                </button>
+                <a
+                  href="mailto:sales@mygreenkeys.com?subject=School%20Starter%20inquiry"
+                  className={cn(
+                    pill,
+                    "border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
+                  )}
+                >
+                  Talk to Sales
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-20">
+            <h2 className="mb-10 text-center text-2xl font-extrabold tracking-tight text-[#1A2F23] sm:text-3xl">
+              For Larger Schools
+            </h2>
+            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
+              {/* School Growth */}
+              <div className={cn(cardShell, "border border-[#E5E7EB]")}>
+                <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">School Growth</p>
+                <div className="mt-4">
+                  <span className="text-[48px] font-bold leading-none text-[#1A2F23] sm:text-[56px]">200</span>
+                  <span className="ml-1.5 text-lg font-semibold text-[#374151]">students</span>
+                  <p className="mt-2 text-base text-[#6B7280]">Full cohort capacity</p>
+                </div>
+                <p className="mt-3 text-lg text-[#374151]">For schools scaling their program</p>
+                <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                  {SCHOOL_GROWTH_FEATURES.map((t) => (
+                    <li key={t} className="flex gap-3">
+                      <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
+                        ✓
+                      </span>
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-8">
+                  <button
+                    type="button"
+                    className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                    disabled={checkoutBusy}
+                    onClick={() => void openCheckout("school_growth")}
+                  >
+                    {checkoutBusy ? "Loading…" : "Choose Growth"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Enterprise */}
+              <div className={cn(cardShell, "border border-[#E5E7EB]")}>
+                <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">Enterprise</p>
+                <div className="mt-4 flex flex-wrap items-end gap-2">
+                  <span className="text-[40px] font-bold leading-none text-[#1A2F23] sm:text-[48px]">Custom</span>
+                  <span className="pb-2 text-base text-[#6B7280]">pricing</span>
+                </div>
+                <p className="mt-3 text-lg text-[#374151]">Districts & multi-campus schools</p>
+                <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                  {ENTERPRISE_FEATURES.map((t) => (
+                    <li key={t} className="flex gap-3">
+                      <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
+                        ✓
+                      </span>
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-8">
+                  <a
+                    href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry"
+                    className={cn(
+                      pill,
+                      "border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
+                    )}
+                  >
+                    Contact Enterprise Sales
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Promo codes */}
+          <div className="mx-auto mt-16 max-w-xl rounded-3xl border-2 border-[#E5E7EB] bg-white p-8 shadow-sm">
+            <h2 className="text-center text-xl font-extrabold text-[#1A2F23]">Have a promo code?</h2>
+            <p className="mt-2 text-center text-sm text-[#666666]">Enter your code below for a special discount.</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Enter promo code…"
+                className="h-12 flex-1 rounded-[50px] border-[#E5E7EB] px-5"
+              />
+              <Button
                 type="button"
+                onClick={handlePromoCode}
+                className="h-12 rounded-[50px] bg-[#2ECC71] px-8 font-bold text-white hover:bg-[#27ae60]"
+              >
+                Apply
+              </Button>
+            </div>
+            {promoResult ? (
+              <div
                 className={cn(
-                  pill,
-                  "mt-10 border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]"
-                )}
-                disabled={checkoutBusy}
-                onClick={() => void openCheckout("school_starter")}
-              >
-                {checkoutBusy ? "Loading…" : "Get Started"}
-              </button>
-              <a
-                href="mailto:sales@mygreenkeys.com?subject=School%20plan%20inquiry"
-                className={cn(
-                  pill,
-                  "mt-4 border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
+                  "mt-4 rounded-2xl px-4 py-3 text-sm font-semibold",
+                  promoResult.type === "success"
+                    ? "border border-[#C8E6C9] bg-[#E8F5E9] text-[#1B5E20]"
+                    : "border border-red-200 bg-red-50 text-red-800"
                 )}
               >
-                Talk to Sales
-              </a>
-              <button
-                type="button"
-                className="mt-3 text-center text-sm font-semibold text-[#6B7280] underline-offset-2 hover:text-[#1B5E20] hover:underline"
-                disabled={checkoutBusy}
-                onClick={() => void openCheckout("school_growth")}
-              >
-                Growth package (200 students)
-              </button>
+                {promoResult.message}
+              </div>
+            ) : null}
+            <div className="mt-6 rounded-2xl bg-[#FAFAFA] p-4 text-left text-xs text-[#6B7280]">
+              <p className="mb-2 font-bold text-[#1A2F23]">Available codes</p>
+              {Object.entries(PROMO_CODES).map(([code, info]) => (
+                <p key={code} className="mb-1">
+                  <span className="font-mono font-bold text-[#374151]">{code}</span> — {info.discount} (
+                  {info.applicable.join(", ")})
+                </p>
+              ))}
             </div>
           </div>
 
@@ -535,50 +649,6 @@ export default function PricingPage() {
               {s.label}
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Promo codes — preserved */}
-      <section className="px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-xl rounded-[24px] border-2 border-[#E5E7EB] bg-white p-8 shadow-sm">
-          <h2 className="text-center text-xl font-extrabold text-[#1A2F23]">Have a promo code?</h2>
-          <p className="mt-2 text-center text-sm text-[#666666]">Enter your code below for a special discount.</p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Input
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              placeholder="Enter promo code…"
-              className="h-12 flex-1 rounded-[50px] border-[#E5E7EB] px-5"
-            />
-            <Button
-              type="button"
-              onClick={handlePromoCode}
-              className="h-12 rounded-[50px] bg-[#2ECC71] px-8 font-bold text-white hover:bg-[#27ae60]"
-            >
-              Apply
-            </Button>
-          </div>
-          {promoResult ? (
-            <div
-              className={cn(
-                "mt-4 rounded-2xl px-4 py-3 text-sm font-semibold",
-                promoResult.type === "success"
-                  ? "border border-[#C8E6C9] bg-[#E8F5E9] text-[#1B5E20]"
-                  : "border border-red-200 bg-red-50 text-red-800"
-              )}
-            >
-              {promoResult.message}
-            </div>
-          ) : null}
-          <div className="mt-6 rounded-2xl bg-[#FAFAFA] p-4 text-left text-xs text-[#6B7280]">
-            <p className="mb-2 font-bold text-[#1A2F23]">Available codes</p>
-            {Object.entries(PROMO_CODES).map(([code, info]) => (
-              <p key={code} className="mb-1">
-                <span className="font-mono font-bold text-[#374151]">{code}</span> — {info.discount} (
-                {info.applicable.join(", ")})
-              </p>
-            ))}
-          </div>
         </div>
       </section>
 

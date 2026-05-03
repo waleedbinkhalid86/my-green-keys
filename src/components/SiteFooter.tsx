@@ -1,14 +1,17 @@
 import Link from "next/link";
+import { Leaf } from "lucide-react";
 
-function Inner({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-[1200px] px-6">{children}</div>;
-}
-
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="text-white/45 text-sm no-underline transition-colors hover:text-white/85"
+      className="mb-3 block text-sm text-gray-400 transition-colors hover:text-white last:mb-0"
     >
       {children}
     </Link>
@@ -17,81 +20,73 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
 export default function SiteFooter() {
   return (
-    <footer className="bg-[#1a252f] pt-20 pb-10">
-      <Inner>
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
-          <div className="md:col-span-1">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-[var(--green)]">
-                <span aria-hidden className="text-white text-[18px] leading-none">
-                  🌿
-                </span>
-              </div>
-              <span className="text-white font-extrabold text-base tracking-[-0.01em]">
-                My Green Keys
+    <footer className="w-full bg-[#1A2F23] pt-16 pb-8 text-gray-400">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3">
+              <Leaf className="h-6 w-6 shrink-0 text-green-500" aria-hidden />
+              <span className="text-lg font-bold text-white">My Green Keys</span>
+            </div>
+            <p className="mt-2 max-w-xs text-sm text-gray-400">
+              Learn to Type. Help the Planet.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
+                COPPA Compliant
+              </span>
+              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
+                GDPR Safe
+              </span>
+              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
+                Ad-Free
               </span>
             </div>
-            <p className="text-white/45 text-sm leading-7">
-              A premium typing platform for kids that blends keyboard skills with planet-friendly
-              values.
-            </p>
           </div>
 
           <div>
-            <h3 className="mb-4 text-white/85 text-sm font-bold">Company</h3>
-            <ul className="flex list-none flex-col gap-3 p-0">
-              <li>
-                <FooterLink href="/">Home</FooterLink>
-              </li>
-              <li>
-                <FooterLink href="/pricing">Pricing</FooterLink>
-              </li>
-              <li>
-                <FooterLink href="/signup">Sign up</FooterLink>
-              </li>
-              <li>
-                <FooterLink href="/login">Log in</FooterLink>
-              </li>
-            </ul>
+            <h3 className="mb-4 text-sm font-semibold text-white">Product</h3>
+            <nav className="flex flex-col">
+              <FooterLink href="/lesson">Lessons</FooterLink>
+              <FooterLink href="/games">Games</FooterLink>
+              <FooterLink href="/pricing">Pricing</FooterLink>
+              <FooterLink href="/pricing#schools">For Schools</FooterLink>
+            </nav>
           </div>
 
           <div>
-            <h3 className="mb-4 text-white/85 text-sm font-bold">Legal</h3>
-            <ul className="flex list-none flex-col gap-3 p-0">
-              <li>
-                <FooterLink href="/privacy">Privacy Policy</FooterLink>
-              </li>
-              <li>
-                <FooterLink href="/terms">Terms of Service</FooterLink>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 text-white/85 text-sm font-bold">Contact</h3>
-            <p className="text-white/45 text-sm leading-7">
-              Questions about privacy, COPPA, or GDPR?
-              <br />
-              Email{" "}
+            <h3 className="mb-4 text-sm font-semibold text-white">Company</h3>
+            <nav className="flex flex-col">
+              <FooterLink href="/">About</FooterLink>
+              <FooterLink href="/">Blog</FooterLink>
               <a
                 href="mailto:waleedbinkhalid86@gmail.com"
-                className="text-white/70 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
+                className="mb-3 block text-sm text-gray-400 transition-colors hover:text-white last:mb-0"
               >
-                waleedbinkhalid86@gmail.com
+                Contact
               </a>
-              .
-            </p>
+              <FooterLink href="/">Careers</FooterLink>
+            </nav>
+          </div>
+
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-white">Legal</h3>
+            <nav className="flex flex-col">
+              <FooterLink href="/terms">Terms</FooterLink>
+              <FooterLink href="/privacy">Privacy</FooterLink>
+              <FooterLink href="/privacy">Cookies</FooterLink>
+              <FooterLink href="/privacy">COPPA</FooterLink>
+            </nav>
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-7 text-white/35 md:flex-row md:items-center">
-          <p className="text-xs">
+        <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} My Green Keys. All rights reserved.
           </p>
-          <p className="text-xs">Made for the planet&apos;s future.</p>
+          <p className="text-xs text-gray-500">Made in Pakistan</p>
         </div>
-      </Inner>
+      </div>
     </footer>
   );
 }
-
