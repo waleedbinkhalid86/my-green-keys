@@ -23,7 +23,6 @@ import {
   Target,
   TreeDeciduous,
   Waves,
-  Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -45,11 +44,18 @@ const nunito = Nunito({
 
 const LEVEL_ORDER: GameLevelId[] = ["seedling", "explorer", "guardian", "champion"];
 
-const LEVEL_ICONS: Record<GameLevelId, LucideIcon> = {
-  seedling: Sprout,
-  explorer: Leaf,
-  guardian: TreeDeciduous,
-  champion: Zap,
+const LEVEL_IMAGE_SRC: Record<GameLevelId, string> = {
+  seedling: "/images/games/levels/level-seedling.png",
+  explorer: "/images/games/levels/level-explorer.png",
+  guardian: "/images/games/levels/level-guardian.png",
+  champion: "/images/games/levels/level-champion.png",
+};
+
+const LEVEL_DIFFICULTY_DESC: Record<GameLevelId, string> = {
+  seedling: "Easy — perfect for beginners",
+  explorer: "Medium — for confident typers",
+  guardian: "Hard — for skilled typers",
+  champion: "Expert — true masters only",
 };
 
 const HUB_STARS_KEY = "mgk_hub_game_stars";
@@ -123,32 +129,6 @@ const GAMES: GameCardDef[] = [
     gradient: "linear-gradient(160deg, #9B59B6 0%, #8E44AD 100%)",
   },
 ];
-
-const LEVEL_THEMES: Record<
-  GameLevelId,
-  { gradient: string; accent: string; shadow: string }
-> = {
-  seedling: {
-    gradient: "linear-gradient(145deg, #FF8A65 0%, #FFAB91 50%, #FFCC80 100%)",
-    accent: "#E65100",
-    shadow: "rgba(230, 81, 0, 0.35)",
-  },
-  explorer: {
-    gradient: "linear-gradient(145deg, #26A69A 0%, #4DB6AC 50%, #80CBC4 100%)",
-    accent: "#00695C",
-    shadow: "rgba(0, 105, 92, 0.35)",
-  },
-  guardian: {
-    gradient: "linear-gradient(145deg, #5C6BC0 0%, #7E57C2 50%, #42A5F5 100%)",
-    accent: "#283593",
-    shadow: "rgba(40, 53, 147, 0.35)",
-  },
-  champion: {
-    gradient: "linear-gradient(145deg, #EF5350 0%, #FFCA28 55%, #FFD54F 100%)",
-    accent: "#C62828",
-    shadow: "rgba(198, 40, 40, 0.4)",
-  },
-};
 
 const COMING_SOON = [
   { Icon: Sparkles, name: "Butterfly Catch" },
@@ -395,6 +375,9 @@ export default function GamesHubPage() {
           .games-hub-game-card:hover {
             transform: none;
           }
+          .games-hub-level-card:hover {
+            transform: none !important;
+          }
         }
       `}</style>
 
@@ -603,96 +586,56 @@ export default function GamesHubPage() {
               <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
               </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 16,
-                }}
-                className="games-hub-level-grid"
-              >
-                <style>{`
-                  @media (min-width: 768px) {
-                    .games-hub-level-grid {
-                      grid-template-columns: repeat(4, 1fr) !important;
-                    }
-                  }
-                `}</style>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {LEVEL_ORDER.map((id) => {
                   const def = GAME_LEVELS[id];
-                  const LevelIcon = LEVEL_ICONS[id];
                   const isSel = selectedLevel.id === id;
                   const isRec = recommendedId === id;
-                  const theme = LEVEL_THEMES[id];
                   return (
                     <button
                       key={id}
                       type="button"
                       onClick={() => handleLevelSelect(id)}
                       className={[
+                        "games-hub-level-card relative cursor-pointer rounded-2xl border-2 bg-white p-5 text-center transition-transform hover:scale-105 hover:shadow-md",
+                        isSel ? "border-green-500 bg-green-50" : "border-transparent shadow-sm",
                         levelBounceId === id ? "games-hub-level-bounce" : "",
                         "games-hub-card-animate",
                       ]
                         .filter(Boolean)
                         .join(" ")}
                       style={{
-                        textAlign: "left",
-                        padding: 16,
-                        borderRadius: 20,
-                        border: isSel ? `4px solid ${theme.accent}` : "3px solid rgba(26,47,35,0.12)",
-                        background: theme.gradient,
-                        color: "#1A2F23",
-                        cursor: "pointer",
                         fontFamily: "inherit",
-                        position: "relative",
-                        transform: isSel ? "scale(1.04)" : "scale(1)",
-                        boxShadow: isSel
-                          ? `0 12px 28px ${theme.shadow}`
-                          : "0 6px 16px rgba(0,0,0,0.08)",
-                        transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
                         animationDelay: `${LEVEL_ORDER.indexOf(id) * 80}ms`,
-                        minHeight: 160,
                       }}
                     >
                       {isRec && (
                         <span
-                          style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            background: "#fff",
-                            padding: "4px 10px",
-                            borderRadius: 999,
-                            color: theme.accent,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-                            border: `2px solid ${theme.accent}`,
-                          }}
+                          className="absolute left-2 top-2 z-10 rounded-full border-2 border-[#1A8F4E] bg-white px-2.5 py-1 text-[11px] font-extrabold text-[#1A8F4E] shadow-md"
                         >
                           Recommended
                         </span>
                       )}
                       {isSel && (
                         <span
-                          style={{
-                            position: "absolute",
-                            top: 8,
-                            left: 8,
-                            lineHeight: 1,
-                          }}
+                          className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white"
                           aria-hidden
                         >
-                          <Check className="h-5 w-5 text-[#1A2F23]" strokeWidth={3} />
+                          <Check className="h-4 w-4" strokeWidth={2.5} />
                         </span>
                       )}
-                      <div style={{ marginTop: isSel ? 8 : 0 }} className="flex justify-start">
-                        <LevelIcon className="h-8 w-8 text-green-700" strokeWidth={2.25} aria-hidden />
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 8 }}>{def.label}</div>
-                      <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, opacity: 0.9, lineHeight: 1.45 }}>
+                      <Image
+                        src={LEVEL_IMAGE_SRC[id]}
+                        alt={`${def.label} level`}
+                        width={80}
+                        height={80}
+                        className="mx-auto mb-3 block object-contain"
+                      />
+                      <div className="text-base font-bold text-gray-900">{def.label}</div>
+                      <p className="mt-1 text-xs text-gray-500">{LEVEL_DIFFICULTY_DESC[id]}</p>
+                      <div className="mt-3 text-xs font-bold leading-snug text-gray-700">
                         Speed {def.speedMultiplier}× · {def.lives} lives · {def.roundSeconds}s ·{" "}
-                        <span style={{ fontWeight: 800 }}>{def.pointsMultiplier}× eco</span>
+                        <span className="font-extrabold">{def.pointsMultiplier}× eco</span>
                       </div>
                     </button>
                   );
