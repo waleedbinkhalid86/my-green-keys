@@ -1,33 +1,12 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Leaf, Menu } from "lucide-react";
+import { Check, Leaf, Menu } from "lucide-react";
 import React from "react";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
 const BG = "#FAFAFA";
-
-type IconProps = { size?: number; color?: string; strokeWidth?: number };
-
-const ic = (paths: string, vb = "0 0 24 24") =>
-  function Icon({ size = 24, color = "currentColor", strokeWidth = 2 }: IconProps) {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox={vb}
-        fill="none"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        dangerouslySetInnerHTML={{ __html: paths }}
-      />
-    );
-  };
-
-const CheckIcon = ic('<polyline points="20 6 9 17 4 12"/>');
 
 function Inner({ children }: { children: React.ReactNode }) {
   return (
@@ -132,33 +111,6 @@ const PREVIEW_GAMES = [
   { name: "Eco Garden", desc: "Grow a garden with every key", img: "/images/games/game-eco-garden.jpg", href: "/games/eco-garden" },
   { name: "Kind World Academy", desc: "Spread kindness around the world", img: "/images/games/game-kind-world.jpg", href: "/games/kind-world-academy" },
 ] as const;
-
-function FeatureList({ items, color }: { items: string[]; color: string }) {
-  return (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
-      {items.map((t) => (
-        <li key={t} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: "0.95rem", color: "#374151", fontWeight: 600 }}>
-          <span
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: "50%",
-              background: `${PRIMARY}18`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              marginTop: 2,
-            }}
-          >
-            <CheckIcon size={12} color={color} strokeWidth={3} />
-          </span>
-          {t}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -614,7 +566,7 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" style={{ background: "#fff", padding: "88px 0" }}>
+      <section id="features" className="bg-white py-20">
         <Inner>
           <h2
             style={{
@@ -623,85 +575,73 @@ export default function HomePage() {
               fontWeight: 900,
               color: DARK,
               maxWidth: 720,
-              margin: "0 auto 56px",
+              margin: "0 auto 48px",
               lineHeight: 1.2,
             }}
           >
             Everything your child needs to become a typing champion
           </h2>
 
-          {[
-            {
-              badge: "Engaging Lessons",
-              title: "100 lessons designed by education experts",
-              desc: "Progressive curriculum from home row to advanced typing. Every lesson includes eco-friendly sentences that teach kids about the planet.",
-              items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback system", "4 learning modules"],
-              img: "/images/homepage/homepage-kids.jpg",
-              alt: "Children learning to type",
-              imageLeft: true,
-            },
-            {
-              badge: "Eco Rewards",
-              title: "The world's first typing platform with real eco rewards",
-              desc: "Kids upload photos of real eco actions - planting trees, watering plants, helping nature. Parents approve and kids earn eco points.",
-              items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real world impact tracking"],
-              img: "/images/homepage/homepage-eco.jpg",
-              alt: "Eco themed learning",
-              imageLeft: false,
-            },
-            {
-              badge: "Virtual Pet",
-              title: "Meet your typing companion",
-              desc: "Choose a Panda or Turtle as your pet. Type every day to keep them happy and healthy. Miss a day and they get sad - kids love coming back!",
-              items: ["Panda or Turtle companion", "Daily health system", "Emotional engagement", "Drives daily retention"],
-              img: "/images/homepage/homepage-pet.jpg",
-              alt: "Virtual pet companion",
-              imageLeft: true,
-            },
-          ].map((block) => (
-            <div
-              key={block.title}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 40,
-                alignItems: "center",
-                marginBottom: 72,
-              }}
-            >
-              <div style={{ order: block.imageLeft ? 1 : 2 }}>
-                <div
-                  className="mgk-card-ds"
-                  style={{ position: "relative", minHeight: 320, overflow: "hidden", padding: 0 }}
-                >
-                  <Image src={block.img} alt={block.alt} fill sizes="(max-width: 900px) 100vw, 520px" style={{ objectFit: "cover" }} />
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {(
+              [
+                {
+                  tag: "Engaging Lessons",
+                  src: "/images/homepage/feature-lessons.jpg",
+                  alt: "Engaging typing lessons for kids",
+                  title: "100 lessons designed by experts",
+                  desc: "Progressive curriculum from home row to advanced typing. Every lesson teaches kids about the planet.",
+                  items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback", "4 learning modules"],
+                },
+                {
+                  tag: "Eco Rewards",
+                  src: "/images/homepage/feature-eco.jpg",
+                  alt: "Real eco rewards for kids",
+                  title: "The world's first eco rewards system",
+                  desc: "Kids upload photos of real eco actions like planting trees and watering plants. Parents approve. Kids earn points.",
+                  items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real-world impact"],
+                },
+                {
+                  tag: "Virtual Pet",
+                  src: "/images/homepage/feature-pet.jpg",
+                  alt: "Virtual pet companion for typing",
+                  title: "Meet your typing companion",
+                  desc: "Choose a Panda or Turtle. Type daily to keep them happy. Miss a day and they get sad — kids love coming back.",
+                  items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Drives retention"],
+                },
+              ] as const
+            ).map((card) => (
+              <article
+                key={card.tag}
+                className="overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="relative aspect-square w-full">
+                  <Image
+                    src={card.src}
+                    alt={card.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover"
+                  />
                 </div>
-              </div>
-              <div style={{ order: block.imageLeft ? 2 : 1 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "6px 14px",
-                    borderRadius: 50,
-                    background: `${PRIMARY}18`,
-                    color: "#15803d",
-                    fontSize: "0.75rem",
-                    fontWeight: 900,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    marginBottom: 14,
-                  }}
-                >
-                  {block.badge}
-                </span>
-                <h3 style={{ fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)", fontWeight: 900, color: DARK, lineHeight: 1.2, marginBottom: 16 }}>
-                  {block.title}
-                </h3>
-                <p style={{ fontSize: "1rem", color: "#64748b", fontWeight: 600, lineHeight: 1.75, marginBottom: 22 }}>{block.desc}</p>
-                <FeatureList items={block.items} color={PRIMARY} />
-              </div>
-            </div>
-          ))}
+                <div className="p-6">
+                  <span className="mb-3 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    {card.tag}
+                  </span>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                  <p className="mb-4 text-sm leading-relaxed text-gray-600">{card.desc}</p>
+                  <ul className="space-y-2">
+                    {card.items.map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                        <span className="text-sm text-gray-700">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
         </Inner>
       </section>
 
