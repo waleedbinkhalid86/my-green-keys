@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Ban, Check, Leaf, Lock, Plus, Shield } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Ban, Check, Leaf, Lock, Plus, Shield, Sprout } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
@@ -237,8 +237,12 @@ const pill =
 const cardShell =
   "flex h-full flex-col rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg";
 
-export default function PricingPage() {
+function PricingPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const source = searchParams.get("source");
+  const ecoGardenExpired = source === "eco_garden_expired";
+  const familyPlanRef = useRef<HTMLDivElement | null>(null);
   const [isYearly, setIsYearly] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoResult, setPromoResult] = useState<{ type: "success" | "error"; message: string } | null>(
@@ -354,6 +358,14 @@ export default function PricingPage() {
 
   const familyDisplayPrice = isYearly ? "7.99" : "9.99";
 
+  useEffect(() => {
+    if (!ecoGardenExpired || !familyPlanRef.current) return;
+    const t = window.setTimeout(() => {
+      familyPlanRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [ecoGardenExpired]);
+
   return (
     <div
       className="min-h-screen w-full bg-[#FAFAFA] antialiased"
@@ -395,6 +407,17 @@ export default function PricingPage() {
       {/* Pricing cards */}
       <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-6xl">
+          {ecoGardenExpired ? (
+            <div
+              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
+              role="status"
+            >
+              <Sprout className="mx-auto h-8 w-8 shrink-0 text-green-600 sm:mx-0" strokeWidth={2} aria-hidden />
+              <p className="text-base font-semibold text-[#1A2F23]">
+                Your garden is waiting. Upgrade to keep your plants growing.
+              </p>
+            </div>
+          ) : null}
           {checkoutError ? (
             <div
               className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
@@ -440,9 +463,12 @@ export default function PricingPage() {
 
             {/* Family — Most Popular */}
             <div
+              ref={familyPlanRef}
+              id="pricing-family-plan"
               className={cn(
                 cardShell,
-                "relative z-10 border-2 border-[#2ECC71] lg:scale-105"
+                "relative z-10 border-2 border-[#2ECC71] lg:scale-105",
+                ecoGardenExpired && "ring-2 ring-yellow-300 ring-offset-2"
               )}
             >
               <div className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
@@ -770,5 +796,20 @@ export default function PricingPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen w-full bg-[#FAFAFA] antialiased"
+          style={{ fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif" }}
+        />
+      }
+    >
+      <PricingPageContent />
+    </Suspense>
   );
 }

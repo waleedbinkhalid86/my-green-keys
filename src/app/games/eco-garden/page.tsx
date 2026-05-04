@@ -30,6 +30,15 @@ import {
   type GardenPlantTier,
 } from "@/lib/games/ecoGardenData";
 import { getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
+import { ArrowRight, Clock, Lock, Sprout } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  canFullyAccessGarden,
+  canViewGarden,
+  getTrialState,
+  startTrial,
+  type TrialState,
+} from "@/lib/ecoGardenTrial";
 import "@/app/globals.css";
 
 const GAME_NAME = "eco_garden";
@@ -105,6 +114,75 @@ function waterGardenCell(g: GardenData, maxLesson: number): {
   return { next: g, newStage: 0 };
 }
 
+function TrialBanner({ state }: { state: TrialState }) {
+  const finalDay = state.status === "active" && state.daysRemaining < 1;
+  return (
+    <div
+      className={cn(
+        "relative z-[6] flex w-full flex-wrap items-center justify-center gap-3 border-y-2 border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50 py-3 px-4 sm:px-6",
+        finalDay && "animate-pulse",
+      )}
+    >
+      <div className="flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 sm:justify-between">
+        <div className="flex items-center gap-2 text-center sm:text-left">
+          <Clock className="h-5 w-5 shrink-0 text-amber-700" strokeWidth={2} aria-hidden />
+          {finalDay ? (
+            <span className="font-semibold text-orange-700">
+              Final day: {state.hoursRemaining}h left
+            </span>
+          ) : (
+            <span className="font-semibold text-[#1b2e1b]">
+              Free trial: {state.daysRemaining} day{state.daysRemaining !== 1 ? "s" : ""} left
+            </span>
+          )}
+        </div>
+        <Link
+          href="/pricing"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-600 bg-white px-4 py-1.5 text-sm font-bold text-amber-900 shadow-sm transition hover:bg-amber-50"
+        >
+          Upgrade now
+          <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ExpiredOverlay({ plantCount, ecoPoints }: { plantCount: number; ecoPoints: number }) {
+  return (
+    <div
+      className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-b from-transparent via-white/60 to-white/95 p-4 backdrop-blur-sm"
+      aria-modal="true"
+      role="dialog"
+      aria-label="Eco Garden trial ended"
+    >
+      <div className="pointer-events-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
+        <Sprout className="mx-auto mb-4 h-16 w-16 text-green-500" strokeWidth={2} aria-hidden />
+        <h2 className="text-2xl font-bold text-gray-900">Your plants miss you</h2>
+        <p className="mt-2 text-gray-600">
+          Your trial ended, but your garden lives on with Family Plan
+        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600">
+          <span>{plantCount} plants grown</span>
+          <span aria-hidden className="text-gray-400">
+            ·
+          </span>
+          <span>{ecoPoints} eco points</span>
+        </div>
+        <Link
+          href="/pricing?source=eco_garden_expired"
+          className="mt-6 inline-block w-full rounded-full bg-green-500 py-3 px-6 text-center font-bold text-white transition hover:bg-green-600"
+        >
+          Continue with Family Plan
+        </Link>
+        <p className="mt-4 text-center text-xs text-gray-500">
+          Or keep typing — earn lessons toward unlocking forever
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function EcoGardenPage() {
   const [phase, setPhase] = useState<Phase>("load");
   const [error, setError] = useState("");
@@ -154,6 +232,11 @@ export default function EcoGardenPage() {
   const playAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const [trialState, setTrialState] = useState<TrialState | null>(null);
+  const [bootDone, setBootDone] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [profileEcoPoints, setProfileEcoPoints] = useState(0);
+
   const syncDrops = useCallback((next: RainDrop[]) => {
     dropsRef.current = next;
     setDrops(next);
@@ -185,6 +268,7 @@ export default function EcoGardenPage() {
   const persistGarden = useCallback(async (data: GardenData) => {
     const uid = userIdRef.current;
     if (!uid) return;
+    if (!trialState || !canFullyAccessGarden(trialState)) return;
     try {
       const supabase = createClient();
       const total = countGardenPlants(data);
@@ -202,7 +286,7 @@ export default function EcoGardenPage() {
     } catch {
       /* offline */
     }
-  }, []);
+  }, [trialState]);
 
   useEffect(() => {
     const run = async () => {
@@ -211,15 +295,51 @@ export default function EcoGardenPage() {
         const { data: userData, error: uErr } = await supabase.auth.getUser();
         if (uErr) throw uErr;
         if (!userData.user) {
+          setSignedIn(false);
           setError("Please sign in to visit your garden.");
           setPhase("garden");
+          setBootDone(true);
           return;
         }
+        setSignedIn(true);
         userIdRef.current = userData.user.id;
+
+        let state = await getTrialState(userData.user.id, supabase);
+        if (state.status === "not_started") {
+          await startTrial(userData.user.id, supabase);
+          state = await getTrialState(userData.user.id, supabase);
+        }
+        setTrialState(state);
+
+        if (state.status === "locked") {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, pet_type, pet_name")
+            .eq("id", userData.user.id)
+            .maybeSingle();
+
+          const fn = (profile as { full_name?: string } | null)?.full_name;
+          if (fn && fn.trim()) setStudentName(fn.trim());
+
+          const pt = (profile as { pet_type?: string; pet_name?: string } | null)?.pet_type;
+          setPetType(pt === "turtle" ? "turtle" : pt === "panda" ? "panda" : null);
+          setPetName(((profile as { pet_name?: string } | null)?.pet_name as string) || "");
+
+          setPhase("garden");
+          setBootDone(true);
+          return;
+        }
+
+        if (!canViewGarden(state)) {
+          setError("Eco Garden is not available right now.");
+          setPhase("garden");
+          setBootDone(true);
+          return;
+        }
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, pet_type, pet_name")
+          .select("full_name, pet_type, pet_name, eco_points")
           .eq("id", userData.user.id)
           .maybeSingle();
 
@@ -229,6 +349,8 @@ export default function EcoGardenPage() {
         const pt = (profile as { pet_type?: string; pet_name?: string } | null)?.pet_type;
         setPetType(pt === "turtle" ? "turtle" : pt === "panda" ? "panda" : null);
         setPetName(((profile as { pet_name?: string } | null)?.pet_name as string) || "");
+        const ep = Number((profile as { eco_points?: number } | null)?.eco_points ?? 0) || 0;
+        setProfileEcoPoints(ep);
 
         const { data: progressRows } = await supabase
           .from("student_progress")
@@ -240,8 +362,8 @@ export default function EcoGardenPage() {
           new Set(
             (progressRows ?? [])
               .map((r: { lesson_id: unknown }) => r.lesson_id)
-              .filter((n): n is number => typeof n === "number" && n >= 1)
-          )
+              .filter((n): n is number => typeof n === "number" && n >= 1),
+          ),
         ).sort((x, y) => x - y);
         setCompletedLessonIds(ids.length > 0 ? ids : [1]);
 
@@ -266,16 +388,18 @@ export default function EcoGardenPage() {
           const grown = applyOfflineGrowth(data, last, now);
           if (JSON.stringify(grown.cells) !== JSON.stringify(data.cells)) {
             data = grown;
-            await supabase.from("eco_garden").upsert(
-              {
-                student_id: userData.user.id,
-                garden_data: data as unknown as Record<string, unknown>,
-                last_watered: lw,
-                total_plants: countGardenPlants(data),
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "student_id" }
-            );
+            if (canFullyAccessGarden(state)) {
+              await supabase.from("eco_garden").upsert(
+                {
+                  student_id: userData.user.id,
+                  garden_data: data as unknown as Record<string, unknown>,
+                  last_watered: lw,
+                  total_plants: countGardenPlants(data),
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "student_id" },
+              );
+            }
           }
         }
         setGardenData(data);
@@ -292,9 +416,11 @@ export default function EcoGardenPage() {
 
         setHighScore(Number((scores as { score?: number } | null)?.score ?? 0) || 0);
         setPhase("garden");
+        setBootDone(true);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load garden.");
         setPhase("garden");
+        setBootDone(true);
       }
     };
     void run();
@@ -463,6 +589,7 @@ export default function EcoGardenPage() {
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (phase !== "play" || roundEndedRef.current) return;
+      if (!trialState || !canFullyAccessGarden(trialState)) return;
       const L = roundLevelRef.current;
       const allowSpace = L.id === "champion";
 
@@ -555,10 +682,11 @@ export default function EcoGardenPage() {
       e.preventDefault();
       appendChar(ch);
     },
-    [phase, typingBuffer, maxLesson, persistGarden, registerAnimals, showPlantFact, syncDrops]
+    [phase, typingBuffer, maxLesson, persistGarden, registerAnimals, showPlantFact, syncDrops, trialState]
   );
 
   const startPlay = () => {
+    if (!trialState || !canFullyAccessGarden(trialState)) return;
     const lvl = getStoredGameLevel();
     roundLevelRef.current = lvl;
     setGameLevel(lvl);
@@ -576,6 +704,8 @@ export default function EcoGardenPage() {
 
     const run = async () => {
       try {
+        if (!trialState || !canFullyAccessGarden(trialState)) return;
+
         const supabase = createClient();
         const { data: userData, error: uErr } = await supabase.auth.getUser();
         if (uErr) throw uErr;
@@ -630,7 +760,7 @@ export default function EcoGardenPage() {
     };
 
     void run();
-  }, [phase, wateredSession, ecoPoints]);
+  }, [phase, wateredSession, ecoPoints, trialState]);
 
   const shareGarden = async () => {
     const text = `${studentName}'s Eco Garden on My Green Keys — ${totalPlants} plants and growing! 🌱`;
@@ -798,32 +928,82 @@ export default function EcoGardenPage() {
         </Link>
       </header>
 
-      {welcomeFlash && welcomeDays > 0 && (
-        <div
+      {trialState?.status === "active" && bootDone ? <TrialBanner state={trialState} /> : null}
+
+      {!bootDone ? <p style={{ padding: 20, fontWeight: 700 }}>Loading garden…</p> : null}
+
+      {bootDone && signedIn && trialState?.status === "locked" ? (
+        <main
           style={{
-            margin: "12px 16px 0",
-            padding: 14,
-            borderRadius: 16,
-            background: "rgba(255,249,196,0.95)",
-            border: "2px solid #ffc107",
-            fontWeight: 800,
+            position: "relative",
+            zIndex: 3,
+            padding: "32px 20px 48px",
+            maxWidth: 560,
+            margin: "0 auto",
+            textAlign: "center",
           }}
         >
-          Welcome back! Your garden missed you! 🌱 It&apos;s been {welcomeDays} day
-          {welcomeDays === 1 ? "" : "s"} — your plants kept growing.
-        </div>
-      )}
+          <Lock className="mx-auto mb-4 h-14 w-14 text-amber-800" strokeWidth={2} aria-hidden />
+          <h2 style={{ fontSize: 24, fontWeight: 950, color: "#1b2e1b" }}>Almost there!</h2>
+          <p style={{ marginTop: 14, fontWeight: 800, fontSize: 17, lineHeight: 1.5, color: "#1b2e1b" }}>
+            Complete lesson 20 to unlock 3 free days of Eco Garden
+          </p>
+          <p style={{ marginTop: 12, fontWeight: 600, fontSize: 15, lineHeight: 1.55, opacity: 0.92 }}>
+            You&apos;ll get three full days to grow your garden, unlock visitors, and play — on us. Finish lesson
+            20, then come back here anytime.
+          </p>
+          <Link
+            href="/lesson"
+            style={{
+              marginTop: 24,
+              display: "inline-block",
+              padding: "14px 24px",
+              borderRadius: 999,
+              background: "linear-gradient(90deg,#43a047,#2e7d32)",
+              color: "#fff",
+              fontWeight: 950,
+              textDecoration: "none",
+              boxShadow: "0 10px 28px rgba(46,125,50,0.35)",
+            }}
+          >
+            Go to lessons
+          </Link>
+        </main>
+      ) : null}
 
-      {error && (
-        <p style={{ padding: 16, fontWeight: 700, color: "#b71c1c" }}>{error}</p>
-      )}
+      {bootDone && !(signedIn && trialState?.status === "locked") ? (
+        <>
+          {welcomeFlash && welcomeDays > 0 && trialState?.status !== "locked" ? (
+            <div
+              style={{
+                margin: "12px 16px 0",
+                padding: 14,
+                borderRadius: 16,
+                background: "rgba(255,249,196,0.95)",
+                border: "2px solid #ffc107",
+                fontWeight: 800,
+              }}
+            >
+              Welcome back! Your garden missed you! 🌱 It&apos;s been {welcomeDays} day
+              {welcomeDays === 1 ? "" : "s"} — your plants kept growing.
+            </div>
+          ) : null}
 
-      {phase === "load" && <p style={{ padding: 20, fontWeight: 700 }}>Loading garden…</p>}
+          {error ? <p style={{ padding: 16, fontWeight: 700, color: "#b71c1c" }}>{error}</p> : null}
 
-      {(phase === "garden" || phase === "play") && (
-        <main style={{ position: "relative", zIndex: 3, padding: "16px 16px 48px", maxWidth: 720, margin: "0 auto" }}>
-          {phase === "garden" && (
-            <>
+          {phase === "garden" || phase === "play" ? (
+            <main
+              style={{
+                position: "relative",
+                zIndex: 3,
+                padding: "16px 16px 48px",
+                maxWidth: 720,
+                margin: "0 auto",
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                {phase === "garden" ? (
+                  <>
               <div
                 style={{
                   display: "flex",
@@ -853,17 +1033,19 @@ export default function EcoGardenPage() {
               <button
                 type="button"
                 onClick={startPlay}
+                disabled={trialState?.status === "expired"}
                 style={{
                   marginTop: 20,
                   padding: "14px 22px",
                   borderRadius: 16,
                   border: "none",
                   fontWeight: 950,
-                  cursor: "pointer",
+                  cursor: trialState?.status === "expired" ? "not-allowed" : "pointer",
                   fontSize: 16,
                   background: "linear-gradient(90deg,#43a047,#2e7d32)",
                   color: "#fff",
                   boxShadow: "0 10px 28px rgba(46,125,50,0.35)",
+                  opacity: trialState?.status === "expired" ? 0.5 : 1,
                 }}
               >
                 Water the garden 💧
@@ -874,11 +1056,9 @@ export default function EcoGardenPage() {
               <p style={{ marginTop: 8, fontSize: 13, fontWeight: 700 }}>
                 Best session: <strong>{highScore}</strong> waters
               </p>
-            </>
-          )}
-
-          {phase === "play" && (
-            <>
+                  </>
+                ) : phase === "play" ? (
+                  <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 10, fontWeight: 800 }}>
                 <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
                   ⏱ {timeLeft}s
@@ -1012,12 +1192,16 @@ export default function EcoGardenPage() {
               >
                 End session early
               </button>
-            </>
-          )}
-        </main>
-      )}
+                  </>
+                ) : null}
+                {trialState?.status === "expired" ? (
+                  <ExpiredOverlay plantCount={totalPlants} ecoPoints={profileEcoPoints} />
+                ) : null}
+              </div>
+            </main>
+          ) : null}
 
-      {phase === "results" && (
+          {phase === "results" ? (
         <div style={{ padding: "20px 18px 48px", maxWidth: 560, margin: "0 auto" }}>
           <h2 style={{ fontSize: 24, fontWeight: 950 }}>Garden session complete</h2>
           <div
@@ -1122,7 +1306,9 @@ export default function EcoGardenPage() {
             </button>
           </div>
         </div>
-      )}
+          ) : null}
+        </>
+      ) : null}
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
     </div>
   );

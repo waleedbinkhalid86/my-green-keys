@@ -302,3 +302,10 @@ CREATE POLICY "Teachers can view enrolled student streaks"
       AND c.teacher_id = auth.uid()
     )
   );
+
+-- ============================================================
+-- ECO GARDEN 3-DAY FREE TRIAL
+-- ============================================================
+
+ALTER TABLE profiles 
+  ADD COLUMN IF NOT EXISTS eco_garden_trial_started_at TIMESTAMPTZ DEFAULT NULL;

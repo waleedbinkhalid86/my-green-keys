@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getTrialState, type TrialState } from "@/lib/ecoGardenTrial";
 import {
   GAME_LEVELS,
   type GameLevelDefinition,
@@ -160,6 +161,20 @@ function readHubStars(): Record<string, number> {
   }
 }
 
+function ecoGardenTrialHubLine(t: TrialState | null): string | null {
+  if (!t) return null;
+  if (t.status === "paid" || t.status === "locked") return null;
+  if (t.status === "not_started") return "Free 3-day trial available!";
+  if (t.status === "active") {
+    if (t.daysRemaining > 0) {
+      return `Trial active - ${t.daysRemaining} day${t.daysRemaining === 1 ? "" : "s"} left`;
+    }
+    return "Trial active — final day!";
+  }
+  if (t.status === "expired") return "Trial ended - upgrade to continue";
+  return null;
+}
+
 function isGameImplemented(slug: string): boolean {
   return (
     slug === "/games/falling-leaves" ||
@@ -180,6 +195,7 @@ export default function GamesHubPage() {
   const [ecoGardenPlantCount, setEcoGardenPlantCount] = useState<number | null>(null);
   const [hubStars, setHubStars] = useState<Record<string, number>>({});
   const [levelBounceId, setLevelBounceId] = useState<GameLevelId | null>(null);
+  const [ecoGardenTrial, setEcoGardenTrial] = useState<TrialState | null>(null);
 
   const refreshHubStars = useCallback(() => {
     setHubStars(readHubStars());
@@ -254,6 +270,9 @@ export default function GamesHubPage() {
           const tp = (gardenRow as { total_plants?: number } | null)?.total_plants;
           setEcoGardenPlantCount(typeof tp === "number" ? tp : null);
         }
+
+        const trial = await getTrialState(userData.user.id, supabase);
+        setEcoGardenTrial(trial);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load games.");
       } finally {
@@ -749,12 +768,15 @@ export default function GamesHubPage() {
               {GAMES.map((g, i) => {
                 const GameCardIcon = g.Icon;
                 const lessonOk = done >= g.unlockLessons;
-                const paidOk = !g.requiresPaid || paidPlan;
+                const paidOk =
+                  !g.requiresPaid || paidPlan || (g.key === "eco-garden" && lessonOk);
                 const unlocked = lessonOk && paidOk;
                 const implemented = isGameImplemented(g.slug);
                 const needLessons = Math.max(0, g.unlockLessons - done);
-                const paidGate = g.requiresPaid && !paidPlan && lessonOk;
+                const paidGate =
+                  g.requiresPaid && !paidPlan && lessonOk && g.key !== "eco-garden";
                 const stars = starsForGame(g);
+                const ecoHubTrialLine = ecoGardenTrialHubLine(ecoGardenTrial);
 
                 let mode: "play" | "lesson_lock" | "paid_lock" | "coming" = "lesson_lock";
                 if (paidGate) mode = "paid_lock";
@@ -917,6 +939,20 @@ export default function GamesHubPage() {
                         )}
 
                     <div style={{ marginTop: "auto", flexShrink: 0 }}>
+                      {g.key === "eco-garden" && lessonOk && !paidPlan && ecoHubTrialLine && (
+                        <p
+                          style={{
+                            margin: "0 0 10px",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            textAlign: "center",
+                            color: "#b45309",
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {ecoHubTrialLine}
+                        </p>
+                      )}
                       {mode === "play" && (
                         <Link
                           href={g.slug}
