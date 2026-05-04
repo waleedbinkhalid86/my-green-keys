@@ -11,6 +11,8 @@ import {
   getRandomScenario,
 } from "@/lib/kindWorldHelpers";
 import { createClient } from "@/lib/supabase/client";
+import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { MilestoneCelebration } from "@/components/MilestoneCelebration";
 import "@/app/globals.css";
 
 type GameState = "intro" | "level_select" | "playing" | "game_over";
@@ -99,6 +101,7 @@ export default function KindWorldGamePage() {
   const [floatPoints, setFloatPoints] = useState<{ key: number; text: string } | null>(
     null,
   );
+  const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
 
   const timeMaxRef = useRef(8);
   const timeLeftRef = useRef(8);
@@ -380,6 +383,20 @@ export default function KindWorldGamePage() {
           .from("profiles")
           .update({ eco_points: cur + eco })
           .eq("id", userData.user.id);
+
+        // Update daily streak (game completion counts)
+        if (!userData.user?.id) {
+          console.warn("Cannot update streak — no authenticated user");
+        } else {
+          try {
+            const streakResult = await updateStreak(userData.user.id, "game", supabase);
+            if (streakResult) {
+              setStreakUpdate(streakResult);
+            }
+          } catch (err) {
+            console.error("Streak update failed:", err);
+          }
+        }
 
       } catch {
         if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(dedupeKey);
@@ -741,6 +758,7 @@ export default function KindWorldGamePage() {
           </Link>
         </div>
       </main>
+      <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
     </div>
   );
 }

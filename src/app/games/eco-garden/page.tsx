@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { MilestoneCelebration } from "@/components/MilestoneCelebration";
 import type { EcoFact } from "@/data/ecoFacts";
 import {
   applyOfflineGrowth,
@@ -135,6 +137,7 @@ export default function EcoGardenPage() {
 
   const [animalToast, setAnimalToast] = useState<GardenAnimalDef | null>(null);
   const [resultsFact, setResultsFact] = useState<EcoFact | null>(null);
+  const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
   const [newRecord, setNewRecord] = useState(false);
   const [petDance, setPetDance] = useState(false);
 
@@ -145,6 +148,7 @@ export default function EcoGardenPage() {
   const roundIdRef = useRef(0);
   const gardenDataRef = useRef<GardenData>(emptyGardenData());
   const userIdRef = useRef<string | null>(null);
+  const streakGardenPlaySessionDoneRef = useRef(false);
   const seenPlantFactsRef = useRef<Set<string>>(new Set());
 
   const playAreaRef = useRef<HTMLDivElement | null>(null);
@@ -319,6 +323,7 @@ export default function EcoGardenPage() {
     setNewRecord(false);
     setPetDance(false);
     setWaterBurst(null);
+    streakGardenPlaySessionDoneRef.current = false;
     if (factClearRef.current) clearTimeout(factClearRef.current);
   }, [syncDrops]);
 
@@ -500,6 +505,26 @@ export default function EcoGardenPage() {
           setGardenData(merged);
           gardenDataRef.current = merged;
           void persistGarden(merged);
+
+          if (!streakGardenPlaySessionDoneRef.current) {
+            streakGardenPlaySessionDoneRef.current = true;
+            void (async () => {
+              try {
+                const supabase = createClient();
+                const uid = userIdRef.current;
+                if (!uid) {
+                  console.warn("Cannot update streak — no authenticated user");
+                  return;
+                }
+                const streakResult = await updateStreak(uid, "game", supabase);
+                if (streakResult) {
+                  setStreakUpdate(streakResult);
+                }
+              } catch (err) {
+                console.error("Streak update failed:", err);
+              }
+            })();
+          }
 
           if (plantKey) showPlantFact(plantKey);
           const idx = merged.cells.findIndex((c) => c.plantKey === plantKey && c.stage === newStage);
@@ -1098,6 +1123,7 @@ export default function EcoGardenPage() {
           </div>
         </div>
       )}
+      <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
     </div>
   );
 }

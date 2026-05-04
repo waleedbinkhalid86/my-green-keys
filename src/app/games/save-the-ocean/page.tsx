@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { MilestoneCelebration } from "@/components/MilestoneCelebration";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { GAME_LEVELS, getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
 import {
@@ -103,6 +105,7 @@ export default function SaveTheOceanPage() {
   const factClearRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [resultsFact, setResultsFact] = useState<EcoFact | null>(null);
+  const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
   const [newRecord, setNewRecord] = useState(false);
   const [petDance, setPetDance] = useState(false);
 
@@ -499,6 +502,20 @@ export default function SaveTheOceanPage() {
           .single();
         const cur = Number((row as { eco_points?: number } | null)?.eco_points ?? 0) || 0;
         await supabase.from("profiles").update({ eco_points: cur + ecoNow }).eq("id", userData.user.id);
+
+        // Update daily streak (game completion counts)
+        if (!userData.user?.id) {
+          console.warn("Cannot update streak — no authenticated user");
+        } else {
+          try {
+            const streakResult = await updateStreak(userData.user.id, "game", supabase);
+            if (streakResult) {
+              setStreakUpdate(streakResult);
+            }
+          } catch (err) {
+            console.error("Streak update failed:", err);
+          }
+        }
 
         setHighScore((h) => {
           setNewRecord(scoreNow > h);
@@ -1138,6 +1155,7 @@ export default function SaveTheOceanPage() {
           </div>
         </div>
       )}
+      <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
     </div>
   );
 }

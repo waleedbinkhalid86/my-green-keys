@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, startTransition, useState } from "react";
 import Image from "next/image";
 import {
+  AlertTriangle,
   BarChart3,
   Bell,
   BookOpen,
@@ -21,6 +22,8 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ecoFacts } from "@/data/ecoFacts";
+import { getTodayDate } from "@/lib/streakHelpers";
+import { streakTierSurfaceClassName } from "@/components/StreakCounter";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +98,9 @@ interface Child {
   accuracy: number;
   ecoPhotos: number;
   currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
+  streakFreezes: number;
   badges: string[];
   wpmData: number[];
   nextMilestone: string;
@@ -134,10 +140,15 @@ type ParentNotifRow = {
 };
 
 type PetProfileRow = {
+  id: string;
   email: string;
   pet_type?: string | null;
   pet_name?: string | null;
   pet_health?: number | null;
+  current_streak?: number | null;
+  longest_streak?: number | null;
+  last_streak_date?: string | null;
+  streak_freezes?: number | null;
 };
 
 function toChildDashboard(row: ChildRow): Child {
@@ -158,11 +169,58 @@ function toChildDashboard(row: ChildRow): Child {
     accuracy: 0,
     ecoPhotos: 0,
     currentStreak: 0,
+    longestStreak: 0,
+    lastStreakDate: null,
+    streakFreezes: 0,
     badges: [],
     wpmData: [],
     nextMilestone: "Complete lessons to unlock badges",
     ecoActions: [],
   };
+}
+
+function ParentOverviewStreakCard({ child }: { child: Child }) {
+  const streak = child.currentStreak;
+  const longest = child.longestStreak;
+  const tier = streakTierSurfaceClassName(streak);
+  const isLegendary = streak >= 100;
+  const today = getTodayDate();
+  const streakAtRisk =
+    streak > 0 && child.lastStreakDate !== null && child.lastStreakDate < today;
+
+  return (
+    <div
+      className={cn(
+        "mgk-card-ds rounded-[20px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border-2",
+        tier,
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className={cn("text-sm font-semibold", isLegendary ? "text-white/90" : "text-gray-700")}>
+          Daily Streak
+        </p>
+        <Flame
+          className={cn("h-8 w-8 shrink-0 stroke-[2.25]", streak > 0 ? "text-orange-500" : "text-gray-400")}
+          aria-hidden
+        />
+      </div>
+      <p className={cn("mt-3 text-3xl font-bold tabular-nums leading-none", isLegendary && "text-white")}>
+        {streak}
+      </p>
+      <p className={cn("mt-2 text-sm font-semibold", isLegendary ? "text-white/95" : "text-gray-800")}>
+        {streak > 0 ? `${streak} day streak` : "Start a streak today"}
+      </p>
+      {streakAtRisk ? (
+        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-orange-600">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          Streak ends today!
+        </p>
+      ) : null}
+      <p className={cn("mt-3 text-xs", isLegendary ? "text-white/75" : "text-gray-500")}>
+        Longest: {longest} days
+      </p>
+    </div>
+  );
 }
 
 export default function ParentDashboard() {
@@ -321,7 +379,9 @@ export default function ParentDashboard() {
 
       const { data: petProfiles, error: petError } = await supabase
         .from("profiles")
-        .select("id, email, pet_type, pet_name, pet_health")
+        .select(
+          "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes",
+        )
         .in("email", usernames as string[]);
       if (petError) {
         setChildren(mapped);
@@ -334,14 +394,21 @@ export default function ParentDashboard() {
         return;
       }
 
-      const profileRows = (petProfiles as Array<PetProfileRow & { id: string }> | null) ?? [];
+      const profileRows = (petProfiles as PetProfileRow[] | null) ?? [];
       const profileByEmail = new Map(
         profileRows.map((p) => [String(p.email ?? "").trim().toLowerCase(), p])
       );
       withProfileIds = mapped.map((c) => {
         const key = c.username.trim().toLowerCase();
         const p = profileByEmail.get(key);
-        return { ...c, studentProfileId: p?.id ?? null };
+        return {
+          ...c,
+          studentProfileId: p?.id ?? null,
+          currentStreak: Number(p?.current_streak ?? 0),
+          longestStreak: Number(p?.longest_streak ?? 0),
+          lastStreakDate: p?.last_streak_date ?? null,
+          streakFreezes: Number(p?.streak_freezes ?? 0),
+        };
       });
 
       setChildren(withProfileIds);
@@ -806,7 +873,7 @@ export default function ParentDashboard() {
 
         <section id="parent-overview" className="scroll-mt-28">
           <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <div className={statCardClass}>
               <BookOpen className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
@@ -838,6 +905,11 @@ export default function ParentDashboard() {
                 {selectedChild?.ecoPhotos ?? 0}
               </p>
             </div>
+            {selectedChild ? (
+              <ParentOverviewStreakCard child={selectedChild} />
+            ) : (
+              <div className={cn(statCardClass, "min-h-[140px]")} aria-hidden />
+            )}
           </div>
           <div
             className={cn(statCardClass, "mt-4 border-0 bg-gradient-to-br from-[#1B5E20] to-[#2ECC71] text-white")}

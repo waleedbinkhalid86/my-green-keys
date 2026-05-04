@@ -1,8 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 import { Nunito } from "next/font/google";
+import { Flame } from "lucide-react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentStreak, updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { StreakCounter } from "@/components/StreakCounter";
+import { MilestoneCelebration } from "@/components/MilestoneCelebration";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
 import { PetWidget } from "@/components/PetWidget";
@@ -566,6 +571,8 @@ export default function LessonPage() {
   // Certificates
   const [earnedCertificate, setEarnedCertificate] = useState<(CertificateDefinition & { id: string }) | null>(null);
   const [showCertificatePopup, setShowCertificatePopup] = useState(false);
+  const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [profileDailyStreak, setProfileDailyStreak] = useState(0);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
     age: "8",
@@ -657,6 +664,29 @@ export default function LessonPage() {
   useEffect(() => {
     void loadCurrentClass();
   }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+        const s = await getCurrentStreak(user.id, supabase);
+        if (s) setProfileDailyStreak(s.current_streak);
+      } catch {
+        /* non-blocking */
+      }
+    };
+    void run();
+  }, []);
+
+  useEffect(() => {
+    if (streakUpdate?.newStreak != null) {
+      setProfileDailyStreak(streakUpdate.newStreak);
+    }
+  }, [streakUpdate]);
 
   const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -1106,6 +1136,22 @@ export default function LessonPage() {
         } else {
           const { error: insErr } = await supabase.from("student_progress").insert([payload]);
           if (insErr) throw insErr;
+        }
+
+        const user = userData.user;
+        if (!user?.id) {
+          console.warn("Cannot update streak — no authenticated user");
+        } else {
+          // Update daily streak (graceful — never blocks completion)
+          try {
+            const streakResult = await updateStreak(user.id, "lesson", supabase);
+            if (streakResult) {
+              setStreakUpdate(streakResult);
+            }
+          } catch (err) {
+            console.error("Streak update failed:", err);
+            // Continue normally — don't block user
+          }
         }
 
         // 2) Count completed lessons
@@ -2173,6 +2219,26 @@ export default function LessonPage() {
             </div>
           </div>
 
+          <Link
+            href="/streak"
+            style={{
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "1px solid rgba(255,255,255,0.22)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              textDecoration: "none",
+            }}
+          >
+            <Flame size={18} aria-hidden />
+            Streak
+          </Link>
+
           {userProfile?.name && (
             <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
               Hi {userProfile.name}!
@@ -2262,6 +2328,12 @@ export default function LessonPage() {
           </div>
         </div>
       </nav>
+
+      <div className="pointer-events-none fixed left-6 top-20 z-30 hidden md:block">
+        <div className="pointer-events-auto">
+          <StreakCounter streak={profileDailyStreak} variant="floating" />
+        </div>
+      </div>
 
       {/* LESSON INFO STRIP (minimal) */}
       <div
@@ -3829,6 +3901,8 @@ export default function LessonPage() {
           box-shadow: none;
         }
       `}</style>
+
+      <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
 
       {/* BOTTOM PROGRESS BAR */}
       <div

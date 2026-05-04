@@ -243,3 +243,62 @@ CREATE POLICY "Students can update their own eco garden" ON eco_garden
 -- Subscriptions: users can view their own subscription row
 CREATE POLICY "Users can view their own subscription" ON subscriptions
   FOR SELECT USING (auth.uid() = user_id);
+
+-- ============================================================
+-- DAILY STREAK FEATURE
+-- Hybrid approach: Fast counters on profiles + history table
+-- ============================================================
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_streak INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS longest_streak INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_streak_date DATE;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS streak_freezes INTEGER DEFAULT 2;
+
+CREATE TABLE IF NOT EXISTS streaks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  activity_date DATE NOT NULL,
+  activity_type TEXT NOT NULL CHECK (activity_type IN ('lesson', 'game')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_streaks_user_date_type 
+  ON streaks(user_id, activity_date, activity_type);
+
+CREATE INDEX IF NOT EXISTS idx_streaks_user_id 
+  ON streaks(user_id, activity_date DESC);
+
+ALTER TABLE streaks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own streaks" ON streaks;
+CREATE POLICY "Users can view their own streaks"
+  ON streaks FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own streaks" ON streaks;
+CREATE POLICY "Users can insert their own streaks"
+  ON streaks FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Parents can view children streaks" ON streaks;
+CREATE POLICY "Parents can view children streaks"
+  ON streaks FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM children 
+      WHERE children.id = streaks.user_id 
+      AND children.parent_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Teachers can view enrolled student streaks" ON streaks;
+CREATE POLICY "Teachers can view enrolled student streaks"
+  ON streaks FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM class_enrollments ce
+      JOIN classes c ON c.id = ce.class_id
+      WHERE ce.student_id = streaks.user_id
+      AND c.teacher_id = auth.uid()
+    )
+  );

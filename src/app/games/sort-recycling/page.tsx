@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { MilestoneCelebration } from "@/components/MilestoneCelebration";
 import {
   GAME_LEVELS,
   getStoredGameLevel,
@@ -64,6 +66,7 @@ export default function SortRecyclingPage() {
   const [petType, setPetType] = useState<"panda" | "turtle" | null>(null);
   const [petName, setPetName] = useState("");
   const [petDance, setPetDance] = useState(false);
+  const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
 
   const roundEndedRef = useRef(false);
   const roundIdRef = useRef(0);
@@ -405,6 +408,20 @@ export default function SortRecyclingPage() {
         const { data: row } = await supabase.from("profiles").select("eco_points").eq("id", userData.user.id).single();
         const cur = Number((row as { eco_points?: number } | null)?.eco_points ?? 0) || 0;
         await supabase.from("profiles").update({ eco_points: cur + ecoNow }).eq("id", userData.user.id);
+
+        // Update daily streak (game completion counts)
+        if (!userData.user?.id) {
+          console.warn("Cannot update streak — no authenticated user");
+        } else {
+          try {
+            const streakResult = await updateStreak(userData.user.id, "game", supabase);
+            if (streakResult) {
+              setStreakUpdate(streakResult);
+            }
+          } catch (err) {
+            console.error("Streak update failed:", err);
+          }
+        }
 
         if (cityHealth > 70) {
           setPetDance(true);
@@ -800,6 +817,7 @@ export default function SortRecyclingPage() {
           </div>
         )}
       </div>
+      <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
     </div>
   );
 }
