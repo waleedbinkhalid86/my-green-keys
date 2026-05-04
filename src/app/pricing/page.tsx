@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Ban, Check, Leaf, Lock, Plus, Shield, Sprout } from "lucide-react";
+import { Ban, Check, Lock, Plus, Quote, Shield, Sprout } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { testimonials } from "@/data/testimonials";
 
 const LeafIconCustom = () => (
   <svg
@@ -377,9 +378,8 @@ function PricingPageContent() {
       {/* Hero */}
       <section className="bg-white px-4 pt-[80px] pb-[60px] text-center sm:px-6">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-[50px] border border-[#E5E7EB] bg-[#FAFAFA] px-4 py-2 text-sm font-semibold text-[#374151] shadow-sm">
-            <Leaf className="h-5 w-5 shrink-0 text-green-600" strokeWidth={2.25} aria-hidden />
-            Trusted by 10,000+ families
+          <div className="mb-6 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+            Now in early access for schools and families
           </div>
           <h1 className="text-[40px] font-black leading-[1.1] tracking-tight text-[#1A2F23] sm:text-[48px]">
             Simple, honest pricing for your child&apos;s future
@@ -655,12 +655,31 @@ function PricingPageContent() {
             </div>
           </div>
 
-          <div className="mx-auto mt-14 max-w-3xl rounded-[20px] border-2 border-[#E5E7EB] bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
-            <p className="text-lg font-extrabold leading-relaxed text-[#1A2F23] sm:text-xl">
-              &ldquo;Switched from TypingClub. My kids are 3x more engaged!&rdquo;
-            </p>
-            <p className="mt-4 text-base font-bold text-[#2ECC71]">— Ahmed Family, Karachi</p>
-          </div>
+          {testimonials.length > 0 ? (
+            <section className="py-12">
+              <div className="mx-auto max-w-4xl px-6">
+                <h3 className="mb-8 text-center text-2xl font-bold text-gray-900">What educators are saying</h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {testimonials.slice(0, 2).map((t) => (
+                    <div
+                      key={t.id}
+                      className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+                    >
+                      <Quote className="mb-3 h-6 w-6 text-green-600" />
+                      <p className="mb-4 text-gray-700">&ldquo;{t.quote}&rdquo;</p>
+                      <div className="text-sm">
+                        <div className="font-semibold text-gray-900">{t.author}</div>
+                        <div className="text-gray-600">
+                          {t.role}
+                          {t.organization ? ` • ${t.organization}` : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
 
@@ -770,9 +789,7 @@ function PricingPageContent() {
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             Ready to start your child&apos;s typing journey?
           </h2>
-          <p className="text-lg text-white/90">
-            Join thousands of kids learning to type while helping the planet.
-          </p>
+          <p className="text-lg text-white/90">Start free. No credit card needed.</p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/signup"
