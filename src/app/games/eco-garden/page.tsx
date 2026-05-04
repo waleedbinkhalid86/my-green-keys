@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { awardXp, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
+import { RankUpCelebration } from "@/components/RankUpCelebration";
 import type { EcoFact } from "@/data/ecoFacts";
 import {
   applyOfflineGrowth,
@@ -216,6 +218,7 @@ export default function EcoGardenPage() {
   const [animalToast, setAnimalToast] = useState<GardenAnimalDef | null>(null);
   const [resultsFact, setResultsFact] = useState<EcoFact | null>(null);
   const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<XpAwardResult | null>(null);
   const [newRecord, setNewRecord] = useState(false);
   const [petDance, setPetDance] = useState(false);
 
@@ -631,7 +634,25 @@ export default function EcoGardenPage() {
           const merged = registerAnimals(next);
           setGardenData(merged);
           gardenDataRef.current = merged;
-          void persistGarden(merged);
+          void (async () => {
+            await persistGarden(merged);
+            const uid = userIdRef.current;
+            if (!uid || !trialState || !canFullyAccessGarden(trialState) || newStage < 1) return;
+            try {
+              const supabase = createClient();
+              const isPlant = newStage === 1;
+              const result = await awardXp(
+                uid,
+                3,
+                XP_SOURCES.GAME_ECO_GARDEN,
+                isPlant ? "Planted a new plant" : "Watered the garden",
+                supabase
+              );
+              if (result) setXpAwarded(result);
+            } catch (err) {
+              console.error("XP award failed:", err);
+            }
+          })();
 
           if (!streakGardenPlaySessionDoneRef.current) {
             streakGardenPlaySessionDoneRef.current = true;
@@ -1310,6 +1331,7 @@ export default function EcoGardenPage() {
         </>
       ) : null}
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
+      <RankUpCelebration xpAwarded={xpAwarded} onClose={() => setXpAwarded(null)} />
     </div>
   );
 }

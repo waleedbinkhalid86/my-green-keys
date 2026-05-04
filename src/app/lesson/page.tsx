@@ -2,12 +2,15 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Nunito } from "next/font/google";
-import { Flame } from "lucide-react";
+import { Flame, Shield } from "lucide-react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentStreak, updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { awardXp, getRangerProfile, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { StreakCounter } from "@/components/StreakCounter";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
+import { RankBadge } from "@/components/RankBadge";
+import { RankUpCelebration } from "@/components/RankUpCelebration";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
 import { PetWidget } from "@/components/PetWidget";
@@ -572,6 +575,8 @@ export default function LessonPage() {
   const [earnedCertificate, setEarnedCertificate] = useState<(CertificateDefinition & { id: string }) | null>(null);
   const [showCertificatePopup, setShowCertificatePopup] = useState(false);
   const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<XpAwardResult | null>(null);
+  const [rangerXp, setRangerXp] = useState(0);
   const [profileDailyStreak, setProfileDailyStreak] = useState(0);
   const [welcomeData, setWelcomeData] = useState({
     name: "",
@@ -675,6 +680,8 @@ export default function LessonPage() {
         if (!user) return;
         const s = await getCurrentStreak(user.id, supabase);
         if (s) setProfileDailyStreak(s.current_streak);
+        const ranger = await getRangerProfile(user.id, supabase);
+        if (ranger) setRangerXp(ranger.ranger_xp);
       } catch {
         /* non-blocking */
       }
@@ -1151,6 +1158,51 @@ export default function LessonPage() {
           } catch (err) {
             console.error("Streak update failed:", err);
             // Continue normally — don't block user
+          }
+        }
+
+        // Award XP for completing a lesson
+        if (user?.id) {
+          try {
+            let lessonStars = 1;
+            if (stats.accuracy >= 90) lessonStars++;
+            if (stats.wpm >= (currentLesson.targetWPM || 20)) lessonStars++;
+
+            const baseXp = await awardXp(
+              user.id,
+              10,
+              XP_SOURCES.LESSON_COMPLETE,
+              `Completed lesson ${currentLesson.id}: ${currentLesson.title}`,
+              supabase
+            );
+
+            let bonusResult: XpAwardResult | null = null;
+            if (lessonStars === 3) {
+              bonusResult = await awardXp(
+                user.id,
+                5,
+                XP_SOURCES.LESSON_THREE_STARS,
+                `3-star bonus: lesson ${currentLesson.id}`,
+                supabase
+              );
+            }
+
+            const finalTotal = bonusResult?.totalXp ?? baseXp?.totalXp ?? 0;
+            const combinedRankUp = !!(baseXp?.rankUp || bonusResult?.rankUp);
+            const lastResult = bonusResult ?? baseXp;
+            if (lastResult) {
+              setRangerXp(finalTotal);
+              setXpAwarded({
+                ...lastResult,
+                totalXp: finalTotal,
+                rankUp: combinedRankUp,
+                rankAfter: bonusResult?.rankAfter ?? baseXp?.rankAfter ?? lastResult.rankAfter,
+                rankBefore: baseXp?.rankBefore ?? bonusResult?.rankBefore ?? lastResult.rankBefore,
+                awarded: (baseXp?.awarded ?? 0) + (bonusResult?.awarded ?? 0),
+              });
+            }
+          } catch (err) {
+            console.error("XP award failed:", err);
           }
         }
 
@@ -2239,6 +2291,34 @@ export default function LessonPage() {
             Streak
           </Link>
 
+          <Link
+            href="/ranger"
+            className="hidden md:inline-flex"
+            style={{
+              padding: "10px 14px",
+              borderRadius: 50,
+              border: "1px solid rgba(255,255,255,0.22)",
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              fontWeight: 900,
+              cursor: "pointer",
+              alignItems: "center",
+              gap: 8,
+              textDecoration: "none",
+            }}
+          >
+            <Shield size={18} aria-hidden />
+            Ranger
+          </Link>
+
+          <Link
+            href="/ranger"
+            className="hidden md:inline-flex items-center"
+            style={{ textDecoration: "none" }}
+          >
+            <RankBadge xp={rangerXp} variant="compact" />
+          </Link>
+
           {userProfile?.name && (
             <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
               Hi {userProfile.name}!
@@ -2330,8 +2410,15 @@ export default function LessonPage() {
       </nav>
 
       <div className="pointer-events-none fixed left-6 top-20 z-30 hidden md:block">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex flex-col items-start gap-2">
           <StreakCounter streak={profileDailyStreak} variant="floating" />
+          <Link
+            href="/ranger"
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-2 text-sm font-bold text-white shadow-lg backdrop-blur-sm"
+          >
+            <Shield className="h-4 w-4 shrink-0" aria-hidden />
+            Ranger
+          </Link>
         </div>
       </div>
 
@@ -3903,6 +3990,7 @@ export default function LessonPage() {
       `}</style>
 
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
+      <RankUpCelebration xpAwarded={xpAwarded} onClose={() => setXpAwarded(null)} />
 
       {/* BOTTOM PROGRESS BAR */}
       <div

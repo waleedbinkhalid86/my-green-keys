@@ -17,6 +17,7 @@ import {
   Play,
   Recycle,
   Sparkles,
+  Shield,
   Sprout,
   Star,
   Sun,
@@ -26,6 +27,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getRangerProfile, type RangerRank } from "@/lib/rangerHelpers";
+import { RankBadge } from "@/components/RankBadge";
 import { getTrialState, type TrialState } from "@/lib/ecoGardenTrial";
 import {
   GAME_LEVELS,
@@ -196,6 +199,8 @@ export default function GamesHubPage() {
   const [hubStars, setHubStars] = useState<Record<string, number>>({});
   const [levelBounceId, setLevelBounceId] = useState<GameLevelId | null>(null);
   const [ecoGardenTrial, setEcoGardenTrial] = useState<TrialState | null>(null);
+  const [rangerXp, setRangerXp] = useState(0);
+  const [rangerRank, setRangerRank] = useState<RangerRank>("cadet");
 
   const refreshHubStars = useCallback(() => {
     setHubStars(readHubStars());
@@ -273,6 +278,12 @@ export default function GamesHubPage() {
 
         const trial = await getTrialState(userData.user.id, supabase);
         setEcoGardenTrial(trial);
+
+        const ranger = await getRangerProfile(userData.user.id, supabase);
+        if (ranger) {
+          setRangerXp(ranger.ranger_xp);
+          setRangerRank(ranger.ranger_rank);
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load games.");
       } finally {
@@ -514,6 +525,30 @@ export default function GamesHubPage() {
           >
             Learn to type while saving the planet!
           </p>
+          {!loading ? (
+            <div
+              className="mt-5 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center"
+              style={{ position: "relative", zIndex: 2 }}
+            >
+              <Link href="/ranger" className="inline-flex items-center" style={{ textDecoration: "none" }}>
+                <RankBadge xp={rangerXp} rank={rangerRank} variant="full" />
+              </Link>
+              <p
+                className="text-sm font-bold sm:max-w-xs"
+                style={{ color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+              >
+                Play different games to earn rank XP
+              </p>
+              <Link
+                href="/ranger"
+                className="hidden items-center gap-2 rounded-full border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
+                style={{ textDecoration: "none" }}
+              >
+                <Shield className="h-4 w-4 shrink-0" aria-hidden />
+                Ranger
+              </Link>
+            </div>
+          ) : null}
           <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
             <Link
               href="/lesson"

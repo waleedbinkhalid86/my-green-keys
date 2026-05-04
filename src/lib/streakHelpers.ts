@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { awardXp, XP_SOURCES } from "@/lib/rangerHelpers";
 
 export interface StreakProfile {
   current_streak: number;
@@ -196,6 +197,31 @@ export async function updateStreak(
     if (updateError) {
       console.error("[streakHelpers] updateStreak profile update:", updateError);
       return null;
+    }
+
+    try {
+      if (newStreak > 0) {
+        await awardXp(
+          userId,
+          5,
+          XP_SOURCES.STREAK_DAY,
+          `Day ${newStreak} streak`,
+          supabase
+        );
+      }
+
+      if (milestoneDay && rewardEcoPoints > 0) {
+        const milestoneXp = rewardEcoPoints * 5;
+        await awardXp(
+          userId,
+          milestoneXp,
+          XP_SOURCES.STREAK_MILESTONE,
+          `${milestoneDay}-day streak milestone`,
+          supabase
+        );
+      }
+    } catch (err) {
+      console.error("[streakHelpers] updateStreak ranger XP:", err);
     }
 
     return {

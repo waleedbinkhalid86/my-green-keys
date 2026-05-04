@@ -309,3 +309,57 @@ CREATE POLICY "Teachers can view enrolled student streaks"
 
 ALTER TABLE profiles 
   ADD COLUMN IF NOT EXISTS eco_garden_trial_started_at TIMESTAMPTZ DEFAULT NULL;
+
+-- ============================================================
+-- PLANET RANGER IDENTITY PROGRESSION
+-- ============================================================
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ranger_xp INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ranger_rank TEXT DEFAULT 'cadet';
+
+CREATE TABLE IF NOT EXISTS ranger_xp_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  source TEXT NOT NULL,
+  xp_amount INTEGER NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ranger_xp_log_user_created
+  ON ranger_xp_log(user_id, created_at DESC);
+
+ALTER TABLE ranger_xp_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own xp log" ON ranger_xp_log;
+CREATE POLICY "Users can view their own xp log"
+  ON ranger_xp_log FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own xp entries" ON ranger_xp_log;
+CREATE POLICY "Users can insert their own xp entries"
+  ON ranger_xp_log FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Parents can view children xp log" ON ranger_xp_log;
+CREATE POLICY "Parents can view children xp log"
+  ON ranger_xp_log FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM children
+      WHERE children.id = ranger_xp_log.user_id
+      AND children.parent_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Teachers can view enrolled student xp log" ON ranger_xp_log;
+CREATE POLICY "Teachers can view enrolled student xp log"
+  ON ranger_xp_log FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM class_enrollments ce
+      JOIN classes c ON c.id = ce.class_id
+      WHERE ce.student_id = ranger_xp_log.user_id
+      AND c.teacher_id = auth.uid()
+    )
+  );

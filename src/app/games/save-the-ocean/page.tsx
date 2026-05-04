@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { awardXp, calculateGameXp, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
+import { RankUpCelebration } from "@/components/RankUpCelebration";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { GAME_LEVELS, getStoredGameLevel, type GameLevelDefinition } from "@/lib/games/gameLevels";
 import {
@@ -106,6 +108,7 @@ export default function SaveTheOceanPage() {
 
   const [resultsFact, setResultsFact] = useState<EcoFact | null>(null);
   const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<XpAwardResult | null>(null);
   const [newRecord, setNewRecord] = useState(false);
   const [petDance, setPetDance] = useState(false);
 
@@ -514,6 +517,22 @@ export default function SaveTheOceanPage() {
             }
           } catch (err) {
             console.error("Streak update failed:", err);
+          }
+        }
+
+        if (userData.user?.id) {
+          try {
+            const xpAmount = calculateGameXp(scoreNow);
+            const result = await awardXp(
+              userData.user.id,
+              xpAmount,
+              XP_SOURCES.GAME_SAVE_OCEAN,
+              `Save the Ocean - score ${scoreNow}`,
+              supabase
+            );
+            if (result) setXpAwarded(result);
+          } catch (err) {
+            console.error("XP award failed:", err);
           }
         }
 
@@ -1156,6 +1175,7 @@ export default function SaveTheOceanPage() {
         </div>
       )}
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
+      <RankUpCelebration xpAwarded={xpAwarded} onClose={() => setXpAwarded(null)} />
     </div>
   );
 }

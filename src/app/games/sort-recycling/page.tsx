@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { awardXp, calculateGameXp, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
+import { RankUpCelebration } from "@/components/RankUpCelebration";
 import {
   GAME_LEVELS,
   getStoredGameLevel,
@@ -67,6 +69,7 @@ export default function SortRecyclingPage() {
   const [petName, setPetName] = useState("");
   const [petDance, setPetDance] = useState(false);
   const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<XpAwardResult | null>(null);
 
   const roundEndedRef = useRef(false);
   const roundIdRef = useRef(0);
@@ -420,6 +423,22 @@ export default function SortRecyclingPage() {
             }
           } catch (err) {
             console.error("Streak update failed:", err);
+          }
+        }
+
+        if (userData.user?.id) {
+          try {
+            const xpAmount = calculateGameXp(score);
+            const result = await awardXp(
+              userData.user.id,
+              xpAmount,
+              XP_SOURCES.GAME_SORT_RECYCLING,
+              `Sort Recycling - score ${score}`,
+              supabase
+            );
+            if (result) setXpAwarded(result);
+          } catch (err) {
+            console.error("XP award failed:", err);
           }
         }
 
@@ -818,6 +837,7 @@ export default function SortRecyclingPage() {
         )}
       </div>
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
+      <RankUpCelebration xpAwarded={xpAwarded} onClose={() => setXpAwarded(null)} />
     </div>
   );
 }

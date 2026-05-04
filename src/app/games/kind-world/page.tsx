@@ -12,7 +12,9 @@ import {
 } from "@/lib/kindWorldHelpers";
 import { createClient } from "@/lib/supabase/client";
 import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
+import { awardXp, calculateGameXp, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
+import { RankUpCelebration } from "@/components/RankUpCelebration";
 import "@/app/globals.css";
 
 type GameState = "intro" | "level_select" | "playing" | "game_over";
@@ -102,6 +104,7 @@ export default function KindWorldGamePage() {
     null,
   );
   const [streakUpdate, setStreakUpdate] = useState<StreakUpdateResult | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<XpAwardResult | null>(null);
 
   const timeMaxRef = useRef(8);
   const timeLeftRef = useRef(8);
@@ -395,6 +398,22 @@ export default function KindWorldGamePage() {
             }
           } catch (err) {
             console.error("Streak update failed:", err);
+          }
+        }
+
+        if (userData.user?.id) {
+          try {
+            const xpAmount = calculateGameXp(score);
+            const result = await awardXp(
+              userData.user.id,
+              xpAmount,
+              XP_SOURCES.GAME_KIND_WORLD,
+              `Kind World Academy - score ${score}`,
+              supabase
+            );
+            if (result) setXpAwarded(result);
+          } catch (err) {
+            console.error("XP award failed:", err);
           }
         }
 
@@ -759,6 +778,7 @@ export default function KindWorldGamePage() {
         </div>
       </main>
       <MilestoneCelebration streakUpdate={streakUpdate} onClose={() => setStreakUpdate(null)} />
+      <RankUpCelebration xpAwarded={xpAwarded} onClose={() => setXpAwarded(null)} />
     </div>
   );
 }

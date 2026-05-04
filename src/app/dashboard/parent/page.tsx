@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, startTransition, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   AlertTriangle,
   BarChart3,
@@ -15,12 +16,16 @@ import {
   LogOut,
   PawPrint,
   Settings,
+  Shield,
+  Sparkles,
   Target,
   UserRound,
   Users,
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { awardXp, getProgress, XP_SOURCES, type RangerRank } from "@/lib/rangerHelpers";
+import { RankBadge, rankProgressFillClassName } from "@/components/RankBadge";
 import { ecoFacts } from "@/data/ecoFacts";
 import { getTodayDate } from "@/lib/streakHelpers";
 import { streakTierSurfaceClassName } from "@/components/StreakCounter";
@@ -101,6 +106,8 @@ interface Child {
   longestStreak: number;
   lastStreakDate: string | null;
   streakFreezes: number;
+  ranger_xp: number;
+  ranger_rank: RangerRank;
   badges: string[];
   wpmData: number[];
   nextMilestone: string;
@@ -149,7 +156,15 @@ type PetProfileRow = {
   longest_streak?: number | null;
   last_streak_date?: string | null;
   streak_freezes?: number | null;
+  ranger_xp?: number | null;
+  ranger_rank?: string | null;
 };
+
+const RANK_IDS = new Set<string>(["cadet", "scout", "ranger", "captain", "hero"]);
+
+function coerceRangerRank(value: unknown): RangerRank {
+  return typeof value === "string" && RANK_IDS.has(value) ? (value as RangerRank) : "cadet";
+}
 
 function toChildDashboard(row: ChildRow): Child {
   const gender = row.gender ?? "boy";
@@ -172,6 +187,8 @@ function toChildDashboard(row: ChildRow): Child {
     longestStreak: 0,
     lastStreakDate: null,
     streakFreezes: 0,
+    ranger_xp: 0,
+    ranger_rank: "cadet",
     badges: [],
     wpmData: [],
     nextMilestone: "Complete lessons to unlock badges",
@@ -199,10 +216,22 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
         <p className={cn("text-sm font-semibold", isLegendary ? "text-white/90" : "text-gray-700")}>
           Daily Streak
         </p>
-        <Flame
-          className={cn("h-8 w-8 shrink-0 stroke-[2.25]", streak > 0 ? "text-orange-500" : "text-gray-400")}
-          aria-hidden
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/ranger"
+            className={cn(
+              "hidden items-center gap-1 rounded-full px-2 py-1 text-xs font-bold transition hover:opacity-90 md:inline-flex",
+              isLegendary ? "text-white/95" : "text-purple-600",
+            )}
+          >
+            <Shield className="h-3.5 w-3.5" aria-hidden />
+            Ranger
+          </Link>
+          <Flame
+            className={cn("h-8 w-8 shrink-0 stroke-[2.25]", streak > 0 ? "text-orange-500" : "text-gray-400")}
+            aria-hidden
+          />
+        </div>
       </div>
       <p className={cn("mt-3 text-3xl font-bold tabular-nums leading-none", isLegendary && "text-white")}>
         {streak}
@@ -219,6 +248,49 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
       <p className={cn("mt-3 text-xs", isLegendary ? "text-white/75" : "text-gray-500")}>
         Longest: {longest} days
       </p>
+    </div>
+  );
+}
+
+function ParentOverviewRangerCard({ child }: { child: Child }) {
+  const xp = child.ranger_xp;
+  const prog = getProgress(xp);
+  const fill = rankProgressFillClassName(prog.currentRank.id);
+  const isMax = prog.nextRank === null;
+
+  return (
+    <div className={statCardClass}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold text-gray-700">Planet Ranger</p>
+        <Link
+          href="/ranger"
+          className="hidden items-center gap-1 text-xs font-bold text-purple-600 transition hover:opacity-90 md:inline-flex"
+        >
+          <Shield className="h-3.5 w-3.5" aria-hidden />
+          Details
+        </Link>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <RankBadge xp={xp} rank={child.ranger_rank} variant="full" />
+      </div>
+      {isMax ? (
+        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-purple-600">
+          <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+          Maxed out!
+        </p>
+      ) : (
+        <>
+          <div className="mt-4 h-1.5 w-full rounded-full bg-gray-200">
+            <div
+              className={cn("h-full rounded-full transition-all", fill)}
+              style={{ width: `${prog.progressPercent}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            {prog.xpToNext.toLocaleString()} XP to {prog.nextRank?.label}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -380,7 +452,7 @@ export default function ParentDashboard() {
       const { data: petProfiles, error: petError } = await supabase
         .from("profiles")
         .select(
-          "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes",
+          "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes, ranger_xp, ranger_rank",
         )
         .in("email", usernames as string[]);
       if (petError) {
@@ -408,6 +480,8 @@ export default function ParentDashboard() {
           longestStreak: Number(p?.longest_streak ?? 0),
           lastStreakDate: p?.last_streak_date ?? null,
           streakFreezes: Number(p?.streak_freezes ?? 0),
+          ranger_xp: Number(p?.ranger_xp ?? 0),
+          ranger_rank: coerceRangerRank(p?.ranger_rank),
         };
       });
 
@@ -583,6 +657,20 @@ export default function ParentDashboard() {
         .eq("id", photo.studentId);
 
       if (awardError) throw awardError;
+
+      if (photo.studentId) {
+        try {
+          await awardXp(
+            photo.studentId,
+            30,
+            XP_SOURCES.ECO_PHOTO_APPROVED,
+            `Eco photo approved: ${photo.actionType}`,
+            supabase
+          );
+        } catch (err) {
+          console.error("XP award failed:", err);
+        }
+      }
 
       setPendingPhotos((prev) => prev.filter((p) => p.id !== photo.id));
       setEcoSuccess("Approved! Eco points awarded to the student.");
@@ -873,7 +961,7 @@ export default function ParentDashboard() {
 
         <section id="parent-overview" className="scroll-mt-28">
           <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <div className={statCardClass}>
               <BookOpen className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
@@ -907,6 +995,11 @@ export default function ParentDashboard() {
             </div>
             {selectedChild ? (
               <ParentOverviewStreakCard child={selectedChild} />
+            ) : (
+              <div className={cn(statCardClass, "min-h-[140px]")} aria-hidden />
+            )}
+            {selectedChild ? (
+              <ParentOverviewRangerCard child={selectedChild} />
             ) : (
               <div className={cn(statCardClass, "min-h-[140px]")} aria-hidden />
             )}
