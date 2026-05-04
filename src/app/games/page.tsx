@@ -118,8 +118,8 @@ const GAMES: GameCardDef[] = [
     gradient: "linear-gradient(160deg, #2ECC71 0%, #27AE60 100%)",
   },
   {
-    slug: "/games/kind-world-academy",
-    key: "kind-world-academy",
+    slug: "/games/kind-world",
+    key: "kind-world",
     Icon: Heart,
     name: "Kind World Academy",
     description: "Spread kindness around the world—typing adventure awaits!",
@@ -165,7 +165,8 @@ function isGameImplemented(slug: string): boolean {
     slug === "/games/falling-leaves" ||
     slug === "/games/sort-recycling" ||
     slug === "/games/save-the-ocean" ||
-    slug === "/games/eco-garden"
+    slug === "/games/eco-garden" ||
+    slug === "/games/kind-world"
   );
 }
 
