@@ -95,13 +95,6 @@ function getPhaseVisualStatus(
   return "completed";
 }
 
-function getPhaseTargetLesson(start: number, end: number, completedSet: Set<number>): number {
-  for (let i = start; i <= end; i++) {
-    if (!completedSet.has(i)) return i;
-  }
-  return start;
-}
-
 export default function LessonMapPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -187,10 +180,6 @@ export default function LessonMapPage() {
   }, [completedSet]);
 
   const progressPct = clamp((completedCount / 100) * 100, 0, 100);
-
-  const openLesson = (id: number) => {
-    router.push(`/lesson?lesson=${id}`);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 pb-32">
@@ -334,7 +323,6 @@ export default function LessonMapPage() {
                 const completedInPhase = countCompletedInRange(p.start, p.end, completedSet);
                 const lessonsInPhase = p.end - p.start + 1;
                 const phasePct = clamp((completedInPhase / lessonsInPhase) * 100, 0, 100);
-                const targetLesson = getPhaseTargetLesson(p.start, p.end, completedSet);
                 const showProgress =
                   !locked &&
                   (completedInPhase > 0 ||
@@ -347,7 +335,7 @@ export default function LessonMapPage() {
                     key={p.id}
                     type="button"
                     disabled={locked}
-                    onClick={() => !locked && openLesson(targetLesson)}
+                    onClick={() => !locked && router.push(`/lesson-map/phase-${p.id}`)}
                     className={clsx(
                       "group relative w-full text-left",
                       "aspect-[3/4] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300",
