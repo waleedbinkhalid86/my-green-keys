@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Leaf, Menu } from "lucide-react";
+import { Check, Leaf, Menu, MessageSquare, School, Users } from "lucide-react";
 import React from "react";
 
 const DARK = "#1A2F23";
@@ -315,19 +315,10 @@ export default function HomePage() {
           className="pb-32 sm:pb-40"
           style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 900, margin: "0 auto" }}
         >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              border: `2px solid ${PRIMARY}`,
-              borderRadius: 50,
-              padding: "8px 20px",
-              marginBottom: 28,
-              animation: "fade-in 0.8s ease 0.2s both",
-            }}
-          >
-            <span style={{ color: "#fff", fontSize: "0.8rem", fontWeight: 700 }}>Trusted by 10,000+ kids worldwide</span>
+          <div className="mb-7" style={{ animation: "fade-in 0.8s ease 0.2s both" }}>
+            <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+              Now in early access for schools and families
+            </span>
           </div>
 
           <h1
@@ -442,47 +433,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SOCIAL PROOF */}
+      {/* TRUST BADGES */}
       <section style={{ background: "#fff", padding: "48px 0" }}>
         <Inner>
           <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
-            Join thousands of families already learning
+            Privacy and safety built in
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 20 }}>
-            {[
-              { bg: "#E8F5E9", t: "SM" },
-              { bg: "#E3F2FD", t: "AK" },
-              { bg: "#FFF3E0", t: "FK" },
-              { bg: "#F3E5F5", t: "ZH" },
-              { bg: "#E0F2F1", t: "OR" },
-            ].map((a) => (
-              <div
-                key={a.t}
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  background: a.bg,
-                  color: DARK,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                  fontSize: 14,
-                  border: "3px solid #fff",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                }}
-              >
-                {a.t}
-              </div>
-            ))}
-            <span style={{ fontWeight: 800, color: "#64748b", fontSize: "1rem" }}>+9,847 families</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 24, marginTop: 28 }}>
-            <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#F59E0B" }}>★★★★★</span>
-            <span style={{ fontWeight: 700, color: DARK }}>4.9/5 from 2,000+ reviews</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16, marginTop: 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
             {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
               <span
                 key={b}
@@ -701,35 +658,58 @@ export default function HomePage() {
         </Inner>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section style={{ background: "#fff", padding: "88px 0" }}>
-        <Inner>
-          <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3.5vw, 2.25rem)", fontWeight: 900, color: DARK, marginBottom: 40 }}>
-            Parents and teachers love My Green Keys
+      {/* EARLY ACCESS */}
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+            Join us as an early adopter
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
-            {[
-              {
-                quote: "My daughter types 45 WPM after just 3 months! She loves her panda and checks on it every day.",
-                who: "Sarah M., Mother of 2",
-              },
-              {
-                quote: "I use it with my entire class. The eco lessons spark amazing conversations about the environment.",
-                who: "Mr. Ahmed, Grade 4 Teacher",
-              },
-              {
-                quote: "Finally a typing app that teaches values too. My son learned about recycling while improving his typing!",
-                who: "Fatima K., Mother",
-              },
-            ].map((t) => (
-              <div key={t.who} className="mgk-card-ds" style={{ padding: "28px 24px" }}>
-                <p style={{ fontSize: "0.95rem", color: "#334155", fontWeight: 600, lineHeight: 1.7, margin: "0 0 16px" }}>&ldquo;{t.quote}&rdquo;</p>
-                <p style={{ fontWeight: 900, color: DARK, margin: 0 }}>{t.who}</p>
-                <p style={{ margin: "10px 0 0", color: "#F59E0B", fontSize: "1rem" }}>★★★★★</p>
-              </div>
-            ))}
+          <p className="mx-auto mt-4 max-w-2xl text-center text-base font-semibold text-gray-600">
+            Schools and families joining now get founding member benefits
+          </p>
+          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+              <School className="mb-4 h-10 w-10 text-green-600" aria-hidden />
+              <h3 className="mb-2 text-xl font-bold text-gray-900">Free 30-day pilot for schools</h3>
+              <p className="text-sm leading-relaxed text-gray-600">
+                Test My Green Keys with your classroom. Full access, no commitment.
+              </p>
+            </article>
+            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+              <Users className="mb-4 h-10 w-10 text-green-600" aria-hidden />
+              <h3 className="mb-2 text-xl font-bold text-gray-900">Founding family pricing</h3>
+              <p className="text-sm leading-relaxed text-gray-600">
+                Lock in 50% off the Family Plan for life when you sign up early.
+              </p>
+            </article>
+            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+              <MessageSquare className="mb-4 h-10 w-10 text-green-600" aria-hidden />
+              <h3 className="mb-2 text-xl font-bold text-gray-900">Help shape the product</h3>
+              <p className="text-sm leading-relaxed text-gray-600">
+                Direct feedback line to the founder. Your input shapes new features.
+              </p>
+            </article>
           </div>
-        </Inner>
+          <div className="mt-12 text-center">
+            <h3 className="text-xl font-bold text-gray-900" style={{ color: DARK }}>
+              Be among the first
+            </h3>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-full bg-green-600 px-8 py-3 text-base font-bold text-white shadow-sm transition hover:bg-green-700"
+              >
+                Get Started Free
+              </Link>
+              <a
+                href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
+                className="inline-flex items-center justify-center rounded-full border-2 border-gray-900 bg-white px-8 py-3 text-base font-bold text-gray-900 transition hover:bg-gray-50"
+              >
+                Schools: Book a Demo
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* PRICING PREVIEW */}
