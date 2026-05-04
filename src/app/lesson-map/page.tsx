@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { lessons, type Lesson } from "@/data/lessons";
+import { Check, Lock, Star } from "lucide-react";
+import clsx from "clsx";
+import { lessons } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { CERTIFICATES, formatDate } from "@/lib/certificates";
 
@@ -23,63 +26,84 @@ type CertificateRow = {
   earned_at: string | null;
 };
 
-const PHASES = [
-  { id: 1, icon: "🟢", title: "Phase 1: Home Row", desc: "Build muscle memory on ASDF JKL;", range: [1, 20] as const },
-  { id: 2, icon: "🔵", title: "Phase 2: Top Row", desc: "Reach up to Q through P with confidence", range: [21, 45] as const },
-  { id: 3, icon: "🟠", title: "Phase 3: Bottom Row", desc: "Complete the alphabet with bottom keys", range: [46, 65] as const },
-  { id: 4, icon: "🟣", title: "Phase 4: Numbers", desc: "Type digits and symbols smoothly", range: [66, 70] as const },
-  { id: 5, icon: "🩷", title: "Phase 5: Capital Letters", desc: "Shift skills and uppercase fluency", range: [71, 85] as const },
-  { id: 6, icon: "🔴", title: "Phase 6: Speed Drills", desc: "Push WPM and accuracy to champion level", range: [86, 100] as const },
-];
+type PhaseBook = {
+  id: number;
+  title: string;
+  tagline: string;
+  start: number;
+  end: number;
+};
+
+const PHASE_BOOK_META = [
+  { id: 1, title: "Home Row", tagline: "Where every typist begins" },
+  { id: 2, title: "Top Row", tagline: "Reaching up the keyboard" },
+  { id: 3, title: "Bottom Row", tagline: "Mastering the lower keys" },
+  { id: 4, title: "Numbers", tagline: "Digits and number row" },
+  { id: 5, title: "Capitals + Shift", tagline: "Uppercase mastery" },
+  { id: 6, title: "Speed Drills", tagline: "Becoming a champion" },
+] as const;
+
+function buildPhaseBooks(): PhaseBook[] {
+  return PHASE_BOOK_META.map((meta) => {
+    const inPhase = lessons.filter((l) => l.phase === meta.id);
+    const ids = inPhase.map((l) => l.id);
+    const start = Math.min(...ids);
+    const end = Math.max(...ids);
+    return { ...meta, start, end };
+  });
+}
+
+const PHASE_BOOKS = buildPhaseBooks();
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function TreesStrip() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: 180,
-        pointerEvents: "none",
-        opacity: 0.9,
-      }}
-    >
-      <svg
-        viewBox="0 0 1200 220"
-        width="100%"
-        height="100%"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="groundGrad" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#2d6a4f" stopOpacity="0.9" />
-            <stop offset="1" stopColor="#1b4d30" stopOpacity="1" />
-          </linearGradient>
-        </defs>
-        <rect x="0" y="140" width="1200" height="90" fill="url(#groundGrad)" />
-        {Array.from({ length: 18 }).map((_, i) => {
-          const x = 30 + i * 65;
-          const h = 70 + (i % 5) * 8;
-          return (
-            <g key={i} transform={`translate(${x} ${150 - h})`}>
-              <rect x="14" y={h - 18} width="8" height="30" rx="2" fill="#6b3f1e" />
-              <polygon points={`18,0 36,${h} 0,${h}`} fill={i % 2 === 0 ? "#40916c" : "#2d6a4f"} />
-              <polygon points={`18,14 32,${h - 10} 4,${h - 10}`} fill={i % 3 === 0 ? "#52b788" : "#1b4d30"} opacity="0.9" />
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
+function isPhaseLocked(start: number, completedSet: Set<number>): boolean {
+  if (start <= 1) return false;
+  for (let i = 1; i < start; i++) {
+    if (!completedSet.has(i)) return true;
+  }
+  return false;
+}
+
+function countCompletedInRange(start: number, end: number, completedSet: Set<number>): number {
+  let n = 0;
+  for (let i = start; i <= end; i++) {
+    if (completedSet.has(i)) n++;
+  }
+  return n;
+}
+
+function isPhaseFullyComplete(start: number, end: number, completedSet: Set<number>): boolean {
+  for (let i = start; i <= end; i++) {
+    if (!completedSet.has(i)) return false;
+  }
+  return true;
+}
+
+type PhaseVisualStatus = "locked" | "current" | "completed";
+
+function getPhaseVisualStatus(
+  start: number,
+  end: number,
+  completedSet: Set<number>,
+  currentLessonId: number
+): Exclude<PhaseVisualStatus, "locked"> {
+  if (isPhaseFullyComplete(start, end, completedSet)) return "completed";
+  if (currentLessonId >= start && currentLessonId <= end) return "current";
+  return "completed";
+}
+
+function getPhaseTargetLesson(start: number, end: number, completedSet: Set<number>): number {
+  for (let i = start; i <= end; i++) {
+    if (!completedSet.has(i)) return i;
+  }
+  return start;
 }
 
 export default function LessonMapPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [completedSet, setCompletedSet] = useState<Set<number>>(new Set());
@@ -106,7 +130,6 @@ export default function LessonMapPage() {
           return;
         }
 
-        // Try to load the richer schema first, fallback if columns don't exist.
         let rows: ProgressRow[] = [];
         const attempt = await supabase
           .from("student_progress")
@@ -143,7 +166,7 @@ export default function LessonMapPage() {
           .eq("student_id", userData.user.id)
           .order("earned_at", { ascending: false });
         if (certErr) throw certErr;
-        setCertificates((certRows as any) ?? []);
+        setCertificates((certRows as CertificateRow[] | null) ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load lesson map.");
         setCertificates([]);
@@ -165,348 +188,126 @@ export default function LessonMapPage() {
 
   const progressPct = clamp((completedCount / 100) * 100, 0, 100);
 
-  const lessonsById = useMemo(() => {
-    const map = new Map<number, Lesson>();
-    lessons.forEach((l) => map.set(l.id, l));
-    return map;
-  }, []);
-
   const openLesson = (id: number) => {
-    window.location.href = `/lesson?lesson=${id}`;
+    router.push(`/lesson?lesson=${id}`);
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        position: "relative",
-        background:
-          "linear-gradient(180deg,#162d1e 0%,#1f4d35 25%,#2d6a4f 55%,#52b788 80%,#81c99e 100%)",
-        paddingBottom: 200,
-      }}
-    >
-      <TreesStrip />
-
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px 0" }}>
+    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 pb-32">
+      <div className="mx-auto max-w-7xl px-6 pt-7">
         <div
-          style={{
-            background: "rgba(255,255,255,0.92)",
-            border: "1px solid rgba(0,0,0,0.06)",
-            borderRadius: 18,
-            padding: 18,
-            boxShadow: "0 10px 35px rgba(0,0,0,0.12)",
-            backdropFilter: "blur(10px)",
-          }}
+          className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]"
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
-                LESSON MAP
+              <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">LESSON MAP</div>
+              <div className="mt-1 text-[28px] font-black text-[#2c3e50]">
+                You completed {completedCount}/100 lessons
               </div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: "#2c3e50", marginTop: 4 }}>
-                You completed {completedCount}/100 lessons 🌿
-              </div>
-              <div style={{ color: "#6b7280", marginTop: 4, fontWeight: 600 }}>
-                Current lesson: #{currentLessonId}
-              </div>
+              <div className="mt-1 font-semibold text-gray-600">Current lesson: #{currentLessonId}</div>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "stretch" }}>
-              <div
-                style={{
-                  background: "#E8F5E9",
-                  border: "1px solid rgba(76,175,80,0.25)",
-                  borderRadius: 14,
-                  padding: "10px 12px",
-                  minWidth: 160,
-                }}
-              >
-                <div style={{ fontSize: 12, color: "#2e7d32", fontWeight: 900 }}>Eco points</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#1b4d30" }}>{ecoPointsTotal}</div>
+            <div className="flex flex-wrap items-stretch gap-3">
+              <div className="min-w-[160px] rounded-[14px] border border-green-600/25 bg-[#E8F5E9] px-3 py-2.5">
+                <div className="text-xs font-black text-[#2e7d32]">Eco points</div>
+                <div className="text-[22px] font-black text-[#1b4d30]">{ecoPointsTotal}</div>
               </div>
-              <div
-                style={{
-                  background: "#FFFDE7",
-                  border: "1px solid rgba(255,235,59,0.35)",
-                  borderRadius: 14,
-                  padding: "10px 12px",
-                  minWidth: 160,
-                }}
-              >
-                <div style={{ fontSize: 12, color: "#8a6d1b", fontWeight: 900 }}>Stars earned</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#2c3e50" }}>{starsTotal} ⭐</div>
+              <div className="min-w-[160px] rounded-[14px] border border-yellow-200 bg-[#FFFDE7] px-3 py-2.5">
+                <div className="text-xs font-black text-[#8a6d1b]">Stars earned</div>
+                <div className="text-[22px] font-black text-[#2c3e50]">{starsTotal}</div>
               </div>
               <button
                 type="button"
-                onClick={() => (window.location.href = "/lesson")}
-                style={{
-                  background: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 14,
-                  padding: "12px 14px",
-                  fontWeight: 900,
-                  cursor: "pointer",
+                onClick={() => {
+                  router.push("/lesson");
                 }}
+                className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
               >
-                ▶ Back to Lesson
+                Back to Lesson
               </button>
             </div>
           </div>
 
-          <div style={{ marginTop: 14 }}>
-            <div style={{ height: 10, background: "rgba(0,0,0,0.06)", borderRadius: 999, overflow: "hidden" }}>
-              <div
-                style={{
-                  width: `${progressPct}%`,
-                  height: "100%",
-                  background: "linear-gradient(90deg,#4CAF50 0%,#2196F3 100%)",
-                  transition: "width 0.4s ease",
-                }}
-              />
-            </div>
+          <div className="mt-3.5 h-2.5 overflow-hidden rounded-full bg-black/[0.06]">
+            <div
+              className="h-full bg-gradient-to-r from-[#4CAF50] to-[#2196F3] transition-[width] duration-[400ms] ease-out"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
 
           {error && (
-            <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 12, background: "#ffebee", border: "1px solid #ef5350", color: "#c62828", fontWeight: 800 }}>
+            <div className="mt-3 rounded-xl border border-[#ef5350] bg-[#ffebee] px-3 py-2.5 font-extrabold text-[#c62828]">
               {error}
             </div>
           )}
         </div>
 
-        {/* MY CERTIFICATES */}
-        <div style={{ marginTop: 18 }}>
-          <div
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              border: "1px solid rgba(0,0,0,0.06)",
-              borderRadius: 18,
-              padding: 18,
-              boxShadow: "0 10px 35px rgba(0,0,0,0.12)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.18em", color: "#2d6a4f" }}>
-                  MY CERTIFICATES
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#2c3e50", marginTop: 4 }}>
-                  Your achievements 🏆
-                </div>
-                <div style={{ color: "#6b7280", marginTop: 4, fontWeight: 700 }}>
-                  Earn certificates at 10, 25, 50, and 100 lessons.
-                </div>
+        <div className="mt-[18px] rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">MY CERTIFICATES</div>
+              <div className="mt-1 text-[22px] font-black text-[#2c3e50]">Your achievements</div>
+              <div className="mt-1 font-bold text-gray-600">
+                Earn certificates at 10, 25, 50, and 100 lessons.
               </div>
-              <button
-                type="button"
-                onClick={() => (window.location.href = "/certificate")}
-                style={{
-                  background: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 14,
-                  padding: "12px 14px",
-                  fontWeight: 900,
-                  cursor: "pointer",
-                }}
-              >
-                View Latest Certificate
-              </button>
             </div>
-
-            {certsLoading ? (
-              <div style={{ marginTop: 12, color: "#2c3e50", fontWeight: 800 }}>Loading certificates...</div>
-            ) : certificates.length === 0 ? (
-              <div style={{ marginTop: 12, color: "#6b7280", fontWeight: 800 }}>
-                No certificates yet—finish lessons to unlock your first one!
-              </div>
-            ) : (
-              <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-                {certificates.map((c) => {
-                  const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
-                  return (
-                    <div
-                      key={c.id}
-                      style={{
-                        background: "linear-gradient(135deg,#E8F5E9 0%, #FFFFFF 60%, #FFFDE7 100%)",
-                        border: "1px solid rgba(76,175,80,0.25)",
-                        borderRadius: 16,
-                        padding: 14,
-                        boxShadow: "0 10px 26px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                        <div style={{ fontWeight: 950, color: "#2c3e50" }}>
-                          {def?.title ?? "Certificate"}
-                        </div>
-                        <div style={{ fontSize: 22 }}>{def?.emoji ?? "🏆"}</div>
-                      </div>
-                      <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                        Earned: {c.earned_at ? formatDate(c.earned_at) : "—"}
-                      </div>
-                      <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", color: "#1b4d30", fontWeight: 900 }}>
-                        <span>{c.lessons_completed ?? 0} lessons</span>
-                        <span>•</span>
-                        <span>{c.wpm ?? 0} WPM</span>
-                        <span>•</span>
-                        <span>{c.accuracy ?? 0}%</span>
-                      </div>
-
-                      <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
-                          style={{
-                            padding: "10px 12px",
-                            borderRadius: 12,
-                            border: "none",
-                            background: "#4CAF50",
-                            color: "white",
-                            fontWeight: 950,
-                            cursor: "pointer",
-                          }}
-                        >
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")}
-                          style={{
-                            padding: "10px 12px",
-                            borderRadius: 12,
-                            border: "1px solid rgba(76,175,80,0.45)",
-                            background: "white",
-                            color: "#2e7d32",
-                            fontWeight: 950,
-                            cursor: "pointer",
-                          }}
-                        >
-                          PDF
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                router.push("/certificate");
+              }}
+              className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
+            >
+              View Latest Certificate
+            </button>
           </div>
-        </div>
 
-        <div style={{ marginTop: 18 }}>
-          {loading ? (
-            <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 800, padding: "18px 6px" }}>
-              Loading progress...
+          {certsLoading ? (
+            <div className="mt-3 font-extrabold text-[#2c3e50]">Loading certificates...</div>
+          ) : certificates.length === 0 ? (
+            <div className="mt-3 font-extrabold text-gray-600">
+              No certificates yet—finish lessons to unlock your first one!
             </div>
           ) : (
-            <div style={{ display: "grid", gap: 18 }}>
-              {PHASES.map((p) => {
-                const [start, end] = p.range;
-                const phaseLessons = lessons.filter((l) => l.id >= start && l.id <= end);
-
+            <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
+              {certificates.map((c) => {
+                const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
                 return (
-                  <div key={p.id}>
-                    <div
-                      style={{
-                        position: "relative",
-                        width: "100%",
-                        height: 140,
-                        borderRadius: 16,
-                        overflow: "hidden",
-                        margin: "10px 0 12px",
-                        boxShadow: "0 12px 34px rgba(0,0,0,0.18)",
-                        border: "1px solid rgba(255,255,255,0.22)",
-                      }}
-                    >
-                      <Image
-                        src={`/images/lessons/lesson-phase-${p.id}.jpg`}
-                        alt={p.title}
-                        fill
-                        sizes="(max-width: 1200px) 100vw, 1200px"
-                        style={{ objectFit: "cover" }}
-                        priority={p.id <= 2}
-                      />
-                      <div
-                        aria-hidden
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background:
-                            "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.12) 100%)",
-                          pointerEvents: "none",
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          gap: 6,
-                          padding: "0 20px",
-                          color: "#fff",
-                          textShadow: "0 2px 14px rgba(0,0,0,0.45)",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 22 }} aria-hidden>
-                            {p.icon}
-                          </span>
-                          <span style={{ fontWeight: 900, fontSize: 18 }}>{p.title}</span>
-                          <span style={{ opacity: 0.88, fontSize: 13, fontWeight: 800 }}>
-                            — Lessons {start}-{end}
-                          </span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, opacity: 0.92, maxWidth: 720 }}>{p.desc}</p>
-                      </div>
+                  <div
+                    key={c.id}
+                    className="rounded-2xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-3.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
+                  >
+                    <div className="flex justify-between gap-2.5">
+                      <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
+                    </div>
+                    <div className="mt-2 text-xs font-extrabold text-gray-600">
+                      Earned: {c.earned_at ? formatDate(c.earned_at) : "—"}
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap gap-2.5 font-black text-[#1b4d30]">
+                      <span>{c.lessons_completed ?? 0} lessons</span>
+                      <span aria-hidden>•</span>
+                      <span>{c.wpm ?? 0} WPM</span>
+                      <span aria-hidden>•</span>
+                      <span>{c.accuracy ?? 0}%</span>
                     </div>
 
-                    <div className="lesson-grid">
-                      {phaseLessons.map((l) => {
-                        const isCompleted = completedSet.has(l.id);
-                        const isCurrent = !isCompleted && l.id === currentLessonId;
-                        const isLocked = !isCompleted && l.id > currentLessonId;
-
-                        const statusIcon = isCompleted ? "⭐" : isCurrent ? "▶️" : "🔒";
-                        const canOpen = isCompleted || isCurrent;
-
-                        return (
-                          <button
-                            key={l.id}
-                            type="button"
-                            onClick={() => canOpen && openLesson(l.id)}
-                            disabled={!canOpen}
-                            className={[
-                              "lesson-card",
-                              isCompleted ? "lesson-completed" : "",
-                              isCurrent ? "lesson-current" : "",
-                              isLocked ? "lesson-locked" : "",
-                            ].join(" ")}
-                          >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-                              <div>
-                                <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.14em", color: isCompleted ? "#1b4d30" : "#4CAF50" }}>
-                                  LESSON {l.id}
-                                </div>
-                                <div style={{ fontSize: 14, fontWeight: 900, color: "#2c3e50", marginTop: 6, lineHeight: 1.25 }}>
-                                  {l.title}
-                                </div>
-                              </div>
-                              <div style={{ fontSize: 18 }}>{statusIcon}</div>
-                            </div>
-
-                            <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                              <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                                Target: {l.targetWPM ?? "—"} WPM
-                              </div>
-                              <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                                {isCompleted ? "Completed" : isCurrent ? "Next" : "Locked"}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
+                        className="cursor-pointer rounded-xl border-none bg-[#4CAF50] px-3 py-2.5 font-black text-white"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")
+                        }
+                        className="cursor-pointer rounded-xl border border-green-600/45 bg-white px-3 py-2.5 font-black text-[#2e7d32]"
+                      >
+                        PDF
+                      </button>
                     </div>
                   </div>
                 );
@@ -514,57 +315,120 @@ export default function LessonMapPage() {
             </div>
           )}
         </div>
+
+        <section className="py-12">
+          <header className="mb-12 text-center">
+            <h1 className="text-3xl font-bold text-gray-900">Your Learning Journey</h1>
+            <p className="mt-2 text-base text-gray-600">
+              100 lessons across 6 phases. Master one phase at a time.
+            </p>
+          </header>
+
+          {loading ? (
+            <p className="text-center font-extrabold text-gray-600">Loading progress...</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {PHASE_BOOKS.map((p) => {
+                const locked = isPhaseLocked(p.start, completedSet);
+                const visualUnlocked = getPhaseVisualStatus(p.start, p.end, completedSet, currentLessonId);
+                const completedInPhase = countCompletedInRange(p.start, p.end, completedSet);
+                const lessonsInPhase = p.end - p.start + 1;
+                const phasePct = clamp((completedInPhase / lessonsInPhase) * 100, 0, 100);
+                const targetLesson = getPhaseTargetLesson(p.start, p.end, completedSet);
+                const showProgress =
+                  !locked &&
+                  (completedInPhase > 0 ||
+                    (currentLessonId >= p.start && currentLessonId <= p.end) ||
+                    visualUnlocked === "completed");
+                const rangeLabel = `Lessons ${p.start}–${p.end}`;
+
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => !locked && openLesson(targetLesson)}
+                    className={clsx(
+                      "group relative w-full text-left",
+                      "aspect-[3/4] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300",
+                      !locked &&
+                        "cursor-pointer hover:-translate-y-2 hover:rotate-1 hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600",
+                      locked && "cursor-not-allowed"
+                    )}
+                  >
+                    <div className="absolute top-0 right-0 left-0 z-0 h-[70%]">
+                      <Image
+                        src={`/images/lessons/lesson-phase-${p.id}.jpg`}
+                        alt={p.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        priority={p.id <= 2}
+                      />
+                    </div>
+
+                    <div
+                      className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent to-white"
+                      aria-hidden
+                    />
+
+                    <div className="absolute top-4 left-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-2xl font-bold text-green-600 shadow-md backdrop-blur-sm">
+                      {p.id}
+                    </div>
+
+                    <div className="absolute top-4 right-4 z-20">
+                      {locked ? (
+                        <span className="inline-flex rounded-full bg-gray-400 p-2 text-white shadow-md">
+                          <Lock className="h-5 w-5" aria-hidden />
+                          <span className="sr-only">Locked</span>
+                        </span>
+                      ) : visualUnlocked === "current" ? (
+                        <span className="inline-flex rounded-full bg-[#FFD700] p-2 text-white shadow-md">
+                          <Star className="h-5 w-5" aria-hidden />
+                          <span className="sr-only">Current phase</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex rounded-full bg-green-500 p-2 text-white shadow-md">
+                          <Check className="h-5 w-5" aria-hidden />
+                          <span className="sr-only">Completed</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="absolute right-0 bottom-0 left-0 z-20 flex h-[30%] flex-col justify-center overflow-hidden bg-white p-5">
+                      <h2 className="text-xl font-bold leading-tight text-gray-900">{p.title}</h2>
+                      <p className="mt-1 text-xs text-gray-500">{rangeLabel}</p>
+                      <p className="mt-1 text-xs italic text-gray-500">{p.tagline}</p>
+                      {showProgress && (
+                        <>
+                          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                            <div
+                              className="h-full rounded-full bg-green-500 transition-[width] duration-300"
+                              style={{ width: `${phasePct}%` }}
+                            />
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {completedInPhase} of {lessonsInPhase} complete
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {locked && (
+                      <div
+                        className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm"
+                        aria-hidden
+                      >
+                        <Lock className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
-
-      <style>{`
-        .lesson-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-        @media (min-width: 1024px) {
-          .lesson-grid {
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-          }
-        }
-
-        .lesson-card {
-          text-align: left;
-          border-radius: 16px;
-          border: 1px solid rgba(0,0,0,0.08);
-          background: rgba(255,255,255,0.92);
-          padding: 14px 14px 12px;
-          cursor: pointer;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-          backdrop-filter: blur(8px);
-        }
-        .lesson-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 18px 44px rgba(0,0,0,0.14);
-          border-color: rgba(76,175,80,0.35);
-        }
-        .lesson-card:disabled {
-          cursor: not-allowed;
-          opacity: 0.75;
-          transform: none;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
-        .lesson-completed {
-          background: rgba(232,245,233,0.95);
-          border-color: rgba(76,175,80,0.45);
-        }
-        .lesson-current {
-          border-color: rgba(255,235,59,0.65);
-          box-shadow: 0 0 0 3px rgba(255,235,59,0.25), 0 18px 44px rgba(0,0,0,0.14);
-          animation: currentPulse 1.6s ease-in-out infinite;
-        }
-        @keyframes currentPulse {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
-        }
-      `}</style>
     </div>
   );
 }
-
