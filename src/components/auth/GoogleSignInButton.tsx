@@ -35,42 +35,41 @@ type GoogleSignInButtonProps = {
   onClick: () => void | Promise<void>;
   disabled?: boolean;
   className?: string;
+  label?: string;
 };
 
 export function AuthOrDivider({
   className,
-  pillClassName = "bg-card",
 }: {
   className?: string;
-  /** Background for the “Or” chip (match surrounding surface). */
-  pillClassName?: string;
 }) {
   return (
-    <div className={cn("relative my-6", className)} role="separator" aria-label="Or">
-      <div className="absolute inset-0 flex items-center" aria-hidden>
-        <span className="w-full border-t border-[#E5E7EB]" />
-      </div>
-      <div className="relative flex justify-center text-xs font-semibold uppercase tracking-wide">
-        <span className={cn("px-3 text-[#6B7280]", pillClassName)}>Or</span>
-      </div>
+    <div className={cn("my-6 flex items-center gap-3", className)} role="separator" aria-label="Or">
+      <hr className="min-h-px flex-1 border-0 bg-gray-200" />
+      <span className="text-xs font-medium uppercase tracking-wider text-gray-400">OR</span>
+      <hr className="min-h-px flex-1 border-0 bg-gray-200" />
     </div>
   );
 }
 
-export function GoogleSignInButton({ onClick, disabled, className }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({
+  onClick,
+  disabled,
+  className,
+  label = "Continue with Google",
+}: GoogleSignInButtonProps) {
   return (
     <button
       type="button"
       onClick={() => void onClick()}
       disabled={disabled}
       className={cn(
-        "flex h-[52px] w-full items-center justify-center gap-3 rounded-[50px] border border-[#E5E7EB] bg-white px-5 text-base text-[#1A2F23] shadow-sm transition-colors hover:bg-[#F3F4F6] disabled:pointer-events-none disabled:opacity-60",
+        "flex w-full items-center justify-start gap-3 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 shadow-none transition-colors hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-60",
         className
       )}
-      style={{ fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif", fontWeight: 600 }}
     >
       <GoogleLogo />
-      <span>Continue with Google</span>
+      <span>{label}</span>
     </button>
   );
 }

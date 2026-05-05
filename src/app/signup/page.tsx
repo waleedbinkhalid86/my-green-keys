@@ -1,25 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { Check, GraduationCap, Leaf, School, Shield, Users } from "lucide-react";
+import { GraduationCap, Leaf, School, Users } from "lucide-react";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { MinimalAuthShell } from "@/components/auth/MinimalAuthShell";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import "../globals.css";
-
-const DARK = "#1A2F23";
 
 type AccountType = "student" | "parent" | "teacher" | null;
 
@@ -47,7 +38,7 @@ const VALID_PROMO_CODES: Record<string, { discount: string; message: string; dis
 };
 
 const selectClassName =
-  "flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
+  "flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-green-600 focus:ring-1 focus:ring-green-600 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SignupPage() {
   const { showToast } = useToast();
@@ -404,483 +395,416 @@ export default function SignupPage() {
     }
   };
 
-  const stepProgress = accountType ? 66 : 33;
+  const inputClassName = cn(
+    "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400",
+    "focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600",
+    "disabled:cursor-not-allowed disabled:opacity-50"
+  );
 
   return (
-    <div className="flex min-h-screen bg-background font-sans">
-      <div
-        className="relative hidden w-1/2 flex-col justify-between p-12 text-white lg:flex"
-        style={{ background: DARK }}
-      >
-        <div>
-          <p className="font-heading text-3xl font-extrabold leading-tight">Now in early access</p>
-          <p className="mt-4 max-w-md text-base font-semibold text-white/80">
-            Start your child&apos;s typing journey with planet-friendly lessons.
-          </p>
-          <div className="relative mt-8 overflow-hidden rounded-[20px] shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
-            <Image
-              src="/images/homepage/homepage-eco.jpg"
-              alt="Eco learning with My Green Keys"
-              width={520}
-              height={340}
-              className="h-auto w-full object-cover"
-              priority
-            />
-          </div>
-          <ul className="mt-10 space-y-4 text-base font-semibold">
-            <li className="flex items-center gap-3">
-              <Check className="size-5 shrink-0 text-[#2ECC71]" strokeWidth={3} />
-              Start free, no credit card
-            </li>
-            <li className="flex items-center gap-3">
-              <Check className="size-5 shrink-0 text-[#2ECC71]" strokeWidth={3} />
-              Cancel anytime
-            </li>
-            <li className="flex items-center gap-3">
-              <Shield className="size-5 shrink-0 text-[#2ECC71]" />
-              COPPA &amp; GDPR compliant
-            </li>
-          </ul>
-        </div>
-        <Link href="/login" className="text-sm font-bold text-[#2ECC71] hover:underline">
-          Already have an account? Log In
-        </Link>
-      </div>
-
-      <div className="flex w-full flex-col bg-white lg:w-1/2 lg:overflow-y-auto">
-        <div className="mgk-container mgk-section-tight">
-        <div className="mx-auto w-full max-w-xl">
-        <div className="mb-6 flex justify-center lg:justify-start">
-          <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
-        </div>
-        <div className="mb-8">
-          <h1 className="font-heading text-3xl font-extrabold text-[#1A2F23]">Create your account</h1>
-          <p className="mt-2 text-base font-semibold text-[#64748b]">Choose how you&apos;ll use My Green Keys</p>
-        </div>
-
-        {googleGateLoading ? (
-          <Card className="border-dashed">
-            <CardContent className="py-16 text-center text-sm text-muted-foreground">
-              Finishing Google sign-in…
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {!oauthUser ? (
-              <>
-                <GoogleSignInButton
-                  onClick={handleGoogleSignUp}
-                  disabled={isLoading || googleLoading}
-                />
-                <AuthOrDivider pillClassName="bg-background" />
-              </>
-            ) : (
-              <div
-                className="mb-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
-                role="status"
-              >
-                You&apos;re signed in with Google. Choose your account type and complete your profile — no password
-                needed.
-              </div>
-            )}
-
-            <div className="mb-8 space-y-3">
-              <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                <span>Step 1 · Account type</span>
-                <span>Step 2 · Your details</span>
-              </div>
-              <Progress value={stepProgress} className="[&_[data-slot=progress-track]]:h-2" />
+    <MinimalAuthShell title="Create your account" subtitle="Choose how you’ll use My Green Keys">
+      {googleGateLoading ? (
+        <div className="text-center text-sm text-gray-500">Finishing Google sign-in…</div>
+      ) : (
+        <>
+          {!oauthUser ? (
+            <>
+              <GoogleSignInButton onClick={handleGoogleSignUp} disabled={isLoading || googleLoading} />
+              <AuthOrDivider />
+            </>
+          ) : (
+            <div className="mb-6 rounded-md border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700">
+              You&apos;re signed in with Google. Choose your account type and complete your profile — no password needed.
             </div>
+          )}
 
-        {errors.form ? (
-          <div
-            className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-            role="alert"
-          >
-            {errors.form}
+          {errors.form ? (
+            <p className="mb-4 whitespace-pre-wrap break-words text-xs text-red-600" role="alert">
+              {errors.form}
+            </p>
+          ) : null}
+
+          {successMessage ? (
+            <p className="mb-4 text-xs text-green-700" role="status">
+              {successMessage}
+            </p>
+          ) : null}
+
+          <div className="mb-8 space-y-2">
+            <p className="text-xs font-medium text-gray-700">Account type</p>
+            <div className="space-y-2">
+              {[
+                { type: "student" as const, Icon: GraduationCap, label: "Student", desc: "I want to learn typing" },
+                { type: "parent" as const, Icon: Users, label: "Parent", desc: "I want to track my child" },
+                { type: "teacher" as const, Icon: School, label: "Teacher", desc: "I manage a classroom" },
+              ].map((option) => (
+                <button
+                  key={option.type}
+                  type="button"
+                  onClick={() => handleAccountTypeSelect(option.type)}
+                  disabled={googleGateLoading}
+                  className={cn(
+                    "w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-left transition-colors hover:bg-gray-50",
+                    "disabled:pointer-events-none disabled:opacity-60",
+                    accountType === option.type && "border-green-600 ring-1 ring-green-600"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <option.Icon className="mt-0.5 h-4 w-4 text-green-600" aria-hidden />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">{option.label}</div>
+                      <div className="text-xs text-gray-500">{option.desc}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : null}
 
-        {successMessage ? (
-          <div
-            className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-primary"
-            role="status"
-          >
-            {successMessage}
-          </div>
-        ) : null}
+          {accountType ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Full name
+                </label>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  aria-invalid={!!errors.fullName}
+                  className={cn(
+                    inputClassName,
+                    errors.fullName && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  )}
+                />
+                {errors.fullName ? <p className="mt-1 text-xs text-red-600">{errors.fullName}</p> : null}
+              </div>
 
-        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {(
-            [
-              { type: "student" as const, Icon: GraduationCap, label: "Student", desc: "I want to learn typing" },
-              { type: "parent" as const, Icon: Users, label: "Parent", desc: "I want to track my child" },
-              { type: "teacher" as const, Icon: School, label: "Teacher", desc: "I manage a classroom" },
-            ] as const
-          ).map((option) => (
-            <Card
-              key={option.type}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleAccountTypeSelect(option.type)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleAccountTypeSelect(option.type);
-                }
-              }}
-              className={cn(
-                    "cursor-pointer border-2 border-transparent transition-shadow",
-                googleGateLoading && "pointer-events-none opacity-50",
-                accountType === option.type
-                  ? "border-[#2ECC71] shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-2 ring-[#2ECC71]/25"
-                  : "hover:border-[#2ECC71]/40"
-              )}
-            >
-              <CardHeader className="relative pb-2 text-center">
-                {accountType === option.type ? (
-                  <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-[#2ECC71] text-sm text-white" aria-hidden>
-                    ✓
-                  </span>
-                ) : null}
-                <div className="flex justify-center text-green-600">
-                  <option.Icon className="h-8 w-8" strokeWidth={2} aria-hidden />
-                </div>
-                <CardTitle className="font-heading text-sm">{option.label}</CardTitle>
-                <CardDescription className="text-xs">{option.desc}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={isLoading || !!oauthUser}
+                  readOnly={!!oauthUser}
+                  aria-invalid={!!errors.email}
+                  placeholder="you@example.com"
+                  className={cn(
+                    inputClassName,
+                    errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  )}
+                />
+                {errors.email ? <p className="mt-1 text-xs text-red-600">{errors.email}</p> : null}
+              </div>
 
-        {accountType ? (
-          <form onSubmit={handleSubmit}>
-            <Card className="border-border/80">
-              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-                <div>
-                  <CardTitle className="font-heading text-lg">Your details</CardTitle>
-                  <CardDescription>We&apos;ll set up your profile securely.</CardDescription>
-                </div>
-                <Badge variant="secondary" className="capitalize">
-                  {accountType}
-                </Badge>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    aria-invalid={!!errors.fullName}
-                    className={cn(errors.fullName && "border-destructive")}
-                  />
-                  {errors.fullName ? (
-                    <p className="text-xs text-destructive">{errors.fullName}</p>
-                  ) : null}
-                </div>
+              <div>
+                <label htmlFor="gender" className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  className={cn(selectClassName, errors.gender && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                >
+                  <option value="">Select gender</option>
+                  <option value="boy">Boy</option>
+                  <option value="girl">Girl</option>
+                </select>
+                {errors.gender ? <p className="mt-1 text-xs text-red-600">{errors.gender}</p> : null}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={isLoading || !!oauthUser}
-                    readOnly={!!oauthUser}
-                    aria-invalid={!!errors.email}
-                    className={cn(errors.email && "border-destructive")}
-                  />
-                  {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
-                </div>
+              {accountType === "student" ? (
+                <>
+                  <div>
+                    <label htmlFor="age" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Age
+                    </label>
+                    <select
+                      id="age"
+                      name="age"
+                      value={formData.age}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      className={cn(selectClassName, errors.age && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    >
+                      <option value="">Select age</option>
+                      {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
+                        <option key={age} value={age}>
+                          {age} years old
+                        </option>
+                      ))}
+                    </select>
+                    {errors.age ? <p className="mt-1 text-xs text-red-600">{errors.age}</p> : null}
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <select
-                    id="gender"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    className={cn(selectClassName, errors.gender && "border-destructive")}
-                  >
-                    <option value="">Select gender</option>
-                    <option value="boy">Boy</option>
-                    <option value="girl">Girl</option>
-                  </select>
-                  {errors.gender ? <p className="text-xs text-destructive">{errors.gender}</p> : null}
-                </div>
-
-                {accountType === "student" ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="age">Age</Label>
-                      <select
-                        id="age"
-                        name="age"
-                        value={formData.age}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        className={cn(selectClassName, errors.age && "border-destructive")}
-                      >
-                        <option value="">Select age</option>
-                        {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
-                          <option key={age} value={age}>
-                            {age} years old
-                          </option>
-                        ))}
-                      </select>
-                      {errors.age ? <p className="text-xs text-destructive">{errors.age}</p> : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        aria-invalid={!!errors.username}
-                        className={cn(errors.username && "border-destructive")}
-                      />
-                      {errors.username ? (
-                        <p className="text-xs text-destructive">{errors.username}</p>
-                      ) : null}
-                    </div>
-                  </>
-                ) : null}
-
-                {accountType === "parent" ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="childName">Child&apos;s Name</Label>
-                      <Input
-                        id="childName"
-                        name="childName"
-                        value={formData.childName}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        aria-invalid={!!errors.childName}
-                        className={cn(errors.childName && "border-destructive")}
-                      />
-                      {errors.childName ? (
-                        <p className="text-xs text-destructive">{errors.childName}</p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="childAge">Child&apos;s Age</Label>
-                      <select
-                        id="childAge"
-                        name="childAge"
-                        value={formData.childAge}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        className={cn(selectClassName, errors.childAge && "border-destructive")}
-                      >
-                        <option value="">Select age</option>
-                        {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
-                          <option key={age} value={age}>
-                            {age} years old
-                          </option>
-                        ))}
-                      </select>
-                      {errors.childAge ? (
-                        <p className="text-xs text-destructive">{errors.childAge}</p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="childGender">Child&apos;s Gender</Label>
-                      <select
-                        id="childGender"
-                        name="childGender"
-                        value={formData.childGender}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        className={cn(selectClassName, errors.childGender && "border-destructive")}
-                      >
-                        <option value="">Select gender</option>
-                        <option value="boy">Boy</option>
-                        <option value="girl">Girl</option>
-                      </select>
-                      {errors.childGender ? (
-                        <p className="text-xs text-destructive">{errors.childGender}</p>
-                      ) : null}
-                    </div>
-                  </>
-                ) : null}
-
-                {accountType === "teacher" ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="schoolName">School Name</Label>
-                      <Input
-                        id="schoolName"
-                        name="schoolName"
-                        value={formData.schoolName}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        aria-invalid={!!errors.schoolName}
-                        className={cn(errors.schoolName && "border-destructive")}
-                      />
-                      {errors.schoolName ? (
-                        <p className="text-xs text-destructive">{errors.schoolName}</p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="numStudents">Number of Students</Label>
-                      <Input
-                        id="numStudents"
-                        type="number"
-                        name="numStudents"
-                        value={formData.numStudents}
-                        onChange={handleInputChange}
-                        disabled={isLoading}
-                        aria-invalid={!!errors.numStudents}
-                        className={cn(errors.numStudents && "border-destructive")}
-                      />
-                      {errors.numStudents ? (
-                        <p className="text-xs text-destructive">{errors.numStudents}</p>
-                      ) : null}
-                    </div>
-                  </>
-                ) : null}
-
-                {!oauthUser ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={passwordVisible ? "text" : "password"}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          disabled={isLoading}
-                          aria-invalid={!!errors.password}
-                          className={cn("pr-10", errors.password && "border-destructive")}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-                          onClick={() => setPasswordVisible(!passwordVisible)}
-                        >
-                          {passwordVisible ? "Hide" : "Show"}
-                        </Button>
-                      </div>
-                      {errors.password ? (
-                        <p className="text-xs text-destructive">{errors.password}</p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={confirmPasswordVisible ? "text" : "password"}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          disabled={isLoading}
-                          aria-invalid={!!errors.confirmPassword}
-                          className={cn("pr-14", errors.confirmPassword && "border-destructive")}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 px-2 text-muted-foreground"
-                          onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-                        >
-                          {confirmPasswordVisible ? "Hide" : "Show"}
-                        </Button>
-                      </div>
-                      {errors.confirmPassword ? (
-                        <p className="text-xs text-destructive">{errors.confirmPassword}</p>
-                      ) : null}
-                    </div>
-                  </>
-                ) : null}
-
-                <div className="space-y-2">
-                  <Label htmlFor="promoCode">Promo Code (Optional)</Label>
-                  <Input
-                    id="promoCode"
-                    name="promoCode"
-                    value={formData.promoCode}
-                    onChange={handlePromoCodeChange}
-                    disabled={isLoading}
-                    placeholder="Enter promo code"
-                  />
-                  {promoStatus ? (
-                    <p
+                  <div>
+                    <label htmlFor="username" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.username}
                       className={cn(
-                        "text-xs",
-                        promoStatus.valid ? "text-primary" : "text-destructive"
+                        inputClassName,
+                        errors.username && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
+                    />
+                    {errors.username ? <p className="mt-1 text-xs text-red-600">{errors.username}</p> : null}
+                  </div>
+                </>
+              ) : null}
+
+              {accountType === "parent" ? (
+                <>
+                  <div>
+                    <label htmlFor="childName" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Child’s name
+                    </label>
+                    <input
+                      id="childName"
+                      name="childName"
+                      value={formData.childName}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.childName}
+                      className={cn(
+                        inputClassName,
+                        errors.childName && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
+                    />
+                    {errors.childName ? <p className="mt-1 text-xs text-red-600">{errors.childName}</p> : null}
+                  </div>
+
+                  <div>
+                    <label htmlFor="childAge" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Child’s age
+                    </label>
+                    <select
+                      id="childAge"
+                      name="childAge"
+                      value={formData.childAge}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      className={cn(
+                        selectClassName,
+                        errors.childAge && "border-red-500 focus:border-red-500 focus:ring-red-500"
                       )}
                     >
-                      {promoStatus.message}
-                    </p>
-                  ) : null}
-                </div>
+                      <option value="">Select age</option>
+                      {Array.from({ length: 15 }, (_, i) => i + 6).map((age) => (
+                        <option key={age} value={age}>
+                          {age} years old
+                        </option>
+                      ))}
+                    </select>
+                    {errors.childAge ? <p className="mt-1 text-xs text-red-600">{errors.childAge}</p> : null}
+                  </div>
 
-                <Button
-                  type="submit"
-                  className="h-[52px] w-full rounded-[50px] bg-[#2ECC71] text-base font-extrabold text-white hover:bg-[#27ae60]"
-                  disabled={isLoading || googleLoading}
-                >
-                  {isLoading
-                    ? oauthUser
-                      ? "Saving profile…"
-                      : "Creating Account…"
-                    : oauthUser
-                      ? "Complete profile"
-                      : "Create Account"}
-                </Button>
-                <p className="text-center text-xs font-semibold leading-relaxed text-[#64748b]">
-                  By creating an account you agree to our{" "}
-                  <Link href="/terms" className="text-[#2ECC71] hover:underline">
-                    Terms
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-[#2ECC71] hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
-                </p>
-              </CardContent>
-            </Card>
+                  <div>
+                    <label htmlFor="childGender" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Child’s gender
+                    </label>
+                    <select
+                      id="childGender"
+                      name="childGender"
+                      value={formData.childGender}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      className={cn(
+                        selectClassName,
+                        errors.childGender && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="boy">Boy</option>
+                      <option value="girl">Girl</option>
+                    </select>
+                    {errors.childGender ? <p className="mt-1 text-xs text-red-600">{errors.childGender}</p> : null}
+                  </div>
+                </>
+              ) : null}
 
-            <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="font-semibold text-[#2ECC71] hover:underline">
-                Log in here
-              </Link>
-            </p>
-          </form>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Select an account type above to continue
-            </CardContent>
-          </Card>
-        )}
-          </>
-        )}
-        </div>
-      </div>
-    </div>
-    </div>
+              {accountType === "teacher" ? (
+                <>
+                  <div>
+                    <label htmlFor="schoolName" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      School name
+                    </label>
+                    <input
+                      id="schoolName"
+                      name="schoolName"
+                      value={formData.schoolName}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.schoolName}
+                      className={cn(
+                        inputClassName,
+                        errors.schoolName && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
+                    />
+                    {errors.schoolName ? <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p> : null}
+                  </div>
+
+                  <div>
+                    <label htmlFor="numStudents" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Number of students
+                    </label>
+                    <input
+                      id="numStudents"
+                      type="number"
+                      name="numStudents"
+                      value={formData.numStudents}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      aria-invalid={!!errors.numStudents}
+                      className={cn(
+                        inputClassName,
+                        errors.numStudents && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      )}
+                    />
+                    {errors.numStudents ? <p className="mt-1 text-xs text-red-600">{errors.numStudents}</p> : null}
+                  </div>
+                </>
+              ) : null}
+
+              {!oauthUser ? (
+                <>
+                  <div>
+                    <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="password"
+                        type={passwordVisible ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.password}
+                        className={cn(
+                          inputClassName,
+                          "pr-14",
+                          errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500 hover:text-gray-700"
+                        onClick={() => setPasswordVisible(!passwordVisible)}
+                      >
+                        {passwordVisible ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    {errors.password ? <p className="mt-1 text-xs text-red-600">{errors.password}</p> : null}
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-medium text-gray-700">
+                      Confirm password
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        type={confirmPasswordVisible ? "text" : "password"}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        aria-invalid={!!errors.confirmPassword}
+                        className={cn(
+                          inputClassName,
+                          "pr-14",
+                          errors.confirmPassword && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        )}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500 hover:text-gray-700"
+                        onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                      >
+                        {confirmPasswordVisible ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    {errors.confirmPassword ? (
+                      <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+
+              <div>
+                <label htmlFor="promoCode" className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Promo code (optional)
+                </label>
+                <input
+                  id="promoCode"
+                  name="promoCode"
+                  value={formData.promoCode}
+                  onChange={handlePromoCodeChange}
+                  disabled={isLoading}
+                  placeholder="Enter promo code"
+                  className={inputClassName}
+                />
+                {promoStatus ? (
+                  <p className={cn("mt-1 text-xs", promoStatus.valid ? "text-green-700" : "text-red-600")}>
+                    {promoStatus.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isLoading || googleLoading}
+              >
+                {isLoading
+                  ? oauthUser
+                    ? "Saving profile…"
+                    : "Creating account…"
+                  : oauthUser
+                    ? "Complete profile"
+                    : "Create account"}
+              </button>
+
+              <p className="text-center text-xs leading-relaxed text-gray-500">
+                By creating an account you agree to our{" "}
+                <Link href="/terms" className="font-medium text-gray-900 hover:underline">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="font-medium text-gray-900 hover:underline">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+
+              <p className="pt-2 text-center text-sm text-gray-500">
+                Already have an account?{" "}
+                <Link href="/login" className="font-medium text-gray-900 hover:underline">
+                  Log in
+                </Link>
+              </p>
+            </form>
+          ) : (
+            <p className="text-sm text-gray-500">Select an account type above to continue.</p>
+          )}
+        </>
+      )}
+    </MinimalAuthShell>
   );
 }

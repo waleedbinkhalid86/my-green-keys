@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Leaf } from "lucide-react";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { MinimalAuthShell } from "@/components/auth/MinimalAuthShell";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 
@@ -264,107 +264,99 @@ export default function LoginPage() {
   };
 
   const inputClassName = cn(
-    "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400",
-    "focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500",
+    "w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400",
+    "focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600",
     "disabled:cursor-not-allowed disabled:opacity-50"
   );
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans">
-      <div className="mgk-container mgk-section flex items-center justify-center">
-        <div className="mgk-card w-full max-w-sm p-8">
-        <div className="mb-8 flex justify-center">
-          <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
-        </div>
+    <MinimalAuthShell title="Log in to My Green Keys" subtitle="Welcome back">
+      <form className="text-left" onSubmit={handleSubmit} noValidate>
+        <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading || googleLoading} />
 
-        <h1 className="mb-8 text-center text-2xl font-semibold text-gray-900">Log in</h1>
+        <AuthOrDivider />
 
-        <form className="text-left" onSubmit={handleSubmit} noValidate>
-          <GoogleSignInButton
-            onClick={handleGoogleSignIn}
-            disabled={isLoading || googleLoading}
-            className="h-auto justify-start gap-3 rounded-lg border border-gray-300 bg-white py-3 px-4 text-sm font-medium text-gray-700 shadow-none hover:bg-gray-50"
+        <div className="mb-4">
+          <label htmlFor="emailOrUsername" className="mb-1.5 block text-xs font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            id="emailOrUsername"
+            type="email"
+            name="emailOrUsername"
+            autoComplete="email"
+            value={formData.emailOrUsername}
+            onChange={handleInputChange}
+            disabled={isLoading}
+            placeholder="you@example.com"
+            aria-invalid={!!errors.emailOrUsername}
+            className={cn(
+              inputClassName,
+              errors.emailOrUsername && "border-red-500 focus:border-red-500 focus:ring-red-500"
+            )}
           />
-
-          <div className="my-6 flex items-center gap-3" role="separator" aria-label="Or">
-            <hr className="min-h-px flex-1 border-0 bg-gray-200" />
-            <span className="text-xs font-normal uppercase tracking-wide text-gray-400">or</span>
-            <hr className="min-h-px flex-1 border-0 bg-gray-200" />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="emailOrUsername" className="mb-1 block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              id="emailOrUsername"
-              type="email"
-              name="emailOrUsername"
-              autoComplete="email"
-              value={formData.emailOrUsername}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="you@example.com"
-              aria-invalid={!!errors.emailOrUsername}
-              className={cn(inputClassName, errors.emailOrUsername && "border-red-500 focus:ring-red-500")}
-            />
-            {errors.emailOrUsername ? (
-              <p className="mt-1 text-sm text-red-600" role="alert">
-                {errors.emailOrUsername}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mb-6">
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <Link href="/forgot-password" className="text-xs text-gray-500 hover:text-green-600">
-                Forgot?
-              </Link>
-            </div>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              aria-invalid={!!errors.password}
-              className={cn(inputClassName, errors.password && "border-red-500 focus:ring-red-500")}
-            />
-            {errors.password ? (
-              <p className="mt-1 text-sm text-red-600" role="alert">
-                {errors.password}
-              </p>
-            ) : null}
-          </div>
-
-          {errors.form ? (
-            <p className="mb-4 text-sm text-red-600 whitespace-pre-wrap break-words" role="alert" aria-live="polite">
-              {errors.form}
+          {errors.emailOrUsername ? (
+            <p className="mt-1 text-xs text-red-600" role="alert">
+              {errors.emailOrUsername}
             </p>
           ) : null}
-
-          <button
-            type="submit"
-            disabled={isLoading || googleLoading}
-            className="w-full rounded-lg bg-[#2ECC71] py-3 text-sm font-medium text-white hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoading ? "Logging in…" : "Log in"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-green-600 hover:text-green-700">
-            Sign up
-          </Link>
-        </p>
         </div>
-      </div>
-    </div>
+
+        <div className="mb-6">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <label htmlFor="password" className="text-xs font-medium text-gray-700">
+              Password
+            </label>
+            <Link href="/forgot-password" className="text-xs text-green-600 hover:text-green-700">
+              Forgot?
+            </Link>
+          </div>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleInputChange}
+            disabled={isLoading}
+            aria-invalid={!!errors.password}
+            className={cn(
+              inputClassName,
+              errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500"
+            )}
+          />
+          {errors.password ? (
+            <p className="mt-1 text-xs text-red-600" role="alert">
+              {errors.password}
+            </p>
+          ) : null}
+        </div>
+
+        {errors.form ? (
+          <p
+            className="mb-4 whitespace-pre-wrap break-words text-xs text-red-600"
+            role="alert"
+            aria-live="polite"
+          >
+            {errors.form}
+          </p>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={isLoading || googleLoading}
+          className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoading ? "Logging in…" : "Log in"}
+        </button>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-gray-500">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="font-medium text-gray-900 hover:underline">
+          Sign up
+        </Link>
+      </p>
+    </MinimalAuthShell>
   );
 }
