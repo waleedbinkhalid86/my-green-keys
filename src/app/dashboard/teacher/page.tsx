@@ -441,9 +441,9 @@ export default function TeacherDashboard() {
             </div>
           </header>
 
-          <div className="mx-auto max-w-6xl space-y-10 px-6 py-8">
+          <div className="mgk-container space-y-10 py-8">
         <section id="teacher-overview" className="scroll-mt-24">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {(
               [
                 { Icon: Users, label: "Total Students", value: "48" },
@@ -454,7 +454,7 @@ export default function TeacherDashboard() {
             ).map((card) => {
               const StatIcon = card.Icon;
               return (
-              <Card key={card.label} className="mgk-card-ds border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+              <Card key={card.label}>
                 <CardHeader className="pb-2">
                   <StatIcon className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
                   <CardDescription className="font-semibold">{card.label}</CardDescription>
@@ -612,7 +612,7 @@ export default function TeacherDashboard() {
 
         <section id="teacher-leaderboard" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">Student leaderboard</h2>
-          <Card className="overflow-x-auto border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+          <Card className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

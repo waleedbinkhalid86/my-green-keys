@@ -657,13 +657,13 @@ function PricingPageContent() {
 
           {testimonials.length > 0 ? (
             <section className="py-12">
-              <div className="mx-auto max-w-4xl px-6">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                 <h3 className="mb-8 text-center text-2xl font-bold text-gray-900">What educators are saying</h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {testimonials.slice(0, 2).map((t) => (
                     <div
                       key={t.id}
-                      className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+                      className="mgk-card-sm border border-gray-100 p-6"
                     >
                       <Quote className="mb-3 h-6 w-6 text-green-600" />
                       <p className="mb-4 text-gray-700">&ldquo;{t.quote}&rdquo;</p>

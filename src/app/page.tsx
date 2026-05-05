@@ -658,7 +658,7 @@ export default function HomePage() {
 
       {/* EARLY ACCESS */}
       <section className="bg-white py-20">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mgk-container">
           <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
             Join us as an early adopter
           </h2>

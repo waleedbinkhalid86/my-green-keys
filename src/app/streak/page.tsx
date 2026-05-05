@@ -190,7 +190,7 @@ export default function StreakPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
-        <div className="mx-auto max-w-4xl px-6 py-12">
+        <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="h-10 w-40 animate-pulse rounded-lg bg-gray-200" />
           <div className="mx-auto mt-10 max-w-3xl animate-pulse rounded-3xl bg-white p-8 shadow-lg">
             <div className="mx-auto h-32 w-48 rounded-2xl bg-gray-100" />
@@ -211,7 +211,7 @@ export default function StreakPage() {
 
   if (error === "signin") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-6 py-12 font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-4 py-12 font-sans sm:px-6 lg:px-8">
         <div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-lg">
           <p className="text-lg font-semibold text-gray-800">Sign in to view your streak.</p>
           <Link
@@ -227,7 +227,7 @@ export default function StreakPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-6 py-12 font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 px-4 py-12 font-sans sm:px-6 lg:px-8">
         <div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-lg">
           <p className="text-lg font-semibold text-gray-800">Couldn&apos;t load streak data.</p>
           <button
@@ -245,7 +245,7 @@ export default function StreakPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
       <header className="py-12">
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => router.back()}
@@ -256,7 +256,7 @@ export default function StreakPage() {
           </button>
         </div>
 
-        <div className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+        <div className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
           <div className="flex justify-center">
             <StreakCounter streak={currentStreak} variant="large" />
           </div>
@@ -277,7 +277,7 @@ export default function StreakPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+      <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
         <h2 className="text-xl font-bold text-gray-900">Last 90 days</h2>
         <p className="mt-1 text-sm text-gray-500">Each square is a day. Brighter = more activity.</p>
 
@@ -331,7 +331,7 @@ export default function StreakPage() {
         </div>
       </section>
 
-      <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+      <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
         <h2 className="text-xl font-bold text-gray-900">Your milestones</h2>
         {unlockedMilestones.length === 0 ? (
           <p className="mt-6 flex items-center gap-2 text-gray-600">

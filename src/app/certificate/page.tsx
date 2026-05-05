@@ -145,7 +145,10 @@ export default function CertificatePage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#162d1e 0%, #2d6a4f 55%, #81c99e 100%)", padding: 22 }}>
+    <div
+      className="min-h-screen px-4 py-6 sm:px-6 lg:px-8"
+      style={{ background: "linear-gradient(180deg,#162d1e 0%, #2d6a4f 55%, #81c99e 100%)" }}
+    >
       <div className="no-print" style={{ maxWidth: 980, margin: "0 auto 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900, letterSpacing: "0.12em" }}>
           MY GREEN KEYS • CERTIFICATE
@@ -186,7 +189,7 @@ export default function CertificatePage() {
             maxWidth: 980,
             margin: "0 auto",
             background: "white",
-            borderRadius: 22,
+            borderRadius: 24,
             padding: 26,
             border: "10px solid rgba(76,175,80,0.22)",
             boxShadow: "0 24px 90px rgba(0,0,0,0.25)",

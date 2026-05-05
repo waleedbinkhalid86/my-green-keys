@@ -10,7 +10,7 @@ const UPDATED = "April 30, 2026";
 const CONTACT_EMAIL = "waleedbinkhalid86@gmail.com";
 
 function Container({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-[900px] px-6">{children}</div>;
+  return <div className="mx-auto w-full max-w-[900px] px-4 sm:px-6 lg:px-8">{children}</div>;
 }
 
 function H2({ children }: { children: React.ReactNode }) {
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
 
       <Container>
         <div className="py-12">
-          <div className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm md:p-8">
+          <div className="mgk-card p-6 md:p-8">
             <H2>1) Who we are</H2>
             <P>
               <strong>Company name:</strong> My Green Keys

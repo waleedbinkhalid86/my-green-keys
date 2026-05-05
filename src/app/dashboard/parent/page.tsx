@@ -76,8 +76,7 @@ const LeafIcon = () => (
 const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
-const statCardClass =
-  "mgk-card-ds rounded-[20px] border border-[#E5E7EB] bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.08)]";
+const statCardClass = "mgk-card p-6";
 
 const SIDEBAR_LINKS = [
   { href: "#parent-overview", label: "Overview", Icon: Home },
@@ -208,7 +207,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
   return (
     <div
       className={cn(
-        "mgk-card-ds rounded-[20px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border-2",
+        "rounded-3xl p-6 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg border-2 overflow-hidden",
         tier,
       )}
     >
@@ -879,7 +878,7 @@ export default function ParentDashboard() {
             </div>
           </header>
 
-          <div className="space-y-10 px-4 py-8 sm:px-8 sm:py-10">
+          <div className="mgk-container space-y-10 py-8 sm:py-10">
         {childrenError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
             {childrenError}
@@ -937,11 +936,11 @@ export default function ParentDashboard() {
         {childrenLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="mgk-skeleton h-28 rounded-[20px]" />
+              <div key={i} className="mgk-skeleton h-28 rounded-3xl" />
             ))}
           </div>
         ) : children.length === 0 ? (
-          <Card className="mgk-card-ds overflow-hidden border-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+          <Card className="overflow-hidden">
             <CardContent className="flex flex-col items-center gap-4 py-10 text-center sm:flex-row sm:text-left">
               <div className="relative h-40 w-full max-w-[200px] shrink-0 overflow-hidden rounded-2xl">
                 <Image src="/images/ui/ui-empty-state.jpg" alt="" fill className="object-cover" sizes="200px" />
@@ -1329,11 +1328,11 @@ export default function ParentDashboard() {
           {ecoLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="mgk-skeleton h-72 rounded-[20px]" />
+                <div key={i} className="mgk-skeleton h-72 rounded-3xl" />
               ))}
             </div>
           ) : pendingPhotos.length === 0 ? (
-            <Card className="mgk-card-ds overflow-hidden border-0">
+            <Card className="overflow-hidden">
               <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
                 <div className="relative h-44 w-full max-w-[280px] overflow-hidden rounded-2xl">
                   <Image src="/images/ui/ui-empty-garden.jpg" alt="" fill className="object-cover" sizes="280px" />

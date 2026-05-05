@@ -376,7 +376,6 @@ export default function GamesHubPage() {
         }
         .games-hub-game-card:hover {
           transform: scale(1.04) translateY(-4px);
-          box-shadow: 0 20px 44px rgba(0,0,0,0.22) !important;
         }
         .games-hub-level-bounce {
           animation: gamesHubBounce 0.52s cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -414,6 +413,7 @@ export default function GamesHubPage() {
 
       {/* Hero — full-width band at top; title first for visibility */}
       <header
+        className="px-4 sm:px-6 lg:px-8"
         style={{
           position: "relative",
           zIndex: 5,
@@ -422,8 +422,6 @@ export default function GamesHubPage() {
           background: "#1A8F4E",
           color: "#ffffff",
           paddingTop: 20,
-          paddingLeft: 32,
-          paddingRight: 32,
           paddingBottom: "clamp(36px, 6vw, 52px)",
           overflow: "hidden",
           flexShrink: 0,
@@ -488,15 +486,7 @@ export default function GamesHubPage() {
           <Leaf className="h-6 w-6" strokeWidth={2} aria-hidden />
         </div>
 
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            maxWidth: 1200,
-            margin: "0 auto",
-            width: "100%",
-          }}
-        >
+        <div className="mgk-container relative z-[2]">
           <h1
             className="flex flex-wrap items-center gap-3"
             style={{
@@ -601,15 +591,13 @@ export default function GamesHubPage() {
       </header>
 
       <main
+        className="mgk-container py-10 sm:py-12"
         style={{
           position: "relative",
           zIndex: 2,
           flex: 1,
-          maxWidth: 1200,
-          margin: "0 auto",
           width: "100%",
           boxSizing: "border-box",
-          padding: "clamp(28px, 4vw, 40px) 32px 48px",
         }}
       >
         {loading && (
@@ -641,7 +629,7 @@ export default function GamesHubPage() {
               <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
               </p>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {LEVEL_ORDER.map((id) => {
                   const def = GAME_LEVELS[id];
                   const isSel = selectedLevel.id === id;
@@ -652,8 +640,8 @@ export default function GamesHubPage() {
                       type="button"
                       onClick={() => handleLevelSelect(id)}
                       className={[
-                        "games-hub-level-card relative cursor-pointer rounded-2xl border-2 bg-white p-5 text-center transition-transform hover:scale-105 hover:shadow-md",
-                        isSel ? "border-green-500 bg-green-50" : "border-transparent shadow-sm",
+                        "games-hub-level-card relative cursor-pointer rounded-3xl border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
+                        isSel ? "border-green-500 bg-green-50" : "border-black/5",
                         levelBounceId === id ? "games-hub-level-bounce" : "",
                         "games-hub-card-animate",
                       ]
@@ -700,14 +688,9 @@ export default function GamesHubPage() {
 
             {/* Progress */}
             <section
-              className="games-hub-card-animate"
+              className="games-hub-card-animate mgk-card border-2 border-[#1A8F4E]/25 p-6"
               style={{
                 marginBottom: 44,
-                padding: "24px 26px",
-                borderRadius: 24,
-                background: "#fff",
-                border: "2px solid rgba(26,143,78,0.25)",
-                boxShadow: "0 10px 28px rgba(26,143,78,0.12)",
                 animationDelay: "100ms",
               }}
             >
@@ -785,7 +768,7 @@ export default function GamesHubPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
-                gap: 28,
+                gap: 24,
               }}
             >
               <style>{`
@@ -824,15 +807,12 @@ export default function GamesHubPage() {
                 return (
                   <article
                     key={g.slug}
-                    className={`games-hub-game-card games-hub-card-animate`}
+                    className={`games-hub-game-card games-hub-card-animate rounded-3xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
                     style={{
                       position: "relative",
                       minHeight: 420,
-                      borderRadius: 24,
                       padding: 0,
                       boxSizing: "border-box",
-                      background: "#fff",
-                      boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
                       border:
                         dimmed && mode !== "paid_lock"
                           ? "2px solid rgba(26,47,35,0.12)"
@@ -883,7 +863,7 @@ export default function GamesHubPage() {
                         alt={`${g.name} game artwork`}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        style={{ objectFit: "cover", borderRadius: "24px 24px 0 0" }}
+                        style={{ objectFit: "cover" }}
                         priority={i < 3}
                       />
                       <div
@@ -898,7 +878,6 @@ export default function GamesHubPage() {
                             "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%)",
                           pointerEvents: "none",
                           zIndex: 1,
-                          borderRadius: "24px 24px 0 0",
                         }}
                       />
                     </div>
@@ -1138,15 +1117,13 @@ export default function GamesHubPage() {
                   return (
                   <article
                     key={c.name}
-                    className="games-hub-card-animate games-hub-game-card"
+                    className="games-hub-card-animate games-hub-game-card rounded-3xl shadow-sm transition-shadow hover:shadow-lg"
                     style={{
                       position: "relative",
                       minHeight: 280,
-                      borderRadius: 24,
                       padding: 26,
                       boxSizing: "border-box",
                       background: "linear-gradient(160deg, #78909C 0%, #455A64 55%, #37474F 100%)",
-                      boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
                       border: "3px solid rgba(255,255,255,0.25)",
                       color: "#ffffff",
                       display: "flex",

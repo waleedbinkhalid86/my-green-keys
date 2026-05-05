@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-4 font-sans">
-      <div className="w-full max-w-sm p-8">
+      <div className="mgk-card w-full max-w-sm p-8">
         <div className="mb-8 flex justify-center">
           <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
         </div>

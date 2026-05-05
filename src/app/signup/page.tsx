@@ -447,7 +447,7 @@ export default function SignupPage() {
         </Link>
       </div>
 
-      <div className="flex w-full flex-col bg-white px-6 py-10 lg:w-1/2 lg:overflow-y-auto">
+      <div className="flex w-full flex-col bg-white px-4 py-10 sm:px-6 lg:w-1/2 lg:overflow-y-auto lg:px-8">
         <div className="mx-auto w-full max-w-xl">
         <div className="mb-6 flex justify-center lg:justify-start">
           <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
@@ -529,7 +529,7 @@ export default function SignupPage() {
                 }
               }}
               className={cn(
-                "mgk-card-ds cursor-pointer border-2 border-transparent transition-shadow",
+                    "cursor-pointer border-2 border-transparent transition-shadow",
                 googleGateLoading && "pointer-events-none opacity-50",
                 accountType === option.type
                   ? "border-[#2ECC71] shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-2 ring-[#2ECC71]/25"
@@ -554,7 +554,7 @@ export default function SignupPage() {
 
         {accountType ? (
           <form onSubmit={handleSubmit}>
-            <Card className="border-border/80 shadow-md">
+            <Card className="border-border/80">
               <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
                 <div>
                   <CardTitle className="font-heading text-lg">Your details</CardTitle>

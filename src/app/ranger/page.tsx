@@ -136,7 +136,7 @@ export default function RangerPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       <header className="bg-gradient-to-br from-purple-50 to-pink-50 py-12">
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => router.back()}
@@ -148,7 +148,7 @@ export default function RangerPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl px-6 pb-16">
+      <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 lg:px-8">
         {loading ? (
           <div className="space-y-8">
             <div className="mx-auto max-w-3xl animate-pulse rounded-3xl bg-white p-8 shadow-lg">
@@ -177,7 +177,7 @@ export default function RangerPage() {
           </div>
         ) : (
           <>
-            <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+            <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <RankBadge xp={xp} rank={rankId} variant="large" className="mx-auto" />
               <div className="mx-auto mt-6 w-full max-w-md">
                 {progress.nextRank ? (
@@ -201,7 +201,7 @@ export default function RangerPage() {
               </div>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">All ranks</h2>
               <ul className="mt-6 space-y-3">
                 {RANKS.map((r) => {
@@ -239,7 +239,7 @@ export default function RangerPage() {
               </ul>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">Where your XP came from</h2>
               <p className="mt-1 text-sm text-gray-600">Play variety of activities to climb faster</p>
               {breakdown.length === 0 ? (
@@ -270,7 +270,7 @@ export default function RangerPage() {
               )}
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">Recent activity</h2>
               {history.length === 0 ? (
                 <p className="mt-6 text-center text-gray-500">

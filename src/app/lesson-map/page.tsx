@@ -183,7 +183,7 @@ export default function LessonMapPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 pb-32">
-      <div className="mx-auto max-w-7xl px-6 pt-7">
+      <div className="mgk-container pt-7">
         <div
           className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]"
         >
@@ -258,13 +258,13 @@ export default function LessonMapPage() {
               No certificates yet—finish lessons to unlock your first one!
             </div>
           ) : (
-            <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
+            <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-6">
               {certificates.map((c) => {
                 const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
                 return (
                   <div
                     key={c.id}
-                    className="rounded-2xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-3.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]"
+                    className="rounded-3xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
                   >
                     <div className="flex justify-between gap-2.5">
                       <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
@@ -338,9 +338,9 @@ export default function LessonMapPage() {
                     onClick={() => !locked && router.push(`/lesson-map/phase-${p.id}`)}
                     className={clsx(
                       "group relative w-full text-left",
-                      "aspect-[3/4] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300",
+                      "aspect-[3/4] overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg",
                       !locked &&
-                        "cursor-pointer hover:-translate-y-2 hover:rotate-1 hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600",
+                        "cursor-pointer hover:-translate-y-2 hover:rotate-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600",
                       locked && "cursor-not-allowed"
                     )}
                   >

@@ -259,7 +259,7 @@ export default function LessonPhaseDetailPage() {
           aria-hidden
         />
         <div className="absolute inset-0 flex items-end">
-          <div className="mx-auto w-full max-w-7xl px-6 pb-8">
+          <div className="mgk-container pb-8">
             <Link
               href="/lesson-map"
               className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-white/80 transition hover:text-white"
@@ -275,14 +275,14 @@ export default function LessonPhaseDetailPage() {
         </div>
       </section>
 
-      <div className="relative z-10 mx-auto max-w-7xl -mt-8 px-6">
-        <div className="rounded-2xl bg-white p-6 shadow-lg">
+      <div className="mgk-container relative z-10 -mt-8">
+        <div className="mgk-card p-6">
           {error ? (
             <p className="text-center font-bold text-red-600">{error}</p>
           ) : loading ? (
             <p className="text-center font-bold text-gray-600">Loading progress...</p>
           ) : (
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-3 gap-6 text-center">
               <div>
                 <div className="text-2xl font-bold text-gray-900">
                   {completedInPhase} / {totalInPhase || "0"}
@@ -302,13 +302,13 @@ export default function LessonPhaseDetailPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="mgk-container py-16">
         <h2 className="mb-6 text-2xl font-bold text-gray-900">All Lessons</h2>
 
         {phaseLessons.length === 0 ? (
           <p className="text-center font-semibold text-gray-600">Lessons coming soon for this phase</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {phaseLessons.map((lesson) => {
               const row = progressByLesson.get(lesson.id);
               const state = getCardState({
@@ -319,7 +319,7 @@ export default function LessonPhaseDetailPage() {
               const starsEarned = Math.min(3, Math.max(0, Math.round(num(row?.stars))));
 
               const baseCard =
-                "rounded-xl border-2 border-gray-100 bg-white p-4 text-center transition";
+                "rounded-2xl border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
               const interactive = state !== "locked";
 
               return (
@@ -330,11 +330,11 @@ export default function LessonPhaseDetailPage() {
                   onClick={() => handleLessonClick(lesson.id, state)}
                   className={clsx(
                     baseCard,
-                    interactive && "cursor-pointer hover:border-[#2ECC71] hover:shadow-md",
+                    interactive && "cursor-pointer hover:border-[#2ECC71]",
                     state === "completed" && "border-green-200 bg-green-50/30",
                     state === "current" &&
                       "border-[#2ECC71] ring-2 ring-[#2ECC71]/30 shadow-[0_0_0_1px_rgba(46,204,113,0.2)]",
-                    state === "locked" && "cursor-not-allowed opacity-50 hover:border-gray-100 hover:shadow-none"
+                    state === "locked" && "cursor-not-allowed opacity-50 hover:border-black/5 hover:shadow-none"
                   )}
                 >
                   <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
