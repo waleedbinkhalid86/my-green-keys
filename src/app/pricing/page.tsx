@@ -595,7 +595,7 @@ function PricingPageContent() {
             </div>
           </div>
 
-          <section className="mgk-section-tight mt-12">
+          <div className="mgk-section-tight mt-12">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">For larger schools</h2>
               <p className="text-sm text-gray-600 mb-8">Scale with confidence</p>
@@ -657,7 +657,7 @@ function PricingPageContent() {
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Trust bar */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-gray-500">

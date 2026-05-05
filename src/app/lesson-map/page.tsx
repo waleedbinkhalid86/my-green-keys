@@ -183,129 +183,131 @@ export default function LessonMapPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100">
-      <div className="mgk-container mgk-section-tight">
-        <div
-          className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">LESSON MAP</div>
-              <div className="mt-1 text-[28px] font-black text-[#2c3e50]">
-                You completed {completedCount}/100 lessons
+      <section className="mgk-section-tight">
+        <div className="mgk-container">
+          <div className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">LESSON MAP</div>
+                <div className="mt-1 text-[28px] font-black text-[#2c3e50]">
+                  You completed {completedCount}/100 lessons
+                </div>
+                <div className="mt-1 font-semibold text-gray-600">Current lesson: #{currentLessonId}</div>
               </div>
-              <div className="mt-1 font-semibold text-gray-600">Current lesson: #{currentLessonId}</div>
+
+              <div className="flex flex-wrap items-stretch gap-3">
+                <div className="min-w-[160px] rounded-[14px] border border-green-600/25 bg-[#E8F5E9] px-3 py-2.5">
+                  <div className="text-xs font-black text-[#2e7d32]">Eco points</div>
+                  <div className="text-[22px] font-black text-[#1b4d30]">{ecoPointsTotal}</div>
+                </div>
+                <div className="min-w-[160px] rounded-[14px] border border-yellow-200 bg-[#FFFDE7] px-3 py-2.5">
+                  <div className="text-xs font-black text-[#8a6d1b]">Stars earned</div>
+                  <div className="text-[22px] font-black text-[#2c3e50]">{starsTotal}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    router.push("/lesson");
+                  }}
+                  className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
+                >
+                  Back to Lesson
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-stretch gap-3">
-              <div className="min-w-[160px] rounded-[14px] border border-green-600/25 bg-[#E8F5E9] px-3 py-2.5">
-                <div className="text-xs font-black text-[#2e7d32]">Eco points</div>
-                <div className="text-[22px] font-black text-[#1b4d30]">{ecoPointsTotal}</div>
+            <div className="mt-3.5 h-2.5 overflow-hidden rounded-full bg-black/[0.06]">
+              <div
+                className="h-full bg-gradient-to-r from-[#4CAF50] to-[#2196F3] transition-[width] duration-[400ms] ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+
+            {error && (
+              <div className="mt-3 rounded-xl border border-[#ef5350] bg-[#ffebee] px-3 py-2.5 font-extrabold text-[#c62828]">
+                {error}
               </div>
-              <div className="min-w-[160px] rounded-[14px] border border-yellow-200 bg-[#FFFDE7] px-3 py-2.5">
-                <div className="text-xs font-black text-[#8a6d1b]">Stars earned</div>
-                <div className="text-[22px] font-black text-[#2c3e50]">{starsTotal}</div>
+            )}
+          </div>
+
+          <div className="mt-[18px] rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">MY CERTIFICATES</div>
+                <div className="mt-1 text-[22px] font-black text-[#2c3e50]">Your achievements</div>
+                <div className="mt-1 font-bold text-gray-600">
+                  Earn certificates at 10, 25, 50, and 100 lessons.
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  router.push("/lesson");
+                  router.push("/certificate");
                 }}
                 className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
               >
-                Back to Lesson
+                View Latest Certificate
               </button>
             </div>
-          </div>
 
-          <div className="mt-3.5 h-2.5 overflow-hidden rounded-full bg-black/[0.06]">
-            <div
-              className="h-full bg-gradient-to-r from-[#4CAF50] to-[#2196F3] transition-[width] duration-[400ms] ease-out"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-
-          {error && (
-            <div className="mt-3 rounded-xl border border-[#ef5350] bg-[#ffebee] px-3 py-2.5 font-extrabold text-[#c62828]">
-              {error}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-[18px] rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">MY CERTIFICATES</div>
-              <div className="mt-1 text-[22px] font-black text-[#2c3e50]">Your achievements</div>
-              <div className="mt-1 font-bold text-gray-600">
-                Earn certificates at 10, 25, 50, and 100 lessons.
+            {certsLoading ? (
+              <div className="mt-3 font-extrabold text-[#2c3e50]">Loading certificates...</div>
+            ) : certificates.length === 0 ? (
+              <div className="mt-3 font-extrabold text-gray-600">
+                No certificates yet—finish lessons to unlock your first one!
               </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                router.push("/certificate");
-              }}
-              className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
-            >
-              View Latest Certificate
-            </button>
+            ) : (
+              <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-6">
+                {certificates.map((c) => {
+                  const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
+                  return (
+                    <div
+                      key={c.id}
+                      className="rounded-xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
+                    >
+                      <div className="flex justify-between gap-2.5">
+                        <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
+                      </div>
+                      <div className="mt-2 text-xs font-extrabold text-gray-600">
+                        Earned: {c.earned_at ? formatDate(c.earned_at) : "—"}
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap gap-2.5 font-black text-[#1b4d30]">
+                        <span>{c.lessons_completed ?? 0} lessons</span>
+                        <span aria-hidden>•</span>
+                        <span>{c.wpm ?? 0} WPM</span>
+                        <span aria-hidden>•</span>
+                        <span>{c.accuracy ?? 0}%</span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
+                          className="cursor-pointer rounded-xl border-none bg-[#4CAF50] px-3 py-2.5 font-black text-white"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")
+                          }
+                          className="cursor-pointer rounded-xl border border-green-600/45 bg-white px-3 py-2.5 font-black text-[#2e7d32]"
+                        >
+                          PDF
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-
-          {certsLoading ? (
-            <div className="mt-3 font-extrabold text-[#2c3e50]">Loading certificates...</div>
-          ) : certificates.length === 0 ? (
-            <div className="mt-3 font-extrabold text-gray-600">
-              No certificates yet—finish lessons to unlock your first one!
-            </div>
-          ) : (
-            <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-6">
-              {certificates.map((c) => {
-                const def = CERTIFICATES.find((d) => d.type === c.certificate_type) || null;
-                return (
-                  <div
-                    key={c.id}
-                    className="rounded-xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
-                  >
-                    <div className="flex justify-between gap-2.5">
-                      <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
-                    </div>
-                    <div className="mt-2 text-xs font-extrabold text-gray-600">
-                      Earned: {c.earned_at ? formatDate(c.earned_at) : "—"}
-                    </div>
-                    <div className="mt-2.5 flex flex-wrap gap-2.5 font-black text-[#1b4d30]">
-                      <span>{c.lessons_completed ?? 0} lessons</span>
-                      <span aria-hidden>•</span>
-                      <span>{c.wpm ?? 0} WPM</span>
-                      <span aria-hidden>•</span>
-                      <span>{c.accuracy ?? 0}%</span>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
-                        className="cursor-pointer rounded-xl border-none bg-[#4CAF50] px-3 py-2.5 font-black text-white"
-                      >
-                        View
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")
-                        }
-                        className="cursor-pointer rounded-xl border border-green-600/45 bg-white px-3 py-2.5 font-black text-[#2e7d32]"
-                      >
-                        PDF
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
+      </section>
 
-        <section className="mgk-section">
+      <section className="mgk-section">
+        <div className="mgk-container">
           <header className="mb-12 text-center">
             <h1 className="text-3xl font-bold text-gray-900">Your Learning Journey</h1>
             <p className="mt-2 text-base text-gray-600">
@@ -415,8 +417,8 @@ export default function LessonMapPage() {
               })}
             </div>
           )}
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -2212,198 +2212,205 @@ export default function LessonPage() {
         style={{
           background: "#1A2F23",
           color: "#ffffff",
-          padding: "12px 20px",
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          alignItems: "center",
-          gap: 12,
           position: "sticky",
           top: 0,
           zIndex: 50,
         }}
       >
-        {/* Left: logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 50,
-              border: "1px solid rgba(255,255,255,0.18)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#fff",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-            aria-label="Back"
-          >
-            ←
-          </button>
-          <div style={{ fontWeight: 950, letterSpacing: "-0.01em" }}>
-            <div style={{ fontSize: 14, opacity: 0.85 }}>My Green Keys</div>
-          </div>
-        </div>
-
-        {/* Center: lesson + module */}
-        <div style={{ textAlign: "center", fontWeight: 900, fontSize: 14, opacity: 0.95, whiteSpace: "nowrap" }}>
-          Lesson {currentLessonId} of 100 <span style={{ opacity: 0.7 }}>|</span>{" "}
-          <span style={{ fontWeight: 950 }}>
-            📚 {currentPhase?.name ?? "Typing"}
-          </span>
-        </div>
-
-        {/* Right: stats + actions + pet */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 14, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.wpm}</div>
-              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>WPM</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.accuracy}%</div>
-              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Accuracy</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 16, fontWeight: 950, color: "#F39C12" }}>{stats.streak} 🔥</div>
-              <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Streak</div>
+        <div
+          className="mgk-container"
+          style={{
+            paddingTop: 12,
+            paddingBottom: 12,
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          {/* Left: logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 50,
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+              aria-label="Back"
+            >
+              ←
+            </button>
+            <div style={{ fontWeight: 950, letterSpacing: "-0.01em" }}>
+              <div style={{ fontSize: 14, opacity: 0.85 }}>My Green Keys</div>
             </div>
           </div>
 
-          <Link
-            href="/streak"
-            style={{
-              padding: "10px 14px",
-              borderRadius: 50,
-              border: "1px solid rgba(255,255,255,0.22)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#fff",
-              fontWeight: 900,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              textDecoration: "none",
-            }}
-          >
-            <Flame size={18} aria-hidden />
-            Streak
-          </Link>
+          {/* Center: lesson + module */}
+          <div style={{ textAlign: "center", fontWeight: 900, fontSize: 14, opacity: 0.95, whiteSpace: "nowrap" }}>
+            Lesson {currentLessonId} of 100 <span style={{ opacity: 0.7 }}>|</span>{" "}
+            <span style={{ fontWeight: 950 }}>
+              📚 {currentPhase?.name ?? "Typing"}
+            </span>
+          </div>
 
-          <Link
-            href="/ranger"
-            className="hidden md:inline-flex"
-            style={{
-              padding: "10px 14px",
-              borderRadius: 50,
-              border: "1px solid rgba(255,255,255,0.22)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#fff",
-              fontWeight: 900,
-              cursor: "pointer",
-              alignItems: "center",
-              gap: 8,
-              textDecoration: "none",
-            }}
-          >
-            <Shield size={18} aria-hidden />
-            Ranger
-          </Link>
-
-          <Link
-            href="/ranger"
-            className="hidden md:inline-flex items-center"
-            style={{ textDecoration: "none" }}
-          >
-            <RankBadge xp={rangerXp} variant="compact" />
-          </Link>
-
-          {userProfile?.name && (
-            <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
-              Hi {userProfile.name}!
+          {/* Right: stats + actions + pet */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.wpm}</div>
+                <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>WPM</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.accuracy}%</div>
+                <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Accuracy</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 950, color: "#F39C12" }}>{stats.streak} 🔥</div>
+                <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Streak</div>
+              </div>
             </div>
-          )}
 
-          <button
-            type="button"
-            onClick={() => (window.location.href = "/lesson-map")}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 50,
-              border: "1px solid rgba(255,255,255,0.22)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#fff",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-          >
-            Lesson Map
-          </button>
-          <button
-            type="button"
-            onClick={() => (window.location.href = "/games")}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 50,
-              border: "1px solid rgba(255,255,255,0.22)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#fff",
-              fontWeight: 900,
-              cursor: "pointer",
-            }}
-          >
-            Games
-          </button>
+            <Link
+              href="/streak"
+              style={{
+                padding: "10px 14px",
+                borderRadius: 50,
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                textDecoration: "none",
+              }}
+            >
+              <Flame size={18} aria-hidden />
+              Streak
+            </Link>
 
-          {/* Pet widget (compact — desktop uses PetWidget on typing card) */}
-          <div
-            className="nav-pet-wrap flex md:hidden"
-            style={{ alignItems: "center", gap: 10, paddingLeft: 4 }}
-          >
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.85, lineHeight: 1.1 }}>
-                {petName || "My Pet"}
+            <Link
+              href="/ranger"
+              className="hidden md:inline-flex"
+              style={{
+                padding: "10px 14px",
+                borderRadius: 50,
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+                alignItems: "center",
+                gap: 8,
+                textDecoration: "none",
+              }}
+            >
+              <Shield size={18} aria-hidden />
+              Ranger
+            </Link>
+
+            <Link
+              href="/ranger"
+              className="hidden md:inline-flex items-center"
+              style={{ textDecoration: "none" }}
+            >
+              <RankBadge xp={rangerXp} variant="compact" />
+            </Link>
+
+            {userProfile?.name && (
+              <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
+                Hi {userProfile.name}!
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/lesson-map")}
+              style={{
+                padding: "10px 14px",
+                borderRadius: 50,
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Lesson Map
+            </button>
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/games")}
+              style={{
+                padding: "10px 14px",
+                borderRadius: 50,
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.06)",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              Games
+            </button>
+
+            {/* Pet widget (compact — desktop uses PetWidget on typing card) */}
+            <div
+              className="nav-pet-wrap flex md:hidden"
+              style={{ alignItems: "center", gap: 10, paddingLeft: 4 }}
+            >
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.85, lineHeight: 1.1 }}>
+                  {petName || "My Pet"}
+                </div>
+                <div
+                  style={{
+                    width: 56,
+                    height: 6,
+                    background: "rgba(255,255,255,0.18)",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    marginTop: 6,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                  }}
+                  aria-label="Pet health"
+                >
+                  <div
+                    className="pet-health-fill"
+                    style={{
+                      width: `${clamp(petHealth, 0, 100)}%`,
+                      height: "100%",
+                      background:
+                        petMood === "happy"
+                          ? "#2ECC71"
+                          : petMood === "neutral"
+                            ? "#F39C12"
+                            : "#E67E22",
+                    }}
+                  />
+                </div>
               </div>
               <div
-                style={{
-                  width: 56,
-                  height: 6,
-                  background: "rgba(255,255,255,0.18)",
-                  borderRadius: 999,
-                  overflow: "hidden",
-                  marginTop: 6,
-                  border: "1px solid rgba(255,255,255,0.14)",
-                }}
-                aria-label="Pet health"
+                className={[
+                  "pet",
+                  "nav-pet-emoji",
+                  `pet-${petMood}`,
+                  petPulse ? "pet-pulse" : "",
+                  petDance ? "pet-dance" : "",
+                ].join(" ")}
+                style={{ borderRadius: 16, display: "grid", placeItems: "center" }}
+                aria-label="Pet"
               >
-                <div
-                  className="pet-health-fill"
-                  style={{
-                    width: `${clamp(petHealth, 0, 100)}%`,
-                    height: "100%",
-                    background:
-                      petMood === "happy"
-                        ? "#2ECC71"
-                        : petMood === "neutral"
-                          ? "#F39C12"
-                          : "#E67E22",
-                  }}
-                />
+                {petEmoji}
               </div>
-            </div>
-            <div
-              className={[
-                "pet",
-                "nav-pet-emoji",
-                `pet-${petMood}`,
-                petPulse ? "pet-pulse" : "",
-                petDance ? "pet-dance" : "",
-              ].join(" ")}
-              style={{ borderRadius: 16, display: "grid", placeItems: "center" }}
-              aria-label="Pet"
-            >
-              {petEmoji}
             </div>
           </div>
         </div>
@@ -2428,50 +2435,63 @@ export default function LessonPage() {
           height: 34,
           background: "#F8F9FA",
           borderBottom: "1px solid rgba(0,0,0,0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 14px",
           gap: 8,
           fontWeight: 800,
         }}
       >
-        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
-          <span style={{ fontSize: 11, opacity: 0.85 }}>
-            Target: <span style={{ fontWeight: 950 }}>{currentLesson.targetWPM || 20} WPM</span>
-          </span>
-          <div style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
-            <div
-              className="lesson-strip-progress-fill"
-              style={{
-                width: `${lessonProgress}%`,
-                height: "100%",
-                background: "linear-gradient(90deg,#2ECC71,#1A8F4E)",
-              }}
-            />
+        <div
+          className="mgk-container"
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: 0,
+            paddingBottom: 0,
+            gap: 8,
+          }}
+        >
+          <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
+            <span style={{ fontSize: 11, opacity: 0.85 }}>
+              Target: <span style={{ fontWeight: 950 }}>{currentLesson.targetWPM || 20} WPM</span>
+            </span>
+            <div style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+              <div
+                className="lesson-strip-progress-fill"
+                style={{
+                  width: `${lessonProgress}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg,#2ECC71,#1A8F4E)",
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {joinClassSuccess && (
-        <div style={{ background: "#E8F5E9", borderBottom: "1px solid #4CAF50", padding: "10px 24px", color: "#2e7d32", fontWeight: 800 }}>
-          {joinClassSuccess}
+        <div style={{ background: "#E8F5E9", borderBottom: "1px solid #4CAF50", color: "#2e7d32", fontWeight: 800 }}>
+          <div className="mgk-container" style={{ paddingTop: 10, paddingBottom: 10 }}>
+            {joinClassSuccess}
+          </div>
         </div>
       )}
 
       {currentClass && (
-        <div style={{ background: "white", borderBottom: "1px solid #e0e0e0", padding: "10px 24px", color: "#374151", fontWeight: 700 }}>
-          Joined class: <span style={{ color: "#4CAF50" }}>{currentClass.name}</span> <span style={{ color: "#999" }}>({currentClass.code})</span>
+        <div style={{ background: "white", borderBottom: "1px solid #e0e0e0", color: "#374151", fontWeight: 700 }}>
+          <div className="mgk-container" style={{ paddingTop: 10, paddingBottom: 10 }}>
+            Joined class: <span style={{ color: "#4CAF50" }}>{currentClass.name}</span>{" "}
+            <span style={{ color: "#999" }}>({currentClass.code})</span>
+          </div>
         </div>
       )}
 
       {/* ECO POINTS COUNTER (subtle, top) */}
       <div
         style={{
-          padding: "7px 14px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -2479,56 +2499,58 @@ export default function LessonPage() {
           color: "#2C3E50",
         }}
       >
-        <div style={{ fontWeight: 900, opacity: 0.9 }}>
-          🌿{" "}
-          <span className="eco-counter-tick" style={{ color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
-            {ecoDisplay}
-          </span>{" "}
-          eco points
-        </div>
-        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => {
-              setJoinClassError("");
-              setJoinClassSuccess("");
-              setShowJoinClassModal(true);
-            }}
-            style={{
-              padding: "7px 10px",
-              borderRadius: 50,
-              border: "2px solid #2ECC71",
-              background: "#fff",
-              color: "#1A8F4E",
-              fontWeight: 900,
-              cursor: "pointer",
-              boxShadow: "0 4px 0 #1A8F4E",
-            }}
-          >
-            🏫 Join Class
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setEcoError("");
-              setEcoMessage("");
-              setEcoFile(null);
-              setEcoSelectedAction(null);
-              setShowEcoUploadModal(true);
-            }}
-            style={{
-              padding: "7px 10px",
-              borderRadius: 50,
-              border: "2px solid #2ECC71",
-              background: "#2ECC71",
-              color: "#fff",
-              fontWeight: 950,
-              cursor: "pointer",
-              boxShadow: "0 4px 0 #1A8F4E",
-            }}
-          >
-            📸 Submit Eco Photo
-          </button>
+        <div className="mgk-container" style={{ paddingTop: 7, paddingBottom: 7, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ fontWeight: 900, opacity: 0.9 }}>
+            🌿{" "}
+            <span className="eco-counter-tick" style={{ color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
+              {ecoDisplay}
+            </span>{" "}
+            eco points
+          </div>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setJoinClassError("");
+                setJoinClassSuccess("");
+                setShowJoinClassModal(true);
+              }}
+              style={{
+                padding: "7px 10px",
+                borderRadius: 50,
+                border: "2px solid #2ECC71",
+                background: "#fff",
+                color: "#1A8F4E",
+                fontWeight: 900,
+                cursor: "pointer",
+                boxShadow: "0 4px 0 #1A8F4E",
+              }}
+            >
+              🏫 Join Class
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEcoError("");
+                setEcoMessage("");
+                setEcoFile(null);
+                setEcoSelectedAction(null);
+                setShowEcoUploadModal(true);
+              }}
+              style={{
+                padding: "7px 10px",
+                borderRadius: 50,
+                border: "2px solid #2ECC71",
+                background: "#2ECC71",
+                color: "#fff",
+                fontWeight: 950,
+                cursor: "pointer",
+                boxShadow: "0 4px 0 #1A8F4E",
+              }}
+            >
+              📸 Submit Eco Photo
+            </button>
+          </div>
         </div>
       </div>
 
