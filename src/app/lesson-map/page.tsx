@@ -383,7 +383,7 @@ export default function LessonMapPage() {
                       )}
                     </div>
 
-                    <div className="absolute right-0 bottom-0 left-0 z-20 flex h-[30%] flex-col justify-center overflow-hidden bg-white p-5">
+                    <div className="absolute right-0 bottom-0 left-0 z-20 flex min-h-[30%] max-h-[55%] flex-col justify-center overflow-y-auto bg-white p-5">
                       <h2 className="text-xl font-bold leading-tight text-gray-900">{p.title}</h2>
                       <p className="mt-1 text-xs text-gray-500">{rangeLabel}</p>
                       <p className="mt-1 text-xs italic text-gray-500">{p.tagline}</p>

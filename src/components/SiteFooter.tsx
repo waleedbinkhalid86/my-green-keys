@@ -84,7 +84,7 @@ export default function SiteFooter() {
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} My Green Keys. All rights reserved.
           </p>
-          <p className="text-xs text-gray-500">Made in Pakistan</p>
+          <p className="text-center text-xs text-gray-500 md:text-right">Made in Pakistan</p>
         </div>
       </div>
     </footer>

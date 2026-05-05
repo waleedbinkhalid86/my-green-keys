@@ -233,7 +233,7 @@ function CompareCell({ value }: { value: Cell }) {
 }
 
 const pill =
-  "inline-flex min-h-[52px] w-full items-center justify-center rounded-[50px] px-6 text-base font-semibold transition-all duration-200 disabled:opacity-60";
+  "inline-flex min-h-[52px] w-full items-center justify-center whitespace-nowrap rounded-[50px] px-6 text-base font-semibold transition-all duration-200 disabled:opacity-60";
 
 const cardShell =
   "flex h-full flex-col rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg";

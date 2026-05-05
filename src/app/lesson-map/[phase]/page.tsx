@@ -340,7 +340,9 @@ export default function LessonPhaseDetailPage() {
                   <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
                     {lesson.id}
                   </div>
-                  <div className="mb-2 line-clamp-2 text-sm font-semibold text-gray-900">{lesson.title}</div>
+                  <div className="mb-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-gray-900">
+                    {lesson.title}
+                  </div>
 
                   <div className="flex min-h-[28px] items-center justify-center gap-1 text-xs font-semibold">
                     {state === "completed" && (

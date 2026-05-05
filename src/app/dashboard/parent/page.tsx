@@ -1093,7 +1093,7 @@ export default function ParentDashboard() {
                   Download Report
                 </Button>
               ) : (
-                <p className="max-w-xs text-right text-xs text-muted-foreground">
+                <p className="max-w-xs break-words text-right text-xs text-muted-foreground">
                   Link your child&apos;s account email to unlock printable reports.
                 </p>
               )}
