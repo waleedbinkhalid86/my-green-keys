@@ -10,6 +10,8 @@ export type PetWidgetProps = {
   health: number;
   pulse?: boolean;
   dance?: boolean;
+  /** "overlay" = absolute corner on typing card (legacy). "sidebar" = static column beside keyboard. */
+  placement?: "overlay" | "sidebar";
   className?: string;
 };
 
@@ -23,6 +25,7 @@ export function PetWidget({
   health,
   pulse = false,
   dance = false,
+  placement = "overlay",
   className = "",
 }: PetWidgetProps) {
   const h = clamp(health, 0, 100);
@@ -45,12 +48,16 @@ export function PetWidget({
     .filter(Boolean)
     .join(" ");
 
+  const shell =
+    placement === "sidebar"
+      ? `pointer-events-none relative z-10 w-full max-w-[208px] rounded-md border border-emerald-200/50 bg-white p-3 shadow-[0_8px_30px_rgba(26,47,35,0.12)] ${className}`
+      : `pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-md border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`;
+
   return (
-    <div
-      className={`pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-md border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`}
-      aria-label={`${petName} wellness`}
-    >
-      <div className="mb-3 text-center text-base font-bold text-gray-800">{petName}</div>
+    <div className={shell} aria-label={`${petName} wellness`}>
+      <div className={`text-center font-bold text-gray-800 ${placement === "sidebar" ? "mb-2 text-sm" : "mb-3 text-base"}`}>
+        {petName}
+      </div>
       <div className={imageWrapperClass}>
         <Image
           src={src}
@@ -58,11 +65,11 @@ export function PetWidget({
           width={160}
           height={160}
           quality={90}
-          className="mx-auto block h-40 w-40 object-contain"
+          className={placement === "sidebar" ? "mx-auto block h-32 w-32 object-contain" : "mx-auto block h-40 w-40 object-contain"}
         />
       </div>
       <div
-        className="mt-4 h-2.5 w-full overflow-hidden rounded-md bg-gray-200"
+        className={`h-2.5 w-full overflow-hidden rounded-md bg-gray-200 ${placement === "sidebar" ? "mt-3" : "mt-4"}`}
         aria-label="Pet health"
       >
         <div

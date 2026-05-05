@@ -1486,10 +1486,8 @@ export default function LessonPage() {
 
   return (
     <div
-      className={nunito.className}
+      className={`${nunito.className} min-h-screen bg-[#FAFAFA] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[length:18px_18px] antialiased`}
       style={{
-        background: "#FFFFFF",
-        minHeight: "100vh",
         color: "#2C3E50",
         fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif",
       }}
@@ -2218,18 +2216,10 @@ export default function LessonPage() {
         }}
       >
         <div
-          className="mgk-container"
-          style={{
-            paddingTop: 12,
-            paddingBottom: 12,
-            display: "grid",
-            gridTemplateColumns: "1fr auto 1fr",
-            alignItems: "center",
-            gap: 12,
-          }}
+          className="mgk-container flex flex-wrap items-center justify-between gap-3 py-3"
         >
-          {/* Left: logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
+          {/* Left: back + brand only (lesson meta lives in strip below) */}
+          <div className="flex min-w-0 shrink-0 items-center gap-3">
             <button
               type="button"
               onClick={() => window.history.back()}
@@ -2252,16 +2242,8 @@ export default function LessonPage() {
             </div>
           </div>
 
-          {/* Center: lesson + module */}
-          <div style={{ textAlign: "center", fontWeight: 900, fontSize: 14, opacity: 0.95, whiteSpace: "nowrap" }}>
-            Lesson {currentLessonId} of 100 <span style={{ opacity: 0.7 }}>|</span>{" "}
-            <span style={{ fontWeight: 950 }}>
-              📚 {currentPhase?.name ?? "Typing"}
-            </span>
-          </div>
-
           {/* Right: stats + actions + pet */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 14, flexWrap: "wrap" }}>
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-3.5 flex-wrap">
             <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.wpm}</div>
@@ -2276,6 +2258,10 @@ export default function LessonPage() {
                 <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>Streak</div>
               </div>
             </div>
+
+            {profileDailyStreak > 0 ? (
+              <StreakCounter streak={profileDailyStreak} variant="inline" className="!shadow-none" />
+            ) : null}
 
             <Link
               href="/streak"
@@ -2416,23 +2402,9 @@ export default function LessonPage() {
         </div>
       </nav>
 
-      <div className="pointer-events-none fixed left-6 top-20 z-30 hidden md:block">
-        <div className="pointer-events-auto flex flex-col items-start gap-2">
-          <StreakCounter streak={profileDailyStreak} variant="floating" />
-          <Link
-            href="/ranger"
-            className="pointer-events-auto inline-flex items-center gap-2 rounded-md border-2 border-white/25 bg-white/10 px-3 py-2 text-sm font-bold text-white shadow-lg backdrop-blur-sm"
-          >
-            <Shield className="h-4 w-4 shrink-0" aria-hidden />
-            Ranger
-          </Link>
-        </div>
-      </div>
-
       {/* LESSON INFO STRIP (minimal) */}
       <div
         style={{
-          height: 34,
           background: "#F8F9FA",
           borderBottom: "1px solid rgba(0,0,0,0.06)",
           gap: 8,
@@ -2442,17 +2414,21 @@ export default function LessonPage() {
         <div
           className="mgk-container"
           style={{
-            height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingTop: 0,
-            paddingBottom: 0,
+            paddingTop: 8,
+            paddingBottom: 8,
             gap: 8,
           }}
         >
-          <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
+          <div style={{ minWidth: 0, overflow: "hidden" }}>
+            <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.75, marginBottom: 3, letterSpacing: "0.02em" }}>
+              Lesson {currentLessonId} of 100 <span style={{ opacity: 0.55 }}>·</span> 📚 {currentPhase?.name ?? "Typing"}
+            </div>
+            <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
             <span style={{ fontSize: 11, opacity: 0.85 }}>
@@ -2555,10 +2531,9 @@ export default function LessonPage() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="mgk-container max-w-[860px] px-2 pt-2">
+      <div className="mgk-container max-w-[1100px] px-2 pt-2">
         {/* TYPING AREA */}
         <div
-          className="md:pr-[232px]"
           style={{
             position: "relative",
             maxWidth: "100%",
@@ -2570,13 +2545,6 @@ export default function LessonPage() {
             border: "1px solid rgba(0,0,0,0.06)",
           }}
         >
-          <PetWidget
-            petType={petType}
-            petName={petName}
-            health={petHealth}
-            pulse={petPulse}
-            dance={petDance}
-          />
           <div style={{ marginBottom: "7px" }}>
             <div style={{ fontSize: 11, fontWeight: 900, color: "#95A5A6", marginBottom: 4, letterSpacing: "0.08em" }}>
               DRILL TEXT
@@ -2673,14 +2641,33 @@ export default function LessonPage() {
           autoFocus
         />
 
-        <EdclubKeyboardSection
-          highlightKey={guideHighlightKey}
-          shakeKey={shakeKey}
-          pressedVKey={pressedVKey}
-          themeColor={getThemeColor()}
-          fontClassName={nunito.className}
-          showInstruction={showKeyboardInstruction}
-        />
+        <div
+          className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4"
+          style={{ marginBottom: 0 }}
+        >
+          <div className="min-w-0 flex-1">
+            <EdclubKeyboardSection
+              highlightKey={guideHighlightKey}
+              shakeKey={shakeKey}
+              pressedVKey={pressedVKey}
+              themeColor={getThemeColor()}
+              fontClassName={nunito.className}
+              showInstruction={showKeyboardInstruction}
+            />
+          </div>
+          {petType && petName.trim() ? (
+            <div className="hidden shrink-0 md:flex md:w-[220px] md:flex-col md:items-center md:justify-end">
+              <PetWidget
+                petType={petType}
+                petName={petName}
+                health={petHealth}
+                pulse={petPulse}
+                dance={petDance}
+                placement="sidebar"
+              />
+            </div>
+          ) : null}
+        </div>
 
         {/* NAVIGATION BUTTONS */}
         <div style={{
@@ -2790,7 +2777,7 @@ export default function LessonPage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "20px 16px 72px",
+            padding: "max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
             overflow: "hidden",
           }}
         >
@@ -2812,11 +2799,11 @@ export default function LessonPage() {
             className="lesson-complete-panel"
             style={{
               position: "relative",
-              width: "min(520px, 100%)",
-              maxHeight: "min(92vh, 880px)",
+              width: "min(480px, 100%)",
+              maxHeight: "min(calc(100vh - 24px), 640px)",
               overflow: "auto",
-              borderRadius: 24,
-              padding: "28px 22px 26px",
+              borderRadius: 20,
+              padding: "16px 18px 14px",
               textAlign: "center",
               background: "linear-gradient(165deg, rgba(255,255,255,0.97) 0%, #f4fbf6 45%, #fffef5 100%)",
               boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
@@ -2838,15 +2825,15 @@ export default function LessonPage() {
             <h2
               style={{
                 position: "relative",
-                fontSize: "clamp(26px, 5vw, 34px)",
+                fontSize: "clamp(22px, 4.5vw, 30px)",
                 fontWeight: 800,
                 color: "#14532d",
-                margin: "0 0 8px",
+                margin: "0 0 4px",
               }}
             >
               Lesson complete!
             </h2>
-            <div style={{ position: "relative", fontSize: 15, fontWeight: 800, color: "#3d5c4a", marginBottom: 18 }}>
+            <div style={{ position: "relative", fontSize: 14, fontWeight: 800, color: "#3d5c4a", marginBottom: 12 }}>
               You helped the planet with every keystroke.
             </div>
 
@@ -2856,9 +2843,9 @@ export default function LessonPage() {
                 position: "relative",
                 display: "flex",
                 justifyContent: "center",
-                gap: 10,
-                marginBottom: 20,
-                minHeight: 56,
+                gap: 8,
+                marginBottom: 12,
+                minHeight: 44,
                 alignItems: "center",
               }}
             >
@@ -2867,7 +2854,7 @@ export default function LessonPage() {
                   key={i}
                   className="complete-star"
                   style={{
-                    fontSize: 52,
+                    fontSize: 40,
                     lineHeight: 1,
                     color: i < stars ? "#F1C40F" : "rgba(0,0,0,0.12)",
                     animationDelay: `${0.12 + i * 0.16}s`,
@@ -2886,8 +2873,8 @@ export default function LessonPage() {
                 position: "relative",
                 display: "grid",
                 gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: 10,
-                marginBottom: 18,
+                gap: 8,
+                marginBottom: 12,
               }}
             >
               {[
@@ -2900,43 +2887,22 @@ export default function LessonPage() {
                   style={{
                     background: "rgba(255,255,255,0.92)",
                     border: "1px solid rgba(46,204,113,0.28)",
-                    borderRadius: 16,
-                    padding: "14px 10px",
+                    borderRadius: 14,
+                    padding: "10px 8px",
                     boxShadow: "0 8px 20px rgba(26,47,35,0.08)",
                   }}
                 >
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
+                  <div style={{ fontSize: 19, fontWeight: 900, color: "#1A8F4E", fontVariantNumeric: "tabular-nums" }}>
                     {card.value}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 900, color: "#6b7c72", marginTop: 4, letterSpacing: "0.04em" }}>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "#6b7c72", marginTop: 3, letterSpacing: "0.04em" }}>
                     {card.label}
                     {card.sub ? (
-                      <span style={{ display: "block", fontSize: 10, opacity: 0.85, fontWeight: 800 }}>{card.sub}</span>
+                      <span style={{ display: "block", fontSize: 9, opacity: 0.85, fontWeight: 800 }}>{card.sub}</span>
                     ) : null}
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Pet happy dance */}
-            <div style={{ position: "relative", marginBottom: 16 }}>
-              <div
-                className={["pet", "pet-happy", "pet-dance"].join(" ")}
-                style={{
-                  display: "inline-grid",
-                  placeItems: "center",
-                  width: 72,
-                  height: 72,
-                  borderRadius: 22,
-                  fontSize: 40,
-                  background: "linear-gradient(180deg, rgba(46,204,113,0.2), rgba(255,255,255,0.9))",
-                  border: "2px solid rgba(46,204,113,0.45)",
-                  boxShadow: "0 12px 28px rgba(26,47,35,0.15)",
-                }}
-              >
-                {petEmoji}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: "#2d6a4f", marginTop: 8 }}>Your pet is celebrating!</div>
             </div>
 
             {/* Eco fact — slide from bottom */}
@@ -2947,18 +2913,18 @@ export default function LessonPage() {
                   position: "relative",
                   background: "linear-gradient(135deg,#E8F5E9 0%, #FFFDE7 100%)",
                   border: "1px solid rgba(76,175,80,0.4)",
-                  padding: "14px 14px",
-                  borderRadius: 16,
-                  marginBottom: 20,
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  marginBottom: 12,
                   textAlign: "left",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <div style={{ fontSize: 32, lineHeight: 1 }}>{lessonFact.emoji}</div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ fontSize: 26, lineHeight: 1 }}>{lessonFact.emoji}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 950, color: "#1b4332", marginBottom: 6, fontSize: 14 }}>Eco fact</div>
-                    <div style={{ fontWeight: 800, color: "#14532d", fontSize: 15, lineHeight: 1.4 }}>{lessonFact.fact}</div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                    <div style={{ fontWeight: 950, color: "#1b4332", marginBottom: 4, fontSize: 12 }}>Eco fact</div>
+                    <div style={{ fontWeight: 800, color: "#14532d", fontSize: 14, lineHeight: 1.35 }}>{lessonFact.fact}</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8, alignItems: "center" }}>
                       <span
                         style={{
                           background: "#fff",
@@ -2979,18 +2945,18 @@ export default function LessonPage() {
               </div>
             )}
 
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch" }}>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
               <button
                 type="button"
                 onClick={handleNextLesson}
                 disabled={currentLessonId === 100}
                 style={{
-                  height: 56,
+                  height: 48,
                   borderRadius: 999,
                   border: "none",
                   background: currentLessonId === 100 ? "#bfc9c4" : "linear-gradient(180deg,#2ECC71,#1A8F4E)",
                   color: "#fff",
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: 900,
                   cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
                   boxShadow: currentLessonId === 100 ? "none" : "0 6px 0 #0f3d24, 0 14px 28px rgba(26,143,78,0.35)",
@@ -3002,12 +2968,12 @@ export default function LessonPage() {
                 type="button"
                 onClick={handleReset}
                 style={{
-                  height: 44,
+                  height: 40,
                   borderRadius: 999,
                   background: "rgba(255,255,255,0.95)",
                   border: "2px solid rgba(26,47,35,0.18)",
                   color: "#2d4a3e",
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: 800,
                   cursor: "pointer",
                 }}
