@@ -10,7 +10,7 @@ const BG = "#FAFAFA";
 
 function Inner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+    <div className="mgk-container">{children}</div>
   );
 }
 
@@ -432,7 +432,7 @@ export default function HomePage() {
       </section>
 
       {/* TRUST BADGES */}
-      <section style={{ background: "#fff", padding: "48px 0" }}>
+      <section className="mgk-section-tight" style={{ background: "#fff" }}>
         <Inner>
           <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
             Privacy and safety built in
@@ -459,12 +459,12 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-20" style={{ background: "#F8F9FA" }}>
+      <section id="how-it-works" className="mgk-section" style={{ background: "#F8F9FA" }}>
         <Inner>
           <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 48 }}>
             Learning that actually works
           </h2>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
             {(
               [
                 {
@@ -521,7 +521,7 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="bg-white py-20">
+      <section id="features" className="bg-white mgk-section">
         <Inner>
           <h2
             style={{
@@ -537,7 +537,7 @@ export default function HomePage() {
             Everything your child needs to become a typing champion
           </h2>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
             {(
               [
                 {
@@ -657,7 +657,7 @@ export default function HomePage() {
       </section>
 
       {/* EARLY ACCESS */}
-      <section className="bg-white py-20">
+      <section className="bg-white mgk-section">
         <div className="mgk-container">
           <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
             Join us as an early adopter
@@ -665,7 +665,7 @@ export default function HomePage() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-base font-semibold text-gray-600">
             Schools and families joining now get founding member benefits
           </p>
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="mgk-grid mt-12 grid-cols-1 md:grid-cols-3">
             <article className="rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg">
               <School className="mb-4 h-10 w-10 text-green-600" aria-hidden />
               <h3 className="mb-2 text-xl font-bold text-gray-900">Free 30-day pilot for schools</h3>

@@ -405,8 +405,8 @@ function PricingPageContent() {
       </section>
 
       {/* Pricing cards */}
-      <section className="px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="mgk-section">
+        <div className="mgk-container">
           {ecoGardenExpired ? (
             <div
               className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
@@ -427,7 +427,8 @@ function PricingPageContent() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-8 pt-4 lg:grid-cols-3 lg:items-stretch lg:gap-8">
+          <div className="relative">
+            <div className="mgk-grid grid-cols-1 pt-4 lg:grid-cols-3 lg:items-stretch">
             {/* Free */}
             <div className={cn(cardShell, "border border-[#E5E7EB]")}>
               <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Free Starter</p>
@@ -543,12 +544,14 @@ function PricingPageContent() {
               </div>
             </div>
           </div>
+            <div className="h-12" aria-hidden />
+          </div>
 
-          <div className="mt-20">
-            <h2 className="mb-10 text-center text-2xl font-extrabold tracking-tight text-[#1A2F23] sm:text-3xl">
+          <div className="mt-20 lg:mt-24">
+            <h2 className="mb-12 text-center text-2xl font-extrabold tracking-tight text-[#1A2F23] sm:text-3xl">
               For Larger Schools
             </h2>
-            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 lg:grid-cols-2 lg:items-stretch">
+            <div className="mgk-grid grid-cols-1 lg:grid-cols-3 lg:items-stretch">
               {/* School Growth */}
               <div className={cn(cardShell, "border border-[#E5E7EB]")}>
                 <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">School Growth</p>
@@ -610,6 +613,9 @@ function PricingPageContent() {
                   </a>
                 </div>
               </div>
+
+              {/* Spacer column for alignment with top row on lg+ */}
+              <div className="hidden lg:block" aria-hidden />
             </div>
           </div>
 

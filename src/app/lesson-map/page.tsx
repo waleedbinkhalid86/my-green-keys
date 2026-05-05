@@ -305,7 +305,7 @@ export default function LessonMapPage() {
           )}
         </div>
 
-        <section className="py-12">
+        <section className="mgk-section">
           <header className="mb-12 text-center">
             <h1 className="text-3xl font-bold text-gray-900">Your Learning Journey</h1>
             <p className="mt-2 text-base text-gray-600">
@@ -316,7 +316,7 @@ export default function LessonMapPage() {
           {loading ? (
             <p className="text-center font-extrabold text-gray-600">Loading progress...</p>
           ) : (
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mgk-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {PHASE_BOOKS.map((p) => {
                 const locked = isPhaseLocked(p.start, completedSet);
                 const visualUnlocked = getPhaseVisualStatus(p.start, p.end, completedSet, currentLessonId);

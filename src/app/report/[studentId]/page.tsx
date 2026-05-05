@@ -454,7 +454,7 @@ export default function StudentReportPage() {
   return (
     <div className="report-print-root min-h-screen bg-[#f4fbf6] text-foreground">
       <div className="report-no-print sticky top-0 z-50 border-b border-primary/20 bg-[#1a2f23] px-4 py-3 shadow-sm">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+        <div className="mgk-container flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm font-semibold text-white">Progress report</div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-lg border border-white/20 bg-white/10 p-0.5">
@@ -485,7 +485,7 @@ export default function StudentReportPage() {
         </div>
       </div>
 
-      <div className="report-no-print mx-auto max-w-3xl px-4 py-4">
+      <div className="report-no-print mgk-container py-4">
         <div className="rounded-xl border border-primary/25 bg-white p-4 shadow-sm">
           <h2 className="font-heading text-sm font-bold text-primary">School branding (saved on this device)</h2>
           <p className="mt-1 text-xs text-muted-foreground">

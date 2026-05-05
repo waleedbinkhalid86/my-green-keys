@@ -115,16 +115,18 @@ export default function RangerPage() {
 
   if (!loading && userId === null && !error) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-6">
-        <Shield className="h-14 w-14 text-purple-500" aria-hidden />
-        <h1 className="mt-4 text-2xl font-bold text-gray-900">Planet Ranger</h1>
-        <p className="mt-2 max-w-md text-center text-gray-600">Sign in to see your rank, XP, and activity.</p>
-        <Link
-          href="/login"
-          className="mt-6 rounded-full bg-purple-500 px-8 py-3 font-semibold text-white transition hover:bg-purple-600"
-        >
-          Sign in
-        </Link>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="mgk-container mgk-section flex flex-col items-center justify-center">
+          <Shield className="h-14 w-14 text-purple-500" aria-hidden />
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">Planet Ranger</h1>
+          <p className="mt-2 max-w-md text-center text-gray-600">Sign in to see your rank, XP, and activity.</p>
+          <Link
+            href="/login"
+            className="mt-6 rounded-full bg-purple-500 px-8 py-3 font-semibold text-white transition hover:bg-purple-600"
+          >
+            Sign in
+          </Link>
+        </div>
       </div>
     );
   }
@@ -135,8 +137,8 @@ export default function RangerPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <header className="bg-gradient-to-br from-purple-50 to-pink-50 py-12">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <header className="bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="mgk-container mgk-section-tight">
           <button
             type="button"
             onClick={() => router.back()}
@@ -148,7 +150,8 @@ export default function RangerPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 lg:px-8">
+      <main className="mgk-section-tight">
+        <div className="mgk-container pb-16">
         {loading ? (
           <div className="space-y-8">
             <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
@@ -202,7 +205,7 @@ export default function RangerPage() {
             </section>
 
             <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-              <h2 className="text-xl font-bold text-gray-900">All ranks</h2>
+              <h2 className="mb-2 text-xl font-bold text-gray-900">All ranks</h2>
               <ul className="mt-6 space-y-3">
                 {RANKS.map((r) => {
                   const earned = xp >= r.xpRequired;
@@ -240,7 +243,7 @@ export default function RangerPage() {
             </section>
 
             <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-              <h2 className="text-xl font-bold text-gray-900">Where your XP came from</h2>
+              <h2 className="mb-2 text-xl font-bold text-gray-900">Where your XP came from</h2>
               <p className="mt-1 text-sm text-gray-600">Play variety of activities to climb faster</p>
               {breakdown.length === 0 ? (
                 <p className="mt-6 text-center text-gray-500">Start typing or playing to see your XP breakdown!</p>
@@ -271,7 +274,7 @@ export default function RangerPage() {
             </section>
 
             <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-              <h2 className="text-xl font-bold text-gray-900">Recent activity</h2>
+              <h2 className="mb-2 text-xl font-bold text-gray-900">Recent activity</h2>
               {history.length === 0 ? (
                 <p className="mt-6 text-center text-gray-500">
                   Your XP history will show here as you play and learn
@@ -302,7 +305,7 @@ export default function RangerPage() {
             </section>
 
             <section className="mx-auto mt-8 max-w-3xl rounded-lg bg-purple-50 p-6">
-              <h2 className="text-lg font-bold text-gray-900">How to earn XP</h2>
+              <h2 className="mb-2 text-lg font-bold text-gray-900">How to earn XP</h2>
               <ul className="mt-4 space-y-3 text-sm text-gray-800">
                 {[
                   "Complete lessons (10 XP each, 15 with 3 stars)",
@@ -321,7 +324,8 @@ export default function RangerPage() {
             </section>
           </>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

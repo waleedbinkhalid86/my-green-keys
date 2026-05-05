@@ -443,7 +443,7 @@ export default function TeacherDashboard() {
 
           <div className="mgk-container space-y-10 py-8">
         <section id="teacher-overview" className="scroll-mt-24">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mgk-grid md:grid-cols-2 lg:grid-cols-4">
             {(
               [
                 { Icon: Users, label: "Total Students", value: "48" },
@@ -751,7 +751,7 @@ export default function TeacherDashboard() {
                   Detailed progress — {filteredStudents.find((s) => s.id === selectedStudent)?.name}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <CardContent className="mgk-grid sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   ["Total WPM", filteredStudents.find((s) => s.id === selectedStudent)?.wpm],
                   ["Accuracy", `${filteredStudents.find((s) => s.id === selectedStudent)?.accuracy}%`],
@@ -792,7 +792,7 @@ export default function TeacherDashboard() {
                 />
                 <p className="text-xs text-muted-foreground">{assignmentText.length}/1000 characters</p>
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="mgk-grid md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Difficulty</Label>
                   <select className={selectClassName} value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
@@ -902,7 +902,7 @@ export default function TeacherDashboard() {
                 />
                 <p className="text-xs text-muted-foreground">Saved with school name for PDF reports · ~200×200px works well</p>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="mgk-grid md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="primary-color">Primary color</Label>
                   <div className="flex items-center gap-3">
@@ -937,7 +937,7 @@ export default function TeacherDashboard() {
           <h2 className="font-heading mb-4 text-xl font-bold">Generate reports</h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="mgk-grid md:grid-cols-2">
                 <Button className="w-full" variant="secondary">
                   Generate class report
                 </Button>

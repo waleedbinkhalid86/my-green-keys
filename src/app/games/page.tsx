@@ -413,7 +413,7 @@ export default function GamesHubPage() {
 
       {/* Hero — full-width band at top; title first for visibility */}
       <header
-        className="px-4 sm:px-6 lg:px-8"
+        className="mgk-section-tight"
         style={{
           position: "relative",
           zIndex: 5,
@@ -591,7 +591,7 @@ export default function GamesHubPage() {
       </header>
 
       <main
-        className="mgk-container py-10 sm:py-12"
+        className="mgk-container mgk-section-tight"
         style={{
           position: "relative",
           zIndex: 2,
@@ -629,7 +629,7 @@ export default function GamesHubPage() {
               <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
               </p>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="mgk-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 {LEVEL_ORDER.map((id) => {
                   const def = GAME_LEVELS[id];
                   const isSel = selectedLevel.id === id;
@@ -764,11 +764,10 @@ export default function GamesHubPage() {
               <span>Pick a game</span>
             </h2>
             <div
-              className="games-hub-games-grid"
+              className="mgk-grid games-hub-games-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
-                gap: 24,
               }}
             >
               <style>{`
@@ -1093,11 +1092,10 @@ export default function GamesHubPage() {
                 <span>Coming Soon</span>
               </h2>
               <div
-                className="games-hub-coming-grid"
+                className="mgk-grid games-hub-coming-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr",
-                  gap: 24,
                 }}
               >
                 <style>{`

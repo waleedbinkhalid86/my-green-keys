@@ -447,7 +447,8 @@ export default function SignupPage() {
         </Link>
       </div>
 
-      <div className="flex w-full flex-col bg-white px-4 py-10 sm:px-6 lg:w-1/2 lg:overflow-y-auto lg:px-8">
+      <div className="flex w-full flex-col bg-white lg:w-1/2 lg:overflow-y-auto">
+        <div className="mgk-container mgk-section-tight">
         <div className="mx-auto w-full max-w-xl">
         <div className="mb-6 flex justify-center lg:justify-start">
           <Leaf className="h-10 w-10 text-green-500" strokeWidth={2} aria-hidden />
@@ -879,6 +880,7 @@ export default function SignupPage() {
         )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

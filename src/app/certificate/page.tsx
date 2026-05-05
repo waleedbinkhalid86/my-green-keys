@@ -146,57 +146,58 @@ export default function CertificatePage() {
 
   return (
     <div
-      className="min-h-screen px-4 py-6 sm:px-6 lg:px-8"
+      className="min-h-screen"
       style={{ background: "linear-gradient(180deg,#162d1e 0%, #2d6a4f 55%, #81c99e 100%)" }}
     >
-      <div className="no-print" style={{ maxWidth: 980, margin: "0 auto 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900, letterSpacing: "0.12em" }}>
-          MY GREEN KEYS • CERTIFICATE
+      <div className="mgk-container mgk-section-tight">
+        <div className="no-print" style={{ maxWidth: 980, margin: "0 auto 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900, letterSpacing: "0.12em" }}>
+            MY GREEN KEYS • CERTIFICATE
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.15)", color: "white", fontWeight: 900, cursor: "pointer" }}
+            >
+              Download / Print PDF
+            </button>
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/lesson-map")}
+              style={{ padding: "10px 12px", borderRadius: 12, border: "none", background: "#4CAF50", color: "white", fontWeight: 950, cursor: "pointer" }}
+            >
+              Back to Lesson Map
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.15)", color: "white", fontWeight: 900, cursor: "pointer" }}
-          >
-            Download / Print PDF
-          </button>
-          <button
-            type="button"
-            onClick={() => (window.location.href = "/lesson-map")}
-            style={{ padding: "10px 12px", borderRadius: 12, border: "none", background: "#4CAF50", color: "white", fontWeight: 950, cursor: "pointer" }}
-          >
-            Back to Lesson Map
-          </button>
-        </div>
-      </div>
 
-      {loading ? (
-        <div style={{ maxWidth: 980, margin: "0 auto", color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>Loading certificate...</div>
-      ) : error ? (
-        <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ fontWeight: 950, color: "#c62828" }}>{error}</div>
-        </div>
-      ) : !row ? (
-        <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
-          <div style={{ fontWeight: 950, color: "#2c3e50" }}>No certificate found yet.</div>
-          <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700 }}>Complete lessons to earn certificates at 10, 25, 50, and 100.</div>
-        </div>
-      ) : (
-        <div
-          id="certificate"
-          style={{
-            maxWidth: 980,
-            margin: "0 auto",
-            background: "white",
-            borderRadius: 24,
-            padding: 26,
-            border: "10px solid rgba(76,175,80,0.22)",
-            boxShadow: "0 24px 90px rgba(0,0,0,0.25)",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
+        {loading ? (
+          <div style={{ maxWidth: 980, margin: "0 auto", color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>Loading certificate...</div>
+        ) : error ? (
+          <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
+            <div style={{ fontWeight: 950, color: "#c62828" }}>{error}</div>
+          </div>
+        ) : !row ? (
+          <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
+            <div style={{ fontWeight: 950, color: "#2c3e50" }}>No certificate found yet.</div>
+            <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700 }}>Complete lessons to earn certificates at 10, 25, 50, and 100.</div>
+          </div>
+        ) : (
+          <div
+            id="certificate"
+            style={{
+              maxWidth: 980,
+              margin: "0 auto",
+              background: "white",
+              borderRadius: 24,
+              padding: 26,
+              border: "10px solid rgba(76,175,80,0.22)",
+              boxShadow: "0 24px 90px rgba(0,0,0,0.25)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
           {/* Decorative leaves */}
           <div aria-hidden style={{ position: "absolute", inset: -40, opacity: 0.18, pointerEvents: "none", backgroundImage: "radial-gradient(circle at 20% 20%, #4CAF50 0, transparent 45%), radial-gradient(circle at 85% 30%, #2d6a4f 0, transparent 48%), radial-gradient(circle at 70% 85%, #FFEB3B 0, transparent 52%)" }} />
 
@@ -346,6 +347,7 @@ export default function CertificatePage() {
           @page { margin: 12mm; }
         }
       `}</style>
+      </div>
     </div>
   );
 }

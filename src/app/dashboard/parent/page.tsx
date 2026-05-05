@@ -738,7 +738,7 @@ export default function ParentDashboard() {
               {addChildError}
             </div>
           ) : null}
-          <div className="grid gap-4">
+          <div className="mgk-grid">
             <div className="space-y-2">
               <Label htmlFor="child-name">Child name</Label>
               <Input
@@ -760,7 +760,7 @@ export default function ParentDashboard() {
               />
               <p className="text-xs text-muted-foreground">Used for linking and identifying the child.</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="mgk-grid sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="child-age">Age</Label>
                 <Input
@@ -942,7 +942,7 @@ export default function ParentDashboard() {
         ) : null}
 
         {childrenLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="mgk-grid sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="mgk-skeleton h-28 rounded-xl" />
             ))}
@@ -968,7 +968,7 @@ export default function ParentDashboard() {
 
         <section id="parent-overview" className="scroll-mt-28">
           <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="mgk-grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <div className={statCardClass}>
               <BookOpen className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
               <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
@@ -1139,7 +1139,7 @@ export default function ParentDashboard() {
               )}
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="mgk-grid lg:grid-cols-3">
               <Card className="lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="font-heading text-base">WPM (last 7 days)</CardTitle>
@@ -1235,7 +1235,7 @@ export default function ParentDashboard() {
                 />
                 <p className="text-xs text-muted-foreground">{lessonText.length}/500 characters</p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="mgk-grid sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Difficulty</Label>
                   <select
@@ -1367,7 +1367,7 @@ export default function ParentDashboard() {
           ) : null}
 
           {ecoLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mgk-grid sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="mgk-skeleton h-72 rounded-xl" />
               ))}
@@ -1385,7 +1385,7 @@ export default function ParentDashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mgk-grid sm:grid-cols-2 lg:grid-cols-3">
               {pendingPhotos.map((photo) => (
                 <Card key={photo.id} className="overflow-hidden">
                   {photo.photoUrl ? (
@@ -1476,7 +1476,7 @@ export default function ParentDashboard() {
           </h2>
           <Card>
             <CardContent className="space-y-6 pt-6">
-              <div className="grid gap-8 lg:grid-cols-2">
+              <div className="mgk-grid lg:grid-cols-2">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Current plan</p>
                   <p className="font-heading text-xl font-bold">Family plan</p>

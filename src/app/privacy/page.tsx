@@ -10,7 +10,7 @@ const UPDATED = "April 30, 2026";
 const CONTACT_EMAIL = "waleedbinkhalid86@gmail.com";
 
 function Container({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-[900px] px-4 sm:px-6 lg:px-8">{children}</div>;
+  return <div className="mgk-container max-w-[900px]">{children}</div>;
 }
 
 function H2({ children }: { children: React.ReactNode }) {
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
     <div className="bg-[var(--bg-alt)]">
       <div className="bg-[var(--navy)]">
         <Container>
-          <div className="py-14">
+          <div className="mgk-section-tight">
             <p className="text-[12px] font-extrabold tracking-[0.18em] text-[var(--yellow)]">
               PRIVACY
             </p>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
       </div>
 
       <Container>
-        <div className="py-12">
+        <div className="mgk-section-tight">
           <div className="mgk-card p-6 md:p-8">
             <H2>1) Who we are</H2>
             <P>

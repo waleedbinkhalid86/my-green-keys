@@ -162,7 +162,7 @@ export default function AdminPanel() {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className="ml-60 flex-1">
-        <div className="p-8">
+        <div className="mgk-container mgk-section-tight">
           {/* DASHBOARD SECTION */}
           {activeSection === 'dashboard' && (
             <div>
@@ -172,7 +172,7 @@ export default function AdminPanel() {
               </div>
 
               {/* Metric Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              <div className="mgk-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-10">
                 {[
                   { icon: '👥', label: 'Total users', value: '1,247', change: '↑12%' },
                   { icon: '💰', label: 'Monthly revenue', value: '$8,432', change: '↑8%' },
@@ -195,7 +195,7 @@ export default function AdminPanel() {
               </div>
 
               {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+              <div className="mgk-grid grid-cols-1 lg:grid-cols-2 mb-10">
                 {/* Revenue Chart */}
                 <div
                   className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
@@ -241,7 +241,7 @@ export default function AdminPanel() {
               </div>
 
               {/* Recent Signups & Transactions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="mgk-grid grid-cols-1 lg:grid-cols-2">
                 {/* Recent Signups */}
                 <div
                   className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
