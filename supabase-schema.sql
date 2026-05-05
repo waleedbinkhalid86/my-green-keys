@@ -363,3 +363,14 @@ CREATE POLICY "Teachers can view enrolled student xp log"
       AND c.teacher_id = auth.uid()
     )
   );
+
+DROP POLICY IF EXISTS "Parents can insert children eco photos" ON eco_photos;
+CREATE POLICY "Parents can insert children eco photos"
+  ON eco_photos FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM children
+      WHERE children.id = eco_photos.student_id
+      AND children.parent_id = auth.uid()
+    )
+  );
