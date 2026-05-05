@@ -543,7 +543,7 @@ export default function SortRecyclingPage() {
         ))}
       </div>
 
-      <div style={{ position: "relative", zIndex: 2, maxWidth: 920, margin: "0 auto", padding: "12px 14px 100px" }}>
+      <div className="mgk-container mgk-section-tight max-w-[920px]" style={{ position: "relative", zIndex: 2 }}>
         <header style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: "0.14em", opacity: 0.75 }}>ECO HERO CITY</div>

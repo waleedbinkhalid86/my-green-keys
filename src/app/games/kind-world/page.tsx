@@ -683,7 +683,7 @@ export default function KindWorldGamePage() {
       )}
 
       <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mgk-container flex max-w-[896px] items-center justify-between gap-4 py-3">
           <div className="flex items-center gap-1.5" aria-label="Lives remaining">
             {hearts.map((filled, i) => (
               <Heart
@@ -716,7 +716,7 @@ export default function KindWorldGamePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 pt-10">
+      <main className="mgk-container max-w-[672px] pt-10">
         {currentScenario && (
           <div className="relative rounded-xl bg-white p-12 shadow-2xl">
             {feedback === "correct" && (

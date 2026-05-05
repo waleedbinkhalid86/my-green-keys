@@ -173,22 +173,41 @@ export default function CertificatePage() {
         </div>
 
         {loading ? (
-          <div style={{ maxWidth: 980, margin: "0 auto", color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>Loading certificate...</div>
+          <div className="mgk-container max-w-[980px]" style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>
+            Loading certificate...
+          </div>
         ) : error ? (
-          <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <div
+            className="mgk-container max-w-[980px]"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: 16,
+              padding: 16,
+              border: "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
             <div style={{ fontWeight: 950, color: "#c62828" }}>{error}</div>
           </div>
         ) : !row ? (
-          <div style={{ maxWidth: 980, margin: "0 auto", background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <div
+            className="mgk-container max-w-[980px]"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: 16,
+              padding: 16,
+              border: "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
             <div style={{ fontWeight: 950, color: "#2c3e50" }}>No certificate found yet.</div>
-            <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700 }}>Complete lessons to earn certificates at 10, 25, 50, and 100.</div>
+            <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700 }}>
+              Complete lessons to earn certificates at 10, 25, 50, and 100.
+            </div>
           </div>
         ) : (
           <div
             id="certificate"
+            className="mgk-container max-w-[980px]"
             style={{
-              maxWidth: 980,
-              margin: "0 auto",
               background: "white",
               borderRadius: 24,
               padding: 26,

@@ -151,7 +151,7 @@ export default function RangerPage() {
       </header>
 
       <main className="mgk-section-tight">
-        <div className="mgk-container pb-16">
+        <div className="mgk-container">
         {loading ? (
           <div className="space-y-8">
             <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">

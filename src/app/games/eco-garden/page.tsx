@@ -914,39 +914,36 @@ export default function EcoGardenPage() {
         style={{
           position: "relative",
           zIndex: 5,
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 10,
+          padding: 0,
           background: "rgba(255,255,255,0.35)",
           backdropFilter: "blur(8px)",
           borderBottom: "1px solid rgba(0,0,0,0.08)",
         }}
       >
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", opacity: 0.75 }}>
-            MY ECO GARDEN
+        <div className="mgk-container flex flex-wrap items-center justify-between gap-3 py-4">
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", opacity: 0.75 }}>
+              MY ECO GARDEN
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 950, marginTop: 4 }}>
+              {studentName}&apos;s Garden 🌱
+            </h1>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 950, marginTop: 4 }}>
-            {studentName}&apos;s Garden 🌱
-          </h1>
+          <Link
+            href="/games"
+            style={{
+              padding: "8px 14px",
+              borderRadius: 999,
+              border: "1px solid rgba(0,0,0,0.15)",
+              color: "#1b2e1b",
+              fontWeight: 800,
+              textDecoration: "none",
+              background: "rgba(255,255,255,0.5)",
+            }}
+          >
+            ← Games
+          </Link>
         </div>
-        <Link
-          href="/games"
-          style={{
-            padding: "8px 14px",
-            borderRadius: 999,
-            border: "1px solid rgba(0,0,0,0.15)",
-            color: "#1b2e1b",
-            fontWeight: 800,
-            textDecoration: "none",
-            background: "rgba(255,255,255,0.5)",
-          }}
-        >
-          ← Games
-        </Link>
       </header>
 
       {trialState?.status === "active" && bootDone ? <TrialBanner state={trialState} /> : null}
@@ -1223,7 +1220,7 @@ export default function EcoGardenPage() {
           ) : null}
 
           {phase === "results" ? (
-        <div style={{ padding: "20px 18px 48px", maxWidth: 560, margin: "0 auto" }}>
+        <div className="mgk-container mgk-section-tight max-w-[560px]">
           <h2 style={{ fontSize: 24, fontWeight: 950 }}>Garden session complete</h2>
           <div
             style={{

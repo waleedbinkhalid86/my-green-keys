@@ -166,7 +166,7 @@ const TRUST_SIGNALS = [
 function PricingNav() {
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mgk-container flex items-center justify-between py-4">
         <Link href="/" className="flex items-center gap-3 no-underline">
           <div className="flex size-9 items-center justify-center rounded-md bg-gray-900 text-white">
             <LeafIconCustom />{" "}
@@ -446,19 +446,21 @@ function PricingPageContent() {
 
       {/* Hero */}
       <section className="mgk-section text-center">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-4 inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium uppercase tracking-wider text-green-700">
-            Pricing
+        <div className="mgk-container">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-4 inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium uppercase tracking-wider text-green-700">
+              Pricing
+            </div>
+            <h1 className="text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl">
+              Pricing that fits every learner
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-base text-gray-600">
+              Start free. Upgrade when ready. Cancel anytime.
+            </p>
           </div>
-          <h1 className="text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl">
-            Pricing that fits every learner
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-base text-gray-600">
-            Start free. Upgrade when ready. Cancel anytime.
-          </p>
-        </div>
-        <div className="mt-12 mb-12">
-          <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
+          <div className="mt-12">
+            <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
+          </div>
         </div>
       </section>
 
@@ -713,8 +715,8 @@ function PricingPageContent() {
           </section>
 
           {testimonials.length > 0 ? (
-            <section className="py-12">
-              <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <section className="mgk-section-tight">
+              <div className="mgk-container mx-auto max-w-4xl">
                 <h3 className="mb-8 text-center text-2xl font-bold text-gray-900">What educators are saying</h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {testimonials.slice(0, 2).map((t) => (

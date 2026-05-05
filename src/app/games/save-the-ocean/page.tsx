@@ -633,36 +633,33 @@ export default function SaveTheOceanPage() {
         style={{
           position: "relative",
           zIndex: 5,
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 10,
+          padding: 0,
           borderBottom: "1px solid rgba(255,255,255,0.12)",
           background: "rgba(2,15,35,0.65)",
           backdropFilter: "blur(10px)",
         }}
       >
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", opacity: 0.85 }}>
-            OPERATION BLUE PLANET
+        <div className="mgk-container flex flex-wrap items-center justify-between gap-3 py-4">
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", opacity: 0.85 }}>
+              OPERATION BLUE PLANET
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 950, marginTop: 4 }}>Save the Ocean 🌊</h1>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 950, marginTop: 4 }}>Save the Ocean 🌊</h1>
+          <Link
+            href="/games"
+            style={{
+              padding: "8px 14px",
+              borderRadius: 999,
+              border: "1px solid rgba(255,255,255,0.35)",
+              color: "#fff",
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            ← Games
+          </Link>
         </div>
-        <Link
-          href="/games"
-          style={{
-            padding: "8px 14px",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.35)",
-            color: "#fff",
-            fontWeight: 800,
-            textDecoration: "none",
-          }}
-        >
-          ← Games
-        </Link>
       </header>
 
       {phase === "load" && (
@@ -1074,7 +1071,7 @@ export default function SaveTheOceanPage() {
       )}
 
       {phase === "results" && (
-        <div style={{ position: "relative", zIndex: 4, padding: "20px 18px 40px", maxWidth: 560, margin: "0 auto" }}>
+        <div className="mgk-container mgk-section-tight max-w-[560px]" style={{ position: "relative", zIndex: 4 }}>
           <h2 style={{ fontSize: 24, fontWeight: 950 }}>Mission report</h2>
           <div
             style={{

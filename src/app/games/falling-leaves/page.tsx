@@ -660,7 +660,7 @@ export default function FallingLeavesPage() {
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 2, maxWidth: 960, margin: "0 auto", padding: "16px 16px 32px" }}>
+      <div className="mgk-container mgk-section-tight max-w-[960px]" style={{ position: "relative", zIndex: 2 }}>
         <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: "0.12em", opacity: 0.8 }}>ENCHANTED FOREST</div>

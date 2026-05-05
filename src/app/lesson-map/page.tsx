@@ -182,8 +182,8 @@ export default function LessonMapPage() {
   const progressPct = clamp((completedCount / 100) * 100, 0, 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 pb-32">
-      <div className="mgk-container pt-7">
+    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100">
+      <div className="mgk-container mgk-section-tight">
         <div
           className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]"
         >

@@ -524,7 +524,7 @@ export default function StudentReportPage() {
         </div>
       </div>
 
-      <div className="mx-auto min-h-[calc(100vh-80px)] max-w-[210mm] px-4 py-6 print:max-w-none print:px-0 print:py-0">
+      <div className="mgk-container min-h-[calc(100vh-80px)] max-w-[210mm] py-6 print:max-w-none print:px-0 print:py-0">
         {loading ? (
           <p className="text-center font-medium text-muted-foreground">Loading report…</p>
         ) : error ? (

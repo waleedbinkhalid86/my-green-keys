@@ -214,13 +214,13 @@ export default function StreakPage() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
         <div className="mgk-container mgk-section">
           <div className="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
-          <p className="text-lg font-semibold text-gray-800">Sign in to view your streak.</p>
-          <Link
-            href="/login"
-            className="mt-6 inline-block rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
-          >
-            Go to login
-          </Link>
+            <p className="text-lg font-semibold text-gray-800">Sign in to view your streak.</p>
+            <Link
+              href="/login"
+              className="mt-6 inline-block rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
+            >
+              Go to login
+            </Link>
           </div>
         </div>
       </div>
@@ -232,14 +232,14 @@ export default function StreakPage() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
         <div className="mgk-container mgk-section">
           <div className="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
-          <p className="text-lg font-semibold text-gray-800">Couldn&apos;t load streak data.</p>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="mt-6 rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
-          >
-            Retry
-          </button>
+            <p className="text-lg font-semibold text-gray-800">Couldn&apos;t load streak data.</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-6 rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -262,23 +262,23 @@ export default function StreakPage() {
 
         <div className="mgk-container mt-8">
           <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-          <div className="flex justify-center">
-            <StreakCounter streak={currentStreak} variant="large" />
-          </div>
-          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-gray-900 tabular-nums">{currentStreak}</p>
-              <p className="mt-1 text-sm text-gray-500">current streak</p>
+            <div className="flex justify-center">
+              <StreakCounter streak={currentStreak} variant="large" />
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-gray-900 tabular-nums">{longestStreak}</p>
-              <p className="mt-1 text-sm text-gray-500">longest streak</p>
+            <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-gray-900 tabular-nums">{currentStreak}</p>
+                <p className="mt-1 text-sm text-gray-500">current streak</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-gray-900 tabular-nums">{longestStreak}</p>
+                <p className="mt-1 text-sm text-gray-500">longest streak</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-gray-900 tabular-nums">{freezes}</p>
+                <p className="mt-1 text-sm text-gray-500">freezes available</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-gray-900 tabular-nums">{freezes}</p>
-              <p className="mt-1 text-sm text-gray-500">freezes available</p>
-            </div>
-          </div>
           </div>
         </div>
       </header>
@@ -286,57 +286,57 @@ export default function StreakPage() {
       <section className="mgk-section-tight">
         <div className="mgk-container">
           <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-          <h2 className="mb-2 text-xl font-bold text-gray-900">Last 90 days</h2>
-          <p className="text-sm text-gray-500">Each square is a day. Brighter = more activity.</p>
+            <h2 className="mb-2 text-xl font-bold text-gray-900">Last 90 days</h2>
+            <p className="text-sm text-gray-500">Each square is a day. Brighter = more activity.</p>
 
-          <div className="mt-6 overflow-x-auto pb-2">
-          <div
-            className="inline-grid gap-1"
-            style={{
-              gridTemplateColumns: `auto repeat(13, 14px)`,
-            }}
-          >
-            <div />
-            {monthLabels.map((lab, i) => (
-              <div key={`mh-${i}`} className="text-center text-[10px] font-semibold leading-none text-gray-500">
-                {lab}
+            <div className="mt-6 overflow-x-auto pb-2">
+              <div
+                className="inline-grid gap-1"
+                style={{
+                  gridTemplateColumns: `auto repeat(13, 14px)`,
+                }}
+              >
+                <div />
+                {monthLabels.map((lab, i) => (
+                  <div key={`mh-${i}`} className="text-center text-[10px] font-semibold leading-none text-gray-500">
+                    {lab}
+                  </div>
+                ))}
+
+                {ROW_LABELS.map((lab, rowIdx) => (
+                  <div key={`row-${rowIdx}`} className="contents">
+                    <div className="flex items-center justify-end pr-1 text-[10px] leading-none text-gray-500">
+                      {lab ?? ""}
+                    </div>
+                    {columns.map((col, cIdx) => {
+                      const date = col[rowIdx] ?? null;
+                      if (!date) {
+                        return <div key={`e-${cIdx}-${rowIdx}`} className="h-[14px] w-[14px]" />;
+                      }
+                      const inRange = date >= startDate90 && date <= today;
+                      const types = inRange ? historyMap.get(date) : undefined;
+                      const isToday = date === today;
+                      const title = inRange
+                        ? `${formatTooltipDate(date)} — ${activityDescription(types)}`
+                        : `${formatTooltipDate(date)} — outside range`;
+
+                      return (
+                        <div
+                          key={`${date}-${cIdx}-${rowIdx}`}
+                          title={title}
+                          className={cn(
+                            "h-[14px] w-[14px] shrink-0",
+                            inRange
+                              ? cellClasses(types, isToday)
+                              : cn("rounded-sm bg-gray-50", isToday && "ring-2 ring-yellow-400 ring-offset-1"),
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
-            ))}
-
-            {ROW_LABELS.map((lab, rowIdx) => (
-              <div key={`row-${rowIdx}`} className="contents">
-                <div className="flex items-center justify-end pr-1 text-[10px] leading-none text-gray-500">
-                  {lab ?? ""}
-                </div>
-                {columns.map((col, cIdx) => {
-                  const date = col[rowIdx] ?? null;
-                  if (!date) {
-                    return <div key={`e-${cIdx}-${rowIdx}`} className="h-[14px] w-[14px]" />;
-                  }
-                  const inRange = date >= startDate90 && date <= today;
-                  const types = inRange ? historyMap.get(date) : undefined;
-                  const isToday = date === today;
-                  const title = inRange
-                    ? `${formatTooltipDate(date)} — ${activityDescription(types)}`
-                    : `${formatTooltipDate(date)} — outside range`;
-
-                  return (
-                    <div
-                      key={`${date}-${cIdx}-${rowIdx}`}
-                      title={title}
-                      className={cn(
-                        "h-[14px] w-[14px] shrink-0",
-                        inRange
-                          ? cellClasses(types, isToday)
-                          : cn("rounded-sm bg-gray-50", isToday && "ring-2 ring-yellow-400 ring-offset-1"),
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
           </div>
         </div>
       </section>
@@ -344,28 +344,28 @@ export default function StreakPage() {
       <section className="mgk-section-tight">
         <div className="mgk-container">
           <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
-        <h2 className="mb-2 text-xl font-bold text-gray-900">Your milestones</h2>
-        {unlockedMilestones.length === 0 ? (
-          <p className="mt-6 flex items-center gap-2 text-gray-600">
-            <Flame className="h-5 w-5 shrink-0 text-orange-500" aria-hidden />
-            Hit 3 days to earn your first milestone!
-          </p>
-        ) : (
-          <ul className="mt-6 space-y-3">
-            {unlockedMilestones.map((m) => (
-              <li
-                key={m.day}
-                className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/80 px-4 py-3"
-              >
-                <span className="flex items-center gap-2 font-semibold text-gray-900">
-                  <Award className="h-5 w-5 text-amber-500" aria-hidden />
-                  {m.badge ?? m.title}
-                </span>
-                <span className="text-sm text-gray-500">{m.day}-day milestone</span>
-              </li>
-            ))}
-          </ul>
-        )}
+            <h2 className="mb-2 text-xl font-bold text-gray-900">Your milestones</h2>
+            {unlockedMilestones.length === 0 ? (
+              <p className="mt-6 flex items-center gap-2 text-gray-600">
+                <Flame className="h-5 w-5 shrink-0 text-orange-500" aria-hidden />
+                Hit 3 days to earn your first milestone!
+              </p>
+            ) : (
+              <ul className="mt-6 space-y-3">
+                {unlockedMilestones.map((m) => (
+                  <li
+                    key={m.day}
+                    className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/80 px-4 py-3"
+                  >
+                    <span className="flex items-center gap-2 font-semibold text-gray-900">
+                      <Award className="h-5 w-5 text-amber-500" aria-hidden />
+                      {m.badge ?? m.title}
+                    </span>
+                    <span className="text-sm text-gray-500">{m.day}-day milestone</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>
@@ -373,20 +373,20 @@ export default function StreakPage() {
       <section className="mgk-section-tight">
         <div className="mgk-container">
           <div className="mx-auto max-w-3xl rounded-lg bg-blue-50 p-6">
-        <h2 className="mb-2 text-lg font-bold text-gray-900">How streaks work</h2>
-        <ul className="mt-4 space-y-3 text-gray-800">
-          {[
-            "Type one lesson OR play one game each day",
-            "Miss a day? Use a streak freeze to keep going (you have 2 to start)",
-            "Hit milestones at 3, 7, 14, 30, 60, and 100 days",
-            "Earn eco points and badges as you go",
-          ].map((line) => (
-            <li key={line} className="flex gap-2 text-sm font-medium leading-relaxed">
-              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
+            <h2 className="mb-2 text-lg font-bold text-gray-900">How streaks work</h2>
+            <ul className="mt-4 space-y-3 text-gray-800">
+              {[
+                "Type one lesson OR play one game each day",
+                "Miss a day? Use a streak freeze to keep going (you have 2 to start)",
+                "Hit milestones at 3, 7, 14, 30, 60, and 100 days",
+                "Earn eco points and badges as you go",
+              ].map((line) => (
+                <li key={line} className="flex gap-2 text-sm font-medium leading-relaxed">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>

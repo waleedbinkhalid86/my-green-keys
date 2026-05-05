@@ -244,7 +244,7 @@ export default function LessonPhaseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 pb-24 font-sans">
+    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 font-sans">
       <section className="relative h-64 w-full md:h-80">
         <Image
           src={meta.image}
@@ -304,7 +304,7 @@ export default function LessonPhaseDetailPage() {
 
       <section className="mgk-section">
         <div className="mgk-container">
-          <h2 className="mb-10 text-2xl font-bold text-gray-900">All Lessons</h2>
+          <h2 className="mb-8 text-2xl font-bold text-gray-900">All Lessons</h2>
 
           {phaseLessons.length === 0 ? (
             <p className="text-center font-semibold text-gray-600">Lessons coming soon for this phase</p>

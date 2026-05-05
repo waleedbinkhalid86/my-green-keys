@@ -487,11 +487,11 @@ body {
   }
 
   .mgk-section {
-    @apply py-16 sm:py-20;
+    @apply py-16 md:py-20 lg:py-24;
   }
 
   .mgk-section-tight {
-    @apply py-12 sm:py-16;
+    @apply py-12 md:py-16;
   }
 
   .mgk-card {

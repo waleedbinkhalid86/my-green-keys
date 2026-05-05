@@ -2533,7 +2533,7 @@ export default function LessonPage() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="lesson-main-pad" style={{ maxWidth: 860, margin: "0 auto", padding: "8px 8px 0" }}>
+      <div className="mgk-container max-w-[860px] px-2 pt-2">
         {/* TYPING AREA */}
         <div
           className="md:pr-[232px]"

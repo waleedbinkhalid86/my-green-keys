@@ -601,7 +601,7 @@ export default function HomePage() {
       </section>
 
       {/* GAMES */}
-      <section id="games-preview" style={{ background: DARK, padding: "88px 0" }}>
+      <section id="games-preview" className="mgk-section" style={{ background: DARK }}>
         <Inner>
           <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
             Learning through play
@@ -711,7 +711,7 @@ export default function HomePage() {
       </section>
 
       {/* PRICING PREVIEW */}
-      <section style={{ background: BG, padding: "88px 0" }}>
+      <section className="mgk-section" style={{ background: BG }}>
         <Inner>
           <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 40 }}>
             Simple pricing for every family
@@ -746,9 +746,9 @@ export default function HomePage() {
 
       {/* FINAL CTA */}
       <section
+        className="mgk-section"
         style={{
           background: "linear-gradient(135deg, #1B5E20 0%, #2ECC71 55%, #58D68D 100%)",
-          padding: "88px 0",
           textAlign: "center",
         }}
       >
