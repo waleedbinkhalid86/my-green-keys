@@ -8,6 +8,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Clock,
   FileText,
   Flame,
   Globe,
@@ -20,6 +21,7 @@ import {
   Shield,
   Sparkles,
   Target,
+  TrendingUp,
   UserRound,
   Users,
   Zap,
@@ -77,7 +79,9 @@ const LeafIcon = () => (
 const selectClassName =
   "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
-const statCardClass = "mgk-card p-6";
+const compactSurfaceClass = "rounded-xl bg-white shadow-sm ring-1 ring-black/5";
+const compactStatCardClass = cn(compactSurfaceClass, "p-4 h-32");
+const compactStatIconWrapClass = "flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-700";
 
 const SIDEBAR_LINKS = [
   { href: "#parent-overview", label: "Overview", Icon: Home },
@@ -208,7 +212,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
   return (
     <div
       className={cn(
-        "rounded-xl p-6 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg border-2 overflow-hidden",
+        "rounded-xl p-4 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md border-2 overflow-hidden",
         tier,
       )}
     >
@@ -233,7 +237,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
           />
         </div>
       </div>
-      <p className={cn("mt-3 text-3xl font-bold tabular-nums leading-none", isLegendary && "text-white")}>
+      <p className={cn("mt-2 text-2xl font-bold tabular-nums leading-none", isLegendary && "text-white")}>
         {streak}
       </p>
       <p className={cn("mt-2 text-sm font-semibold", isLegendary ? "text-white/95" : "text-gray-800")}>
@@ -259,7 +263,7 @@ function ParentOverviewRangerCard({ child }: { child: Child }) {
   const isMax = prog.nextRank === null;
 
   return (
-    <div className={statCardClass}>
+    <div className={cn(compactSurfaceClass, "p-4")}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-gray-700">Planet Ranger</p>
         <Link
@@ -274,13 +278,13 @@ function ParentOverviewRangerCard({ child }: { child: Child }) {
         <RankBadge xp={xp} rank={child.ranger_rank} variant="full" />
       </div>
       {isMax ? (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-purple-600">
+        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-purple-600">
           <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
           Maxed out!
         </p>
       ) : (
         <>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-gray-200">
+          <div className="mt-3 h-1.5 w-full rounded-full bg-gray-200">
             <div
               className={cn("h-full rounded-full transition-all", fill)}
               style={{ width: `${prog.progressPercent}%` }}
@@ -720,7 +724,7 @@ export default function ParentDashboard() {
   const wpmMax = Math.max(...wpmSeries, 1);
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans">
       <Dialog
         open={showAddChildModal}
         onOpenChange={(open) => {
@@ -850,7 +854,13 @@ export default function ParentDashboard() {
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1">
+        <div
+          className={cn(
+            "min-w-0 flex-1",
+            // Dot-grid background on content area (Linear-like)
+            "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
+          )}
+        >
           <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -968,52 +978,66 @@ export default function ParentDashboard() {
 
         <section id="parent-overview" className="scroll-mt-28">
           <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
-          <div className="mgk-grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            <div className={statCardClass}>
-              <BookOpen className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
-              <p className="mt-3 text-sm font-normal text-[#6B7280]">Total lessons completed</p>
-              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className={compactStatCardClass}>
+              <div className={compactStatIconWrapClass}>
+                <BookOpen className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+              </div>
+              <p className="mt-3 text-xs text-gray-500">Lessons</p>
+              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">
                 {selectedChild?.lessonsCompleted ?? 0}
               </p>
+              <p className="mt-2 text-xs text-gray-400">This child</p>
             </div>
-            <div className={statCardClass}>
-              <Zap className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
-              <p className="mt-3 text-sm font-normal text-[#6B7280]">Average WPM</p>
-              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#1A2F23]">
-                {selectedChild?.avgWpm ?? 0}
-              </p>
+
+            <div className={compactStatCardClass}>
+              <div className={compactStatIconWrapClass}>
+                <Zap className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+              </div>
+              <p className="mt-3 text-xs text-gray-500">Avg WPM</p>
+              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{selectedChild?.avgWpm ?? 0}</p>
+              <p className="mt-2 text-xs text-gray-400">Last 7 days</p>
             </div>
-            <div className={statCardClass}>
-              <Target className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
-              <p className="mt-3 text-sm font-normal text-[#6B7280]">Accuracy</p>
+
+            <div className={compactStatCardClass}>
+              <div className={compactStatIconWrapClass}>
+                <Target className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+              </div>
+              <p className="mt-3 text-xs text-gray-500">Accuracy</p>
               <p
-                className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none"
-                style={{ color: (selectedChild?.accuracy ?? 0) >= 90 ? "#2ECC71" : "#D97706" }}
+                className="mt-1 text-2xl font-bold leading-none"
+                style={{ color: (selectedChild?.accuracy ?? 0) >= 90 ? "#16a34a" : "#d97706" }}
               >
                 {selectedChild?.accuracy ?? 0}%
               </p>
+              <p className="mt-2 text-xs text-gray-400">Recent sessions</p>
             </div>
-            <div className={statCardClass}>
-              <Leaf className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
-              <p className="mt-3 text-sm font-normal text-[#6B7280]">Eco Points</p>
-              <p className="mgk-stat-number mt-2 text-[36px] font-extrabold leading-none text-[#2ECC71]">
-                {selectedChild?.ecoPhotos ?? 0}
-              </p>
+
+            <div className={compactStatCardClass}>
+              <div className={compactStatIconWrapClass}>
+                <Leaf className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+              </div>
+              <p className="mt-3 text-xs text-gray-500">Eco</p>
+              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{selectedChild?.ecoPhotos ?? 0}</p>
+              <p className="mt-2 text-xs text-gray-400">Approvals</p>
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {selectedChild ? (
               <ParentOverviewStreakCard child={selectedChild} />
             ) : (
-              <div className={cn(statCardClass, "min-h-[140px]")} aria-hidden />
+              <div className={cn(compactSurfaceClass, "min-h-[140px]")} aria-hidden />
             )}
             {selectedChild ? (
               <ParentOverviewRangerCard child={selectedChild} />
             ) : (
-              <div className={cn(statCardClass, "min-h-[140px]")} aria-hidden />
+              <div className={cn(compactSurfaceClass, "min-h-[140px]")} aria-hidden />
             )}
           </div>
           <div
             className={cn(
-              "mt-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5",
+              "mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5",
               "flex flex-col gap-4 sm:flex-row sm:items-start"
             )}
           >
@@ -1439,31 +1463,33 @@ export default function ParentDashboard() {
         </section>
 
         <section id="parent-summary" className="scroll-mt-28 space-y-4">
-          <h2 className="font-heading text-[20px] font-bold text-foreground">This week&apos;s summary</h2>
+          <h2 className="font-heading text-[20px] font-bold text-foreground">This week</h2>
           <Card>
             <CardContent className="space-y-6 pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Metric</TableHead>
-                    <TableHead className="text-right">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[
-                    ["Lessons completed", "—"],
-                    ["Time spent", "—"],
-                    ["WPM improvement", "—"],
-                    ["Eco actions", "—"],
-                  ].map(([label, value]) => (
-                    <TableRow key={label}>
-                      <TableCell className="text-muted-foreground">{label}</TableCell>
-                      <TableCell className="text-right font-semibold text-primary">{value}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <Button type="button" variant="secondary">
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { Icon: BookOpen, label: "Lessons", value: "—" },
+                  { Icon: Clock, label: "Time", value: "—" },
+                  { Icon: TrendingUp, label: "WPM", value: "—" },
+                  { Icon: Sprout, label: "Eco", value: "—" },
+                ].map(({ Icon, label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white px-4 py-2"
+                  >
+                    <Icon className="h-4 w-4 text-gray-500" strokeWidth={2.25} aria-hidden />
+                    <span className="text-sm text-gray-600">{label}:</span>
+                    <span className="text-sm font-semibold text-gray-900">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit border-green-200 text-green-700 hover:bg-green-50"
+              >
                 Send report to email
               </Button>
             </CardContent>
@@ -1474,35 +1500,33 @@ export default function ParentDashboard() {
           <h2 className="font-heading text-[20px] font-bold text-foreground">
             Subscription &amp; billing
           </h2>
-          <Card>
-            <CardContent className="space-y-6 pt-6">
-              <div className="mgk-grid lg:grid-cols-2">
+          <Card className="rounded-xl border border-gray-100 bg-white">
+            <CardContent className="space-y-6 p-6">
+              <div className="grid gap-6 lg:grid-cols-2">
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Current plan</p>
-                  <p className="font-heading text-xl font-bold">Family plan</p>
-                  <p className="text-lg font-semibold text-primary">$9.99/month</p>
-                  <p className="text-sm text-muted-foreground">Next billing date: May 25, 2026</p>
-                  <a href="#" className="text-sm font-semibold text-primary hover:underline">
-                    Manage subscription →
+                  <p className="text-xs text-gray-500">Current plan</p>
+                  <p className="font-heading text-lg font-bold text-gray-900">Family plan</p>
+                  <p className="text-sm font-semibold text-green-700">$9.99/month</p>
+                  <p className="text-sm text-gray-500">Next billing date: May 25, 2026</p>
+                  <a href="#" className="text-sm font-medium text-gray-900 hover:underline">
+                    Manage subscription
                   </a>
+                  <p className="pt-2 text-xs text-green-700">Your account is in good standing.</p>
                 </div>
+
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Promo code</p>
+                  <p className="text-xs text-gray-500">Promo code</p>
                   <div className="flex gap-2">
                     <Input
                       placeholder="Enter promo code…"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
                     />
-                    <Button type="button" variant="secondary">
+                    <Button type="button" variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
                       Apply
                     </Button>
                   </div>
                 </div>
-              </div>
-              <Separator />
-              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
-                Your account is in good standing. All family features are unlocked.
               </div>
             </CardContent>
           </Card>
