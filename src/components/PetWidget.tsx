@@ -39,6 +39,9 @@ export function PetWidget({
   const fillClass =
     state === "happy" ? "bg-emerald-500" : state === "neutral" ? "bg-amber-500" : "bg-orange-600";
 
+  const statusMessage =
+    state === "happy" ? "I'm so happy" : state === "neutral" ? "Doing okay" : "I miss you";
+
   const imageWrapperClass = [
     "relative mx-auto block",
     state === "sad" ? "opacity-90" : "",
@@ -50,33 +53,41 @@ export function PetWidget({
 
   const shell =
     placement === "sidebar"
-      ? `pointer-events-none relative z-10 w-full max-w-[208px] rounded-md border border-emerald-200/50 bg-white p-3 shadow-[0_8px_30px_rgba(26,47,35,0.12)] ${className}`
-      : `pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-md border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`;
+      ? `pointer-events-none relative z-10 flex w-full max-w-60 flex-col items-center p-6 text-center ${className}`
+      : `pointer-events-none absolute top-2 right-2 z-40 hidden w-full max-w-60 flex-col items-center p-6 text-center md:flex md:flex-col ${className}`;
 
   return (
     <div className={shell} aria-label={`${petName} wellness`}>
-      <div className={`text-center font-bold text-gray-800 ${placement === "sidebar" ? "mb-2 text-sm" : "mb-3 text-base"}`}>
-        {petName}
-      </div>
-      <div className={imageWrapperClass}>
-        <Image
-          src={src}
-          alt={`${petName}, your ${petType} companion`}
-          width={160}
-          height={160}
-          quality={90}
-          className={placement === "sidebar" ? "mx-auto block h-32 w-32 object-contain" : "mx-auto block h-40 w-40 object-contain"}
+      <div className="mb-3 text-center text-lg font-bold text-slate-800">{petName}</div>
+      <div className="relative mx-auto flex shrink-0 items-center justify-center">
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(46,204,113,0.12)_0%,transparent_68%)]"
+          aria-hidden
         />
+        <div className={imageWrapperClass}>
+          <Image
+            src={src}
+            alt={`${petName}, your ${petType} companion`}
+            width={200}
+            height={200}
+            quality={90}
+            className="mx-auto block h-[200px] w-[200px] object-contain"
+          />
+        </div>
       </div>
       <div
-        className={`h-2.5 w-full overflow-hidden rounded-md bg-gray-200 ${placement === "sidebar" ? "mt-3" : "mt-4"}`}
+        className="mx-auto mt-4 h-3 w-40 overflow-hidden rounded-full bg-slate-200/90"
         aria-label="Pet health"
       >
         <div
-          className={`h-full rounded-md transition-[width] duration-500 ease-out ${fillClass}`}
+          className={`h-full rounded-full transition-[width] duration-500 ease-out ${fillClass}`}
           style={{ width: `${h}%` }}
         />
       </div>
+      <div className="mt-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Health
+      </div>
+      <p className="mt-2 text-center text-sm font-medium text-slate-600">{statusMessage}</p>
     </div>
   );
 }

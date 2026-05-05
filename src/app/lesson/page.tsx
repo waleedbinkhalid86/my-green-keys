@@ -2642,7 +2642,7 @@ export default function LessonPage() {
         />
 
         <div
-          className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4"
+          className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4"
           style={{ marginBottom: 0 }}
         >
           <div className="min-w-0 flex-1">
@@ -2656,7 +2656,7 @@ export default function LessonPage() {
             />
           </div>
           {petType && petName.trim() ? (
-            <div className="hidden shrink-0 md:flex md:w-[220px] md:flex-col md:items-center md:justify-end">
+            <div className="hidden shrink-0 md:flex md:w-60 md:flex-col md:items-center md:justify-center">
               <PetWidget
                 petType={petType}
                 petName={petName}
