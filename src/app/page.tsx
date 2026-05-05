@@ -431,374 +431,360 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TRUST BADGES */}
-      <section className="mgk-section-tight" style={{ background: "#fff" }}>
-        <Inner>
-          <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
-            Privacy and safety built in
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
-            {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
-              <span
-                key={b}
-                style={{
-                  padding: "8px 18px",
-                  borderRadius: 50,
-                  background: BG,
-                  fontSize: "0.8rem",
-                  fontWeight: 800,
-                  color: "#475569",
-                  border: "1px solid #e2e8f0",
-                }}
-              >
-                {b}
-              </span>
-            ))}
-          </div>
-        </Inner>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="mgk-section" style={{ background: "#F8F9FA" }}>
-        <Inner>
-          <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 48 }}>
-            Learning that actually works
-          </h2>
-          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
-            {(
-              [
-                {
-                  step: 1,
-                  src: "/images/homepage/how-1-signup.jpg",
-                  alt: "Sign up for My Green Keys",
-                  title: "Sign Up Free",
-                  desc: "Create an account in 60 seconds and choose your virtual pet",
-                },
-                {
-                  step: 2,
-                  src: "/images/homepage/how-2-typing.jpg",
-                  alt: "Learn typing with eco-friendly lessons",
-                  title: "Start Typing",
-                  desc: "100 lessons from home row to advanced. Every lesson teaches the planet",
-                },
-                {
-                  step: 3,
-                  src: "/images/homepage/how-3-planet.jpg",
-                  alt: "Help the planet with eco rewards",
-                  title: "Help the Planet",
-                  desc: "Upload eco actions, earn points, and contribute to real tree planting",
-                },
-              ] as const
-            ).map((card) => (
-              <article
-                key={card.step}
-                className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
-                  <span
-                    className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
-                    style={{ background: PRIMARY }}
-                  >
-                    {card.step}
-                  </span>
-                  <Image
-                    src={card.src}
-                    alt={card.alt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    priority={false}
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex-1 p-6 pb-7">
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
-                  <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </Inner>
-      </section>
-
-      {/* FEATURES */}
-      <section id="features" className="bg-white mgk-section">
-        <Inner>
-          <h2
-            style={{
-              textAlign: "center",
-              fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
-              fontWeight: 900,
-              color: DARK,
-              maxWidth: 720,
-              margin: "0 auto 48px",
-              lineHeight: 1.2,
-            }}
-          >
-            Everything your child needs to become a typing champion
-          </h2>
-
-          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
-            {(
-              [
-                {
-                  tag: "Engaging Lessons",
-                  src: "/images/homepage/feature-lessons.jpg",
-                  alt: "Engaging typing lessons for kids",
-                  title: "100 lessons designed by experts",
-                  desc: "Progressive curriculum from home row to advanced typing. Every lesson teaches kids about the planet.",
-                  items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback", "4 learning modules"],
-                },
-                {
-                  tag: "Eco Rewards",
-                  src: "/images/homepage/feature-eco.jpg",
-                  alt: "Real eco rewards for kids",
-                  title: "The world's first eco rewards system",
-                  desc: "Kids upload photos of real eco actions like planting trees and watering plants. Parents approve. Kids earn points.",
-                  items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real-world impact"],
-                },
-                {
-                  tag: "Virtual Pet",
-                  src: "/images/homepage/feature-pet.jpg",
-                  alt: "Virtual pet companion for typing",
-                  title: "Meet your typing companion",
-                  desc: "Choose a Panda or Turtle. Type daily to keep them happy. Miss a day and they get sad — kids love coming back.",
-                  items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Kids keep coming back"],
-                },
-              ] as const
-            ).map((card) => (
-              <article
-                key={card.tag}
-                className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
-                  <Image
-                    src={card.src}
-                    alt={card.alt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex-1 p-6 pb-7">
-                  <span className="mb-3 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                    {card.tag}
-                  </span>
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
-                  <p className="mb-4 text-sm leading-relaxed text-gray-600">{card.desc}</p>
-                  <ul className="space-y-2">
-                    {card.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                        <span className="text-sm text-gray-700">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            ))}
-          </div>
-        </Inner>
-      </section>
-
-      {/* GAMES */}
-      <section id="games-preview" className="mgk-section" style={{ background: DARK }}>
-        <Inner>
-          <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
-            Learning through play
-          </h2>
-          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 40, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
-            5 eco-themed games that make typing practice addictive
-          </p>
-          <div
-            className="flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible"
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            {PREVIEW_GAMES.map((g) => (
-              <Link
-                key={g.name}
-                href="/games"
-                className="mgk-card-ds shrink-0"
-                style={{
-                  width: "min(280px, 85vw)",
-                  scrollSnapAlign: "start",
-                  overflow: "hidden",
-                  padding: 0,
-                  textDecoration: "none",
-                  color: "inherit",
-                }}
-              >
-                <div style={{ position: "relative", height: 160 }}>
-                  <Image src={g.img} alt="" fill sizes="280px" style={{ objectFit: "cover" }} />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)",
-                    }}
-                  />
-                </div>
-                <div style={{ padding: "18px 20px" }}>
-                  <p style={{ fontWeight: 900, color: DARK, margin: 0, fontSize: "1.05rem" }}>{g.name}</p>
-                  <p style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>{g.desc}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 36 }}>
-            <Link
-              href="/games"
-              className="btn-ghost"
-              style={{ display: "inline-flex", alignItems: "center", height: 52, padding: "0 32px" }}
-            >
-              Explore All Games
-            </Link>
-          </div>
-        </Inner>
-      </section>
-
-      {/* EARLY ACCESS */}
-      <section className="bg-white mgk-section">
-        <div className="mgk-container">
-          <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
-            Join us as an early adopter
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-base font-semibold text-gray-600">
-            Schools and families joining now get founding member benefits
-          </p>
-          <div className="mgk-grid mt-12 grid-cols-1 md:grid-cols-3">
-            <article className="rounded-md bg-white p-8 shadow-sm transition hover:shadow-lg">
-              <School className="mb-4 h-10 w-10 text-green-600" aria-hidden />
-              <h3 className="mb-2 text-xl font-bold text-gray-900">Free 30-day pilot for schools</h3>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Test My Green Keys with your classroom. Full access, no commitment.
-              </p>
-            </article>
-            <article className="rounded-md bg-white p-8 shadow-sm transition hover:shadow-lg">
-              <Users className="mb-4 h-10 w-10 text-green-600" aria-hidden />
-              <h3 className="mb-2 text-xl font-bold text-gray-900">Founding family pricing</h3>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Lock in 50% off the Family Plan for life when you sign up early.
-              </p>
-            </article>
-            <article className="rounded-md bg-white p-8 shadow-sm transition hover:shadow-lg">
-              <MessageSquare className="mb-4 h-10 w-10 text-green-600" aria-hidden />
-              <h3 className="mb-2 text-xl font-bold text-gray-900">Help shape the product</h3>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Direct feedback line to the founder. Your input shapes new features.
-              </p>
-            </article>
-          </div>
-          <div className="mt-12 text-center">
-            <h3 className="text-xl font-bold text-gray-900" style={{ color: DARK }}>
-              Be among the first
-            </h3>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-md bg-green-600 px-8 py-3 text-base font-bold text-white shadow-sm transition hover:bg-green-700"
-              >
-                Get Started Free
-              </Link>
-              <a
-                href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
-                className="inline-flex items-center justify-center rounded-md border-2 border-gray-900 bg-white px-8 py-3 text-base font-bold text-gray-900 transition hover:bg-gray-50"
-              >
-                Schools: Book a Demo
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING PREVIEW */}
-      <section className="mgk-section" style={{ background: BG }}>
-        <Inner>
-          <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 40 }}>
-            Simple pricing for every family
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, maxWidth: 800, margin: "0 auto" }}>
-            <div className="mgk-card-ds" style={{ padding: 32 }}>
-              <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
-              <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
-              <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
-              <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                Start free
-              </Link>
-            </div>
-            <div className="mgk-card-ds" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
-              <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
-              <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
-              </p>
-              <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
-              <Link href="/pricing" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                View Family Plan
-              </Link>
-            </div>
-          </div>
-          <p style={{ textAlign: "center", marginTop: 28 }}>
-            <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
-              See all plans →
-            </Link>
-          </p>
-        </Inner>
-      </section>
-
-      {/* FINAL CTA */}
-      <section
-        className="mgk-section"
-        style={{
-          background: "linear-gradient(135deg, #1B5E20 0%, #2ECC71 55%, #58D68D 100%)",
-          textAlign: "center",
-        }}
+      <div
+        className="bg-[#FAFAFA] antialiased text-gray-900
+          bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
-        <Inner>
-          <div style={{ maxWidth: 560, margin: "0 auto" }}>
-            <h2 style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 28 }}>
-              Ready to start your child&apos;s typing journey?
-            </h2>
-            <form
-              style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 480, margin: "0 auto" }}
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-                <input
-                  type="email"
-                  placeholder="Your email"
+        {/* TRUST BADGES */}
+        <section className="mgk-section-tight py-16 md:py-20">
+          <Inner>
+            <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
+              Privacy and safety built in
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
+              {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
+                <span
+                  key={b}
                   style={{
-                    flex: "1 1 200px",
-                    minHeight: 52,
-                    padding: "0 22px",
-                    borderRadius: 6,
-                    border: "2px solid transparent",
-                    fontWeight: 600,
-                    color: DARK,
-                    outline: "none",
+                    padding: "8px 18px",
+                    borderRadius: 50,
+                    background: BG,
+                    fontSize: "0.8rem",
+                    fontWeight: 800,
+                    color: "#475569",
+                    border: "1px solid #e2e8f0",
                   }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    minHeight: 52,
-                    padding: "0 28px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: "#fff",
-                    color: DARK,
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    transition: "transform 0.2s ease",
-                  }}
-                  className="hover:-translate-y-0.5 active:scale-[0.97]"
                 >
-                  Start Free
-                </button>
+                  {b}
+                </span>
+              ))}
+            </div>
+          </Inner>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="mgk-section py-20 md:py-28 lg:py-32">
+          <Inner>
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
+              Learning that actually works
+            </h2>
+            <div className="mgk-grid grid-cols-1 md:grid-cols-3">
+              {(
+                [
+                  {
+                    step: 1,
+                    src: "/images/homepage/how-1-signup.jpg",
+                    alt: "Sign up for My Green Keys",
+                    title: "Sign Up Free",
+                    desc: "Create an account in 60 seconds and choose your virtual pet",
+                  },
+                  {
+                    step: 2,
+                    src: "/images/homepage/how-2-typing.jpg",
+                    alt: "Learn typing with eco-friendly lessons",
+                    title: "Start Typing",
+                    desc: "100 lessons from home row to advanced. Every lesson teaches the planet",
+                  },
+                  {
+                    step: 3,
+                    src: "/images/homepage/how-3-planet.jpg",
+                    alt: "Help the planet with eco rewards",
+                    title: "Help the Planet",
+                    desc: "Upload eco actions, earn points, and contribute to real tree planting",
+                  },
+                ] as const
+              ).map((card) => (
+                <article
+                  key={card.step}
+                  className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
+                    <span
+                      className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
+                      style={{ background: PRIMARY }}
+                    >
+                      {card.step}
+                    </span>
+                    <Image
+                      src={card.src}
+                      alt={card.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      priority={false}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 p-6 pb-7">
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                    <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Inner>
+        </section>
+
+        {/* FEATURES */}
+        <section id="features" className="mgk-section py-20 md:py-28 lg:py-32">
+          <Inner>
+            <h2
+              style={{
+                textAlign: "center",
+                fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
+                fontWeight: 900,
+                color: DARK,
+                maxWidth: 720,
+                margin: "0 auto 64px",
+                lineHeight: 1.2,
+              }}
+            >
+              Everything your child needs to become a typing champion
+            </h2>
+
+            <div className="mgk-grid grid-cols-1 md:grid-cols-3">
+              {(
+                [
+                  {
+                    tag: "Engaging Lessons",
+                    src: "/images/homepage/feature-lessons.jpg",
+                    alt: "Engaging typing lessons for kids",
+                    title: "100 lessons designed by experts",
+                    desc: "Progressive curriculum from home row to advanced typing. Every lesson teaches kids about the planet.",
+                    items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback", "4 learning modules"],
+                  },
+                  {
+                    tag: "Eco Rewards",
+                    src: "/images/homepage/feature-eco.jpg",
+                    alt: "Real eco rewards for kids",
+                    title: "The world's first eco rewards system",
+                    desc: "Kids upload photos of real eco actions like planting trees and watering plants. Parents approve. Kids earn points.",
+                    items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real-world impact"],
+                  },
+                  {
+                    tag: "Virtual Pet",
+                    src: "/images/homepage/feature-pet.jpg",
+                    alt: "Virtual pet companion for typing",
+                    title: "Meet your typing companion",
+                    desc: "Choose a Panda or Turtle. Type daily to keep them happy. Miss a day and they get sad — kids love coming back.",
+                    items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Kids keep coming back"],
+                  },
+                ] as const
+              ).map((card) => (
+                <article
+                  key={card.tag}
+                  className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
+                    <Image
+                      src={card.src}
+                      alt={card.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 p-6 pb-7">
+                    <span className="mb-3 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                      {card.tag}
+                    </span>
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                    <p className="mb-4 text-sm leading-relaxed text-gray-600">{card.desc}</p>
+                    <ul className="space-y-2">
+                      {card.items.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                          <span className="text-sm text-gray-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Inner>
+        </section>
+
+        {/* GAMES */}
+        <section id="games-preview" className="mgk-section py-20 md:py-28 lg:py-32" style={{ background: DARK }}>
+          <Inner>
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
+              Learning through play
+            </h2>
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 56, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+              5 eco-themed games that make typing practice addictive
+            </p>
+            <div
+              className="flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible"
+              style={{ scrollSnapType: "x mandatory" }}
+            >
+              {PREVIEW_GAMES.map((g) => (
+                <Link
+                  key={g.name}
+                  href="/games"
+                  className="mgk-card-ds shrink-0"
+                  style={{
+                    width: "min(280px, 85vw)",
+                    scrollSnapAlign: "start",
+                    overflow: "hidden",
+                    padding: 0,
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div style={{ position: "relative", height: 160 }}>
+                    <Image src={g.img} alt="" fill sizes="280px" style={{ objectFit: "cover" }} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)",
+                      }}
+                    />
+                  </div>
+                  <div style={{ padding: "18px 20px" }}>
+                    <p style={{ fontWeight: 900, color: DARK, margin: 0, fontSize: "1.05rem" }}>{g.name}</p>
+                    <p style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>{g.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div style={{ textAlign: "center", marginTop: 36 }}>
+              <Link
+                href="/games"
+                className="btn-ghost"
+                style={{ display: "inline-flex", alignItems: "center", height: 52, padding: "0 32px" }}
+              >
+                Explore All Games
+              </Link>
+            </div>
+          </Inner>
+        </section>
+
+        {/* EARLY ACCESS */}
+        <section className="mgk-section py-20 md:py-28 lg:py-32">
+          <div className="mgk-container">
+            <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+              Join us as an early adopter
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-base font-semibold text-gray-600">
+              Schools and families joining now get founding member benefits
+            </p>
+            <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+              {(
+                [
+                  {
+                    title: "Free 30-day pilot for schools",
+                    desc: "Test My Green Keys with your classroom. Full access, no commitment.",
+                    Icon: School,
+                  },
+                  {
+                    title: "Founding family pricing",
+                    desc: "Lock in 50% off the Family Plan for life when you sign up early.",
+                    Icon: Users,
+                  },
+                  {
+                    title: "Help shape the product",
+                    desc: "Direct feedback line to the founder. Your input shapes new features.",
+                    Icon: MessageSquare,
+                  },
+                ] as const
+              ).map(({ title, desc, Icon }) => (
+                <article
+                  key={title}
+                  className="rounded-md bg-white p-8 shadow-sm transition-shadow duration-200 hover:shadow-md border border-gray-200"
+                >
+                  <div className="h-1 w-12 rounded bg-green-500 mb-6" aria-hidden />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+                    <Icon className="h-12 w-12 text-green-600" aria-hidden />
+                  </div>
+                  <h3 className="mt-6 text-lg font-bold text-gray-900">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{desc}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-16 text-center">
+              <h3 className="text-xl font-bold text-gray-900" style={{ color: DARK }}>
+                Be among the first
+              </h3>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-md bg-green-600 px-8 py-3 text-base font-bold text-white shadow-sm transition hover:bg-green-700"
+                >
+                  Get Started Free
+                </Link>
+                <a
+                  href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
+                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-900 bg-white px-8 py-3 text-base font-bold text-gray-900 transition hover:bg-gray-50"
+                >
+                  Schools: Book a Demo
+                </a>
               </div>
-            </form>
-            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.85rem", fontWeight: 600, marginTop: 16 }}>No spam. Unsubscribe anytime.</p>
+            </div>
           </div>
-        </Inner>
-      </section>
+        </section>
+
+        {/* PRICING PREVIEW */}
+        <section className="mgk-section py-20 md:py-28 lg:py-32">
+          <Inner>
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
+              Simple pricing for every family
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, maxWidth: 800, margin: "0 auto" }}>
+              <div className="mgk-card-ds bg-white" style={{ padding: 32 }}>
+                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
+                <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  Start free
+                </Link>
+              </div>
+              <div className="mgk-card-ds bg-white" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
+                <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                  $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
+                </p>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
+                <Link href="/pricing" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  View Family Plan
+                </Link>
+              </div>
+            </div>
+            <p style={{ textAlign: "center", marginTop: 28 }}>
+              <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
+                See all plans →
+              </Link>
+            </p>
+          </Inner>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="mgk-section py-20 md:py-28 lg:py-32 text-center">
+          <Inner>
+            <div style={{ maxWidth: 560, margin: "0 auto" }}>
+              <h2 className="text-gray-900" style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: 28 }}>
+                Ready to start your child&apos;s typing journey?
+              </h2>
+              <form className="mx-auto flex max-w-[480px] flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    className="h-[52px] flex-1 basis-[200px] rounded-md border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-900 outline-none ring-offset-white focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10"
+                  />
+                  <button
+                    type="submit"
+                    className="h-[52px] rounded-md bg-gray-900 px-7 text-sm font-bold text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.99]"
+                  >
+                    Start Free
+                  </button>
+                </div>
+              </form>
+              <p className="mt-4 text-sm font-semibold text-gray-500">No spam. Unsubscribe anytime.</p>
+            </div>
+          </Inner>
+        </section>
+      </div>
     </>
   );
 }
