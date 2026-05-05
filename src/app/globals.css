@@ -492,18 +492,18 @@ body {
     width: 100%;
     max-width: 80rem;
     margin-inline: auto;
-    padding-inline: 1rem;
+    padding-inline: 1rem !important;
   }
 
   @media (min-width: 640px) {
     .mgk-container {
-      padding-inline: 1.5rem;
+      padding-inline: 1.5rem !important;
     }
   }
 
   @media (min-width: 1024px) {
     .mgk-container {
-      padding-inline: 2rem;
+      padding-inline: 2rem !important;
     }
   }
 
