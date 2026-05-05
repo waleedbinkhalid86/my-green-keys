@@ -3,20 +3,13 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Ban, Check, Lock, Plus, Quote, Shield, Sprout } from "lucide-react";
+import { Ban, Check, ChevronDown, Lock, Quote, Shield, Sprout } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { testimonials } from "@/data/testimonials";
 
 const LeafIconCustom = () => (
@@ -172,13 +165,13 @@ const TRUST_SIGNALS = [
 
 function PricingNav() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#1A2F23] shadow-sm">
+    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 no-underline">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-[#2ECC71]">
-            <LeafIconCustom />
+          <div className="flex size-9 items-center justify-center rounded-lg bg-gray-900 text-white">
+            <LeafIconCustom />{" "}
           </div>
-          <span className="text-base font-bold tracking-tight text-white" style={{ fontFamily: "var(--font-nunito)" }}>
+          <span className="text-sm font-semibold tracking-tight text-gray-900">
             My Green Keys
           </span>
         </Link>
@@ -187,19 +180,19 @@ function PricingNav() {
             <Link
               key={l}
               href={`/#${l.toLowerCase()}`}
-              className="text-sm font-medium text-white/85 transition-colors hover:text-[#2ECC71]"
+              className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
             >
               {l}
             </Link>
           ))}
-          <Link href="/pricing" className="text-sm font-semibold text-[#2ECC71]">
+          <Link href="/pricing" className="text-sm font-semibold text-gray-900">
             Pricing
           </Link>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="hidden text-sm font-medium text-white/90 hover:text-[#2ECC71] md:inline"
+            className="hidden text-sm font-medium text-gray-600 hover:text-gray-900 md:inline"
           >
             Log In
           </Link>
@@ -207,10 +200,10 @@ function PricingNav() {
             href="/signup"
             className={cn(
               buttonVariants({ size: "sm" }),
-              "rounded-[50px] border-0 bg-[#2ECC71] font-semibold text-white hover:bg-[#27ae60]"
+              "rounded-md border border-gray-300 bg-white font-medium text-gray-900 hover:bg-gray-50"
             )}
           >
-            Start Free Trial
+            Start free
           </Link>
         </div>
       </div>
@@ -232,11 +225,84 @@ function CompareCell({ value }: { value: Cell }) {
   return <span className="text-sm text-[#374151]">{value}</span>;
 }
 
-const pill =
-  "inline-flex min-h-[52px] w-full items-center justify-center whitespace-nowrap rounded-[50px] px-6 text-base font-semibold transition-all duration-200 disabled:opacity-60";
+const cardShell = "flex h-full flex-col rounded-xl bg-white p-8 border border-gray-200 transition-colors hover:border-gray-300";
 
-const cardShell =
-  "flex h-full flex-col rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg";
+function PricingToggle({
+  isYearly,
+  onChange,
+}: {
+  isYearly: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-center">
+      <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-1">
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            !isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
+          )}
+          aria-pressed={!isYearly}
+        >
+          Monthly
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
+          )}
+          aria-pressed={isYearly}
+        >
+          <span className="inline-flex items-center gap-2">
+            Yearly
+            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Save 20%</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FaqItem({
+  question,
+  answer,
+  isOpen,
+  onToggle,
+}: {
+  question: string;
+  answer: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <span className="text-sm font-medium text-gray-900">{question}</span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 text-gray-400 transition-transform", isOpen && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-200 ease-out",
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
+      >
+        <div className="overflow-hidden px-6 pb-4 text-sm leading-relaxed text-gray-600">{answer}</div>
+      </div>
+    </div>
+  );
+}
 
 function PricingPageContent() {
   const router = useRouter();
@@ -251,6 +317,7 @@ function PricingPageContent() {
   );
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const priceIds = useMemo(() => {
     const family = process.env.NEXT_PUBLIC_PADDLE_FAMILY_PRICE_ID || "";
@@ -369,47 +436,38 @@ function PricingPageContent() {
 
   return (
     <div
-      className="min-h-screen w-full bg-[#FAFAFA] antialiased"
-      style={{ fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif" }}
+      className={cn(
+        "min-h-screen w-full bg-[#FAFAFA] antialiased text-gray-900",
+        // Same dot-grid background as auth pages (MinimalAuthShell)
+        "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
+      )}
     >
       <PricingNav />
-      <div className="h-[72px]" aria-hidden />
 
       {/* Hero */}
-      <section className="bg-white px-4 pt-[80px] pb-[60px] text-center sm:px-6 lg:px-8">
+      <section className="mgk-section text-center">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-            Now in early access for schools and families
+          <div className="mb-4 inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium uppercase tracking-wider text-green-700">
+            Pricing
           </div>
-          <h1 className="text-[40px] font-black leading-[1.1] tracking-tight text-[#1A2F23] sm:text-[48px]">
-            Simple, honest pricing for your child&apos;s future
+          <h1 className="text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl">
+            Pricing that fits every learner
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[#666666]">
-            Start free. Upgrade when ready. Cancel anytime. No hidden fees.
+          <p className="mx-auto mt-3 max-w-xl text-base text-gray-600">
+            Start free. Upgrade when ready. Cancel anytime.
           </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Label htmlFor="billing-toggle" className="text-base font-medium text-[#666666]">
-              Monthly
-            </Label>
-            <Switch id="billing-toggle" checked={isYearly} onCheckedChange={setIsYearly} />
-            <div className="flex items-center gap-2">
-              <Label htmlFor="billing-toggle" className="text-base font-semibold text-[#1A2F23]">
-                Yearly
-              </Label>
-              <span className="rounded-[50px] bg-[#E8F5E9] px-3 py-1 text-xs font-bold text-[#1B5E20]">
-                Save 20%
-              </span>
-            </div>
-          </div>
+        </div>
+        <div className="mt-12 mb-12">
+          <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
         </div>
       </section>
 
       {/* Pricing cards */}
-      <section className="mgk-section">
+      <section className="mgk-section pt-0">
         <div className="mgk-container">
           {ecoGardenExpired ? (
             <div
-              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
+              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
               role="status"
             >
               <Sprout className="mx-auto h-8 w-8 shrink-0 text-green-600 sm:mx-0" strokeWidth={2} aria-hidden />
@@ -420,44 +478,39 @@ function PricingPageContent() {
           ) : null}
           {checkoutError ? (
             <div
-              className="mb-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
               role="alert"
             >
               {checkoutError}
             </div>
           ) : null}
 
-          <div className="relative">
-            <div className="mgk-grid grid-cols-1 pt-4 lg:grid-cols-3 lg:items-stretch">
+          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
             {/* Free */}
-            <div className={cn(cardShell, "border border-[#E5E7EB]")}>
-              <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Free Starter</p>
+            <div className={cardShell}>
+              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Free</p>
               <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-[64px] font-bold leading-none text-[#1A2F23]">$0</span>
-                <span className="pb-2 text-base text-[#6B7280]">/forever</span>
+                <span className="text-5xl font-semibold text-gray-900">$0</span>
+                <span className="text-sm text-gray-500">/forever</span>
               </div>
-              <p className="mt-3 text-lg text-[#374151]">Perfect for trying out</p>
-              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+              <p className="mt-2 text-sm text-gray-600">Perfect for trying out</p>
+              <div className="my-6 border-t border-gray-100" />
+              <ul className="space-y-3">
                 {FREE_FEATURES.map((t) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
-                      ✓
-                    </span>
-                    <span>{t}</span>
+                  <li key={t} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
+                    <span className="text-sm text-gray-700">{t}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-auto pt-8">
+              <div className="mt-8">
                 <button
                   type="button"
-                  className={cn(
-                    pill,
-                    "border-2 border-[#2ECC71] bg-white font-bold text-[#1B5E20] hover:bg-[#F0FDF4]"
-                  )}
+                  className="w-full rounded-md bg-gray-100 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-60"
                   disabled={checkoutBusy}
                   onClick={() => router.push("/signup")}
                 >
-                  Start Free
+                  Start free
                 </button>
               </div>
             </div>
@@ -468,113 +521,105 @@ function PricingPageContent() {
               id="pricing-family-plan"
               className={cn(
                 cardShell,
-                "relative z-10 border-2 border-[#2ECC71] lg:scale-105",
+                "relative border-2 border-green-500 hover:border-green-500",
                 ecoGardenExpired && "ring-2 ring-yellow-300 ring-offset-2"
               )}
             >
-              <div className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
-                <span className="whitespace-nowrap rounded-full bg-[#2ECC71] px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+              <div className="absolute right-6 top-6">
+                <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
                   MOST POPULAR
                 </span>
               </div>
-              <p className="mt-5 text-sm font-bold uppercase tracking-[0.12em] text-[#6B7280]">Family Plan</p>
+              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Family</p>
               <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-[64px] font-bold leading-none text-[#1A2F23]">${familyDisplayPrice}</span>
-                <span className="pb-2 text-base text-[#6B7280]">/month</span>
+                <span className="text-5xl font-semibold text-gray-900">${familyDisplayPrice}</span>
+                <span className="text-sm text-gray-500">/month</span>
               </div>
-              <p className="mt-3 text-lg text-[#374151]">Perfect for families</p>
-              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+              <p className="mt-2 text-sm text-gray-600">Perfect for families</p>
+              <div className="my-6 border-t border-gray-100" />
+              <ul className="space-y-3">
                 {FAMILY_FEATURES.map((t) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
-                      ✓
-                    </span>
-                    <span>{t}</span>
+                  <li key={t} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
+                    <span className="text-sm text-gray-700">{t}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-auto pt-8">
+              <div className="mt-8">
                 <button
                   type="button"
-                  className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                  className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
                   disabled={checkoutBusy}
                   onClick={() => void openCheckout("family")}
                 >
-                  {checkoutBusy ? "Loading…" : "Start 7-Day Free Trial"}
+                  {checkoutBusy ? "Loading…" : "Start 7-day free trial"}
                 </button>
               </div>
             </div>
 
             {/* School Starter */}
-            <div className={cn(cardShell, "border border-[#E5E7EB]")}>
-              <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">School Starter</p>
+            <div className={cardShell}>
+              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">School Starter</p>
               <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-[48px] font-bold leading-none text-[#1A2F23]">From $299</span>
-                <span className="pb-2 text-base text-[#6B7280]">/month</span>
+                <span className="text-5xl font-semibold text-gray-900">From $299</span>
+                <span className="text-sm text-gray-500">/month</span>
               </div>
-              <p className="mt-3 text-lg text-[#374151]">Perfect for classrooms</p>
-              <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+              <p className="mt-2 text-sm text-gray-600">Perfect for classrooms</p>
+              <div className="my-6 border-t border-gray-100" />
+              <ul className="space-y-3">
                 {SCHOOL_STARTER_FEATURES.map((t) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
-                      ✓
-                    </span>
-                    <span>{t}</span>
+                  <li key={t} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
+                    <span className="text-sm text-gray-700">{t}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-auto flex flex-col gap-3 pt-8">
+              <div className="mt-8 space-y-3">
                 <button
                   type="button"
-                  className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                  className="w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
                   disabled={checkoutBusy}
                   onClick={() => void openCheckout("school_starter")}
                 >
-                  {checkoutBusy ? "Loading…" : "Get Started"}
+                  {checkoutBusy ? "Loading…" : "Get started"}
                 </button>
                 <a
                   href="mailto:sales@mygreenkeys.com?subject=School%20Starter%20inquiry"
-                  className={cn(
-                    pill,
-                    "border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
-                  )}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50"
                 >
-                  Talk to Sales
+                  Talk to sales
                 </a>
               </div>
             </div>
           </div>
-            <div className="h-12" aria-hidden />
-          </div>
 
-          <div className="mt-20 lg:mt-24">
-            <h2 className="mb-12 text-center text-2xl font-extrabold tracking-tight text-[#1A2F23] sm:text-3xl">
-              For Larger Schools
-            </h2>
-            <div className="mgk-grid grid-cols-1 lg:grid-cols-3 lg:items-stretch">
+          <section className="mgk-section-tight mt-12">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">For larger schools</h2>
+              <p className="text-sm text-gray-600 mb-8">Scale with confidence</p>
+            </div>
+            <div className="mgk-grid grid-cols-1 md:grid-cols-2">
               {/* School Growth */}
-              <div className={cn(cardShell, "border border-[#E5E7EB]")}>
-                <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">School Growth</p>
-                <div className="mt-4">
-                  <span className="text-[48px] font-bold leading-none text-[#1A2F23] sm:text-[56px]">200</span>
-                  <span className="ml-1.5 text-lg font-semibold text-[#374151]">students</span>
-                  <p className="mt-2 text-base text-[#6B7280]">Full cohort capacity</p>
+              <div className={cardShell}>
+                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">School Growth</p>
+                <div className="mt-4 flex flex-wrap items-end gap-2">
+                  <span className="text-5xl font-semibold text-gray-900">200</span>
+                  <span className="text-sm text-gray-500">students</span>
                 </div>
-                <p className="mt-3 text-lg text-[#374151]">For schools scaling their program</p>
-                <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                <p className="mt-2 text-sm text-gray-600">For schools scaling their program</p>
+                <div className="my-6 border-t border-gray-100" />
+                <ul className="space-y-3">
                   {SCHOOL_GROWTH_FEATURES.map((t) => (
-                    <li key={t} className="flex gap-3">
-                      <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
-                        ✓
-                      </span>
-                      <span>{t}</span>
+                    <li key={t} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
+                      <span className="text-sm text-gray-700">{t}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-auto pt-8">
+                <div className="mt-8">
                   <button
                     type="button"
-                    className={cn(pill, "border-0 bg-[#2ECC71] font-bold text-white hover:bg-[#27ae60]")}
+                    className="w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
                     disabled={checkoutBusy}
                     onClick={() => void openCheckout("school_growth")}
                   >
@@ -584,82 +629,88 @@ function PricingPageContent() {
               </div>
 
               {/* Enterprise */}
-              <div className={cn(cardShell, "border border-[#E5E7EB]")}>
-                <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#1B5E20]">Enterprise</p>
+              <div className={cardShell}>
+                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Enterprise</p>
                 <div className="mt-4 flex flex-wrap items-end gap-2">
-                  <span className="text-[40px] font-bold leading-none text-[#1A2F23] sm:text-[48px]">Custom</span>
-                  <span className="pb-2 text-base text-[#6B7280]">pricing</span>
+                  <span className="text-5xl font-semibold text-gray-900">Custom</span>
+                  <span className="text-sm text-gray-500">pricing</span>
                 </div>
-                <p className="mt-3 text-lg text-[#374151]">Districts & multi-campus schools</p>
-                <ul className="mt-8 flex grow flex-col gap-3.5 border-t border-[#E5E7EB] pt-8 text-base text-[#374151]">
+                <p className="mt-2 text-sm text-gray-600">Districts & multi-campus schools</p>
+                <div className="my-6 border-t border-gray-100" />
+                <ul className="space-y-3">
                   {ENTERPRISE_FEATURES.map((t) => (
-                    <li key={t} className="flex gap-3">
-                      <span className="mt-0.5 shrink-0 text-[#2ECC71]" aria-hidden>
-                        ✓
-                      </span>
-                      <span>{t}</span>
+                    <li key={t} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
+                      <span className="text-sm text-gray-700">{t}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-auto pt-8">
+                <div className="mt-8">
                   <a
                     href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry"
-                    className={cn(
-                      pill,
-                      "border-2 border-[#1A2F23] bg-transparent font-extrabold text-[#1A2F23] hover:bg-[#1A2F23]/5"
-                    )}
+                    className="block w-full rounded-md border border-gray-300 bg-white py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50"
                   >
-                    Contact Enterprise Sales
+                    Contact enterprise sales
                   </a>
                 </div>
               </div>
-
-              {/* Spacer column for alignment with top row on lg+ */}
-              <div className="hidden lg:block" aria-hidden />
             </div>
+          </section>
+
+          {/* Trust bar */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-gray-500">
+            {TRUST_SIGNALS.map((s) => (
+              <div key={s.label} className="inline-flex items-center gap-2">
+                <s.Icon className="h-4 w-4 text-gray-400" strokeWidth={2.25} aria-hidden />
+                <span>{s.label}</span>
+              </div>
+            ))}
           </div>
 
           {/* Promo codes */}
-          <div className="mx-auto mt-16 max-w-xl rounded-xl border-2 border-[#E5E7EB] bg-white p-8 shadow-sm">
-            <h2 className="text-center text-xl font-extrabold text-[#1A2F23]">Have a promo code?</h2>
-            <p className="mt-2 text-center text-sm text-[#666666]">Enter your code below for a special discount.</p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Input
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Enter promo code…"
-                className="h-12 flex-1 rounded-[50px] border-[#E5E7EB] px-5"
-              />
-              <Button
-                type="button"
-                onClick={handlePromoCode}
-                className="h-12 rounded-[50px] bg-[#2ECC71] px-8 font-bold text-white hover:bg-[#27ae60]"
-              >
-                Apply
-              </Button>
-            </div>
-            {promoResult ? (
-              <div
-                className={cn(
-                  "mt-4 rounded-lg px-4 py-3 text-sm font-semibold",
-                  promoResult.type === "success"
-                    ? "border border-[#C8E6C9] bg-[#E8F5E9] text-[#1B5E20]"
-                    : "border border-red-200 bg-red-50 text-red-800"
-                )}
-              >
-                {promoResult.message}
+          <section className="mt-10">
+            <div className="mx-auto max-w-md">
+              <h2 className="text-center text-base font-medium text-gray-900">Have a promo code?</h2>
+              <div className="mt-4 flex gap-2">
+                <Input
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="h-10 flex-1 rounded-md border-gray-300 text-sm"
+                />
+                <Button
+                  type="button"
+                  onClick={handlePromoCode}
+                  className="h-10 rounded-md bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800"
+                >
+                  Apply
+                </Button>
               </div>
-            ) : null}
-            <div className="mt-6 rounded-lg bg-[#FAFAFA] p-4 text-left text-xs text-[#6B7280]">
-              <p className="mb-2 font-bold text-[#1A2F23]">Available codes</p>
-              {Object.entries(PROMO_CODES).map(([code, info]) => (
-                <p key={code} className="mb-1">
-                  <span className="font-mono font-bold text-[#374151]">{code}</span> — {info.discount} (
-                  {info.applicable.join(", ")})
-                </p>
-              ))}
+              {promoResult ? (
+                <div
+                  className={cn(
+                    "mt-3 rounded-md border px-3 py-2 text-sm",
+                    promoResult.type === "success"
+                      ? "border-green-200 bg-green-50 text-green-800"
+                      : "border-red-200 bg-red-50 text-red-800"
+                  )}
+                  role="status"
+                >
+                  {promoResult.message}
+                </div>
+              ) : null}
+              <div className="mt-4 text-xs text-gray-500">
+                <p className="font-medium text-gray-700">Available codes</p>
+                <div className="mt-2 space-y-1">
+                  {Object.entries(PROMO_CODES).map(([code, info]) => (
+                    <p key={code}>
+                      <span className="font-mono text-gray-700">{code}</span> — {info.discount} ({info.applicable.join(", ")})
+                    </p>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
 
           {testimonials.length > 0 ? (
             <section className="py-12">
@@ -689,132 +740,96 @@ function PricingPageContent() {
         </div>
       </section>
 
-      {/* Trust badges */}
-      <section className="border-y border-[#E5E7EB] bg-[#F3F4F6] py-8">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4">
-          {TRUST_SIGNALS.map((s) => (
-            <div key={s.label} className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
-              <s.Icon className="h-5 w-5 shrink-0 text-green-600" strokeWidth={2.25} aria-hidden />
-              {s.label}
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Feature comparison */}
-      <section className="px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-center text-3xl font-extrabold text-[#1A2F23]">Compare plans</h2>
-          <div className="overflow-x-auto rounded-[24px] border-2 border-[#E5E7EB] bg-white shadow-sm">
-            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-              <thead className="sticky top-0 z-20 bg-white shadow-[0_1px_0_#E5E7EB]">
-                <tr>
-                  <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-wider text-[#6B7280]">
-                    Feature
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-extrabold text-[#1A2F23]">Free Starter</th>
-                  <th className="bg-[#E8F5E9]/80 px-6 py-4 text-center text-sm font-extrabold text-[#1B5E20]">
-                    Family
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-extrabold text-[#1A2F23]">School</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON_GROUPS.map((group) => (
-                  <React.Fragment key={group.category}>
-                    <tr className="bg-[#F9FAFB]">
-                      <td
-                        colSpan={4}
-                        className="px-6 py-3 text-xs font-extrabold uppercase tracking-widest text-[#1B5E20]"
-                      >
-                        {group.category}
-                      </td>
-                    </tr>
-                    {group.rows.map((row, idx) => (
-                      <tr
-                        key={row.feature}
-                        className={cn("border-t border-[#F3F4F6]", idx % 2 === 1 ? "bg-[#FAFAFA]/80" : "bg-white")}
-                      >
-                        <td className="px-6 py-3.5 font-medium text-[#374151]">{row.feature}</td>
-                        <td className="px-6 py-3.5 text-center">
-                          <CompareCell value={row.free} />
-                        </td>
-                        <td className="bg-[#F1F8F4]/50 px-6 py-3.5 text-center">
-                          <CompareCell value={row.family} />
-                        </td>
-                        <td className="px-6 py-3.5 text-center">
-                          <CompareCell value={row.school} />
+      <section className="mgk-section-tight">
+        <div className="mgk-container">
+          <h2 className="text-center text-2xl font-semibold tracking-tight text-gray-900">Compare plans</h2>
+          <div className="mt-8 overflow-x-auto">
+            <div className="min-w-[720px] overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3">Feature</th>
+                    <th className="px-6 py-3 text-center">Free</th>
+                    <th className="px-6 py-3 text-center">Family</th>
+                    <th className="px-6 py-3 text-center">School</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON_GROUPS.map((group) => (
+                    <React.Fragment key={group.category}>
+                      <tr className="bg-gray-50">
+                        <td
+                          colSpan={4}
+                          className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-700"
+                        >
+                          {group.category}
                         </td>
                       </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                      {group.rows.map((row) => (
+                        <tr key={row.feature} className="border-t border-gray-100">
+                          <td className="px-6 py-3 font-medium text-gray-700">{row.feature}</td>
+                          <td className="px-6 py-3 text-center">
+                            <CompareCell value={row.free} />
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <CompareCell value={row.family} />
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <CompareCell value={row.school} />
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="bg-[#F8F9FA] px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="mb-4 text-center text-4xl font-black tracking-tight text-[#1A2F23] sm:text-[2.75rem]">
-            Frequently asked questions
-          </h2>
-          <p className="mb-12 text-center text-lg font-semibold text-[#64748b]">Everything you need to know before you subscribe</p>
-          <Accordion
-            multiple={false}
-            className="pricing-page-faq w-full rounded-[24px] border-[3px] border-[#1A2F23]/15 bg-white px-3 shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
-          >
+      <section className="mgk-section-tight">
+        <div className="mgk-container">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-semibold tracking-tight text-gray-900">Frequently asked questions</h2>
+            <p className="mt-2 text-sm text-gray-600">Everything you need to know before you subscribe</p>
+          </div>
+          <div className="mx-auto mt-8 max-w-2xl space-y-3">
             {FAQ_ITEMS.slice(0, 6).map((faq, idx) => (
-              <AccordionItem key={faq.q} value={`item-${idx}`} className="border-[#E5E7EB] px-3">
-                <AccordionTrigger
-                  className={cn(
-                    "py-5 hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden"
-                  )}
-                >
-                  <span className="flex w-full items-start gap-4">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E20] transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-45">
-                      <Plus className="size-5 stroke-[2.5]" strokeLinecap="round" />
-                    </span>
-                    <span className="pt-1 text-left text-base font-bold text-[#1A2F23]">{faq.q}</span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-5 pl-[3.25rem] text-[15px] leading-relaxed text-[#666666]">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
+              <FaqItem
+                key={faq.q}
+                question={faq.q}
+                answer={faq.a}
+                isOpen={openFaqIndex === idx}
+                onToggle={() => setOpenFaqIndex((prev) => (prev === idx ? null : idx))}
+              />
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="bg-[#1B5E20] px-4 py-20 text-center sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl space-y-6">
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-            Ready to start your child&apos;s typing journey?
-          </h2>
-          <p className="text-lg text-white/90">Start free. No credit card needed.</p>
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/signup"
-              className={cn(
-                pill,
-                "max-w-xs border-0 bg-white font-extrabold text-[#1B5E20] hover:bg-white/95"
-              )}
-            >
-              Start Free Trial
-            </Link>
-            <a
-              href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry"
-              className={cn(
-                pill,
-                "max-w-xs border-2 border-white bg-transparent font-bold text-white hover:bg-white/10"
-              )}
-            >
-              Talk to Sales
-            </a>
+      <section className="mgk-section">
+        <div className="mgk-container">
+          <div className="rounded-xl bg-gray-900 p-12 text-center text-white">
+            <h2 className="text-3xl font-semibold">Ready to start?</h2>
+            <p className="mt-2 text-sm text-gray-400">Free forever for the first 10 lessons. No credit card.</p>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-md bg-white px-6 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100"
+              >
+                Start free
+              </Link>
+              <a
+                href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry"
+                className="inline-flex items-center justify-center rounded-md border border-gray-700 px-6 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Talk to sales
+              </a>
+            </div>
           </div>
         </div>
       </section>
