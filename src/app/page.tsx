@@ -16,11 +16,6 @@ const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
 const BG = "#FAFAFA";
 
-const PRIMARY_CTA =
-  "inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md text-sm font-semibold whitespace-nowrap";
-const SECONDARY_CTA =
-  "inline-flex items-center justify-center border border-gray-300 hover:bg-gray-50 text-gray-900 px-6 py-3 rounded-md text-sm font-semibold whitespace-nowrap";
-
 function Inner({ children }: { children: React.ReactNode }) {
   return (
     <div className="mgk-container">{children}</div>
@@ -140,7 +135,7 @@ export default function HomePage() {
           <DialogFooter className="gap-2 sm:justify-end">
             <Link
               href="/signup"
-              className={PRIMARY_CTA}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-green-700"
               onClick={() => setDemoModalOpen(false)}
             >
               Sign Up Free
@@ -200,7 +195,8 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/signup"
-                className={PRIMARY_CTA}
+                className="btn-primary"
+                style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem", height: 44, display: "inline-flex", alignItems: "center" }}
               >
                 Start Free Today
               </Link>
@@ -347,7 +343,7 @@ export default function HomePage() {
           style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 900, margin: "0 auto" }}
         >
           <div className="mb-7" style={{ animation: "fade-in 0.8s ease 0.2s both" }}>
-            <span className="inline-block rounded-md bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+            <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
               Now in early access for schools and families
             </span>
           </div>
@@ -369,47 +365,43 @@ export default function HomePage() {
             Help the Planet.
           </h1>
 
-          <div
-            className="mx-auto mb-9 max-w-2xl rounded-md bg-white/95 px-6 py-3 backdrop-blur-sm"
-            style={{ animation: "float-up 0.9s ease 0.5s both" }}
+          <p
+            className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+            style={{ margin: "0 auto 36px", animation: "float-up 0.9s ease 0.5s both" }}
           >
-            <p className="text-base font-medium leading-relaxed text-gray-900 md:text-lg">
-              Built for{" "}
-              <span className="bg-yellow-200 px-1 py-0.5">ages 6-14</span>.{" "}
-              <span className="bg-yellow-200 px-1 py-0.5">100 lessons</span>,{" "}
-              <span className="bg-yellow-200 px-1 py-0.5">5 games</span>, and a{" "}
-              <span className="bg-yellow-200 px-1 py-0.5">virtual pet</span>{" "}
-              that needs your child to type daily.
-            </p>
-          </div>
+            Built for ages 6-14. 100 lessons, 5 games, and a virtual pet that needs your child to type daily.
+          </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
             <Link
               href="/signup"
-              className={`${PRIMARY_CTA} hover:-translate-y-0.5 active:scale-[0.97]`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 52,
+                padding: "0 28px",
+                borderRadius: 6,
+                background: "#fff",
+                color: DARK,
+                fontWeight: 800,
+                fontSize: "1rem",
+                textDecoration: "none",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
+              className="hover:-translate-y-0.5 active:scale-[0.97]"
             >
               Start Free Today
             </Link>
             <button
               type="button"
-              className={SECONDARY_CTA}
+              className="btn-ghost"
+              style={{ fontSize: "1rem", padding: "0 28px", height: 52, display: "inline-flex", alignItems: "center" }}
               onClick={() => setDemoModalOpen(true)}
             >
               Watch Demo
             </button>
-          </div>
-          <div
-            className="mt-6 flex flex-wrap items-center justify-center gap-2"
-            style={{ animation: "float-up 0.9s ease 0.8s both" }}
-          >
-            {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
-              <span
-                key={b}
-                className="rounded-md bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 ring-1 ring-white/15 backdrop-blur-sm"
-              >
-                {b}
-              </span>
-            ))}
           </div>
           <p style={{ marginTop: 20, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
             No credit card required. Free forever.
@@ -466,10 +458,37 @@ export default function HomePage() {
         className="bg-[#FAFAFA] antialiased text-gray-900
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
-        {/* HOW IT WORKS */}
-        <section id="how-it-works" className="mgk-section py-20 md:py-24 lg:py-28">
+        {/* TRUST BADGES */}
+        <section className="mgk-section-tight py-16 md:py-20">
           <Inner>
-            <h2 className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+            <p style={{ textAlign: "center", fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: 28 }}>
+              Privacy and safety built in
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
+              {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
+                <span
+                  key={b}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 50,
+                    background: BG,
+                    fontSize: "0.8rem",
+                    fontWeight: 800,
+                    color: "#475569",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  {b}
+                </span>
+              ))}
+            </div>
+          </Inner>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="mgk-section py-24 md:py-32 lg:py-40">
+          <Inner>
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
               Learning that actually works
             </h2>
             <div className="mgk-grid grid-cols-1 md:grid-cols-3">
@@ -500,7 +519,7 @@ export default function HomePage() {
               ).map((card) => (
                 <article
                   key={card.step}
-                  className="flex h-full flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
                     <span
@@ -518,9 +537,9 @@ export default function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex flex-1 flex-col p-6 pb-7">
+                  <div className="flex-1 p-6 pb-7">
                     <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="flex-1 text-sm leading-relaxed text-gray-600">{card.desc}</p>
+                    <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
                   </div>
                 </article>
               ))}
@@ -529,14 +548,16 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="features" className="mgk-section py-20 md:py-24 lg:py-28">
+        <section id="features" className="mgk-section py-24 md:py-32 lg:py-40">
           <Inner>
             <h2
-              className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl"
               style={{
+                textAlign: "center",
+                fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
+                fontWeight: 900,
                 color: DARK,
                 maxWidth: 720,
-                margin: "0 auto",
+                margin: "0 auto 64px",
                 lineHeight: 1.2,
               }}
             >
@@ -574,7 +595,7 @@ export default function HomePage() {
               ).map((card) => (
                 <article
                   key={card.tag}
-                  className="flex h-full flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="flex flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
                     <Image
@@ -585,12 +606,12 @@ export default function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex flex-1 flex-col p-6 pb-7">
-                    <span className="mb-3 inline-block rounded-md bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                  <div className="flex-1 p-6 pb-7">
+                    <span className="mb-3 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                       {card.tag}
                     </span>
                     <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-600">{card.sentence}</p>
+                    <p className="mt-3 text-sm text-gray-600 leading-relaxed">{card.sentence}</p>
                   </div>
                 </article>
               ))}
@@ -599,23 +620,26 @@ export default function HomePage() {
         </section>
 
         {/* GAMES */}
-        <section id="games-preview" className="mgk-section py-20 md:py-24 lg:py-28" style={{ background: DARK }}>
+        <section id="games-preview" className="mgk-section py-24 md:py-32 lg:py-40" style={{ background: DARK }}>
           <Inner>
-            <h2 className="mb-3 text-center text-3xl font-black text-white md:text-4xl">
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
               Learning through play
             </h2>
-            <p className="mx-auto mb-12 max-w-xl text-center text-base font-semibold text-white/75 md:text-lg">
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 64, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
               5 eco-themed games that make typing practice addictive
             </p>
             <div
-              className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-5"
+              className="flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible"
+              style={{ scrollSnapType: "x mandatory" }}
             >
               {PREVIEW_GAMES.map((g) => (
                 <Link
                   key={g.name}
                   href="/games"
-                  className="mgk-card-ds flex h-full flex-col"
+                  className="mgk-card-ds shrink-0"
                   style={{
+                    width: "min(280px, 85vw)",
+                    scrollSnapAlign: "start",
                     overflow: "hidden",
                     padding: 0,
                     textDecoration: "none",
@@ -632,11 +656,9 @@ export default function HomePage() {
                       }}
                     />
                   </div>
-                  <div className="flex flex-1 flex-col" style={{ padding: "18px 20px" }}>
+                  <div style={{ padding: "18px 20px" }}>
                     <p style={{ fontWeight: 900, color: DARK, margin: 0, fontSize: "1.05rem" }}>{g.name}</p>
-                    <p className="flex-1" style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>
-                      {g.desc}
-                    </p>
+                    <p style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>{g.desc}</p>
                   </div>
                 </Link>
               ))}
@@ -644,7 +666,8 @@ export default function HomePage() {
             <div style={{ textAlign: "center", marginTop: 36 }}>
               <Link
                 href="/games"
-                className={SECONDARY_CTA}
+                className="btn-ghost"
+                style={{ display: "inline-flex", alignItems: "center", height: 52, padding: "0 32px" }}
               >
                 Explore All Games
               </Link>
@@ -653,7 +676,7 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section className="mgk-section py-20 md:py-24 lg:py-28">
+        <section className="mgk-section py-24 md:py-32 lg:py-40">
           <div className="mgk-container">
             <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
               Join us as an early adopter
@@ -683,14 +706,14 @@ export default function HomePage() {
               ).map(({ title, desc, Icon }) => (
                 <article
                   key={title}
-                  className="flex h-full flex-col rounded-md border border-gray-200 bg-white p-8 shadow-sm transition-shadow duration-200 hover:shadow-md"
+                  className="rounded-md bg-white p-8 shadow-sm transition-shadow duration-200 hover:shadow-md border border-gray-200"
                 >
                   <div className="h-1 w-12 rounded bg-green-500 mb-6" aria-hidden />
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
                     <Icon className="h-12 w-12 text-green-600" aria-hidden />
                   </div>
                   <h3 className="mt-6 text-lg font-bold text-gray-900">{title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-600">{desc}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{desc}</p>
                 </article>
               ))}
             </div>
@@ -701,13 +724,13 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/signup"
-                  className={PRIMARY_CTA}
+                  className="inline-flex items-center justify-center rounded-md bg-green-600 px-8 py-3 text-base font-bold text-white shadow-sm transition hover:bg-green-700"
                 >
                   Get Started Free
                 </Link>
                 <a
                   href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
-                  className={SECONDARY_CTA}
+                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-900 bg-white px-8 py-3 text-base font-bold text-gray-900 transition hover:bg-gray-50"
                 >
                   Schools: Book a Demo
                 </a>
@@ -717,46 +740,28 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="mgk-section py-20 md:py-24 lg:py-28">
+        <section className="mgk-section py-24 md:py-32 lg:py-40">
           <Inner>
-            <h2 className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+            <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
               Simple pricing for every family
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, maxWidth: 800, margin: "0 auto" }}>
-              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32 }}>
+              <div className="mgk-card-ds bg-white" style={{ padding: 32 }}>
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
-                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
-                  10 lessons, progress tracking, kid-safe.
-                </p>
-                <Link href="/signup" className={PRIMARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
+                <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   Start free
                 </Link>
               </div>
-              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
+              <div className="mgk-card-ds bg-white" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
                 <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
                   $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
                 </p>
-                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
-                  Unlimited lessons, parent dashboard, eco rewards.
-                </p>
-                <Link href="/pricing" className={PRIMARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
+                <Link href="/pricing" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   View Family Plan
-                </Link>
-              </div>
-              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32 }}>
-                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
-                  School Starter
-                </p>
-                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                  $49<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
-                </p>
-                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
-                  Classroom access, teacher dashboard, student progress tracking.
-                </p>
-                <Link href="/pricing" className={SECONDARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
-                  View School Plan
                 </Link>
               </div>
             </div>
@@ -769,21 +774,28 @@ export default function HomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="mgk-section py-20 md:py-24 lg:py-28 text-center">
+        <section className="mgk-section py-24 md:py-32 lg:py-40 text-center">
           <Inner>
             <div style={{ maxWidth: 560, margin: "0 auto" }}>
               <h2 className="text-gray-900" style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: 28 }}>
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/signup" className={PRIMARY_CTA}>
-                  Start Free Today
-                </Link>
-                <Link href="/pricing" className={SECONDARY_CTA}>
-                  View Pricing
-                </Link>
-              </div>
-              <p className="mt-4 text-sm text-gray-500">Free forever for first 10 lessons. No credit card.</p>
+              <form className="mx-auto flex max-w-[480px] flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    className="h-[52px] flex-1 basis-[200px] rounded-md border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-900 outline-none ring-offset-white focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10"
+                  />
+                  <button
+                    type="submit"
+                    className="h-[52px] rounded-md bg-gray-900 px-7 text-sm font-bold text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.99]"
+                  >
+                    Start Free
+                  </button>
+                </div>
+              </form>
+              <p className="mt-4 text-sm font-semibold text-gray-500">No spam. Unsubscribe anytime.</p>
             </div>
           </Inner>
         </section>
