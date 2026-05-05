@@ -1411,10 +1411,10 @@ export default function ParentDashboard() {
                 </TableHeader>
                 <TableBody>
                   {[
-                    ["Lessons completed", "12"],
-                    ["Time spent", "2h 45m"],
-                    ["WPM improvement", "+8 WPM"],
-                    ["Eco actions", "3"],
+                    ["Lessons completed", "—"],
+                    ["Time spent", "—"],
+                    ["WPM improvement", "—"],
+                    ["Eco actions", "—"],
                   ].map(([label, value]) => (
                     <TableRow key={label}>
                       <TableCell className="text-muted-foreground">{label}</TableCell>
@@ -1441,7 +1441,7 @@ export default function ParentDashboard() {
                   <p className="text-sm text-muted-foreground">Current plan</p>
                   <p className="font-heading text-xl font-bold">Family plan</p>
                   <p className="text-lg font-semibold text-primary">$9.99/month</p>
-                  <p className="text-sm text-muted-foreground">Next billing date: May 25, 2024</p>
+                  <p className="text-sm text-muted-foreground">Next billing date: May 25, 2026</p>
                   <a href="#" className="text-sm font-semibold text-primary hover:underline">
                     Manage subscription →
                   </a>

@@ -413,7 +413,7 @@ export default function SignupPage() {
         style={{ background: DARK }}
       >
         <div>
-          <p className="font-heading text-3xl font-extrabold leading-tight">Join 10,000+ families</p>
+          <p className="font-heading text-3xl font-extrabold leading-tight">Now in early access</p>
           <p className="mt-4 max-w-md text-base font-semibold text-white/80">
             Start your child&apos;s typing journey with planet-friendly lessons.
           </p>

@@ -564,7 +564,7 @@ export default function HomePage() {
                   alt: "Virtual pet companion for typing",
                   title: "Meet your typing companion",
                   desc: "Choose a Panda or Turtle. Type daily to keep them happy. Miss a day and they get sad — kids love coming back.",
-                  items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Drives retention"],
+                  items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Kids keep coming back"],
                 },
               ] as const
             ).map((card) => (

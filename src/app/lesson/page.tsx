@@ -2534,7 +2534,7 @@ export default function LessonPage() {
 
       {/* MAIN CONTENT */}
       <div className="lesson-main-pad" style={{ maxWidth: 860, margin: "0 auto", padding: "8px 8px 0" }}>
-        {/* TYPING AREA (TypingClub style) */}
+        {/* TYPING AREA */}
         <div
           className="md:pr-[232px]"
           style={{
