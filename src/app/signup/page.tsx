@@ -402,7 +402,14 @@ export default function SignupPage() {
   );
 
   return (
-    <MinimalAuthShell title="Create your account" subtitle="Choose how you’ll use My Green Keys">
+    <MinimalAuthShell
+      title="Create your account"
+      subtitle="Choose how you’ll use My Green Keys"
+      sideImageSrc="/images/ui/ui-onboarding.jpg.jpg"
+      sideImageAlt="Welcome illustration"
+      sideTitle="Welcome to My Green Keys"
+      sideSubtitle="Learn typing, earn eco points, and grow your progress."
+    >
       {googleGateLoading ? (
         <div className="text-center text-sm text-gray-500">Finishing Google sign-in…</div>
       ) : (

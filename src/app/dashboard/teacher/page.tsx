@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, startTransition, useState } from "react";
 import {
   Activity,
@@ -631,7 +632,24 @@ export default function TeacherDashboard() {
                     </Card>
                   ) : enrolledStudents.length === 0 ? (
                     <Card className="border-dashed">
-                      <CardContent className="py-6 text-sm text-muted-foreground">No students enrolled yet.</CardContent>
+                      <CardContent className="py-6">
+                        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+                          <Image
+                            src="/images/ui/ui-empty-state.jpg"
+                            alt=""
+                            width={160}
+                            height={160}
+                            className="h-auto w-[160px] shrink-0 rounded-md object-cover"
+                            priority={false}
+                          />
+                          <div>
+                            <div className="text-base font-extrabold text-[#1A2F23]">No students enrolled yet</div>
+                            <div className="mt-1 text-sm font-semibold text-muted-foreground">
+                              Share your class code so students can join, then come back to view progress.
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
                     </Card>
                   ) : (
                     <Table>

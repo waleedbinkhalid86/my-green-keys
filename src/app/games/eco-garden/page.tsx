@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
@@ -1042,7 +1043,45 @@ export default function EcoGardenPage() {
                   🐾 {activeAnimals.length} visitors
                 </span>
               </div>
-              {grid}
+              {totalPlants === 0 ? (
+                <div
+                  style={{
+                    marginTop: 12,
+                    borderRadius: 14,
+                    border: "1px solid rgba(0,0,0,0.10)",
+                    background: "rgba(255,255,255,0.72)",
+                    overflow: "hidden",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
+                  }}
+                >
+                  <div style={{ position: "relative", height: 220 }}>
+                    <Image
+                      src="/images/ui/ui-empty-garden.jpg"
+                      alt=""
+                      fill
+                      sizes="(max-width: 720px) 92vw, 640px"
+                      className="object-cover"
+                      priority
+                    />
+                    <div
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 100%)",
+                      }}
+                    />
+                    <div style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
+                      <div style={{ fontWeight: 950, fontSize: 18 }}>Your garden is ready</div>
+                      <div style={{ marginTop: 4, fontWeight: 700, fontSize: 13, opacity: 0.85 }}>
+                        Start watering to plant your first sprouts and unlock visitors.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                grid
+              )}
               {activeAnimals.length > 0 && (
                 <div style={{ marginTop: 16, fontWeight: 700, fontSize: 14 }}>
                   Visiting: {activeAnimals.map((a) => `${a.emoji} ${a.label}`).join(" · ")}

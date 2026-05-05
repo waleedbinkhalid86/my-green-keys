@@ -217,6 +217,21 @@ export default function CertificatePage() {
               overflow: "hidden",
             }}
           >
+          {/* Decorative background image */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.12,
+              pointerEvents: "none",
+              backgroundImage: "url(/images/ui/ui-certificate-bg.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "saturate(1.05) contrast(1.05)",
+            }}
+          />
+
           {/* Decorative leaves */}
           <div aria-hidden style={{ position: "absolute", inset: -40, opacity: 0.18, pointerEvents: "none", backgroundImage: "radial-gradient(circle at 20% 20%, #4CAF50 0, transparent 45%), radial-gradient(circle at 85% 30%, #2d6a4f 0, transparent 48%), radial-gradient(circle at 70% 85%, #FFEB3B 0, transparent 52%)" }} />
 
