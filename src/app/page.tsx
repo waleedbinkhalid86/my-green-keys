@@ -1,8 +1,16 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Leaf, Menu, MessageSquare, School, Users } from "lucide-react";
+import { Leaf, Menu, MessageSquare, School, Users } from "lucide-react";
 import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
@@ -112,9 +120,30 @@ const PREVIEW_GAMES = [
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [demoModalOpen, setDemoModalOpen] = React.useState(false);
 
   return (
     <>
+      <Dialog open={demoModalOpen} onOpenChange={setDemoModalOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Demo video coming soon</DialogTitle>
+            <DialogDescription>
+              Demo video coming soon. Sign up free to try the product right now.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Link
+              href="/signup"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-green-700"
+              onClick={() => setDemoModalOpen(false)}
+            >
+              Sign Up Free
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <nav
         style={{
           background: DARK,
@@ -337,17 +366,10 @@ export default function HomePage() {
           </h1>
 
           <p
-            style={{
-              fontSize: "1.25rem",
-              color: "rgba(255,255,255,0.85)",
-              fontWeight: 600,
-              lineHeight: 1.65,
-              maxWidth: 560,
-              margin: "0 auto 36px",
-              animation: "float-up 0.9s ease 0.5s both",
-            }}
+            className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+            style={{ margin: "0 auto 36px", animation: "float-up 0.9s ease 0.5s both" }}
           >
-            The only typing platform where every word your child types helps save the planet
+            Built for ages 6-14. 100 lessons, 5 games, and a virtual pet that needs your child to type daily.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
@@ -372,13 +394,14 @@ export default function HomePage() {
             >
               Start Free Today
             </Link>
-            <a
-              href="#games-preview"
+            <button
+              type="button"
               className="btn-ghost"
               style={{ fontSize: "1rem", padding: "0 28px", height: 52, display: "inline-flex", alignItems: "center" }}
+              onClick={() => setDemoModalOpen(true)}
             >
               Watch Demo
-            </a>
+            </button>
           </div>
           <p style={{ marginTop: 20, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
             No credit card required. Free forever.
@@ -463,7 +486,7 @@ export default function HomePage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section id="how-it-works" className="mgk-section py-20 md:py-28 lg:py-32">
+        <section id="how-it-works" className="mgk-section py-24 md:py-32 lg:py-40">
           <Inner>
             <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
               Learning that actually works
@@ -525,7 +548,7 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="features" className="mgk-section py-20 md:py-28 lg:py-32">
+        <section id="features" className="mgk-section py-24 md:py-32 lg:py-40">
           <Inner>
             <h2
               style={{
@@ -549,24 +572,24 @@ export default function HomePage() {
                     src: "/images/homepage/feature-lessons.jpg",
                     alt: "Engaging typing lessons for kids",
                     title: "100 lessons designed by experts",
-                    desc: "Progressive curriculum from home row to advanced typing. Every lesson teaches kids about the planet.",
-                    items: ["Color-coded keyboard guide", "Real-time WPM tracking", "Instant feedback", "4 learning modules"],
+                    sentence:
+                      "Color-coded keyboard guide, real-time WPM tracking, and instant feedback across 4 progressive learning modules.",
                   },
                   {
                     tag: "Eco Rewards",
                     src: "/images/homepage/feature-eco.jpg",
                     alt: "Real eco rewards for kids",
                     title: "The world's first eco rewards system",
-                    desc: "Kids upload photos of real eco actions like planting trees and watering plants. Parents approve. Kids earn points.",
-                    items: ["Photo upload rewards", "Parent approval system", "Eco points and badges", "Real-world impact"],
+                    sentence:
+                      "Kids photograph real-world eco actions, parents approve, and points earned plant trees through verified partners.",
                   },
                   {
                     tag: "Virtual Pet",
                     src: "/images/homepage/feature-pet.jpg",
                     alt: "Virtual pet companion for typing",
                     title: "Meet your typing companion",
-                    desc: "Choose a Panda or Turtle. Type daily to keep them happy. Miss a day and they get sad — kids love coming back.",
-                    items: ["Panda or Turtle", "Daily health system", "Emotional engagement", "Kids keep coming back"],
+                    sentence:
+                      "Choose a Panda or Turtle. Daily typing keeps them happy — miss a day and they get sad. Kids never want to disappoint.",
                   },
                 ] as const
               ).map((card) => (
@@ -588,15 +611,7 @@ export default function HomePage() {
                       {card.tag}
                     </span>
                     <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="mb-4 text-sm leading-relaxed text-gray-600">{card.desc}</p>
-                    <ul className="space-y-2">
-                      {card.items.map((item) => (
-                        <li key={item} className="flex items-start gap-2">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                          <span className="text-sm text-gray-700">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="mt-3 text-sm text-gray-600 leading-relaxed">{card.sentence}</p>
                   </div>
                 </article>
               ))}
@@ -605,12 +620,12 @@ export default function HomePage() {
         </section>
 
         {/* GAMES */}
-        <section id="games-preview" className="mgk-section py-20 md:py-28 lg:py-32" style={{ background: DARK }}>
+        <section id="games-preview" className="mgk-section py-24 md:py-32 lg:py-40" style={{ background: DARK }}>
           <Inner>
             <h2 style={{ textAlign: "center", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontWeight: 900, color: "#fff", marginBottom: 12 }}>
               Learning through play
             </h2>
-            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 56, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "1.05rem", marginBottom: 64, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
               5 eco-themed games that make typing practice addictive
             </p>
             <div
@@ -661,7 +676,7 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section className="mgk-section py-20 md:py-28 lg:py-32">
+        <section className="mgk-section py-24 md:py-32 lg:py-40">
           <div className="mgk-container">
             <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
               Join us as an early adopter
@@ -725,7 +740,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="mgk-section py-20 md:py-28 lg:py-32">
+        <section className="mgk-section py-24 md:py-32 lg:py-40">
           <Inner>
             <h2 style={{ textAlign: "center", fontSize: "clamp(1.65rem, 3vw, 2.2rem)", fontWeight: 900, color: DARK, marginBottom: 64 }}>
               Simple pricing for every family
@@ -759,7 +774,7 @@ export default function HomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="mgk-section py-20 md:py-28 lg:py-32 text-center">
+        <section className="mgk-section py-24 md:py-32 lg:py-40 text-center">
           <Inner>
             <div style={{ maxWidth: 560, margin: "0 auto" }}>
               <h2 className="text-gray-900" style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: 28 }}>
