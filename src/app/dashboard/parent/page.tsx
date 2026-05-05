@@ -13,6 +13,7 @@ import {
   Globe,
   Home,
   Leaf,
+  Sprout,
   LogOut,
   PawPrint,
   Settings,
@@ -341,6 +342,7 @@ export default function ParentDashboard() {
   }, []);
 
   const todaysFact = useMemo(() => {
+    if (!ecoFacts || ecoFacts.length === 0) return null;
     const today = new Date().toISOString().slice(0, 10);
     let h = 0;
     const seed = `parent:${today}`;
@@ -348,6 +350,12 @@ export default function ParentDashboard() {
     const fact = ecoFacts[h % ecoFacts.length];
     return { emoji: fact.emoji, fact: fact.fact, source: fact.source };
   }, []);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[ParentDashboard] todaysFact", todaysFact);
+    }
+  }, [todaysFact]);
 
   useEffect(() => {
     const loadPending = async () => {
@@ -1004,14 +1012,47 @@ export default function ParentDashboard() {
             )}
           </div>
           <div
-            className={cn(statCardClass, "mt-4 border-0 bg-gradient-to-br from-[#1B5E20] to-[#2ECC71] text-white")}
+            className={cn(
+              "mt-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5",
+              "flex flex-col gap-4 sm:flex-row sm:items-start"
+            )}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{todaysFact.emoji}</span>
-              <p className="font-heading text-[20px] font-bold text-white">Today&apos;s eco fact</p>
-            </div>
-            <p className="mt-3 text-base font-semibold leading-relaxed text-white/95">{todaysFact.fact}</p>
-            <p className="mt-2 text-sm font-semibold text-white/70">Source: {todaysFact.source}</p>
+            {!todaysFact ? (
+              <div className="flex w-full items-center gap-3">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                  <Sprout className="size-6" strokeWidth={2.25} aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg font-bold text-gray-900">Today&apos;s Eco Fact</p>
+                  <p className="text-sm font-semibold text-gray-600">Loading today&apos;s fact...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start gap-4">
+                  <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-emerald-50 sm:size-28">
+                    <Image
+                      src="/images/ui/ui-empty-garden.jpg"
+                      alt="Eco Fact illustration"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 96px, 112px"
+                      priority
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl" aria-hidden>
+                        {todaysFact.emoji}
+                      </span>
+                      <p className="text-lg font-bold text-gray-900">Today&apos;s Eco Fact</p>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-700">{todaysFact.fact}</p>
+                    <p className="mt-2 text-xs italic text-gray-500">Source: {todaysFact.source}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
