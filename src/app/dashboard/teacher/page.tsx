@@ -8,7 +8,6 @@ import {
   Copy,
   Droplets,
   FileBarChart,
-  FileText,
   GraduationCap,
   LayoutDashboard,
   Leaf,
@@ -55,12 +54,14 @@ const TEACHER_SIDEBAR = [
   { href: "#teacher-students", label: "Students", Icon: Users },
   { href: "#teacher-leaderboard", label: "Leaderboard", Icon: Trophy },
   { href: "#teacher-lessons", label: "Custom Lessons", Icon: BookOpen },
-  { href: "#teacher-reports", label: "Reports", Icon: FileText },
   { href: "#teacher-school", label: "School Settings", Icon: Settings },
 ] as const;
 
 const selectClassName =
-  "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+const compactSurfaceClass = "rounded-md bg-white shadow-sm ring-1 ring-black/5";
+const compactStatCardClass = cn(compactSurfaceClass, "p-4 h-32 border border-gray-100");
 
 export default function TeacherDashboard() {
   const { showToast } = useToast();
@@ -77,6 +78,7 @@ export default function TeacherDashboard() {
   const [schoolName, setSchoolName] = useState("Green Valley Primary School");
   const [schoolLogoDataUrl, setSchoolLogoDataUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#2ECC71");
+  const [teacherName, setTeacherName] = useState("there");
 
   const [teacherId, setTeacherId] = useState<string>("");
   const [classesLoading, setClassesLoading] = useState(true);
@@ -164,6 +166,8 @@ export default function TeacherDashboard() {
   }, []);
 
   const activeClass = classes.find((c) => c.id === selectedClassId);
+  const activeClassLabel = activeClass?.name?.trim() || "Your class";
+  const activeStudentCount = enrolledStudents.length;
 
   const initials = (name: string) =>
     name
@@ -248,6 +252,23 @@ export default function TeacherDashboard() {
   useEffect(() => {
     startTransition(() => {
       void loadClasses();
+    });
+  }, []);
+
+  useEffect(() => {
+    startTransition(() => {
+      void (async () => {
+        try {
+          const supabase = createClient();
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) return;
+          const { data } = await supabase.from("profiles").select("full_name").eq("id", userData.user.id).maybeSingle();
+          const n = (data as { full_name?: string } | null)?.full_name?.trim();
+          setTeacherName(n || "there");
+        } catch {
+          setTeacherName("there");
+        }
+      })();
     });
   }, []);
 
@@ -351,7 +372,7 @@ export default function TeacherDashboard() {
             <DialogDescription>Generates a 6-character class code (example: GRN42X).</DialogDescription>
           </DialogHeader>
           {createClassError ? (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
               {createClassError}
             </div>
           ) : null}
@@ -376,13 +397,13 @@ export default function TeacherDashboard() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex min-h-screen bg-[#FAFAFA] font-sans">
+      <div className="mx-auto flex w-full max-w-[1400px] min-h-screen bg-[#FAFAFA] font-sans">
         <aside
           className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
           aria-label="Teacher navigation"
         >
             <div className="mb-8 flex items-center gap-3 px-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-white">
+            <div className="flex size-10 items-center justify-center rounded-md bg-gray-900 text-white">
               <Leaf className="h-6 w-6" strokeWidth={2.25} aria-hidden />
             </div>
             <div>
@@ -399,7 +420,7 @@ export default function TeacherDashboard() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
+                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
                     active ? "bg-[#2ECC71]/12 text-[#15803d]" : "text-[#374151] hover:bg-[#FAFAFA]"
                   )}
                 >
@@ -412,7 +433,7 @@ export default function TeacherDashboard() {
           <div className="mt-auto pt-8">
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-gray-50 hover:text-gray-900"
               onClick={async () => {
                 const supabase = createClient();
                 await supabase.auth.signOut();
@@ -425,14 +446,21 @@ export default function TeacherDashboard() {
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1">
+        <div
+          className={cn(
+            "min-w-0 flex-1",
+            // Dot-grid background on content area (Linear-like)
+            "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
+          )}
+        >
           <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-6 py-4 backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">Teacher Dashboard</h1>
+                <p className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">
+                  Welcome back, {teacherName}
+                </p>
                 <p className="text-sm font-semibold text-[#64748b]">
-                  {schoolName} ·{" "}
-                  {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                  {activeClassLabel} · {activeStudentCount} students
                 </p>
               </div>
               <div className="flex size-10 items-center justify-center rounded-full bg-[#2ECC71]/20 text-sm font-extrabold text-[#15803d]" aria-hidden>
@@ -443,26 +471,60 @@ export default function TeacherDashboard() {
 
           <div className="mgk-container space-y-10 py-8">
         <section id="teacher-overview" className="scroll-mt-24">
-          <div className="mgk-grid md:grid-cols-2 lg:grid-cols-4">
-            {(
-              [
-                { Icon: Users, label: "Total Students", value: "48" },
-                { Icon: Activity, label: "Active Today", value: "32" },
-                { Icon: Zap, label: "Class Average WPM", value: "28" },
-                { Icon: BookOpen, label: "Lessons Completed Today", value: "127" },
-              ] as const
-            ).map((card) => {
-              const StatIcon = card.Icon;
-              return (
-              <Card key={card.label}>
-                <CardHeader className="pb-2">
-                  <StatIcon className="h-8 w-8 text-green-600" strokeWidth={2.25} aria-hidden />
-                  <CardDescription className="font-semibold">{card.label}</CardDescription>
-                  <CardTitle className="font-heading text-3xl text-[#2ECC71]">{card.value}</CardTitle>
-                </CardHeader>
-              </Card>
-            );
-            })}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              {
+                Icon: Users,
+                label: "Active Students",
+                value: activeStudentCount ? String(activeStudentCount) : "—",
+                sub: "This class",
+                iconClass: "bg-sky-50 text-sky-700",
+              },
+              {
+                Icon: BookOpen,
+                label: "Lessons Completed",
+                value: "—",
+                sub: "Connect analytics",
+                iconClass: "bg-green-50 text-green-700",
+              },
+              {
+                Icon: Zap,
+                label: "Class Avg WPM",
+                value: "—",
+                sub: "Last 7 days",
+                iconClass: "bg-yellow-50 text-yellow-700",
+              },
+              {
+                Icon: Leaf,
+                label: "Eco Actions",
+                value: "—",
+                sub: "This week",
+                iconClass: "bg-emerald-50 text-emerald-700",
+              },
+            ].map(({ Icon, label, value, sub, iconClass }) => (
+              <div key={label} className={compactStatCardClass}>
+                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", iconClass)}>
+                  <Icon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+                </div>
+                <p className="mt-3 text-xs text-gray-500">{label}</p>
+                <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{value}</p>
+                <p className="mt-2 text-xs text-gray-400">{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            {[
+              { Icon: GraduationCap, label: "Class", value: activeClassLabel },
+              { Icon: Users, label: "Students", value: activeStudentCount ? String(activeStudentCount) : "—" },
+              { Icon: Activity, label: "Status", value: activeStudentCount ? "Active" : "Getting started" },
+            ].map(({ Icon, label, value }) => (
+              <div key={label} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-4 py-2">
+                <Icon className="h-4 w-4 text-gray-500" strokeWidth={2.25} aria-hidden />
+                <span className="text-sm text-gray-600">{label}:</span>
+                <span className="text-sm font-semibold text-gray-900">{value}</span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -485,7 +547,7 @@ export default function TeacherDashboard() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="rounded-[50px] border-[#2ECC71]/40 font-bold"
+                  className="rounded-md border-[#2ECC71]/40 font-bold"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(activeClass.code);
@@ -501,7 +563,7 @@ export default function TeacherDashboard() {
               ) : null}
               <Button
                 size="sm"
-                className="rounded-[50px] bg-[#2ECC71] font-bold hover:bg-[#27ae60]"
+                className="rounded-md bg-[#2ECC71] font-bold hover:bg-[#27ae60]"
                 onClick={() => {
                   setCreateClassError("");
                   setShowCreateClass(true);
@@ -513,7 +575,7 @@ export default function TeacherDashboard() {
           </div>
 
           {classesError ? (
-            <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {classesError}
             </div>
           ) : null}
@@ -523,7 +585,7 @@ export default function TeacherDashboard() {
               <CardContent className="py-8 text-muted-foreground">Loading classes…</CardContent>
             </Card>
           ) : classes.length === 0 ? (
-            <Card className="border-primary/30 bg-primary/5">
+            <Card className="border-gray-200 bg-white">
               <CardHeader>
                 <CardTitle className="font-heading text-base">No classes yet</CardTitle>
                 <CardDescription>Create a class to generate a code students can use to join.</CardDescription>
@@ -559,7 +621,7 @@ export default function TeacherDashboard() {
                 <div>
                   <h3 className="font-heading mb-3 text-base font-semibold">Enrolled students</h3>
                   {studentsError ? (
-                    <div className="mb-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                    <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                       {studentsError}
                     </div>
                   ) : null}
@@ -612,48 +674,57 @@ export default function TeacherDashboard() {
 
         <section id="teacher-leaderboard" className="scroll-mt-24">
           <h2 className="font-heading mb-4 text-xl font-bold">Student leaderboard</h2>
-          <Card className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Rank</TableHead>
-                  <TableHead>Avatar</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>WPM</TableHead>
-                  <TableHead>Lessons</TableHead>
-                  <TableHead>Eco Points</TableHead>
-                  <TableHead>Badge</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboardData.map((student) => (
-                  <TableRow
+          <Card className="border border-gray-100">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                {leaderboardData.slice(0, 5).map((student) => (
+                  <div
                     key={student.rank}
-                    className={cn(student.rank <= 3 && "bg-primary/5")}
+                    className="flex items-center justify-between gap-4 rounded-md border border-gray-100 bg-white px-4 py-3"
                   >
-                    <TableCell className="font-semibold">{student.rank}</TableCell>
-                    <TableCell>
-                      <div className="flex size-9 items-center justify-center rounded-full bg-[#2ECC71]/20 text-xs font-extrabold text-[#15803d]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">
+                        {student.rank}
+                      </div>
+                      <div className="flex size-9 items-center justify-center rounded-full bg-[#2ECC71]/15 text-xs font-extrabold text-[#15803d]">
                         {initials(student.name)}
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell className="font-semibold text-primary">{student.wpm}</TableCell>
-                    <TableCell>{student.lessons}</TableCell>
-                    <TableCell className="font-semibold text-[#15803d]">{student.ecoPoints}</TableCell>
-                    <TableCell className="text-lg">
-                      {student.badge === "trophy" ? (
-                        <Trophy className="h-5 w-5 text-amber-600" strokeWidth={2.25} aria-label="Trophy" />
-                      ) : student.badge === "star" ? (
-                        <Sparkles className="h-5 w-5 text-amber-500" strokeWidth={2.25} aria-label="Star" />
-                      ) : student.badge === "leaf" ? (
-                        <Leaf className="h-5 w-5 text-green-600" strokeWidth={2.25} aria-label="Eco badge" />
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900">{student.name}</p>
+                        <p className="text-xs text-gray-500">
+                          Accuracy {student.accuracy}% · Lessons {student.lessons}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">WPM</p>
+                        <p className="text-sm font-semibold text-gray-900">{student.wpm}</p>
+                      </div>
+                      <div className="text-lg">
+                        {student.badge === "trophy" ? (
+                          <Trophy className="h-5 w-5 text-amber-600" strokeWidth={2.25} aria-label="Trophy" />
+                        ) : student.badge === "star" ? (
+                          <Sparkles className="h-5 w-5 text-amber-500" strokeWidth={2.25} aria-label="Star" />
+                        ) : student.badge === "leaf" ? (
+                          <Leaf className="h-5 w-5 text-green-600" strokeWidth={2.25} aria-label="Eco badge" />
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="border-gray-200 text-gray-900 hover:bg-gray-50">
+                  Export report
+                </Button>
+                <Button variant="outline" size="sm" className="border-gray-200 text-gray-900 hover:bg-gray-50">
+                  View full leaderboard
+                </Button>
+              </div>
+            </CardContent>
           </Card>
         </section>
 
@@ -670,54 +741,55 @@ export default function TeacherDashboard() {
             value={searchStudent}
             onChange={(e) => setSearchStudent(e.target.value)}
           />
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>WPM</TableHead>
-                <TableHead>Accuracy</TableHead>
-                <TableHead>Lessons</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pagedStudents.map((student) => (
-                <TableRow
-                  key={student.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedStudent(selectedStudent === student.id ? null : student.id)}
-                >
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell className="font-semibold text-primary">{student.wpm}</TableCell>
-                  <TableCell>{student.accuracy}%</TableCell>
-                  <TableCell>{student.lessons}</TableCell>
-                  <TableCell className="text-muted-foreground">{student.lastActive}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-wrap justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="border-[#2ECC71]/40 font-semibold text-[#15803d]"
-                        onClick={() => window.open(`/report/${student.id}`, "_blank", "noopener,noreferrer")}
-                      >
-                        View Report
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => showToast("info", "Messaging coming soon — contact via school email.")}
-                      >
-                        Send Message
-                      </Button>
+          <Card className="border border-gray-100">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                {pagedStudents.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-gray-100 bg-white px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">{student.name}</p>
+                      <p className="text-xs text-gray-500">Last active: {student.lastActive}</p>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {[
+                        { k: "WPM", v: String(student.wpm) },
+                        { k: "Accuracy", v: `${student.accuracy}%` },
+                        { k: "Lessons", v: String(student.lessons) },
+                      ].map(({ k, v }) => (
+                        <div key={k} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-3 py-2">
+                          <span className="text-xs text-gray-500">{k}</span>
+                          <span className="text-sm font-semibold text-gray-900">{v}</span>
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-200 text-gray-900 hover:bg-gray-50"
+                          onClick={() => window.open(`/report/${student.id}`, "_blank", "noopener,noreferrer")}
+                        >
+                          View report
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-200 text-gray-900 hover:bg-gray-50"
+                          onClick={() => showToast("info", "Messaging coming soon — contact via school email.")}
+                        >
+                          Message
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
             <span>
               Page {studentPage} of {studentPageCount}
@@ -856,7 +928,7 @@ export default function TeacherDashboard() {
             {ecoFeedData.map((item) => {
               const EcoIcon = item.Icon;
               return (
-              <Card key={item.id} className="border-primary/25 bg-primary/5">
+              <Card key={item.id} className="border border-gray-100 bg-white">
                 <CardContent className="py-4">
                   <p className="flex flex-wrap items-center gap-2 font-medium">
                     <EcoIcon className="h-5 w-5 shrink-0 text-green-700" strokeWidth={2} aria-hidden />
@@ -870,7 +942,7 @@ export default function TeacherDashboard() {
             );
             })}
           </div>
-          <Button variant="outline" className="mt-4 border-primary text-primary hover:bg-primary/10">
+          <Button variant="outline" className="mt-4 border-gray-200 text-gray-900 hover:bg-gray-50">
             View all
           </Button>
         </section>
@@ -933,34 +1005,7 @@ export default function TeacherDashboard() {
           </Card>
         </section>
 
-        <section id="teacher-reports" className="scroll-mt-24 pb-16">
-          <h2 className="font-heading mb-4 text-xl font-bold">Generate reports</h2>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div className="mgk-grid md:grid-cols-2">
-                <Button className="w-full" variant="secondary">
-                  Generate class report
-                </Button>
-                <div className="space-y-2">
-                  <Label>Individual student report</Label>
-                  <select className={selectClassName}>
-                    <option>Select a student…</option>
-                    {allStudentsData.map((student) => (
-                      <option key={student.id}>{student.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" className="size-4 rounded border-input accent-primary" />
-                Send to school admin
-              </label>
-              <Button className="w-full" size="lg">
-                Download PDF
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
+        {/* Reports section removed in favor of inline export actions */}
           </div>
         </div>
       </div>

@@ -77,9 +77,9 @@ const LeafIcon = () => (
 );
 
 const selectClassName =
-  "flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
+  "flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
-const compactSurfaceClass = "rounded-xl bg-white shadow-sm ring-1 ring-black/5";
+const compactSurfaceClass = "rounded-md bg-white shadow-sm ring-1 ring-black/5";
 const compactStatCardClass = cn(compactSurfaceClass, "p-4 h-32");
 const compactStatIconWrapClass = "flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-700";
 
@@ -212,7 +212,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
   return (
     <div
       className={cn(
-        "rounded-xl p-4 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md border-2 overflow-hidden",
+        "rounded-md p-4 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md border-2 overflow-hidden",
         tier,
       )}
     >
@@ -738,7 +738,7 @@ export default function ParentDashboard() {
             <DialogDescription>Create a child profile linked to your parent account.</DialogDescription>
           </DialogHeader>
           {addChildError ? (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
               {addChildError}
             </div>
           ) : null}
@@ -809,7 +809,7 @@ export default function ParentDashboard() {
           aria-label="Dashboard sections"
         >
           <div className="mb-8 flex items-center gap-3 px-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#2ECC71] text-white">
+            <div className="flex size-10 items-center justify-center rounded-md bg-[#2ECC71] text-white">
               <LeafIcon />
             </div>
             <div>
@@ -826,7 +826,7 @@ export default function ParentDashboard() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
+                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
                     active
                       ? "bg-[#2ECC71]/12 text-[#15803d]"
                       : "text-[#374151] hover:bg-[#FAFAFA] hover:text-[#1A2F23]"
@@ -841,7 +841,7 @@ export default function ParentDashboard() {
           <div className="mt-auto pt-8">
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
               onClick={async () => {
                 const supabase = createClient();
                 await supabase.auth.signOut();
@@ -882,7 +882,7 @@ export default function ParentDashboard() {
                 <a
                   href="#parent-billing"
                   title="Settings"
-                  className="inline-flex size-9 items-center justify-center rounded-xl text-[#1A2F23] hover:bg-[#F1F5F9] lg:hidden"
+                  className="inline-flex size-9 items-center justify-center rounded-md text-[#1A2F23] hover:bg-[#F1F5F9] lg:hidden"
                 >
                   <Settings className="size-5" strokeWidth={2} />
                 </a>
@@ -898,7 +898,7 @@ export default function ParentDashboard() {
 
           <div className="mgk-container space-y-10 py-8 sm:py-10">
         {childrenError ? (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
             {childrenError}
           </div>
         ) : null}
@@ -954,7 +954,7 @@ export default function ParentDashboard() {
         {childrenLoading ? (
           <div className="mgk-grid sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="mgk-skeleton h-28 rounded-xl" />
+              <div key={i} className="mgk-skeleton h-28 rounded-md" />
             ))}
           </div>
         ) : children.length === 0 ? (
@@ -968,7 +968,7 @@ export default function ParentDashboard() {
                 <CardDescription className="text-base font-semibold">
                   Create a linked child profile to track typing progress and eco actions.
                 </CardDescription>
-                <Button className="rounded-[50px]" onClick={() => setShowAddChildModal(true)}>
+                <Button className="rounded-md" onClick={() => setShowAddChildModal(true)}>
                   Add child
                 </Button>
               </div>
@@ -1037,13 +1037,13 @@ export default function ParentDashboard() {
           </div>
           <div
             className={cn(
-              "mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/5",
+              "mt-4 rounded-md bg-white p-4 shadow-sm ring-1 ring-black/5",
               "flex flex-col gap-4 sm:flex-row sm:items-start"
             )}
           >
             {!todaysFact ? (
               <div className="flex w-full items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <div className="flex size-12 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
                   <Sprout className="size-6" strokeWidth={2.25} aria-hidden />
                 </div>
                 <div className="min-w-0">
@@ -1091,13 +1091,13 @@ export default function ParentDashboard() {
             <Tabs value={selectedChildId} onValueChange={setSelectedChildId}>
               <TabsList
                 variant="line"
-                className="h-auto min-h-10 w-full flex-wrap justify-start gap-2 rounded-[50px] bg-[#F1F5F9] p-1 sm:w-auto"
+                className="h-auto min-h-10 w-full flex-wrap justify-start gap-2 rounded-md bg-[#F1F5F9] p-1 sm:w-auto"
               >
                 {children.map((child) => (
                   <TabsTrigger
                     key={child.id}
                     value={child.id}
-                    className="gap-2 rounded-[50px] data-[state=active]:bg-[#2ECC71] data-[state=active]:text-white"
+                    className="gap-2 rounded-md data-[state=active]:bg-[#2ECC71] data-[state=active]:text-white"
                   >
                     <UserRound
                       className={cn(
@@ -1380,12 +1380,12 @@ export default function ParentDashboard() {
           </svg>
 
           {ecoError ? (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {ecoError}
             </div>
           ) : null}
           {ecoSuccess ? (
-            <div className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">
+            <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">
               {ecoSuccess}
             </div>
           ) : null}
@@ -1393,7 +1393,7 @@ export default function ParentDashboard() {
           {ecoLoading ? (
             <div className="mgk-grid sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="mgk-skeleton h-72 rounded-xl" />
+                <div key={i} className="mgk-skeleton h-72 rounded-md" />
               ))}
             </div>
           ) : pendingPhotos.length === 0 ? (
@@ -1473,10 +1473,7 @@ export default function ParentDashboard() {
                   { Icon: TrendingUp, label: "WPM", value: "—" },
                   { Icon: Sprout, label: "Eco", value: "—" },
                 ].map(({ Icon, label, value }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 rounded-lg border border-gray-100 bg-white px-4 py-2"
-                  >
+                  <div key={label} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-4 py-2">
                     <Icon className="h-4 w-4 text-gray-500" strokeWidth={2.25} aria-hidden />
                     <span className="text-sm text-gray-600">{label}:</span>
                     <span className="text-sm font-semibold text-gray-900">{value}</span>
@@ -1500,7 +1497,7 @@ export default function ParentDashboard() {
           <h2 className="font-heading text-[20px] font-bold text-foreground">
             Subscription &amp; billing
           </h2>
-          <Card className="rounded-xl border border-gray-100 bg-white">
+          <Card className="rounded-md border border-gray-100 bg-white">
             <CardContent className="space-y-6 p-6">
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="space-y-2">

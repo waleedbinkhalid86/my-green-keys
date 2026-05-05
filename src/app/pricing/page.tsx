@@ -168,7 +168,7 @@ function PricingNav() {
     <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 no-underline">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-gray-900 text-white">
+          <div className="flex size-9 items-center justify-center rounded-md bg-gray-900 text-white">
             <LeafIconCustom />{" "}
           </div>
           <span className="text-sm font-semibold tracking-tight text-gray-900">
@@ -225,7 +225,7 @@ function CompareCell({ value }: { value: Cell }) {
   return <span className="text-sm text-[#374151]">{value}</span>;
 }
 
-const cardShell = "flex h-full flex-col rounded-xl bg-white p-8 border border-gray-200 transition-colors hover:border-gray-300";
+const cardShell = "flex h-full flex-col rounded-md bg-white p-8 border border-gray-200 transition-colors hover:border-gray-300";
 
 function PricingToggle({
   isYearly,
@@ -279,7 +279,7 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="rounded-md border border-gray-200 bg-white">
       <button
         type="button"
         className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left"
@@ -467,7 +467,7 @@ function PricingPageContent() {
         <div className="mgk-container">
           {ecoGardenExpired ? (
             <div
-              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
+              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-md border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
               role="status"
             >
               <Sprout className="mx-auto h-8 w-8 shrink-0 text-green-600 sm:mx-0" strokeWidth={2} aria-hidden />
@@ -478,7 +478,7 @@ function PricingPageContent() {
           ) : null}
           {checkoutError ? (
             <div
-              className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              className="mb-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
               role="alert"
             >
               {checkoutError}
@@ -745,7 +745,7 @@ function PricingPageContent() {
         <div className="mgk-container">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-gray-900">Compare plans</h2>
           <div className="mt-8 overflow-x-auto">
-            <div className="min-w-[720px] overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="min-w-[720px] overflow-hidden rounded-md border border-gray-200 bg-white">
               <table className="w-full border-collapse text-left text-sm">
                 <thead className="bg-gray-50">
                   <tr className="text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -813,7 +813,7 @@ function PricingPageContent() {
       {/* Final CTA */}
       <section className="mgk-section">
         <div className="mgk-container">
-          <div className="rounded-xl bg-gray-900 p-12 text-center text-white">
+          <div className="rounded-md bg-gray-900 p-12 text-center text-white">
             <h2 className="text-3xl font-semibold">Ready to start?</h2>
             <p className="mt-2 text-sm text-gray-400">Free forever for the first 10 lessons. No credit card.</p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
