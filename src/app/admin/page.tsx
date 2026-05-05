@@ -181,7 +181,7 @@ export default function AdminPanel() {
                 ].map((card, i) => (
                   <div
                     key={i}
-                    className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                    className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                     style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                   >
                     <div className="text-3xl mb-2">{card.icon}</div>
@@ -198,7 +198,7 @@ export default function AdminPanel() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                 {/* Revenue Chart */}
                 <div
-                  className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-lg font-bold text-white mb-4">📈 Revenue (Last 7 Days)</h2>
@@ -224,14 +224,14 @@ export default function AdminPanel() {
                 {/* Stats Box */}
                 <div className="space-y-4">
                   <div
-                    className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                    className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                     style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                   >
                     <p className="text-gray-400 text-sm">Total This Week</p>
                     <p className="text-3xl font-bold text-white mt-2">$371,200</p>
                   </div>
                   <div
-                    className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                    className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                     style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                   >
                     <p className="text-gray-400 text-sm">Total This Month</p>
@@ -244,7 +244,7 @@ export default function AdminPanel() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Signups */}
                 <div
-                  className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-lg font-bold text-white mb-4">🆕 Recent Signups</h2>
@@ -272,7 +272,7 @@ export default function AdminPanel() {
 
                 {/* Recent Transactions */}
                 <div
-                  className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-lg font-bold text-white mb-4">💳 Recent Transactions</h2>
@@ -462,7 +462,7 @@ export default function AdminPanel() {
 
               {/* Revenue Chart */}
               <div
-                className="p-6 rounded-3xl border mb-8 shadow-sm transition-shadow hover:shadow-lg"
+                className="p-6 rounded-xl border mb-8 shadow-sm transition-shadow hover:shadow-lg"
                 style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
               >
                 <h2 className="text-lg font-bold text-white mb-4">📊 Last 6 Months</h2>
@@ -705,7 +705,7 @@ export default function AdminPanel() {
               <div>
                 <h2 className="text-lg font-bold text-white mb-4">Expired Codes</h2>
                 <div
-                  className="p-6 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-6 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#2d3e52' }}
                 >
                   <p className="text-gray-400">No expired codes to show</p>
@@ -743,7 +743,7 @@ export default function AdminPanel() {
                     {recentEcoApprovals.map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-3xl border overflow-hidden shadow-sm transition-shadow hover:shadow-lg"
+                        className="rounded-xl border overflow-hidden shadow-sm transition-shadow hover:shadow-lg"
                         style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                       >
                         <div className="bg-gray-600 h-40 flex items-center justify-center text-4xl">
@@ -786,7 +786,7 @@ export default function AdminPanel() {
                     {approvedEcoActions.map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-3xl border overflow-hidden shadow-sm transition-shadow hover:shadow-lg"
+                        className="rounded-xl border overflow-hidden shadow-sm transition-shadow hover:shadow-lg"
                         style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                       >
                         <div className="bg-gray-600 h-40 flex items-center justify-center text-4xl">
@@ -817,7 +817,7 @@ export default function AdminPanel() {
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className="p-4 rounded-3xl border text-center shadow-sm transition-shadow hover:shadow-lg"
+                    className="p-4 rounded-xl border text-center shadow-sm transition-shadow hover:shadow-lg"
                     style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                   >
                     <p className="text-2xl mb-1">{stat.icon}</p>
@@ -845,7 +845,7 @@ export default function AdminPanel() {
               </div>
 
               <div
-                className="p-8 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                className="p-8 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                 style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
               >
                 <p className="text-gray-400 text-center py-12">Coming soon: Lesson content manager and eco topics editor</p>
@@ -861,7 +861,7 @@ export default function AdminPanel() {
               <div className="space-y-8">
                 {/* Site Settings */}
                 <div
-                  className="p-8 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-8 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-xl font-bold text-white mb-6">Site Settings</h2>
@@ -901,7 +901,7 @@ export default function AdminPanel() {
 
                 {/* Email Notifications */}
                 <div
-                  className="p-8 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-8 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-xl font-bold text-white mb-6">📧 Email Notifications</h2>
@@ -917,7 +917,7 @@ export default function AdminPanel() {
 
                 {/* Maintenance Mode */}
                 <div
-                  className="p-8 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-8 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <div className="flex items-center justify-between">
@@ -937,7 +937,7 @@ export default function AdminPanel() {
 
                 {/* Admin Password */}
                 <div
-                  className="p-8 rounded-3xl border shadow-sm transition-shadow hover:shadow-lg"
+                  className="p-8 rounded-xl border shadow-sm transition-shadow hover:shadow-lg"
                   style={{ backgroundColor: '#1a2332', borderColor: '#4CAF50' }}
                 >
                   <h2 className="text-xl font-bold text-white mb-6">🔐 Change Admin Password</h2>

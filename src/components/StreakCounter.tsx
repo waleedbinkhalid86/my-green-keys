@@ -39,7 +39,7 @@ export function StreakCounter({ streak, variant = "floating", className }: Strea
     return (
       <div
         className={cn(
-          "inline-flex flex-col items-center justify-center gap-1 rounded-3xl border-2 px-6 py-4 text-center text-3xl",
+          "inline-flex flex-col items-center justify-center gap-1 rounded-xl border-2 px-6 py-4 text-center text-3xl",
           tier,
           className,
         )}

@@ -47,7 +47,7 @@ export function PetWidget({
 
   return (
     <div
-      className={`pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-2xl border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`}
+      className={`pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-lg border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`}
       aria-label={`${petName} wellness`}
     >
       <div className="mb-3 text-center text-base font-bold text-gray-800">{petName}</div>

@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             role="status"
             className={cn(
-              "mgk-toast-enter pointer-events-auto flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+              "mgk-toast-enter pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
               t.type === "success" && "border-[#C8E6C9] bg-[#E8F5E9] text-[#1B5E20]",
               t.type === "error" && "border-[#FFCDD2] bg-[#FFEBEE] text-[#B71C1C]",
               t.type === "info" && "border-[#BBDEFB] bg-[#E3F2FD] text-[#0D47A1]"

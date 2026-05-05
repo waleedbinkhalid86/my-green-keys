@@ -533,7 +533,7 @@ export default function StudentReportPage() {
           </div>
         ) : (
           <article
-            className="break-inside-avoid rounded-3xl border-2 border-[#2ecc71]/35 bg-white shadow-sm transition-shadow hover:shadow-lg print:border print:shadow-none"
+            className="break-inside-avoid rounded-xl border-2 border-[#2ecc71]/35 bg-white shadow-sm transition-shadow hover:shadow-lg print:border print:shadow-none"
             style={{ minHeight: "297mm" }}
           >
             <div className="border-b border-[#2ecc71]/25 bg-gradient-to-br from-[#ecfdf3] to-white px-8 pb-6 pt-8 print:px-[15mm] print:pt-[12mm]">

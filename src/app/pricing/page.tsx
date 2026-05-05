@@ -236,7 +236,7 @@ const pill =
   "inline-flex min-h-[52px] w-full items-center justify-center whitespace-nowrap rounded-[50px] px-6 text-base font-semibold transition-all duration-200 disabled:opacity-60";
 
 const cardShell =
-  "flex h-full flex-col rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg";
+  "flex h-full flex-col rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg";
 
 function PricingPageContent() {
   const router = useRouter();
@@ -409,7 +409,7 @@ function PricingPageContent() {
         <div className="mx-auto max-w-6xl">
           {ecoGardenExpired ? (
             <div
-              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
+              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
               role="status"
             >
               <Sprout className="mx-auto h-8 w-8 shrink-0 text-green-600 sm:mx-0" strokeWidth={2} aria-hidden />
@@ -420,7 +420,7 @@ function PricingPageContent() {
           ) : null}
           {checkoutError ? (
             <div
-              className="mb-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              className="mb-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
               role="alert"
             >
               {checkoutError}
@@ -614,7 +614,7 @@ function PricingPageContent() {
           </div>
 
           {/* Promo codes */}
-          <div className="mx-auto mt-16 max-w-xl rounded-3xl border-2 border-[#E5E7EB] bg-white p-8 shadow-sm">
+          <div className="mx-auto mt-16 max-w-xl rounded-xl border-2 border-[#E5E7EB] bg-white p-8 shadow-sm">
             <h2 className="text-center text-xl font-extrabold text-[#1A2F23]">Have a promo code?</h2>
             <p className="mt-2 text-center text-sm text-[#666666]">Enter your code below for a special discount.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -635,7 +635,7 @@ function PricingPageContent() {
             {promoResult ? (
               <div
                 className={cn(
-                  "mt-4 rounded-2xl px-4 py-3 text-sm font-semibold",
+                  "mt-4 rounded-lg px-4 py-3 text-sm font-semibold",
                   promoResult.type === "success"
                     ? "border border-[#C8E6C9] bg-[#E8F5E9] text-[#1B5E20]"
                     : "border border-red-200 bg-red-50 text-red-800"
@@ -644,7 +644,7 @@ function PricingPageContent() {
                 {promoResult.message}
               </div>
             ) : null}
-            <div className="mt-6 rounded-2xl bg-[#FAFAFA] p-4 text-left text-xs text-[#6B7280]">
+            <div className="mt-6 rounded-lg bg-[#FAFAFA] p-4 text-left text-xs text-[#6B7280]">
               <p className="mb-2 font-bold text-[#1A2F23]">Available codes</p>
               {Object.entries(PROMO_CODES).map(([code, info]) => (
                 <p key={code} className="mb-1">

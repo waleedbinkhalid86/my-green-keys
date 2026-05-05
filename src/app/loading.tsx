@@ -32,7 +32,7 @@ export default function Loading() {
         }
       `}</style>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#2ECC71] text-2xl text-white">🌿</div>
+        <div className="flex size-12 items-center justify-center rounded-lg bg-[#2ECC71] text-2xl text-white">🌿</div>
         <span className="font-heading text-xl font-extrabold text-[#1A2F23]">My Green Keys</span>
       </div>
       <div className="relative mx-auto mb-6 w-[200px]">

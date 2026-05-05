@@ -640,7 +640,7 @@ export default function GamesHubPage() {
                       type="button"
                       onClick={() => handleLevelSelect(id)}
                       className={[
-                        "games-hub-level-card relative cursor-pointer rounded-3xl border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
+                        "games-hub-level-card relative cursor-pointer rounded-xl border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
                         isSel ? "border-green-500 bg-green-50" : "border-black/5",
                         levelBounceId === id ? "games-hub-level-bounce" : "",
                         "games-hub-card-animate",
@@ -807,7 +807,7 @@ export default function GamesHubPage() {
                 return (
                   <article
                     key={g.slug}
-                    className={`games-hub-game-card games-hub-card-animate rounded-3xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
+                    className={`games-hub-game-card games-hub-card-animate rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
                     style={{
                       position: "relative",
                       minHeight: 420,
@@ -1117,7 +1117,7 @@ export default function GamesHubPage() {
                   return (
                   <article
                     key={c.name}
-                    className="games-hub-card-animate games-hub-game-card rounded-3xl shadow-sm transition-shadow hover:shadow-lg"
+                    className="games-hub-card-animate games-hub-game-card rounded-xl shadow-sm transition-shadow hover:shadow-lg"
                     style={{
                       position: "relative",
                       minHeight: 280,

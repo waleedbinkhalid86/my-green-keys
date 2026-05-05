@@ -319,7 +319,7 @@ export default function LessonPhaseDetailPage() {
               const starsEarned = Math.min(3, Math.max(0, Math.round(num(row?.stars))));
 
               const baseCard =
-                "rounded-2xl border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
+                "rounded-lg border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
               const interactive = state !== "locked";
 
               return (

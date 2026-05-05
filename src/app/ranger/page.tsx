@@ -151,21 +151,21 @@ export default function RangerPage() {
       <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 lg:px-8">
         {loading ? (
           <div className="space-y-8">
-            <div className="mx-auto max-w-3xl animate-pulse rounded-3xl bg-white p-8 shadow-lg">
-              <div className="mx-auto h-32 w-48 rounded-2xl bg-gray-100" />
+            <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
+              <div className="mx-auto h-32 w-48 rounded-lg bg-gray-100" />
               <div className="mx-auto mt-6 h-3 max-w-md rounded-full bg-gray-100" />
             </div>
-            <div className="mx-auto max-w-3xl animate-pulse rounded-3xl bg-white p-8 shadow-lg">
+            <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
               <div className="h-6 w-40 rounded bg-gray-100" />
               <div className="mt-4 space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-14 rounded-2xl bg-gray-100" />
+                  <div key={i} className="h-14 rounded-lg bg-gray-100" />
                 ))}
               </div>
             </div>
           </div>
         ) : error ? (
-          <div className="mx-auto max-w-md rounded-2xl bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
             <p className="font-semibold text-gray-900">Couldn&apos;t load ranger data</p>
             <button
               type="button"
@@ -177,7 +177,7 @@ export default function RangerPage() {
           </div>
         ) : (
           <>
-            <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <RankBadge xp={xp} rank={rankId} variant="large" className="mx-auto" />
               <div className="mx-auto mt-6 w-full max-w-md">
                 {progress.nextRank ? (
@@ -201,7 +201,7 @@ export default function RangerPage() {
               </div>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">All ranks</h2>
               <ul className="mt-6 space-y-3">
                 {RANKS.map((r) => {
@@ -210,7 +210,7 @@ export default function RangerPage() {
                     <li
                       key={r.id}
                       className={cn(
-                        "flex items-center gap-4 rounded-2xl border p-4",
+                        "flex items-center gap-4 rounded-lg border p-4",
                         earned ? "border-green-200 bg-green-50" : "border-gray-200 bg-gray-50",
                       )}
                     >
@@ -239,7 +239,7 @@ export default function RangerPage() {
               </ul>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">Where your XP came from</h2>
               <p className="mt-1 text-sm text-gray-600">Play variety of activities to climb faster</p>
               {breakdown.length === 0 ? (
@@ -270,7 +270,7 @@ export default function RangerPage() {
               )}
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-3xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="text-xl font-bold text-gray-900">Recent activity</h2>
               {history.length === 0 ? (
                 <p className="mt-6 text-center text-gray-500">
@@ -301,7 +301,7 @@ export default function RangerPage() {
               )}
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-2xl bg-purple-50 p-6">
+            <section className="mx-auto mt-8 max-w-3xl rounded-lg bg-purple-50 p-6">
               <h2 className="text-lg font-bold text-gray-900">How to earn XP</h2>
               <ul className="mt-4 space-y-3 text-sm text-gray-800">
                 {[

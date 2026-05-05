@@ -264,7 +264,7 @@ export default function LessonMapPage() {
                 return (
                   <div
                     key={c.id}
-                    className="rounded-3xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
+                    className="rounded-xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
                   >
                     <div className="flex justify-between gap-2.5">
                       <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
@@ -338,7 +338,7 @@ export default function LessonMapPage() {
                     onClick={() => !locked && router.push(`/lesson-map/phase-${p.id}`)}
                     className={clsx(
                       "group relative w-full text-left",
-                      "aspect-[3/4] overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg",
+                      "aspect-[3/4] overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg",
                       !locked &&
                         "cursor-pointer hover:-translate-y-2 hover:rotate-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600",
                       locked && "cursor-not-allowed"

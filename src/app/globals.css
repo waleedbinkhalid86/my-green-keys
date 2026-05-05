@@ -495,11 +495,11 @@ body {
   }
 
   .mgk-card {
-    @apply rounded-3xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden transition-shadow hover:shadow-lg;
+    @apply rounded-xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden transition-shadow hover:shadow-lg;
   }
 
   .mgk-card-sm {
-    @apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden transition-shadow hover:shadow-lg;
+    @apply rounded-lg bg-white shadow-sm ring-1 ring-black/5 overflow-hidden transition-shadow hover:shadow-lg;
   }
 
   .mgk-grid {

@@ -208,7 +208,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
   return (
     <div
       className={cn(
-        "rounded-3xl p-6 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg border-2 overflow-hidden",
+        "rounded-xl p-6 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg border-2 overflow-hidden",
         tier,
       )}
     >
@@ -944,7 +944,7 @@ export default function ParentDashboard() {
         {childrenLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="mgk-skeleton h-28 rounded-3xl" />
+              <div key={i} className="mgk-skeleton h-28 rounded-xl" />
             ))}
           </div>
         ) : children.length === 0 ? (
@@ -1013,13 +1013,13 @@ export default function ParentDashboard() {
           </div>
           <div
             className={cn(
-              "mt-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5",
+              "mt-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5",
               "flex flex-col gap-4 sm:flex-row sm:items-start"
             )}
           >
             {!todaysFact ? (
               <div className="flex w-full items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                <div className="flex size-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
                   <Sprout className="size-6" strokeWidth={2.25} aria-hidden />
                 </div>
                 <div className="min-w-0">
@@ -1369,7 +1369,7 @@ export default function ParentDashboard() {
           {ecoLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="mgk-skeleton h-72 rounded-3xl" />
+                <div key={i} className="mgk-skeleton h-72 rounded-xl" />
               ))}
             </div>
           ) : pendingPhotos.length === 0 ? (

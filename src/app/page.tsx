@@ -185,7 +185,7 @@ export default function HomePage() {
 
           {mobileMenuOpen && (
             <div className="md:hidden pb-4">
-              <div className="mt-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
+              <div className="mt-2 rounded-lg border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
                 <div className="flex flex-col gap-3">
                   <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     How it works
@@ -492,9 +492,9 @@ export default function HomePage() {
             ).map((card) => (
               <article
                 key={card.step}
-                className="flex flex-col rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="flex flex-col rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-t-3xl">
+                <div className="relative aspect-square w-full overflow-hidden rounded-t-xl">
                   <span
                     className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
                     style={{ background: PRIMARY }}
@@ -568,9 +568,9 @@ export default function HomePage() {
             ).map((card) => (
               <article
                 key={card.tag}
-                className="flex flex-col rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="flex flex-col rounded-xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-t-3xl">
+                <div className="relative aspect-square w-full overflow-hidden rounded-t-xl">
                   <Image
                     src={card.src}
                     alt={card.alt}
@@ -666,21 +666,21 @@ export default function HomePage() {
             Schools and families joining now get founding member benefits
           </p>
           <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+            <article className="rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg">
               <School className="mb-4 h-10 w-10 text-green-600" aria-hidden />
               <h3 className="mb-2 text-xl font-bold text-gray-900">Free 30-day pilot for schools</h3>
               <p className="text-sm leading-relaxed text-gray-600">
                 Test My Green Keys with your classroom. Full access, no commitment.
               </p>
             </article>
-            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+            <article className="rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg">
               <Users className="mb-4 h-10 w-10 text-green-600" aria-hidden />
               <h3 className="mb-2 text-xl font-bold text-gray-900">Founding family pricing</h3>
               <p className="text-sm leading-relaxed text-gray-600">
                 Lock in 50% off the Family Plan for life when you sign up early.
               </p>
             </article>
-            <article className="rounded-3xl bg-white p-8 shadow-sm transition hover:shadow-lg">
+            <article className="rounded-xl bg-white p-8 shadow-sm transition hover:shadow-lg">
               <MessageSquare className="mb-4 h-10 w-10 text-green-600" aria-hidden />
               <h3 className="mb-2 text-xl font-bold text-gray-900">Help shape the product</h3>
               <p className="text-sm leading-relaxed text-gray-600">
