@@ -1,8 +1,7 @@
 "use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { Ban, Leaf, Lock, Menu, MessageSquare, School, Shield, Users } from "lucide-react";
+import { Leaf, Menu, MessageSquare, School, Users } from "lucide-react";
 import React from "react";
 import {
   Dialog,
@@ -13,67 +12,115 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const BTN_PRIMARY =
-  "inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-md text-base font-bold whitespace-nowrap transition-colors shadow-sm hover:shadow-md";
+const DARK = "#1A2F23";
+const PRIMARY = "#2ECC71";
+const BG = "#FAFAFA";
 
-const BTN_SECONDARY =
-  "inline-flex items-center justify-center bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-900 px-8 py-4 rounded-md text-base font-bold whitespace-nowrap transition-colors";
+const PRIMARY_CTA =
+  "inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md text-sm font-semibold whitespace-nowrap";
+const SECONDARY_CTA =
+  "inline-flex items-center justify-center border border-gray-300 hover:bg-gray-50 text-gray-900 px-6 py-3 rounded-md text-sm font-semibold whitespace-nowrap";
 
-const BTN_NAV =
-  "inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md text-sm font-semibold whitespace-nowrap";
+function Inner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mgk-container">{children}</div>
+  );
+}
 
-const CARD_DEFAULT =
-  "bg-white rounded-md border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full";
+function CloudShape({ style }: { style: React.CSSProperties }) {
+  return (
+    <div className="cloud" style={{ ...style, position: "absolute" }}>
+      <svg
+        viewBox="0 0 200 80"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ width: "100%", height: "100%", display: "block" }}
+      >
+        <ellipse cx="100" cy="50" rx="90" ry="30" fill="rgba(255,255,255,0.88)" />
+        <ellipse cx="70" cy="38" rx="45" ry="32" fill="rgba(255,255,255,0.88)" />
+        <ellipse cx="115" cy="32" rx="38" ry="28" fill="rgba(255,255,255,0.88)" />
+      </svg>
+    </div>
+  );
+}
 
-const CARD_IMAGE =
-  "bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full";
+function Tree({ style, scale = 1, delay = "0s" }: { style: React.CSSProperties; scale?: number; delay?: string }) {
+  const W = Math.round(68 * scale);
+  const H = Math.round(160 * scale);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        ...style,
+        width: W,
+        height: H,
+        transformOrigin: "bottom center",
+        animation: `sway ${2.8 + scale * 0.4}s ease-in-out ${delay} infinite`,
+      }}
+    >
+      <svg width={W} height={H} viewBox="0 0 68 160" fill="none">
+        <rect x="28" y="112" width="12" height="48" rx="3" fill="#6b3f1e" />
+        <polygon points="34,54 66,114 2,114" fill="#40916c" />
+        <polygon points="34,30 60,82 8,82" fill="#2d6a4f" />
+        <polygon points="34,5  52,48 16,48" fill="#1b4d30" />
+      </svg>
+    </div>
+  );
+}
 
-const CARD_HIGHLIGHT = "border-green-500 border-2 ring-2 ring-green-500/20";
-
-const DOT_GRID =
-  "bg-[#FAFAFA] text-gray-900 antialiased bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]";
-
-const SECTION_PAD = "py-24 md:py-28 lg:py-32";
-
-const TRUST_SECTION_PAD = "py-12 md:py-12 lg:py-12";
-
-const SECTION_TITLE =
-  "text-center text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4";
-
-const SECTION_SUB =
-  "text-center text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-16";
+function Flower({ style, color = "#FF6B6B", delay = "0s" }: { style: React.CSSProperties; color?: string; delay?: string }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        ...style,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        animation: `flower-bob 2.5s ease-in-out ${delay} infinite`,
+      }}
+    >
+      <div style={{ position: "relative", width: 22, height: 22 }}>
+        {[0, 60, 120, 180, 240, 300].map((deg) => (
+          <div
+            key={deg}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 8,
+              height: 12,
+              background: color,
+              borderRadius: "50%",
+              transform: `translate(-50%,-50%) rotate(${deg}deg) translateY(-9px)`,
+              opacity: 0.9,
+            }}
+          />
+        ))}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%,-50%)",
+            width: 9,
+            height: 9,
+            background: "#FFEB3B",
+            borderRadius: "50%",
+            zIndex: 2,
+          }}
+        />
+      </div>
+      <div style={{ width: 2, height: 16, background: "#52b788", marginTop: 2 }} />
+    </div>
+  );
+}
 
 const PREVIEW_GAMES = [
-  {
-    name: "Falling Leaves",
-    desc: "Catch leaves by typing words",
-    img: "/images/games/game-falling-leaves.jpg",
-    href: "/games/falling-leaves",
-  },
-  {
-    name: "Sort Recycling",
-    desc: "Sort waste into the right bins",
-    img: "/images/games/game-sort-recycling.jpg",
-    href: "/games/sort-recycling",
-  },
-  {
-    name: "Save the Ocean",
-    desc: "Free the turtle with fast typing",
-    img: "/images/games/game-save-ocean.jpg",
-    href: "/games/save-the-ocean",
-  },
-  {
-    name: "Eco Garden",
-    desc: "Grow a garden with every key",
-    img: "/images/games/game-eco-garden.jpg",
-    href: "/games/eco-garden",
-  },
-  {
-    name: "Kind World Academy",
-    desc: "Spread kindness around the world",
-    img: "/images/games/game-kind-world.jpg",
-    href: "/games/kind-world",
-  },
+  { name: "Falling Leaves", desc: "Catch leaves by typing words", img: "/images/games/game-falling-leaves.jpg", href: "/games/falling-leaves" },
+  { name: "Sort Recycling", desc: "Sort waste into the right bins", img: "/images/games/game-sort-recycling.jpg", href: "/games/sort-recycling" },
+  { name: "Save the Ocean", desc: "Free the turtle with fast typing", img: "/images/games/game-save-ocean.jpg", href: "/games/save-the-ocean" },
+  { name: "Eco Garden", desc: "Grow a garden with every key", img: "/images/games/game-eco-garden.jpg", href: "/games/eco-garden" },
+  { name: "Kind World Academy", desc: "Spread kindness around the world", img: "/images/games/game-kind-world.jpg", href: "/games/kind-world" },
 ] as const;
 
 export default function HomePage() {
@@ -83,7 +130,7 @@ export default function HomePage() {
   return (
     <>
       <Dialog open={demoModalOpen} onOpenChange={setDemoModalOpen}>
-        <DialogContent className="rounded-md sm:max-w-md" showCloseButton>
+        <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
             <DialogTitle>Demo video coming soon</DialogTitle>
             <DialogDescription>
@@ -91,167 +138,341 @@ export default function HomePage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-end">
-            <Link href="/signup" className={BTN_PRIMARY} onClick={() => setDemoModalOpen(false)}>
+            <Link
+              href="/signup"
+              className={PRIMARY_CTA}
+              onClick={() => setDemoModalOpen(false)}
+            >
               Sign Up Free
             </Link>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#1A2F23] text-white">
-        <div className="mgk-container flex items-center justify-between py-4">
-          <Link href="/" className="flex items-center gap-3 no-underline">
-            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-green-500">
-              <Leaf className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
-            </span>
-            <span className="text-lg font-bold text-white">My Green Keys</span>
-          </Link>
-
-          <div className="hidden items-center gap-8 md:flex">
-            <a href="#how-it-works" className="nav-link">
-              How it works
-            </a>
-            <a href="#features" className="nav-link">
-              Features
-            </a>
-            <a href="#games-preview" className="nav-link">
-              Games
-            </a>
-            <Link href="/pricing" className="nav-link">
-              Pricing
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="nav-link hidden md:inline">
-              Log In
-            </Link>
-            <Link href="/signup" className={BTN_NAV}>
-              Start Free Today
-            </Link>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-white/90 hover:bg-white/10 hover:text-white md:hidden"
-              onClick={() => setMobileMenuOpen((v) => !v)}
-              aria-label="Open menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen ? (
-          <div className="border-t border-white/10 md:hidden">
-            <div className="mgk-container py-4">
-              <div className="flex flex-col gap-3 rounded-md border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                <a
-                  href="#how-it-works"
-                  className="nav-link"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  How it works
-                </a>
-                <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                  Features
-                </a>
-                <a
-                  href="#games-preview"
-                  className="nav-link"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Games
-                </a>
-                <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                  Pricing
-                </Link>
-                <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                  Log In
-                </Link>
+      <nav
+        style={{
+          background: DARK,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          boxShadow: "0 1px 0 rgba(255,255,255,0.06)",
+        }}
+      >
+        <Inner>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 6,
+                  background: PRIMARY,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Leaf className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
               </div>
+              <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
+            </Link>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
+              <a href="#how-it-works" className="nav-link">
+                How it works
+              </a>
+              <a href="#features" className="nav-link">
+                Features
+              </a>
+              <a href="#games-preview" className="nav-link">
+                Games
+              </a>
+              <Link href="/pricing" className="nav-link">
+                Pricing
+              </Link>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Link href="/login" className="nav-link hidden md:block">
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className={PRIMARY_CTA}
+              >
+                Start Free Today
+              </Link>
+              <button
+                type="button"
+                className="md:hidden inline-flex items-center justify-center rounded-md px-3 py-2 text-white/90 hover:text-white hover:bg-white/10"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />
+              </button>
             </div>
           </div>
-        ) : null}
+
+          {mobileMenuOpen && (
+            <div className="md:hidden pb-4">
+              <div className="mt-2 rounded-md border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
+                <div className="flex flex-col gap-3">
+                  <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    How it works
+                  </a>
+                  <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Features
+                  </a>
+                  <a href="#games-preview" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Games
+                  </a>
+                  <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Pricing
+                  </Link>
+                  <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Log In
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </Inner>
       </nav>
 
-      <section className="relative flex min-h-[700px] w-full items-center justify-center">
-        <div className="absolute inset-0">
+      {/* HERO */}
+      <section
+        style={{
+          position: "relative",
+          minHeight: "100vh",
+          background: "linear-gradient(180deg, #0A1F0F 0%, #1A3D1F 100%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingTop: 80,
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <Image
             src="/images/homepage/homepage-hero.jpg"
             alt=""
             fill
             priority
             sizes="100vw"
-            className="object-cover"
+            style={{ objectFit: "cover", opacity: 0.15 }}
           />
-          <div className="absolute inset-0 bg-black/60" aria-hidden />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(10,31,15,0.85) 0%, rgba(26,61,31,0.75) 100%)",
+            }}
+          />
         </div>
 
-        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-4 py-24 text-center md:px-6">
-          <div className="mb-6">
-            <span className="inline-flex rounded-md bg-green-500 px-3 py-1 text-xs font-semibold text-white">
+        <div
+          className="animate-sun-pulse"
+          style={{
+            position: "absolute",
+            top: 72,
+            right: "9%",
+            width: 96,
+            height: 96,
+            background: "radial-gradient(circle,#FFEB3B 38%,#FDD835 65%,transparent 100%)",
+            borderRadius: "50%",
+            zIndex: 2,
+            opacity: 0.28,
+          }}
+        />
+
+        <div className="hidden sm:block">
+          <CloudShape style={{ top: 88, left: 0, width: 200, height: 70, animationDuration: "30s", animationDelay: "0s" }} />
+          <CloudShape style={{ top: 128, left: 0, width: 145, height: 50, animationDuration: "38s", animationDelay: "11s" }} />
+          <CloudShape style={{ top: 70, left: 0, width: 240, height: 80, animationDuration: "46s", animationDelay: "20s" }} />
+        </div>
+
+        {(
+          [
+            ["28%", "7%", "3.2s", "0s"],
+            ["44%", "14%", "4.1s", "1s"],
+            ["24%", "79%", "3.7s", "0.5s"],
+            ["54%", "87%", "4.8s", "2s"],
+            ["37%", "69%", "3.0s", "1.5s"],
+            ["61%", "4%", "5.2s", "3s"],
+            ["19%", "59%", "2.9s", "0.8s"],
+            ["68%", "74%", "4.4s", "2.2s"],
+          ] as [string, string, string, string][]
+        ).map(([top, left, dur, delay], i) => (
+          <div key={i} className="firefly" style={{ top, left, animationDuration: dur, animationDelay: delay }} />
+        ))}
+
+        {(
+          [
+            ["5%", "#1b4d30", "7s", "0s"],
+            ["14%", "#40916c", "9s", "2s"],
+            ["27%", "#52b788", "6s", "4s"],
+            ["41%", "#4CAF50", "11s", "1s"],
+            ["57%", "#2d6a4f", "8s", "3s"],
+            ["71%", "#52b788", "10s", "5s"],
+            ["84%", "#1b4d30", "7.5s", "1.5s"],
+            ["92%", "#74c69d", "9.5s", "6s"],
+          ] as [string, string, string, string][]
+        ).map(([left, bg, dur, delay], i) => (
+          <div key={i} className="leaf" style={{ left, top: "-20px", background: bg, animationDuration: dur, animationDelay: delay }} />
+        ))}
+
+        <div style={{ position: "absolute", top: "17%", left: 0, animation: "bird-fly 18s linear 4s infinite", pointerEvents: "none" }}>
+          <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+            <path d="M2 10 Q8 2 16 10 Q24 2 30 10" stroke="rgba(255,255,255,0.8)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <div style={{ position: "absolute", top: "43%", left: "5%", animation: "butterfly 14s ease-in-out 2s infinite", pointerEvents: "none" }}>
+          <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+            <ellipse cx="7" cy="10" rx="7" ry="9" fill="rgba(255,235,59,0.75)" />
+            <ellipse cx="23" cy="10" rx="7" ry="9" fill="rgba(255,152,0,0.75)" />
+            <ellipse cx="7" cy="18" rx="5" ry="6" fill="rgba(255,235,59,0.55)" />
+            <ellipse cx="23" cy="18" rx="5" ry="6" fill="rgba(255,152,0,0.55)" />
+            <line x1="15" y1="2" x2="15" y2="22" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <div
+          className="pb-32 sm:pb-40"
+          style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: 900, margin: "0 auto" }}
+        >
+          <div className="mb-7" style={{ animation: "fade-in 0.8s ease 0.2s both" }}>
+            <span className="inline-block rounded-md bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
               Now in early access for schools and families
             </span>
           </div>
 
-          <h1 className="mb-6 text-5xl font-black leading-tight text-white drop-shadow-lg md:text-7xl">
+          <h1
+            style={{
+              fontSize: "clamp(3rem, 8vw, 5.5rem)",
+              fontWeight: 900,
+              color: "#fff",
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              marginBottom: 24,
+              textShadow: "0 4px 24px rgba(0,0,0,0.25)",
+              animation: "float-up 0.9s ease 0.35s both",
+            }}
+          >
             Learn to Type.
             <br />
             Help the Planet.
           </h1>
 
-          <div className="mb-8 max-w-2xl rounded-md bg-white/95 px-8 py-5 backdrop-blur-sm">
+          <div
+            className="mx-auto mb-9 max-w-2xl rounded-md bg-white/95 px-6 py-3 backdrop-blur-sm"
+            style={{ animation: "float-up 0.9s ease 0.5s both" }}
+          >
             <p className="text-base font-medium leading-relaxed text-gray-900 md:text-lg">
               Built for{" "}
-              <span className="bg-[#FFD700] px-1 py-0.5 text-gray-900">ages 6-14</span>.{" "}
-              <span className="bg-[#FFD700] px-1 py-0.5 text-gray-900">100 lessons</span>,{" "}
-              <span className="bg-[#FFD700] px-1 py-0.5 text-gray-900">5 games</span>, and a{" "}
-              <span className="bg-[#FFD700] px-1 py-0.5 text-gray-900">virtual pet</span> that needs
-              your child to type daily.
+              <span className="bg-yellow-200 px-1 py-0.5">ages 6-14</span>.{" "}
+              <span className="bg-yellow-200 px-1 py-0.5">100 lessons</span>,{" "}
+              <span className="bg-yellow-200 px-1 py-0.5">5 games</span>, and a{" "}
+              <span className="bg-yellow-200 px-1 py-0.5">virtual pet</span>{" "}
+              that needs your child to type daily.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/signup" className={BTN_PRIMARY}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
+            <Link
+              href="/signup"
+              className={`${PRIMARY_CTA} hover:-translate-y-0.5 active:scale-[0.97]`}
+            >
               Start Free Today
             </Link>
-            <button type="button" className={BTN_SECONDARY} onClick={() => setDemoModalOpen(true)}>
+            <button
+              type="button"
+              className={SECONDARY_CTA}
+              onClick={() => setDemoModalOpen(true)}
+            >
               Watch Demo
             </button>
           </div>
+          <div
+            className="mt-6 flex flex-wrap items-center justify-center gap-2"
+            style={{ animation: "float-up 0.9s ease 0.8s both" }}
+          >
+            {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
+              <span
+                key={b}
+                className="rounded-md bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 ring-1 ring-white/15 backdrop-blur-sm"
+              >
+                {b}
+              </span>
+            ))}
+          </div>
+          <p style={{ marginTop: 20, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+            No credit card required. Free forever.
+          </p>
+        </div>
 
-          <p className="mt-6 text-sm text-white/80">No credit card required. Free forever.</p>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 210, pointerEvents: "none" }}>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 130, background: "linear-gradient(180deg,transparent 0%,#235c2a 100%)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 62, background: "#2d6e1e", borderTopLeftRadius: "50% 18px", borderTopRightRadius: "50% 18px" }} />
+
+          <Tree style={{ left: "2%", bottom: 42 }} scale={1.2} />
+          <Tree style={{ left: "9%", bottom: 32 }} scale={0.9} delay="0.5s" />
+          <Tree style={{ left: "17%", bottom: 50 }} scale={1.5} delay="1s" />
+          <Tree style={{ left: "26%", bottom: 36 }} scale={1.0} delay="0.3s" />
+          <Tree style={{ left: "37%", bottom: 46 }} scale={1.3} delay="0.8s" />
+          <Tree style={{ left: "49%", bottom: 32 }} scale={0.85} delay="0.2s" />
+          <Tree style={{ left: "59%", bottom: 50 }} scale={1.4} delay="1.2s" />
+          <Tree style={{ left: "69%", bottom: 36 }} scale={1.0} delay="0.6s" />
+          <Tree style={{ left: "78%", bottom: 46 }} scale={1.2} delay="0.9s" />
+          <Tree style={{ left: "87%", bottom: 32 }} scale={0.9} delay="0.4s" />
+          <Tree style={{ left: "93%", bottom: 42 }} scale={1.1} delay="1.1s" />
+
+          <Flower style={{ left: "6%", bottom: 58 }} color="#FF6B6B" />
+          <Flower style={{ left: "22%", bottom: 60 }} color="#FFEB3B" delay="0.7s" />
+          <Flower style={{ left: "44%", bottom: 58 }} color="#FF8E53" delay="1.3s" />
+          <Flower style={{ left: "65%", bottom: 62 }} color="#e91e63" delay="0.4s" />
+          <Flower style={{ left: "83%", bottom: 58 }} color="#FFEB3B" delay="1s" />
+        </div>
+
+        <div
+          className="hidden sm:flex"
+          style={{
+            position: "absolute",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 12,
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 6,
+            color: "rgba(255,255,255,0.7)",
+            fontSize: 12,
+            fontWeight: 700,
+            animation: "float-up 1s ease 1s both",
+          }}
+          aria-hidden
+        >
+          <span>Scroll</span>
+          <span style={{ fontSize: 22, lineHeight: 1, animation: "flower-bob 2s ease-in-out infinite" }}>↓</span>
         </div>
       </section>
 
-      <div className={DOT_GRID}>
-        <section className={TRUST_SECTION_PAD}>
-          <div className="mgk-container text-center">
-            <p className="mb-8 text-sm font-medium uppercase tracking-wider text-gray-500">
-              Privacy and safety built in
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <span className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700">
-                <Shield className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                COPPA Compliant
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700">
-                <Lock className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                GDPR Safe
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700">
-                <Ban className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                Ad-Free
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className={SECTION_PAD}>
-          <div className="mgk-container">
-            <h2 className={SECTION_TITLE}>Learning that actually works</h2>
-            <p className={SECTION_SUB}>Three steps to a kid who loves typing</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div
+        className="bg-[#FAFAFA] antialiased text-gray-900
+          bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
+      >
+        {/* HOW IT WORKS */}
+        <section id="how-it-works" className="mgk-section py-20 md:py-24 lg:py-28">
+          <Inner>
+            <h2 className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+              Learning that actually works
+            </h2>
+            <div className="mgk-grid grid-cols-1 md:grid-cols-3">
               {(
                 [
                   {
@@ -277,9 +498,15 @@ export default function HomePage() {
                   },
                 ] as const
               ).map((card) => (
-                <article key={card.step} className={CARD_IMAGE}>
-                  <div className="relative aspect-[4/3] w-full">
-                    <span className="absolute left-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-lg font-bold text-white">
+                <article
+                  key={card.step}
+                  className="flex h-full flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
+                    <span
+                      className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
+                      style={{ background: PRIMARY }}
+                    >
                       {card.step}
                     </span>
                     <Image
@@ -287,24 +514,36 @@ export default function HomePage() {
                       alt={card.alt}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
+                      priority={false}
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="mb-3 text-xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="flex-1 text-base leading-relaxed text-gray-600">{card.desc}</p>
+                  <div className="flex flex-1 flex-col p-6 pb-7">
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                    <p className="flex-1 text-sm leading-relaxed text-gray-600">{card.desc}</p>
                   </div>
                 </article>
               ))}
             </div>
-          </div>
+          </Inner>
         </section>
 
-        <section id="features" className={SECTION_PAD}>
-          <div className="mgk-container">
-            <h2 className={SECTION_TITLE}>Everything your child needs to become a typing champion</h2>
-            <p className={SECTION_SUB}>100 lessons. 5 games. One growing pet.</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        {/* FEATURES */}
+        <section id="features" className="mgk-section py-20 md:py-24 lg:py-28">
+          <Inner>
+            <h2
+              className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl"
+              style={{
+                color: DARK,
+                maxWidth: 720,
+                margin: "0 auto",
+                lineHeight: 1.2,
+              }}
+            >
+              Everything your child needs to become a typing champion
+            </h2>
+
+            <div className="mgk-grid grid-cols-1 md:grid-cols-3">
               {(
                 [
                   {
@@ -333,8 +572,11 @@ export default function HomePage() {
                   },
                 ] as const
               ).map((card) => (
-                <article key={card.tag} className={CARD_IMAGE}>
-                  <div className="relative aspect-[4/3] w-full">
+                <article
+                  key={card.tag}
+                  className="flex h-full flex-col rounded-md bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-t-md">
                     <Image
                       src={card.src}
                       alt={card.alt}
@@ -343,55 +585,83 @@ export default function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <span className="mb-4 inline-flex w-fit rounded-md bg-green-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                  <div className="flex flex-1 flex-col p-6 pb-7">
+                    <span className="mb-3 inline-block rounded-md bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                       {card.tag}
                     </span>
-                    <h3 className="mb-3 text-xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="flex-1 text-base leading-relaxed text-gray-600">{card.sentence}</p>
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-600">{card.sentence}</p>
                   </div>
                 </article>
               ))}
             </div>
-          </div>
+          </Inner>
         </section>
 
-        <section id="games-preview" className={SECTION_PAD}>
-          <div className="mgk-container">
-            <h2 className={SECTION_TITLE}>Learning through play</h2>
-            <p className={SECTION_SUB}>
-              5 eco-themed games. Real typing skills. Hidden challenges.
+        {/* GAMES */}
+        <section id="games-preview" className="mgk-section py-20 md:py-24 lg:py-28" style={{ background: DARK }}>
+          <Inner>
+            <h2 className="mb-3 text-center text-3xl font-black text-white md:text-4xl">
+              Learning through play
+            </h2>
+            <p className="mx-auto mb-12 max-w-xl text-center text-base font-semibold text-white/75 md:text-lg">
+              5 eco-themed games that make typing practice addictive
             </p>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <div
+              className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-5"
+            >
               {PREVIEW_GAMES.map((g) => (
                 <Link
                   key={g.name}
-                  href={g.href}
-                  className={`${CARD_IMAGE} no-underline text-inherit`}
+                  href="/games"
+                  className="mgk-card-ds flex h-full flex-col"
+                  style={{
+                    overflow: "hidden",
+                    padding: 0,
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
                 >
-                  <div className="relative aspect-[4/3] w-full">
-                    <Image src={g.img} alt="" fill sizes="280px" className="object-cover" />
+                  <div style={{ position: "relative", height: 160 }}>
+                    <Image src={g.img} alt="" fill sizes="280px" style={{ objectFit: "cover" }} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)",
+                      }}
+                    />
                   </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <h3 className="text-lg font-bold text-gray-900">{g.name}</h3>
-                    <p className="mt-1 flex-1 text-sm text-gray-600">{g.desc}</p>
+                  <div className="flex flex-1 flex-col" style={{ padding: "18px 20px" }}>
+                    <p style={{ fontWeight: 900, color: DARK, margin: 0, fontSize: "1.05rem" }}>{g.name}</p>
+                    <p className="flex-1" style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600, margin: "8px 0 0" }}>
+                      {g.desc}
+                    </p>
                   </div>
                 </Link>
               ))}
             </div>
-            <div className="mt-12 flex justify-center">
-              <Link href="/games" className={BTN_SECONDARY}>
+            <div style={{ textAlign: "center", marginTop: 36 }}>
+              <Link
+                href="/games"
+                className={SECONDARY_CTA}
+              >
                 Explore All Games
               </Link>
             </div>
-          </div>
+          </Inner>
         </section>
 
-        <section className={SECTION_PAD}>
+        {/* EARLY ACCESS */}
+        <section className="mgk-section py-20 md:py-24 lg:py-28">
           <div className="mgk-container">
-            <h2 className={SECTION_TITLE}>Join us as an early adopter</h2>
-            <p className={SECTION_SUB}>Founding members get lifetime benefits.</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <h2 className="text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+              Join us as an early adopter
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-base font-semibold text-gray-600">
+              Schools and families joining now get founding member benefits
+            </p>
+            <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
               {(
                 [
                   {
@@ -411,23 +681,33 @@ export default function HomePage() {
                   },
                 ] as const
               ).map(({ title, desc, Icon }) => (
-                <article key={title} className={CARD_DEFAULT}>
-                  <div className="mb-6 h-1 w-12 bg-green-500" aria-hidden />
-                  <Icon className="mb-4 h-12 w-12 text-green-600" aria-hidden />
-                  <h3 className="mb-3 text-xl font-bold text-gray-900">{title}</h3>
-                  <p className="flex-1 text-base leading-relaxed text-gray-600">{desc}</p>
+                <article
+                  key={title}
+                  className="flex h-full flex-col rounded-md border border-gray-200 bg-white p-8 shadow-sm transition-shadow duration-200 hover:shadow-md"
+                >
+                  <div className="h-1 w-12 rounded bg-green-500 mb-6" aria-hidden />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+                    <Icon className="h-12 w-12 text-green-600" aria-hidden />
+                  </div>
+                  <h3 className="mt-6 text-lg font-bold text-gray-900">{title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-600">{desc}</p>
                 </article>
               ))}
             </div>
             <div className="mt-16 text-center">
-              <h3 className="mb-6 text-2xl font-bold text-gray-900">Be among the first</h3>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link href="/signup" className={BTN_PRIMARY}>
+              <h3 className="text-xl font-bold text-gray-900" style={{ color: DARK }}>
+                Be among the first
+              </h3>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/signup"
+                  className={PRIMARY_CTA}
+                >
                   Get Started Free
                 </Link>
                 <a
                   href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
-                  className={BTN_SECONDARY}
+                  className={SECONDARY_CTA}
                 >
                   Schools: Book a Demo
                 </a>
@@ -436,98 +716,76 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className={SECTION_PAD}>
-          <div className="mgk-container">
-            <h2 className={SECTION_TITLE}>Simple pricing for every family</h2>
-            <p className={SECTION_SUB}>Start free. Upgrade when ready.</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              <article className={CARD_DEFAULT}>
-                <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-green-600">
-                  Free
-                </p>
-                <p className="text-5xl font-bold text-gray-900">
-                  $0{" "}
-                  <span className="text-base font-normal text-gray-500">/forever</span>
-                </p>
-                <p className="my-6 flex-1 text-sm text-gray-600">
+        {/* PRICING PREVIEW */}
+        <section className="mgk-section py-20 md:py-24 lg:py-28">
+          <Inner>
+            <h2 className="mb-12 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+              Simple pricing for every family
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, maxWidth: 800, margin: "0 auto" }}>
+              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32 }}>
+                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
+                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
                   10 lessons, progress tracking, kid-safe.
                 </p>
-                <Link href="/signup" className={`${BTN_SECONDARY} w-full`}>
+                <Link href="/signup" className={PRIMARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
                   Start free
                 </Link>
-              </article>
-
-              <article className={`${CARD_DEFAULT} ${CARD_HIGHLIGHT} relative`}>
-                <div className="mb-4 flex justify-center">
-                  <span className="rounded-md bg-green-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                    Most Popular
-                  </span>
-                </div>
-                <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-green-600">
-                  Family Plan
+              </div>
+              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32, border: `2px solid ${PRIMARY}` }}>
+                <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                  $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
                 </p>
-                <p className="text-5xl font-bold text-gray-900">
-                  $9.99 <span className="text-base font-normal text-gray-500">/mo</span>
-                </p>
-                <p className="my-6 flex-1 text-sm text-gray-600">
+                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
                   Unlimited lessons, parent dashboard, eco rewards.
                 </p>
-                <Link href="/pricing" className={`${BTN_PRIMARY} w-full`}>
+                <Link href="/pricing" className={PRIMARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
                   View Family Plan
                 </Link>
-              </article>
-
-              <article className={CARD_DEFAULT}>
-                <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-green-600">
+              </div>
+              <div className="mgk-card-ds flex h-full flex-col bg-white" style={{ padding: 32 }}>
+                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
                   School Starter
                 </p>
-                <p className="text-5xl font-bold text-gray-900">
-                  $49 <span className="text-base font-normal text-gray-500">/mo</span>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                  $49<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
                 </p>
-                <p className="my-6 flex-1 text-sm text-gray-600">
+                <p className="flex-1" style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
                   Classroom access, teacher dashboard, student progress tracking.
                 </p>
-                <Link href="/pricing" className={`${BTN_SECONDARY} w-full`}>
+                <Link href="/pricing" className={SECONDARY_CTA} style={{ marginTop: 24, width: "100%", textAlign: "center" }}>
                   View School Plan
-                </Link>
-              </article>
-            </div>
-            <p className="mt-12 text-center">
-              <Link
-                href="/pricing"
-                className="text-base font-bold text-green-600 hover:text-green-700 hover:underline"
-              >
-                See all plans →
-              </Link>
-            </p>
-          </div>
-        </section>
-
-        <section className={SECTION_PAD}>
-          <div className="mgk-container">
-            <div className="mx-auto max-w-3xl rounded-md bg-gray-900 p-12 text-center text-white">
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                Ready to start your child&apos;s typing journey?
-              </h2>
-              <p className="mb-8 text-base text-gray-300">
-                Free forever for first 10 lessons. No credit card.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center justify-center rounded-md bg-white px-8 py-4 text-base font-bold text-gray-900 whitespace-nowrap transition-colors hover:bg-gray-100"
-                >
-                  Start Free Today
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center justify-center rounded-md border border-gray-700 px-8 py-4 text-base font-bold text-white whitespace-nowrap transition-colors hover:border-gray-600"
-                >
-                  View Pricing
                 </Link>
               </div>
             </div>
-          </div>
+            <p style={{ textAlign: "center", marginTop: 28 }}>
+              <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
+                See all plans →
+              </Link>
+            </p>
+          </Inner>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="mgk-section py-20 md:py-24 lg:py-28 text-center">
+          <Inner>
+            <div style={{ maxWidth: 560, margin: "0 auto" }}>
+              <h2 className="text-gray-900" style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: 28 }}>
+                Ready to start your child&apos;s typing journey?
+              </h2>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link href="/signup" className={PRIMARY_CTA}>
+                  Start Free Today
+                </Link>
+                <Link href="/pricing" className={SECONDARY_CTA}>
+                  View Pricing
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-gray-500">Free forever for first 10 lessons. No credit card.</p>
+            </div>
+          </Inner>
         </section>
       </div>
     </>
