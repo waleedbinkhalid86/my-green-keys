@@ -483,7 +483,28 @@ body {
 
 @layer components {
   .mgk-container {
+    /*
+      Production-safe container:
+      - Keep Tailwind utilities for consistency
+      - Also set real CSS so spacing can’t disappear due to build/layer quirks
+    */
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .mgk-container {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mgk-container {
+      padding-inline: 2rem;
+    }
   }
 
   .mgk-section {
