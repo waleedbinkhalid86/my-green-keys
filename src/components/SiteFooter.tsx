@@ -21,7 +21,7 @@ function FooterLink({
 export default function SiteFooter() {
   return (
     <footer className="w-full bg-[#1A2F23] pt-16 pb-8 text-gray-400">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">

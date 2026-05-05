@@ -10,9 +10,7 @@ const BG = "#FAFAFA";
 
 function Inner({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-      {children}
-    </div>
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
   );
 }
 
@@ -494,9 +492,9 @@ export default function HomePage() {
             ).map((card) => (
               <article
                 key={card.step}
-                className="overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="flex flex-col rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="relative aspect-square w-full">
+                <div className="relative aspect-square w-full overflow-hidden rounded-t-3xl">
                   <span
                     className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
                     style={{ background: PRIMARY }}
@@ -512,7 +510,7 @@ export default function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <div className="p-6">
+                <div className="flex-1 p-6 pb-7">
                   <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
                   <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
                 </div>
@@ -570,9 +568,9 @@ export default function HomePage() {
             ).map((card) => (
               <article
                 key={card.tag}
-                className="overflow-hidden rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="flex flex-col rounded-3xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <div className="relative aspect-square w-full">
+                <div className="relative aspect-square w-full overflow-hidden rounded-t-3xl">
                   <Image
                     src={card.src}
                     alt={card.alt}
@@ -581,7 +579,7 @@ export default function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <div className="p-6">
+                <div className="flex-1 p-6 pb-7">
                   <span className="mb-3 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                     {card.tag}
                   </span>

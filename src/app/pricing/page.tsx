@@ -173,7 +173,7 @@ const TRUST_SIGNALS = [
 function PricingNav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#1A2F23] shadow-sm">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 no-underline">
           <div className="flex size-10 items-center justify-center rounded-lg bg-[#2ECC71]">
             <LeafIconCustom />
@@ -376,7 +376,7 @@ function PricingPageContent() {
       <div className="h-[72px]" aria-hidden />
 
       {/* Hero */}
-      <section className="bg-white px-4 pt-[80px] pb-[60px] text-center sm:px-6">
+      <section className="bg-white px-4 pt-[80px] pb-[60px] text-center sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <div className="mb-6 inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
             Now in early access for schools and families
@@ -405,7 +405,7 @@ function PricingPageContent() {
       </section>
 
       {/* Pricing cards */}
-      <section className="px-4 py-20 sm:px-6">
+      <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           {ecoGardenExpired ? (
             <div
@@ -696,7 +696,7 @@ function PricingPageContent() {
       </section>
 
       {/* Feature comparison */}
-      <section className="px-4 py-12 sm:px-6">
+      <section className="px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-10 text-center text-3xl font-extrabold text-[#1A2F23]">Compare plans</h2>
           <div className="overflow-x-auto rounded-[24px] border-2 border-[#E5E7EB] bg-white shadow-sm">
@@ -750,7 +750,7 @@ function PricingPageContent() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-[#F8F9FA] px-4 py-20 sm:px-6">
+      <section className="bg-[#F8F9FA] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <h2 className="mb-4 text-center text-4xl font-black tracking-tight text-[#1A2F23] sm:text-[2.75rem]">
             Frequently asked questions
@@ -784,7 +784,7 @@ function PricingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="bg-[#1B5E20] px-4 py-20 text-center sm:px-6">
+      <section className="bg-[#1B5E20] px-4 py-20 text-center sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl space-y-6">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             Ready to start your child&apos;s typing journey?
