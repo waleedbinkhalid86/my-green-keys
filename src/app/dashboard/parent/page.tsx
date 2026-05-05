@@ -224,7 +224,7 @@ function ParentOverviewStreakCard({ child }: { child: Child }) {
           <Link
             href="/ranger"
             className={cn(
-              "hidden items-center gap-1 rounded-full px-2 py-1 text-xs font-bold transition hover:opacity-90 md:inline-flex",
+              "hidden items-center gap-1 rounded-md px-2 py-1 text-xs font-bold transition hover:opacity-90 md:inline-flex",
               isLegendary ? "text-white/95" : "text-purple-600",
             )}
           >
@@ -284,9 +284,9 @@ function ParentOverviewRangerCard({ child }: { child: Child }) {
         </p>
       ) : (
         <>
-          <div className="mt-3 h-1.5 w-full rounded-full bg-gray-200">
+          <div className="mt-3 h-1.5 w-full rounded-md bg-gray-200">
             <div
-              className={cn("h-full rounded-full transition-all", fill)}
+              className={cn("h-full rounded-md transition-all", fill)}
               style={{ width: `${prog.progressPercent}%` }}
             />
           </div>
@@ -960,7 +960,7 @@ export default function ParentDashboard() {
         ) : children.length === 0 ? (
           <Card className="overflow-hidden">
             <CardContent className="flex flex-col items-center gap-4 py-10 text-center sm:flex-row sm:text-left">
-              <div className="relative h-40 w-full max-w-[200px] shrink-0 overflow-hidden rounded-2xl">
+              <div className="relative h-40 w-full max-w-[200px] shrink-0 overflow-hidden rounded-md">
                 <Image src="/images/ui/ui-empty-state.jpg" alt="" fill className="object-cover" sizes="200px" />
               </div>
               <div className="flex-1 space-y-3">
@@ -1054,7 +1054,7 @@ export default function ParentDashboard() {
             ) : (
               <>
                 <div className="flex items-start gap-4">
-                  <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-emerald-50 sm:size-28">
+                  <div className="relative size-24 shrink-0 overflow-hidden rounded-md bg-emerald-50 sm:size-28">
                     <Image
                       src="/images/ui/ui-empty-garden.jpg"
                       alt="Eco Fact illustration"
@@ -1399,7 +1399,7 @@ export default function ParentDashboard() {
           ) : pendingPhotos.length === 0 ? (
             <Card className="overflow-hidden">
               <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-                <div className="relative h-44 w-full max-w-[280px] overflow-hidden rounded-2xl">
+                <div className="relative h-44 w-full max-w-[280px] overflow-hidden rounded-md">
                   <Image src="/images/ui/ui-empty-garden.jpg" alt="" fill className="object-cover" sizes="280px" />
                 </div>
                 <p className="font-heading text-lg font-extrabold text-[#1A2F23]">No pending photos</p>

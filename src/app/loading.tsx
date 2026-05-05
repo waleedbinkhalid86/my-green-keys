@@ -32,7 +32,7 @@ export default function Loading() {
         }
       `}</style>
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center rounded-lg bg-[#2ECC71] text-2xl text-white">🌿</div>
+        <div className="flex size-12 items-center justify-center rounded-md bg-[#2ECC71] text-2xl text-white">🌿</div>
         <span className="font-heading text-xl font-extrabold text-[#1A2F23]">My Green Keys</span>
       </div>
       <div className="relative mx-auto mb-6 w-[200px]">
@@ -41,7 +41,7 @@ export default function Loading() {
           alt=""
           width={200}
           height={200}
-          className="h-auto w-full rounded-[16px] object-contain"
+          className="h-auto w-full rounded-md object-contain"
           priority
         />
       </div>

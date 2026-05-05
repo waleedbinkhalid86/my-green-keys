@@ -140,7 +140,7 @@ function TrialBanner({ state }: { state: TrialState }) {
         </div>
         <Link
           href="/pricing"
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-600 bg-white px-4 py-1.5 text-sm font-bold text-amber-900 shadow-sm transition hover:bg-amber-50"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-600 bg-white px-4 py-1.5 text-sm font-bold text-amber-900 shadow-sm transition hover:bg-amber-50"
         >
           Upgrade now
           <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -158,7 +158,7 @@ function ExpiredOverlay({ plantCount, ecoPoints }: { plantCount: number; ecoPoin
       role="dialog"
       aria-label="Eco Garden trial ended"
     >
-      <div className="pointer-events-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
+      <div className="pointer-events-auto max-w-md rounded-md bg-white p-8 text-center shadow-2xl">
         <Sprout className="mx-auto mb-4 h-16 w-16 text-green-500" strokeWidth={2} aria-hidden />
         <h2 className="text-2xl font-bold text-gray-900">Your plants miss you</h2>
         <p className="mt-2 text-gray-600">
@@ -173,7 +173,7 @@ function ExpiredOverlay({ plantCount, ecoPoints }: { plantCount: number; ecoPoin
         </div>
         <Link
           href="/pricing?source=eco_garden_expired"
-          className="mt-6 inline-block w-full rounded-full bg-green-500 py-3 px-6 text-center font-bold text-white transition hover:bg-green-600"
+          className="mt-6 inline-block w-full rounded-md bg-green-500 py-3 px-6 text-center font-bold text-white transition hover:bg-green-600"
         >
           Continue with Family Plan
         </Link>
@@ -814,7 +814,7 @@ export default function EcoGardenPage() {
           key={i}
           style={{
             aspectRatio: "1",
-            borderRadius: 14,
+                borderRadius: 10,
             background: "linear-gradient(180deg, rgba(139,195,74,0.35), rgba(62,39,35,0.65))",
             border:
               waterBurst?.plot === i
@@ -933,7 +933,7 @@ export default function EcoGardenPage() {
             href="/games"
             style={{
               padding: "8px 14px",
-              borderRadius: 999,
+              borderRadius: 10,
               border: "1px solid rgba(0,0,0,0.15)",
               color: "#1b2e1b",
               fontWeight: 800,
@@ -976,7 +976,7 @@ export default function EcoGardenPage() {
               marginTop: 24,
               display: "inline-block",
               padding: "14px 24px",
-              borderRadius: 999,
+              borderRadius: 10,
               background: "linear-gradient(90deg,#43a047,#2e7d32)",
               color: "#fff",
               fontWeight: 950,
@@ -996,7 +996,7 @@ export default function EcoGardenPage() {
               style={{
                 margin: "12px 16px 0",
                 padding: 14,
-                borderRadius: 16,
+                borderRadius: 10,
                 background: "rgba(255,249,196,0.95)",
                 border: "2px solid #ffc107",
                 fontWeight: 800,
@@ -1032,13 +1032,13 @@ export default function EcoGardenPage() {
                   fontSize: 14,
                 }}
               >
-                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
+                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 10 }}>
                   🪴 {totalPlants} plants
                 </span>
-                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
+                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 10 }}>
                   📅 {gardenAgeDays} days old
                 </span>
-                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
+                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 10 }}>
                   🐾 {activeAnimals.length} visitors
                 </span>
               </div>
@@ -1055,7 +1055,7 @@ export default function EcoGardenPage() {
                 style={{
                   marginTop: 20,
                   padding: "14px 22px",
-                  borderRadius: 16,
+                  borderRadius: 10,
                   border: "none",
                   fontWeight: 950,
                   cursor: trialState?.status === "expired" ? "not-allowed" : "pointer",
@@ -1078,10 +1078,10 @@ export default function EcoGardenPage() {
                 ) : phase === "play" ? (
                   <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 10, fontWeight: 800 }}>
-                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
+                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 10 }}>
                   ⏱ {timeLeft}s
                 </span>
-                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 12 }}>
+                <span style={{ background: "rgba(255,255,255,0.55)", padding: "8px 12px", borderRadius: 10 }}>
                   💧 {wateredSession} watered
                 </span>
                 <span style={{ color: "#1b5e20" }}>✨ {ecoPoints} eco pts</span>
@@ -1092,7 +1092,7 @@ export default function EcoGardenPage() {
                 style={{
                   position: "relative",
                   height: "min(48vh, 380px)",
-                  borderRadius: 20,
+                  borderRadius: 10,
                   border: "2px solid rgba(255,255,255,0.6)",
                   background: "linear-gradient(180deg, rgba(179,229,252,0.6), rgba(129,199,132,0.35))",
                   overflow: "hidden",
@@ -1111,7 +1111,7 @@ export default function EcoGardenPage() {
                         top: d.y,
                         transform: "translateX(-50%)",
                         padding: "6px 10px",
-                        borderRadius: 12,
+                        borderRadius: 10,
                         background: "rgba(255,255,255,0.92)",
                         fontWeight: 900,
                         fontSize: 13,
@@ -1144,7 +1144,7 @@ export default function EcoGardenPage() {
                       transform: "translateX(-50%)",
                       maxWidth: "94%",
                       padding: "10px 12px",
-                      borderRadius: 14,
+                      borderRadius: 10,
                       background: "#fffde7",
                       border: "2px solid #cddc39",
                       fontWeight: 700,
@@ -1163,7 +1163,7 @@ export default function EcoGardenPage() {
                       transform: "translateX(-50%)",
                       maxWidth: "94%",
                       padding: "10px 12px",
-                      borderRadius: 14,
+                      borderRadius: 10,
                       background: "rgba(255,255,255,0.95)",
                       fontWeight: 700,
                       fontSize: 13,
@@ -1187,7 +1187,7 @@ export default function EcoGardenPage() {
                 style={{
                   width: "100%",
                   padding: "12px 14px",
-                  borderRadius: 14,
+                  borderRadius: 10,
                   border: "1px solid rgba(0,0,0,0.12)",
                   fontWeight: 800,
                   fontSize: 15,
@@ -1201,7 +1201,7 @@ export default function EcoGardenPage() {
                 style={{
                   marginTop: 10,
                   padding: "8px 14px",
-                  borderRadius: 12,
+                  borderRadius: 10,
                   border: "1px solid rgba(0,0,0,0.15)",
                   background: "rgba(255,255,255,0.6)",
                   fontWeight: 800,
@@ -1226,7 +1226,7 @@ export default function EcoGardenPage() {
             style={{
               marginTop: 14,
               padding: 16,
-              borderRadius: 16,
+              borderRadius: 10,
               background: "rgba(255,255,255,0.65)",
               lineHeight: 1.55,
               fontWeight: 600,
@@ -1261,7 +1261,7 @@ export default function EcoGardenPage() {
             style={{
               marginTop: 18,
               padding: 16,
-              borderRadius: 16,
+              borderRadius: 10,
               background: "rgba(255,255,255,0.5)",
               textAlign: "center",
             }}
@@ -1280,7 +1280,7 @@ export default function EcoGardenPage() {
               onClick={shareGarden}
               style={{
                 padding: "12px 16px",
-                borderRadius: 14,
+                borderRadius: 10,
                 border: "none",
                 fontWeight: 950,
                 cursor: "pointer",
@@ -1295,7 +1295,7 @@ export default function EcoGardenPage() {
               onClick={startPlay}
               style={{
                 padding: "12px 16px",
-                borderRadius: 14,
+                borderRadius: 10,
                 border: "none",
                 fontWeight: 950,
                 cursor: "pointer",
@@ -1313,7 +1313,7 @@ export default function EcoGardenPage() {
               }}
               style={{
                 padding: "12px 16px",
-                borderRadius: 14,
+                borderRadius: 10,
                 fontWeight: 800,
                 border: "1px solid rgba(0,0,0,0.2)",
                 background: "rgba(255,255,255,0.7)",

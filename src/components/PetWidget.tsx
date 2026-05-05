@@ -47,7 +47,7 @@ export function PetWidget({
 
   return (
     <div
-      className={`pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-lg border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`}
+      className={`pointer-events-none absolute top-2 right-2 z-40 hidden w-52 rounded-md border border-emerald-200/50 bg-white/95 p-4 shadow-[0_8px_30px_rgba(26,47,35,0.12)] backdrop-blur-sm md:block ${className}`}
       aria-label={`${petName} wellness`}
     >
       <div className="mb-3 text-center text-base font-bold text-gray-800">{petName}</div>
@@ -62,11 +62,11 @@ export function PetWidget({
         />
       </div>
       <div
-        className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-200"
+        className="mt-4 h-2.5 w-full overflow-hidden rounded-md bg-gray-200"
         aria-label="Pet health"
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-500 ease-out ${fillClass}`}
+          className={`h-full rounded-md transition-[width] duration-500 ease-out ${fillClass}`}
           style={{ width: `${h}%` }}
         />
       </div>

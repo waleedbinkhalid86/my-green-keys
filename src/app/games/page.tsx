@@ -531,7 +531,7 @@ export default function GamesHubPage() {
               </p>
               <Link
                 href="/ranger"
-                className="hidden items-center gap-2 rounded-full border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
+                className="hidden items-center gap-2 rounded-md border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
                 style={{ textDecoration: "none" }}
               >
                 <Shield className="h-4 w-4 shrink-0" aria-hidden />
@@ -547,7 +547,7 @@ export default function GamesHubPage() {
                 alignItems: "center",
                 minHeight: 48,
                 padding: "0 20px",
-                borderRadius: 999,
+                borderRadius: 10,
                 background: "rgba(255,255,255,0.22)",
                 color: "#ffffff",
                 fontWeight: 800,
@@ -640,7 +640,7 @@ export default function GamesHubPage() {
                       type="button"
                       onClick={() => handleLevelSelect(id)}
                       className={[
-                        "games-hub-level-card relative cursor-pointer rounded-xl border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
+                        "games-hub-level-card relative cursor-pointer rounded-md border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
                         isSel ? "border-green-500 bg-green-50" : "border-black/5",
                         levelBounceId === id ? "games-hub-level-bounce" : "",
                         "games-hub-card-animate",
@@ -712,7 +712,7 @@ export default function GamesHubPage() {
               <div
                 style={{
                   height: 18,
-                  borderRadius: 999,
+                  borderRadius: 10,
                   background: "#E8F5E9",
                   overflow: "hidden",
                   border: "2px solid #A5D6A7",
@@ -722,7 +722,7 @@ export default function GamesHubPage() {
                   style={{
                     width: `${progressToNextPct}%`,
                     height: "100%",
-                    borderRadius: 999,
+                    borderRadius: 10,
                     background: "linear-gradient(90deg, #2ECC71, #1A8F4E)",
                     transition: "width 1s cubic-bezier(0.22, 1, 0.36, 1)",
                     display: "flex",
@@ -806,7 +806,7 @@ export default function GamesHubPage() {
                 return (
                   <article
                     key={g.slug}
-                    className={`games-hub-game-card games-hub-card-animate rounded-xl bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
+                    className={`games-hub-game-card games-hub-card-animate rounded-md bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
                     style={{
                       position: "relative",
                       minHeight: 420,
@@ -978,7 +978,7 @@ export default function GamesHubPage() {
                             minHeight: 52,
                             width: "100%",
                             padding: "0 18px",
-                            borderRadius: 999,
+                            borderRadius: 10,
                             background: "#1A8F4E",
                             color: "#ffffff",
                             fontWeight: 800,
@@ -1046,7 +1046,7 @@ export default function GamesHubPage() {
                               height: 52,
                               minHeight: 52,
                               width: "100%",
-                              borderRadius: 999,
+                              borderRadius: 10,
                               background: "linear-gradient(180deg, #FFD54F, #FFB300)",
                               color: "#5D4037",
                               fontWeight: 800,
@@ -1068,7 +1068,7 @@ export default function GamesHubPage() {
                             justifyContent: "center",
                             height: 52,
                             minHeight: 52,
-                            borderRadius: 999,
+                            borderRadius: 10,
                             background: "#F1F5F9",
                             fontWeight: 800,
                             fontSize: 15,
@@ -1115,7 +1115,7 @@ export default function GamesHubPage() {
                   return (
                   <article
                     key={c.name}
-                    className="games-hub-card-animate games-hub-game-card rounded-xl shadow-sm transition-shadow hover:shadow-lg"
+                    className="games-hub-card-animate games-hub-game-card rounded-md shadow-sm transition-shadow hover:shadow-lg"
                     style={{
                       position: "relative",
                       minHeight: 280,
@@ -1182,7 +1182,7 @@ export default function GamesHubPage() {
                           justifyContent: "center",
                           height: 48,
                           minHeight: 48,
-                          borderRadius: 999,
+                          borderRadius: 10,
                           background: "rgba(0,0,0,0.22)",
                           color: "#ECEFF1",
                           fontWeight: 800,

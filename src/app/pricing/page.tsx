@@ -236,12 +236,12 @@ function PricingToggle({
 }) {
   return (
     <div className="flex items-center justify-center">
-      <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-1">
+      <div className="inline-flex items-center gap-1 rounded-md bg-gray-100 p-1">
         <button
           type="button"
           onClick={() => onChange(false)}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            "rounded-md px-4 py-2 text-sm font-medium transition-colors",
             !isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
           )}
           aria-pressed={!isYearly}
@@ -252,7 +252,7 @@ function PricingToggle({
           type="button"
           onClick={() => onChange(true)}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            "rounded-md px-4 py-2 text-sm font-medium transition-colors",
             isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
           )}
           aria-pressed={isYearly}

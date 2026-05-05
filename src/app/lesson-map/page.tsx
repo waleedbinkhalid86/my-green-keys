@@ -185,7 +185,7 @@ export default function LessonMapPage() {
     <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100">
       <section className="mgk-section-tight">
         <div className="mgk-container">
-          <div className="rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
+          <div className="rounded-md border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">LESSON MAP</div>
@@ -196,11 +196,11 @@ export default function LessonMapPage() {
               </div>
 
               <div className="flex flex-wrap items-stretch gap-3">
-                <div className="min-w-[160px] rounded-[14px] border border-green-600/25 bg-[#E8F5E9] px-3 py-2.5">
+                <div className="min-w-[160px] rounded-md border border-green-600/25 bg-[#E8F5E9] px-3 py-2.5">
                   <div className="text-xs font-black text-[#2e7d32]">Eco points</div>
                   <div className="text-[22px] font-black text-[#1b4d30]">{ecoPointsTotal}</div>
                 </div>
-                <div className="min-w-[160px] rounded-[14px] border border-yellow-200 bg-[#FFFDE7] px-3 py-2.5">
+                <div className="min-w-[160px] rounded-md border border-yellow-200 bg-[#FFFDE7] px-3 py-2.5">
                   <div className="text-xs font-black text-[#8a6d1b]">Stars earned</div>
                   <div className="text-[22px] font-black text-[#2c3e50]">{starsTotal}</div>
                 </div>
@@ -209,14 +209,14 @@ export default function LessonMapPage() {
                   onClick={() => {
                     router.push("/lesson");
                   }}
-                  className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
+                  className="cursor-pointer rounded-md border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
                 >
                   Back to Lesson
                 </button>
               </div>
             </div>
 
-            <div className="mt-3.5 h-2.5 overflow-hidden rounded-full bg-black/[0.06]">
+            <div className="mt-3.5 h-2.5 overflow-hidden rounded-md bg-black/[0.06]">
               <div
                 className="h-full bg-gradient-to-r from-[#4CAF50] to-[#2196F3] transition-[width] duration-[400ms] ease-out"
                 style={{ width: `${progressPct}%` }}
@@ -224,13 +224,13 @@ export default function LessonMapPage() {
             </div>
 
             {error && (
-              <div className="mt-3 rounded-xl border border-[#ef5350] bg-[#ffebee] px-3 py-2.5 font-extrabold text-[#c62828]">
+              <div className="mt-3 rounded-md border border-[#ef5350] bg-[#ffebee] px-3 py-2.5 font-extrabold text-[#c62828]">
                 {error}
               </div>
             )}
           </div>
 
-          <div className="mt-[18px] rounded-[18px] border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
+          <div className="mt-[18px] rounded-md border border-black/[0.06] bg-white/95 p-[18px] shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-[10px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-black tracking-[0.18em] text-[#2d6a4f]">MY CERTIFICATES</div>
@@ -244,7 +244,7 @@ export default function LessonMapPage() {
                 onClick={() => {
                   router.push("/certificate");
                 }}
-                className="cursor-pointer rounded-[14px] border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
+                className="cursor-pointer rounded-md border-none bg-[#4CAF50] px-3.5 py-3 font-black text-white"
               >
                 View Latest Certificate
               </button>
@@ -263,7 +263,7 @@ export default function LessonMapPage() {
                   return (
                     <div
                       key={c.id}
-                      className="rounded-xl border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
+                      className="rounded-md border border-green-600/25 bg-gradient-to-br from-[#E8F5E9] from-0% via-white via-60% to-[#FFFDE7] to-100% p-4 shadow-sm transition-shadow hover:shadow-lg"
                     >
                       <div className="flex justify-between gap-2.5">
                         <div className="font-black text-[#2c3e50]">{def?.title ?? "Certificate"}</div>
@@ -283,7 +283,7 @@ export default function LessonMapPage() {
                         <button
                           type="button"
                           onClick={() => window.open(`/certificate?id=${encodeURIComponent(c.id)}`, "_blank")}
-                          className="cursor-pointer rounded-xl border-none bg-[#4CAF50] px-3 py-2.5 font-black text-white"
+                          className="cursor-pointer rounded-md border-none bg-[#4CAF50] px-3 py-2.5 font-black text-white"
                         >
                           View
                         </button>
@@ -292,7 +292,7 @@ export default function LessonMapPage() {
                           onClick={() =>
                             window.open(`/certificate?id=${encodeURIComponent(c.id)}&print=1`, "_blank")
                           }
-                          className="cursor-pointer rounded-xl border border-green-600/45 bg-white px-3 py-2.5 font-black text-[#2e7d32]"
+                          className="cursor-pointer rounded-md border border-green-600/45 bg-white px-3 py-2.5 font-black text-[#2e7d32]"
                         >
                           PDF
                         </button>
@@ -340,7 +340,7 @@ export default function LessonMapPage() {
                     onClick={() => !locked && router.push(`/lesson-map/phase-${p.id}`)}
                     className={clsx(
                       "group relative w-full text-left",
-                      "aspect-[3/4] overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg",
+                        "aspect-[3/4] overflow-hidden rounded-md border border-black/5 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg",
                       !locked &&
                         "cursor-pointer hover:-translate-y-2 hover:rotate-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600",
                       locked && "cursor-not-allowed"
@@ -391,9 +391,9 @@ export default function LessonMapPage() {
                       <p className="mt-1 text-xs italic text-gray-500">{p.tagline}</p>
                       {showProgress && (
                         <>
-                          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-md bg-gray-200">
                             <div
-                              className="h-full rounded-full bg-green-500 transition-[width] duration-300"
+                              className="h-full rounded-md bg-green-500 transition-[width] duration-300"
                               style={{ width: `${phasePct}%` }}
                             />
                           </div>

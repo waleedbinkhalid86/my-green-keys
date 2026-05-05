@@ -320,7 +320,7 @@ export default function LessonPhaseDetailPage() {
                 const starsEarned = Math.min(3, Math.max(0, Math.round(num(row?.stars))));
 
                 const baseCard =
-                  "rounded-lg border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
+                  "rounded-md border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
                 const interactive = state !== "locked";
 
                 return (
@@ -395,7 +395,7 @@ export default function LessonPhaseDetailPage() {
       </section>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-lg">
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-lg">
           {toast}
         </div>
       )}

@@ -2421,7 +2421,7 @@ export default function LessonPage() {
           <StreakCounter streak={profileDailyStreak} variant="floating" />
           <Link
             href="/ranger"
-            className="pointer-events-auto inline-flex items-center gap-2 rounded-full border-2 border-white/25 bg-white/10 px-3 py-2 text-sm font-bold text-white shadow-lg backdrop-blur-sm"
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-md border-2 border-white/25 bg-white/10 px-3 py-2 text-sm font-bold text-white shadow-lg backdrop-blur-sm"
           >
             <Shield className="h-4 w-4 shrink-0" aria-hidden />
             Ranger

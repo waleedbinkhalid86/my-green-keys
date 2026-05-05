@@ -191,18 +191,18 @@ export default function StreakPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
         <div className="mgk-container mgk-section">
-          <div className="h-10 w-40 animate-pulse rounded-lg bg-gray-200" />
-          <div className="mx-auto mt-10 max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
-            <div className="mx-auto h-32 w-48 rounded-lg bg-gray-100" />
+          <div className="h-10 w-40 animate-pulse rounded-md bg-gray-200" />
+          <div className="mx-auto mt-10 max-w-3xl animate-pulse rounded-md bg-white p-8 shadow-lg">
+            <div className="mx-auto h-32 w-48 rounded-md bg-gray-100" />
             <div className="mt-8 grid grid-cols-3 gap-4">
-              <div className="h-24 rounded-xl bg-gray-100" />
-              <div className="h-24 rounded-xl bg-gray-100" />
-              <div className="h-24 rounded-xl bg-gray-100" />
+              <div className="h-24 rounded-md bg-gray-100" />
+              <div className="h-24 rounded-md bg-gray-100" />
+              <div className="h-24 rounded-md bg-gray-100" />
             </div>
           </div>
-          <div className="mx-auto mt-8 max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
+          <div className="mx-auto mt-8 max-w-3xl animate-pulse rounded-md bg-white p-8 shadow-lg">
             <div className="h-6 w-48 rounded bg-gray-100" />
-            <div className="mt-6 h-40 rounded-xl bg-gray-100" />
+            <div className="mt-6 h-40 rounded-md bg-gray-100" />
           </div>
         </div>
       </div>
@@ -213,11 +213,11 @@ export default function StreakPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
         <div className="mgk-container mgk-section">
-          <div className="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto max-w-md rounded-md bg-white p-8 text-center shadow-lg">
             <p className="text-lg font-semibold text-gray-800">Sign in to view your streak.</p>
             <Link
               href="/login"
-              className="mt-6 inline-block rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
+              className="mt-6 inline-block rounded-md bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
             >
               Go to login
             </Link>
@@ -231,12 +231,12 @@ export default function StreakPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-sans">
         <div className="mgk-container mgk-section">
-          <div className="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto max-w-md rounded-md bg-white p-8 text-center shadow-lg">
             <p className="text-lg font-semibold text-gray-800">Couldn&apos;t load streak data.</p>
             <button
               type="button"
               onClick={() => void load()}
-              className="mt-6 rounded-full bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
+              className="mt-6 rounded-md bg-green-500 px-8 py-3 font-bold text-white hover:bg-green-600"
             >
               Retry
             </button>
@@ -261,7 +261,7 @@ export default function StreakPage() {
         </div>
 
         <div className="mgk-container mt-8">
-          <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+          <div className="mx-auto max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
             <div className="flex justify-center">
               <StreakCounter streak={currentStreak} variant="large" />
             </div>
@@ -285,7 +285,7 @@ export default function StreakPage() {
 
       <section className="mgk-section-tight">
         <div className="mgk-container">
-          <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+          <div className="mx-auto max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
             <h2 className="mb-2 text-xl font-bold text-gray-900">Last 90 days</h2>
             <p className="text-sm text-gray-500">Each square is a day. Brighter = more activity.</p>
 
@@ -343,7 +343,7 @@ export default function StreakPage() {
 
       <section className="mgk-section-tight">
         <div className="mgk-container">
-          <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+          <div className="mx-auto max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
             <h2 className="mb-2 text-xl font-bold text-gray-900">Your milestones</h2>
             {unlockedMilestones.length === 0 ? (
               <p className="mt-6 flex items-center gap-2 text-gray-600">
@@ -355,7 +355,7 @@ export default function StreakPage() {
                 {unlockedMilestones.map((m) => (
                   <li
                     key={m.day}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/80 px-4 py-3"
+                    className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50/80 px-4 py-3"
                   >
                     <span className="flex items-center gap-2 font-semibold text-gray-900">
                       <Award className="h-5 w-5 text-amber-500" aria-hidden />
@@ -372,7 +372,7 @@ export default function StreakPage() {
 
       <section className="mgk-section-tight">
         <div className="mgk-container">
-          <div className="mx-auto max-w-3xl rounded-lg bg-blue-50 p-6">
+          <div className="mx-auto max-w-3xl rounded-md bg-blue-50 p-6">
             <h2 className="mb-2 text-lg font-bold text-gray-900">How streaks work</h2>
             <ul className="mt-4 space-y-3 text-gray-800">
               {[

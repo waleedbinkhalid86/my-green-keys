@@ -115,7 +115,7 @@ export function RankUpCelebration({ xpAwarded, onClose }: RankUpCelebrationProps
     >
       <div
         className={cn(
-          "relative mx-auto max-w-md scale-100 rounded-3xl bg-white p-12 shadow-2xl",
+          "relative mx-auto max-w-md scale-100 rounded-md bg-white p-12 shadow-2xl",
           "animate-in zoom-in-95 fade-in duration-300",
         )}
       >
@@ -168,7 +168,7 @@ export function RankUpCelebration({ xpAwarded, onClose }: RankUpCelebrationProps
           <button
             type="button"
             onClick={onClose}
-            className="mt-10 w-full rounded-full bg-purple-500 px-8 py-3 text-lg font-bold text-white shadow-md transition hover:bg-purple-600"
+            className="mt-10 w-full rounded-md bg-purple-500 px-8 py-3 text-lg font-bold text-white shadow-md transition hover:bg-purple-600"
           >
             Continue your journey
           </button>

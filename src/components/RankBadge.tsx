@@ -61,7 +61,7 @@ export function RankBadge({ xp, rank: rankOverride, variant = "full", className 
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold shadow-sm",
+          "inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm font-semibold shadow-sm",
           tierClasses,
           className,
         )}
@@ -86,7 +86,7 @@ export function RankBadge({ xp, rank: rankOverride, variant = "full", className 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold shadow-sm",
+        "inline-flex items-center gap-2 rounded-md border px-4 py-1.5 text-sm font-semibold shadow-sm",
         tierClasses,
         className,
       )}

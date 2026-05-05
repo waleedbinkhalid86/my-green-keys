@@ -457,7 +457,7 @@ export default function StudentReportPage() {
         <div className="mgk-container flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm font-semibold text-white">Progress report</div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-lg border border-white/20 bg-white/10 p-0.5">
+            <div className="flex rounded-md border border-white/20 bg-white/10 p-0.5">
               {(
                 [
                   ["week", "Weekly"],
@@ -486,7 +486,7 @@ export default function StudentReportPage() {
       </div>
 
       <div className="report-no-print mgk-container py-4">
-        <div className="rounded-xl border border-primary/25 bg-white p-4 shadow-sm">
+        <div className="rounded-md border border-primary/25 bg-white p-4 shadow-sm">
           <h2 className="font-heading text-sm font-bold text-primary">School branding (saved on this device)</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Appears on printed reports. Stored in localStorage for B2B school use.
@@ -528,18 +528,18 @@ export default function StudentReportPage() {
         {loading ? (
           <p className="text-center font-medium text-muted-foreground">Loading report…</p>
         ) : error ? (
-          <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-center font-semibold text-destructive">
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-6 text-center font-semibold text-destructive">
             {error}
           </div>
         ) : (
           <article
-            className="break-inside-avoid rounded-xl border-2 border-[#2ecc71]/35 bg-white shadow-sm transition-shadow hover:shadow-lg print:border print:shadow-none"
+            className="break-inside-avoid rounded-md border-2 border-[#2ecc71]/35 bg-white shadow-sm transition-shadow hover:shadow-lg print:border print:shadow-none"
             style={{ minHeight: "297mm" }}
           >
             <div className="border-b border-[#2ecc71]/25 bg-gradient-to-br from-[#ecfdf3] to-white px-8 pb-6 pt-8 print:px-[15mm] print:pt-[12mm]">
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/30 bg-white">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-primary/30 bg-white">
                     {branding.logoDataUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={branding.logoDataUrl} alt="" className="max-h-full max-w-full object-contain" />
@@ -554,7 +554,7 @@ export default function StudentReportPage() {
                 </div>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2ecc71] text-lg text-white">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#2ecc71] text-lg text-white">
                       🌿
                     </div>
                     <div className="text-left">
@@ -602,7 +602,7 @@ export default function StudentReportPage() {
               </section>
 
               <section className="grid gap-4 break-inside-avoid sm:grid-cols-2">
-                <div className="rounded-xl border border-primary/20 bg-[#f8fdf9] p-4">
+                <div className="rounded-md border border-primary/20 bg-[#f8fdf9] p-4">
                   <h4 className="text-xs font-bold uppercase text-[#14532d]">WPM (7-day windows)</h4>
                   <p className="mt-2 font-heading text-2xl font-bold text-primary">{wpmThis}</p>
                   <p className="text-xs text-muted-foreground">Last 7 days · avg WPM</p>
@@ -611,7 +611,7 @@ export default function StudentReportPage() {
                     {wpmThis > wpmLast ? " · ▲ improving" : wpmThis < wpmLast ? " · focus on consistency" : ""}
                   </p>
                 </div>
-                <div className="rounded-xl border border-primary/20 bg-[#f8fdf9] p-4">
+                <div className="rounded-md border border-primary/20 bg-[#f8fdf9] p-4">
                   <h4 className="text-xs font-bold uppercase text-[#14532d]">Accuracy ({periodLabel})</h4>
                   <p className="mt-2 font-heading text-2xl font-bold text-primary">{accuracyPeriod}%</p>
                   <p className="text-xs text-muted-foreground">Average on completed lessons in range</p>
@@ -631,23 +631,23 @@ export default function StudentReportPage() {
                   </div>
                   <p className="font-heading text-lg font-bold text-amber-600">🔥 {streak} day streak</p>
                 </div>
-                <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-muted">
+                <div className="mt-3 h-3 w-full overflow-hidden rounded-md bg-muted">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#2ecc71] to-[#52b788] transition-all print:bg-[#2ecc71]"
+                    className="h-full rounded-md bg-gradient-to-r from-[#2ecc71] to-[#52b788] transition-all print:bg-[#2ecc71]"
                     style={{ width: `${lessonPct}%` }}
                   />
                 </div>
               </section>
 
               <section className="grid gap-4 break-inside-avoid sm:grid-cols-2">
-                <div className="rounded-xl border border-primary/15 p-4">
+                <div className="rounded-md border border-primary/15 p-4">
                   <h4 className="text-xs font-bold uppercase text-muted-foreground">Eco points ({periodLabel})</h4>
                   <p className="mt-1 font-heading text-xl font-bold text-primary">{ecoPointsEarnedPeriod}</p>
                   <p className="text-xs text-muted-foreground">
                     From lessons, games, and approved eco photos · Profile total: {Number(profile?.eco_points) || 0}
                   </p>
                 </div>
-                <div className="rounded-xl border border-primary/15 p-4">
+                <div className="rounded-md border border-primary/15 p-4">
                   <h4 className="text-xs font-bold uppercase text-muted-foreground">Games played ({periodLabel})</h4>
                   <p className="mt-1 font-heading text-xl font-bold text-primary">{gamesPlayedPeriod}</p>
                 </div>
@@ -698,7 +698,7 @@ export default function StudentReportPage() {
                 </ol>
               </section>
 
-              <section className="break-inside-avoid rounded-xl border-2 border-dashed border-primary/30 bg-[#fafdfb] p-4">
+              <section className="break-inside-avoid rounded-md border-2 border-dashed border-primary/30 bg-[#fafdfb] p-4">
                 <h3 className="font-heading text-sm font-bold uppercase tracking-wide text-[#14532d]">
                   Teacher / parent comments
                 </h3>
@@ -709,7 +709,7 @@ export default function StudentReportPage() {
                 </div>
               </section>
 
-              <section className="break-inside-avoid rounded-xl bg-gradient-to-r from-[#ecfdf3] to-[#fffef5] p-4 print:border print:border-primary/20">
+              <section className="break-inside-avoid rounded-md bg-gradient-to-r from-[#ecfdf3] to-[#fffef5] p-4 print:border print:border-primary/20">
                 <h3 className="font-heading text-sm font-bold text-[#14532d]">Encouragement</h3>
                 <p className="mt-2 text-sm italic leading-relaxed text-[#334155]">&ldquo;{encouragement}&rdquo;</p>
               </section>

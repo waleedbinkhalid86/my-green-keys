@@ -105,7 +105,7 @@ export function MilestoneCelebration({ streakUpdate, onClose }: MilestoneCelebra
       aria-modal="true"
       aria-labelledby="milestone-title"
     >
-      <div className="relative mx-auto max-w-md rounded-3xl bg-white p-12 shadow-2xl">
+      <div className="relative mx-auto max-w-md rounded-md bg-white p-12 shadow-2xl">
         <button
           type="button"
           onClick={onClose}
@@ -146,7 +146,7 @@ export function MilestoneCelebration({ streakUpdate, onClose }: MilestoneCelebra
           <button
             type="button"
             onClick={onClose}
-            className="mt-10 w-full rounded-full bg-green-500 px-8 py-3 text-lg font-bold text-white shadow-md transition hover:bg-green-600"
+            className="mt-10 w-full rounded-md bg-green-500 px-8 py-3 text-lg font-bold text-white shadow-md transition hover:bg-green-600"
           >
             Keep going!
           </button>

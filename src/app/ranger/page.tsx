@@ -122,7 +122,7 @@ export default function RangerPage() {
           <p className="mt-2 max-w-md text-center text-gray-600">Sign in to see your rank, XP, and activity.</p>
           <Link
             href="/login"
-            className="mt-6 rounded-full bg-purple-500 px-8 py-3 font-semibold text-white transition hover:bg-purple-600"
+            className="mt-6 rounded-md bg-purple-500 px-8 py-3 font-semibold text-white transition hover:bg-purple-600"
           >
             Sign in
           </Link>
@@ -154,40 +154,40 @@ export default function RangerPage() {
         <div className="mgk-container">
         {loading ? (
           <div className="space-y-8">
-            <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
-              <div className="mx-auto h-32 w-48 rounded-lg bg-gray-100" />
-              <div className="mx-auto mt-6 h-3 max-w-md rounded-full bg-gray-100" />
+            <div className="mx-auto max-w-3xl animate-pulse rounded-md bg-white p-8 shadow-lg">
+              <div className="mx-auto h-32 w-48 rounded-md bg-gray-100" />
+              <div className="mx-auto mt-6 h-3 max-w-md rounded-md bg-gray-100" />
             </div>
-            <div className="mx-auto max-w-3xl animate-pulse rounded-xl bg-white p-8 shadow-lg">
+            <div className="mx-auto max-w-3xl animate-pulse rounded-md bg-white p-8 shadow-lg">
               <div className="h-6 w-40 rounded bg-gray-100" />
               <div className="mt-4 space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-14 rounded-lg bg-gray-100" />
+                  <div key={i} className="h-14 rounded-md bg-gray-100" />
                 ))}
               </div>
             </div>
           </div>
         ) : error ? (
-          <div className="mx-auto max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto max-w-md rounded-md bg-white p-8 text-center shadow-lg">
             <p className="font-semibold text-gray-900">Couldn&apos;t load ranger data</p>
             <button
               type="button"
               onClick={() => void load()}
-              className="mt-4 rounded-full bg-purple-500 px-6 py-2 font-semibold text-white hover:bg-purple-600"
+              className="mt-4 rounded-md bg-purple-500 px-6 py-2 font-semibold text-white hover:bg-purple-600"
             >
               Retry
             </button>
           </div>
         ) : (
           <>
-            <section className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <RankBadge xp={xp} rank={rankId} variant="large" className="mx-auto" />
               <div className="mx-auto mt-6 w-full max-w-md">
                 {progress.nextRank ? (
                   <>
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-3 w-full overflow-hidden rounded-md bg-gray-200">
                       <div
-                        className={cn("h-full rounded-full transition-all", fillClass)}
+                        className={cn("h-full rounded-md transition-all", fillClass)}
                         style={{ width: `${progress.progressPercent}%` }}
                       />
                     </div>
@@ -204,7 +204,7 @@ export default function RangerPage() {
               </div>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="mb-2 text-xl font-bold text-gray-900">All ranks</h2>
               <ul className="mt-6 space-y-3">
                 {RANKS.map((r) => {
@@ -213,7 +213,7 @@ export default function RangerPage() {
                     <li
                       key={r.id}
                       className={cn(
-                        "flex items-center gap-4 rounded-lg border p-4",
+                        "flex items-center gap-4 rounded-md border p-4",
                         earned ? "border-green-200 bg-green-50" : "border-gray-200 bg-gray-50",
                       )}
                     >
@@ -242,7 +242,7 @@ export default function RangerPage() {
               </ul>
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="mb-2 text-xl font-bold text-gray-900">Where your XP came from</h2>
               <p className="mt-1 text-sm text-gray-600">Play variety of activities to climb faster</p>
               {breakdown.length === 0 ? (
@@ -256,9 +256,9 @@ export default function RangerPage() {
                       <li key={row.source} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                         <span className="w-full shrink-0 text-sm font-medium text-gray-800 sm:w-40">{label}</span>
                         <div className="flex min-w-0 flex-1 items-center gap-3">
-                          <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-100">
+                          <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-md bg-gray-100">
                             <div
-                              className="h-full rounded-full bg-emerald-500"
+                              className="h-full rounded-md bg-emerald-500"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -273,7 +273,7 @@ export default function RangerPage() {
               )}
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-xl bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
+            <section className="mx-auto mt-8 max-w-3xl rounded-md bg-white p-8 shadow-sm transition-shadow hover:shadow-lg">
               <h2 className="mb-2 text-xl font-bold text-gray-900">Recent activity</h2>
               {history.length === 0 ? (
                 <p className="mt-6 text-center text-gray-500">
@@ -304,7 +304,7 @@ export default function RangerPage() {
               )}
             </section>
 
-            <section className="mx-auto mt-8 max-w-3xl rounded-lg bg-purple-50 p-6">
+            <section className="mx-auto mt-8 max-w-3xl rounded-md bg-purple-50 p-6">
               <h2 className="mb-2 text-lg font-bold text-gray-900">How to earn XP</h2>
               <ul className="mt-4 space-y-3 text-sm text-gray-800">
                 {[

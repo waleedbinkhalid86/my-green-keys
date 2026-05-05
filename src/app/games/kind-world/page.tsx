@@ -452,7 +452,7 @@ export default function KindWorldGamePage() {
         className="flex min-h-screen items-center justify-center p-6 font-sans"
         style={{ background: "linear-gradient(180deg, #E8F8EF 0%, #C8E6C9 100%)" }}
       >
-        <div className="w-full max-w-md rounded-xl bg-white p-12 text-center shadow-xl">
+        <div className="w-full max-w-md rounded-md bg-white p-12 text-center shadow-xl">
           <div className="mb-6 flex justify-center">
             <Lock className="h-14 w-14 text-[#2ECC71]" strokeWidth={2} aria-hidden />
           </div>
@@ -473,21 +473,21 @@ export default function KindWorldGamePage() {
             {!signedIn ? (
               <Link
                 href="/login"
-                className="rounded-lg bg-[#2ECC71] px-6 py-3 text-center text-lg font-bold text-white shadow-md transition hover:brightness-95"
+                className="rounded-md bg-[#2ECC71] px-6 py-3 text-center text-lg font-bold text-white shadow-md transition hover:brightness-95"
               >
                 Log In
               </Link>
             ) : (
               <Link
                 href="/lesson-map"
-                className="rounded-lg bg-[#2ECC71] px-6 py-3 text-center text-lg font-bold text-white shadow-md transition hover:brightness-95"
+                className="rounded-md bg-[#2ECC71] px-6 py-3 text-center text-lg font-bold text-white shadow-md transition hover:brightness-95"
               >
                 Continue Lessons
               </Link>
             )}
             <Link
               href="/pricing"
-              className="rounded-lg border-2 border-[#2ECC71] bg-white px-6 py-3 text-center text-lg font-bold text-[#27AE60] shadow-sm transition hover:bg-green-50"
+              className="rounded-md border-2 border-[#2ECC71] bg-white px-6 py-3 text-center text-lg font-bold text-[#27AE60] shadow-sm transition hover:bg-green-50"
             >
               View Plans
             </Link>
@@ -520,7 +520,7 @@ export default function KindWorldGamePage() {
         <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-16 text-center">
           <h1 className="text-5xl font-bold drop-shadow-lg">Kind World Academy</h1>
           <p className="mt-3 text-xl text-white/90">Where kindness becomes a superpower</p>
-          <div className="mt-10 max-w-lg rounded-lg bg-white p-6 text-left text-gray-900 shadow-xl">
+          <div className="mt-10 max-w-lg rounded-md bg-white p-6 text-left text-gray-900 shadow-xl">
             <p className="text-lg font-semibold leading-relaxed">
               Type kind words and responses to social situations. Be quick — the world needs
               your kindness!
@@ -538,7 +538,7 @@ export default function KindWorldGamePage() {
           <button
             type="button"
             onClick={() => setGameState("level_select")}
-            className="mt-10 rounded-full bg-[#2ECC71] px-10 py-4 text-xl font-bold text-white shadow-lg transition hover:brightness-110"
+            className="mt-10 rounded-md bg-[#2ECC71] px-10 py-4 text-xl font-bold text-white shadow-lg transition hover:brightness-110"
           >
             Choose Your Level
           </button>
@@ -555,7 +555,7 @@ export default function KindWorldGamePage() {
           <button
             type="button"
             onClick={() => setGameState("intro")}
-            className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-base font-bold text-gray-800 shadow-md transition hover:bg-white"
+            className="mb-6 inline-flex items-center gap-2 rounded-md bg-white/90 px-4 py-2 text-base font-bold text-gray-800 shadow-md transition hover:bg-white"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
             Back
@@ -571,7 +571,7 @@ export default function KindWorldGamePage() {
                   key={id}
                   type="button"
                   onClick={() => startLevel(id)}
-                  className="cursor-pointer rounded-lg bg-white p-5 text-center shadow-lg transition hover:scale-105"
+                  className="cursor-pointer rounded-md bg-white p-5 text-center shadow-lg transition hover:scale-105"
                 >
                   <Image
                     src={LEVEL_IMAGE_SRC[id]}
@@ -597,7 +597,7 @@ export default function KindWorldGamePage() {
         className="relative flex min-h-screen items-center justify-center bg-black/40 p-6 font-sans"
         style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
       >
-        <div className="w-full max-w-lg rounded-xl bg-white p-10 text-center shadow-2xl">
+        <div className="w-full max-w-lg rounded-md bg-white p-10 text-center shadow-2xl">
           <div className="relative mx-auto mb-6 h-36 w-36">
             <Image
               src={petHappySrc}
@@ -625,14 +625,14 @@ export default function KindWorldGamePage() {
                 setCurrentScenario(null);
                 setUsedScenarioIds([]);
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#2ECC71] px-6 py-3 text-lg font-bold text-white shadow-md transition hover:brightness-95"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#2ECC71] px-6 py-3 text-lg font-bold text-white shadow-md transition hover:brightness-95"
             >
               <RefreshCw className="h-5 w-5" aria-hidden />
               Play Again
             </button>
             <Link
               href="/games"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-6 py-3 text-lg font-bold text-gray-800 transition hover:bg-gray-50"
+              className="inline-flex items-center justify-center gap-2 rounded-md border-2 border-gray-200 bg-white px-6 py-3 text-lg font-bold text-gray-800 transition hover:bg-gray-50"
             >
               <Star className="h-5 w-5 text-amber-500" aria-hidden />
               Back to Games
@@ -718,7 +718,7 @@ export default function KindWorldGamePage() {
 
       <main className="mgk-container max-w-[672px] pt-10">
         {currentScenario && (
-          <div className="relative rounded-xl bg-white p-12 shadow-2xl">
+          <div className="relative rounded-md bg-white p-12 shadow-2xl">
             {feedback === "correct" && (
               <div className="mb-2 flex justify-center text-[#2ECC71]" aria-hidden>
                 <Check className="h-10 w-10" strokeWidth={2.5} />
@@ -745,7 +745,7 @@ export default function KindWorldGamePage() {
                 disabled={feedback !== null}
                 placeholder="Type your kind response..."
                 autoComplete="off"
-                className="w-full rounded-xl border-2 border-gray-200 py-4 pl-6 pr-6 text-2xl outline-none transition focus:border-[#2ECC71] focus:ring-4 focus:ring-[#2ECC71]/20 disabled:bg-gray-50"
+                className="w-full rounded-md border-2 border-gray-200 py-4 pl-6 pr-6 text-2xl outline-none transition focus:border-[#2ECC71] focus:ring-4 focus:ring-[#2ECC71]/20 disabled:bg-gray-50"
               />
               {floatPoints && (
                 <span

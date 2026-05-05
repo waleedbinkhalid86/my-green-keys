@@ -39,7 +39,7 @@ export function StreakCounter({ streak, variant = "floating", className }: Strea
     return (
       <div
         className={cn(
-          "inline-flex flex-col items-center justify-center gap-1 rounded-xl border-2 px-6 py-4 text-center text-3xl",
+          "inline-flex flex-col items-center justify-center gap-1 rounded-md border-2 px-6 py-4 text-center text-3xl",
           tier,
           className,
         )}
@@ -56,7 +56,7 @@ export function StreakCounter({ streak, variant = "floating", className }: Strea
     return (
       <div
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-semibold",
+          "inline-flex items-center gap-1.5 rounded-md border-2 px-3 py-1.5 text-sm font-semibold",
           tier,
           className,
         )}
@@ -71,7 +71,7 @@ export function StreakCounter({ streak, variant = "floating", className }: Strea
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border-2 bg-white px-4 py-2.5 shadow-lg backdrop-blur-sm",
+        "inline-flex items-center gap-2 rounded-md border-2 bg-white px-4 py-2.5 shadow-lg backdrop-blur-sm",
         tier,
         className,
       )}
