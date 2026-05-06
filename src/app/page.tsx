@@ -243,8 +243,8 @@ export default function HomePage() {
         className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
         style={{
           background: "linear-gradient(180deg, #0A1F0F 0%, #1A3D1F 100%)",
-          paddingTop: "160px",
-          paddingBottom: "160px",
+          paddingTop: "48px",
+          paddingBottom: "48px",
         }}
       >
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
@@ -378,7 +378,7 @@ export default function HomePage() {
 
           <div
             className="flex flex-wrap items-center justify-center gap-4"
-            style={{ animation: "float-up 0.9s ease 0.65s both", marginTop: "48px", marginBottom: "32px" }}
+            style={{ animation: "float-up 0.9s ease 0.65s both", marginTop: "14px", marginBottom: "10px" }}
           >
             <Link
               href="/signup"
@@ -404,7 +404,7 @@ export default function HomePage() {
           </div>
           <p
             className="inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm"
-            style={{ marginTop: "48px", marginBottom: "48px" }}
+            style={{ marginTop: "14px", marginBottom: "14px" }}
           >
             No credit card required. Free forever.
           </p>
@@ -440,11 +440,11 @@ export default function HomePage() {
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
         {/* TRUST BADGES */}
-        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <p
               className="text-center"
-              style={{ fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: "64px" }}
+              style={{ fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: "20px" }}
             >
               Privacy and safety built in
             </p>
@@ -470,7 +470,7 @@ export default function HomePage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section id="how-it-works" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section id="how-it-works" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <h2
               style={{
@@ -478,12 +478,12 @@ export default function HomePage() {
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
                 fontWeight: 900,
                 color: DARK,
-                marginBottom: "60px",
+                marginBottom: "18px",
               }}
             >
               Learning that actually works
             </h2>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "12px", marginBottom: "18px" }}>
               {(
                 [
                   {
@@ -540,7 +540,7 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="features" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section id="features" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <h2
               style={{
@@ -552,7 +552,7 @@ export default function HomePage() {
                 marginLeft: "auto",
                 marginRight: "auto",
                 lineHeight: 1.2,
-                marginBottom: "60px",
+                marginBottom: "18px",
               }}
             >
               Everything your child needs to become a typing champion
@@ -560,7 +560,7 @@ export default function HomePage() {
             <p
               className="text-base font-semibold text-gray-600"
               style={{
-                marginBottom: "80px",
+                marginBottom: "24px",
                 textAlign: "center",
                 maxWidth: "600px",
                 marginLeft: "auto",
@@ -570,7 +570,7 @@ export default function HomePage() {
               Lessons, rewards, and motivation — all designed to keep kids practicing every day.
             </p>
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "12px", marginBottom: "18px" }}>
               {(
                 [
                   {
@@ -628,7 +628,7 @@ export default function HomePage() {
         {/* GAMES */}
         <section
           id="games-preview"
-          style={{ background: DARK, paddingTop: "160px", paddingBottom: "160px" }}
+          style={{ background: DARK, paddingTop: "48px", paddingBottom: "48px" }}
         >
           <Inner>
             <h2
@@ -637,14 +637,14 @@ export default function HomePage() {
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
                 fontWeight: 900,
                 color: "#fff",
-                marginBottom: "60px",
+                marginBottom: "18px",
               }}
             >
               Learning through play
             </h2>
             <p
               style={{
-                marginBottom: "80px",
+                marginBottom: "24px",
                 textAlign: "center",
                 maxWidth: "600px",
                 marginLeft: "auto",
@@ -658,7 +658,7 @@ export default function HomePage() {
             </p>
             <div
               className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
-              style={{ marginTop: "40px", marginBottom: "60px" }}
+              style={{ marginTop: "12px", marginBottom: "18px" }}
             >
               {PREVIEW_GAMES.map((g) => (
                 <Link
@@ -689,7 +689,7 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
-            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "48px" }}>
+            <div style={{ textAlign: "center", marginTop: "14px", marginBottom: "14px" }}>
               <Link
                 href="/games"
                 className="btn-ghost"
@@ -702,11 +702,11 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <div className="mgk-container">
             <h2
               className="text-center text-3xl font-black text-gray-900 md:text-4xl"
-              style={{ color: DARK, marginBottom: "60px" }}
+              style={{ color: DARK, marginBottom: "18px" }}
             >
               Join us as an early adopter
             </h2>
@@ -718,12 +718,12 @@ export default function HomePage() {
                 marginLeft: "auto",
                 marginRight: "auto",
                 display: "block",
-                marginBottom: "80px",
+                marginBottom: "24px",
               }}
             >
               Schools and families joining now get founding member benefits
             </p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "12px", marginBottom: "18px" }}>
               {(
                 [
                   {
@@ -760,7 +760,7 @@ export default function HomePage() {
               <h3 className="mt-8 text-xl font-bold text-gray-900" style={{ color: DARK }}>
                 Be among the first
               </h3>
-              <div className="flex flex-wrap items-center justify-center gap-4" style={{ marginTop: "48px", marginBottom: "48px" }}>
+              <div className="flex flex-wrap items-center justify-center gap-4" style={{ marginTop: "14px", marginBottom: "14px" }}>
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -779,7 +779,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <h2
               style={{
@@ -787,14 +787,14 @@ export default function HomePage() {
                 fontSize: "clamp(1.65rem, 3vw, 2.2rem)",
                 fontWeight: 900,
                 color: DARK,
-                marginBottom: "60px",
+                marginBottom: "18px",
               }}
             >
               Simple pricing for every family
             </h2>
             <div
               className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-3"
-              style={{ marginTop: "40px", marginBottom: "60px" }}
+              style={{ marginTop: "12px", marginBottom: "18px" }}
             >
               <div className="mgk-card-ds bg-white p-8">
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
@@ -803,7 +803,7 @@ export default function HomePage() {
                 <Link
                   href="/signup"
                   className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "48px", marginBottom: "48px" }}
+                  style={{ marginTop: "14px", marginBottom: "14px" }}
                 >
                   Start free
                 </Link>
@@ -819,7 +819,7 @@ export default function HomePage() {
                 <Link
                   href="/pricing"
                   className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "48px", marginBottom: "48px" }}
+                  style={{ marginTop: "14px", marginBottom: "14px" }}
                 >
                   View School Plan
                 </Link>
@@ -833,13 +833,13 @@ export default function HomePage() {
                 <Link
                   href="/pricing"
                   className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "48px", marginBottom: "48px" }}
+                  style={{ marginTop: "14px", marginBottom: "14px" }}
                 >
                   View Family Plan
                 </Link>
               </div>
             </div>
-            <p style={{ textAlign: "center", marginTop: "48px", marginBottom: "48px" }}>
+            <p style={{ textAlign: "center", marginTop: "14px", marginBottom: "14px" }}>
               <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
                 See all plans →
               </Link>
@@ -848,16 +848,16 @@ export default function HomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="text-center" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
+        <section className="text-center" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <div style={{ maxWidth: 560, margin: "0 auto" }}>
               <h2
                 className="text-gray-900"
-                style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: "60px" }}
+                style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: "18px" }}
               >
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <div className="flex flex-wrap items-center justify-center gap-6" style={{ marginTop: "48px", marginBottom: "48px" }}>
+              <div className="flex flex-wrap items-center justify-center gap-6" style={{ marginTop: "14px", marginBottom: "14px" }}>
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -871,7 +871,7 @@ export default function HomePage() {
                   View Pricing
                 </Link>
               </div>
-              <p className="text-sm font-semibold text-gray-500" style={{ marginTop: "48px", marginBottom: "48px" }}>
+              <p className="text-sm font-semibold text-gray-500" style={{ marginTop: "14px", marginBottom: "14px" }}>
                 Free forever for first 10 lessons. No credit card.
               </p>
             </div>
