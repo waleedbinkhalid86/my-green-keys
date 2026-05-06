@@ -214,15 +214,15 @@ function PricingNav() {
 function CompareCell({ value }: { value: Cell }) {
   if (value === "yes") {
     return (
-      <span className="inline-flex text-[#2ECC71]" aria-label="Included">
-        <Check className="size-5 stroke-[2.5]" strokeLinecap="round" strokeLinejoin="round" />
+      <span className="inline-flex text-green-600" aria-label="Included">
+        <Check className="h-5 w-5 stroke-[2.5]" strokeLinecap="round" strokeLinejoin="round" />
       </span>
     );
   }
   if (value === "no") {
-    return <span className="text-lg font-light text-[#9CA3AF]">—</span>;
+    return <span className="text-lg font-light text-gray-300">—</span>;
   }
-  return <span className="text-sm text-[#374151]">{value}</span>;
+  return <span className="text-sm text-gray-700">{value}</span>;
 }
 
 const cardShell = "flex h-full flex-col rounded-md bg-white p-8 border border-gray-200 transition-colors hover:border-gray-300";
@@ -425,6 +425,14 @@ function PricingPageContent() {
   };
 
   const familyDisplayPrice = isYearly ? "7.99" : "9.99";
+  const schoolDisplayPrice = "49.00";
+
+  const splitPrice = (price: string) => {
+    const [dollarsRaw, centsRaw] = price.split(".");
+    const dollars = dollarsRaw || "0";
+    const cents = (centsRaw || "00").padEnd(2, "0").slice(0, 2);
+    return { dollars, cents };
+  };
 
   useEffect(() => {
     if (!ecoGardenExpired || !familyPlanRef.current) return;
@@ -448,14 +456,11 @@ function PricingPageContent() {
       <section className="mgk-section text-center">
         <div className="mgk-container">
           <div className="mx-auto max-w-3xl">
-            <div className="mb-4 inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium uppercase tracking-wider text-green-700">
-              Pricing
-            </div>
-            <h1 className="text-4xl font-semibold tracking-tight text-gray-900 md:text-5xl">
-              Pricing that fits every learner
+            <h1 className="text-center text-4xl font-bold text-gray-900 md:text-5xl">
+              Pricing that grows with you
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-base text-gray-600">
-              Start free. Upgrade when ready. Cancel anytime.
+            <p className="mx-auto mb-12 mt-3 max-w-xl text-center text-base text-gray-600">
+              Free forever for trying out. Upgrade when ready. No hidden fees.
             </p>
           </div>
           <div className="mt-12">
@@ -487,34 +492,26 @@ function PricingPageContent() {
             </div>
           ) : null}
 
-          <div className="mgk-grid grid-cols-1 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Free */}
-            <div className={cardShell}>
-              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Free</p>
-              <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-5xl font-semibold text-gray-900">$0</span>
-                <span className="text-sm text-gray-500">/forever</span>
+            <div className="relative flex h-full flex-col rounded-md bg-emerald-400 p-8 text-white">
+              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">Free</p>
+              <div className="text-center">
+                <div className="text-5xl font-black">
+                  <span>${splitPrice("0.00").dollars}</span>
+                  <sup className="ml-1 text-2xl font-bold align-text-top">{splitPrice("0.00").cents}</sup>
+                </div>
+                <p className="mt-1 text-sm opacity-90">/forever</p>
               </div>
-              <p className="mt-2 text-sm text-gray-600">Perfect for trying out</p>
-              <div className="my-6 border-t border-gray-100" />
-              <ul className="space-y-3">
-                {FREE_FEATURES.map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
-                    <span className="text-sm text-gray-700">{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8">
-                <button
-                  type="button"
-                  className="w-full rounded-md bg-gray-100 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-60"
-                  disabled={checkoutBusy}
-                  onClick={() => router.push("/signup")}
-                >
-                  Start free
-                </button>
-              </div>
+              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+                For families wanting to try Green Keys for an unlimited period of time
+              </p>
+              <Link
+                href="/signup"
+                className="mt-auto inline-flex w-full items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100"
+              >
+                Start free
+              </Link>
             </div>
 
             {/* Family — Most Popular */}
@@ -522,78 +519,112 @@ function PricingPageContent() {
               ref={familyPlanRef}
               id="pricing-family-plan"
               className={cn(
-                cardShell,
-                "relative border-2 border-green-500 hover:border-green-500",
+                "relative flex h-full flex-col rounded-md bg-green-600 p-8 text-white",
                 ecoGardenExpired && "ring-2 ring-yellow-300 ring-offset-2"
               )}
             >
-              <div className="absolute right-6 top-6">
-                <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-                  MOST POPULAR
+              <div className="absolute right-3 top-3">
+                <span className="rounded-md bg-yellow-300 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-900">
+                  Most popular
                 </span>
               </div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Family</p>
-              <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-5xl font-semibold text-gray-900">${familyDisplayPrice}</span>
-                <span className="text-sm text-gray-500">/month</span>
+              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">Family</p>
+              <div className="text-center">
+                {(() => {
+                  const { dollars, cents } = splitPrice(familyDisplayPrice);
+                  return (
+                    <div className="text-5xl font-black">
+                      <span>${dollars}</span>
+                      <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
+                    </div>
+                  );
+                })()}
+                <p className="mt-1 text-sm opacity-90">/month</p>
               </div>
-              <p className="mt-2 text-sm text-gray-600">Perfect for families</p>
-              <div className="my-6 border-t border-gray-100" />
-              <ul className="space-y-3">
-                {FAMILY_FEATURES.map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
-                    <span className="text-sm text-gray-700">{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8">
-                <button
-                  type="button"
-                  className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
-                  disabled={checkoutBusy}
-                  onClick={() => void openCheckout("family")}
-                >
-                  {checkoutBusy ? "Loading…" : "Start 7-day free trial"}
-                </button>
-              </div>
+              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+                For families who want unlimited lessons and full features
+              </p>
+              <button
+                type="button"
+                className="mt-auto w-full rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100 disabled:opacity-60"
+                disabled={checkoutBusy}
+                onClick={() => void openCheckout("family")}
+              >
+                {checkoutBusy ? "Loading…" : "Choose Family"}
+              </button>
             </div>
 
-            {/* School Starter */}
-            <div className={cardShell}>
-              <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">School Starter</p>
-              <div className="mt-4 flex flex-wrap items-end gap-2">
-                <span className="text-5xl font-semibold text-gray-900">From $299</span>
-                <span className="text-sm text-gray-500">/month</span>
+            {/* School */}
+            <div className="relative flex h-full flex-col rounded-md bg-teal-600 p-8 text-white">
+              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">School</p>
+              <div className="text-center">
+                {(() => {
+                  const { dollars, cents } = splitPrice(schoolDisplayPrice);
+                  return (
+                    <div className="text-5xl font-black">
+                      <span>${dollars}</span>
+                      <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
+                    </div>
+                  );
+                })()}
+                <p className="mt-1 text-sm opacity-90">/month</p>
               </div>
-              <p className="mt-2 text-sm text-gray-600">Perfect for classrooms</p>
-              <div className="my-6 border-t border-gray-100" />
-              <ul className="space-y-3">
-                {SCHOOL_STARTER_FEATURES.map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
-                    <span className="text-sm text-gray-700">{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8 space-y-3">
-                <button
-                  type="button"
-                  className="w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
-                  disabled={checkoutBusy}
-                  onClick={() => void openCheckout("school_starter")}
-                >
-                  {checkoutBusy ? "Loading…" : "Get started"}
-                </button>
-                <a
-                  href="mailto:sales@mygreenkeys.com?subject=School%20Starter%20inquiry"
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50"
-                >
-                  Talk to sales
-                </a>
-              </div>
+              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+                For classrooms and teachers managing students at scale
+              </p>
+              <button
+                type="button"
+                className="mt-auto w-full rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100 disabled:opacity-60"
+                disabled={checkoutBusy}
+                onClick={() => void openCheckout("school_starter")}
+              >
+                {checkoutBusy ? "Loading…" : "Choose School"}
+              </button>
             </div>
           </div>
+
+          {/* Plan includes */}
+          <section className="mt-12">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <h3 className="mb-2 text-base font-bold text-emerald-700">Free includes</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {FREE_FEATURES.map((t) => (
+                    <li key={t} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-base font-bold text-green-700">Family includes</h3>
+                <p className="mb-3 text-sm text-gray-600">Everything in Free, and:</p>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {FAMILY_FEATURES.map((t) => (
+                    <li key={t} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-base font-bold text-teal-700">School includes</h3>
+                <p className="mb-3 text-sm text-gray-600">Everything in Family, and:</p>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {SCHOOL_STARTER_FEATURES.filter((t) => t !== "Everything in Family").map((t) => (
+                    <li key={t} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
 
           <div className="mgk-section-tight mt-12">
             <div className="text-center">
@@ -745,31 +776,33 @@ function PricingPageContent() {
       {/* Feature comparison */}
       <section className="mgk-section-tight">
         <div className="mgk-container">
-          <h2 className="text-center text-2xl font-semibold tracking-tight text-gray-900">Compare plans</h2>
-          <div className="mt-8 overflow-x-auto">
-            <div className="min-w-[720px] overflow-hidden rounded-md border border-gray-200 bg-white">
+          <h2 className="mb-2 text-center text-3xl font-bold text-gray-900">Compare every feature</h2>
+          <p className="mb-12 text-center text-base text-gray-600">Side-by-side feature breakdown</p>
+
+          <div className="overflow-x-auto">
+            <div className="min-w-[720px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
               <table className="w-full border-collapse text-left text-sm">
                 <thead className="bg-gray-50">
                   <tr className="text-xs font-medium uppercase tracking-wider text-gray-500">
                     <th className="px-6 py-3">Feature</th>
-                    <th className="px-6 py-3 text-center">Free</th>
-                    <th className="px-6 py-3 text-center">Family</th>
-                    <th className="px-6 py-3 text-center">School</th>
+                    <th className="px-6 py-3 text-center text-emerald-700">Free</th>
+                    <th className="px-6 py-3 text-center text-green-700">Family</th>
+                    <th className="px-6 py-3 text-center text-teal-700">School</th>
                   </tr>
                 </thead>
                 <tbody>
                   {COMPARISON_GROUPS.map((group) => (
                     <React.Fragment key={group.category}>
-                      <tr className="bg-gray-50">
-                        <td
-                          colSpan={4}
-                          className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-gray-700"
-                        >
-                          {group.category}
+                      <tr className="bg-gray-100">
+                        <td colSpan={4} className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-700">
+                          {group.category.toUpperCase()}
                         </td>
                       </tr>
-                      {group.rows.map((row) => (
-                        <tr key={row.feature} className="border-t border-gray-100">
+                      {group.rows.map((row, idx) => (
+                        <tr
+                          key={row.feature}
+                          className={cn("border-t border-gray-100", idx % 2 === 1 ? "bg-gray-50/50" : "bg-white")}
+                        >
                           <td className="px-6 py-3 font-medium text-gray-700">{row.feature}</td>
                           <td className="px-6 py-3 text-center">
                             <CompareCell value={row.free} />
