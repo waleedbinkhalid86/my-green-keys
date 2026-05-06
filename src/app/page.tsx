@@ -402,7 +402,7 @@ export default function HomePage() {
               Watch Demo
             </button>
           </div>
-          <p style={{ marginTop: 20, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+          <p className="mt-4 inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
             No credit card required. Free forever.
           </p>
           </Inner>
@@ -430,28 +430,6 @@ export default function HomePage() {
           <Flower style={{ left: "65%", bottom: 62 }} color="#e91e63" delay="0.4s" />
           <Flower style={{ left: "83%", bottom: 58 }} color="#FFEB3B" delay="1s" />
         </div>
-
-        <div
-          className="hidden sm:flex"
-          style={{
-            position: "absolute",
-            bottom: 24,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 12,
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 6,
-            color: "rgba(255,255,255,0.7)",
-            fontSize: 12,
-            fontWeight: 700,
-            animation: "float-up 1s ease 1s both",
-          }}
-          aria-hidden
-        >
-          <span>Scroll</span>
-          <span style={{ fontSize: 22, lineHeight: 1, animation: "flower-bob 2s ease-in-out infinite" }}>↓</span>
-        </div>
       </section>
 
       <div
@@ -459,7 +437,7 @@ export default function HomePage() {
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
         {/* TRUST BADGES */}
-        <section className="py-24 md:py-28 lg:py-32">
+        <section className="py-12 mt-8 mb-8">
           <Inner>
             <p
               className="mb-16 text-center"
@@ -562,7 +540,7 @@ export default function HomePage() {
         <section id="features" className="py-24 md:py-28 lg:py-32">
           <Inner>
             <h2
-              className="mb-16"
+              className="mb-4"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
@@ -576,6 +554,9 @@ export default function HomePage() {
             >
               Everything your child needs to become a typing champion
             </h2>
+            <p className="mx-auto mb-16 max-w-2xl text-center text-base font-semibold text-gray-600">
+              Lessons, rewards, and motivation — all designed to keep kids practicing every day.
+            </p>
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               {(
@@ -661,17 +642,14 @@ export default function HomePage() {
               5 eco-themed games that make typing practice addictive
             </p>
             <div
-              className="flex gap-8 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible"
-              style={{ scrollSnapType: "x mandatory" }}
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
             >
               {PREVIEW_GAMES.map((g) => (
                 <Link
                   key={g.name}
                   href="/games"
-                  className="mgk-card-ds shrink-0"
+                  className="mgk-card-ds"
                   style={{
-                    width: "min(280px, 85vw)",
-                    scrollSnapAlign: "start",
                     overflow: "hidden",
                     padding: 0,
                     textDecoration: "none",
@@ -679,7 +657,7 @@ export default function HomePage() {
                   }}
                 >
                   <div style={{ position: "relative", height: 160 }}>
-                    <Image src={g.img} alt="" fill sizes="280px" style={{ objectFit: "cover" }} />
+                    <Image src={g.img} alt="" fill sizes="(max-width: 1024px) 100vw, 20vw" style={{ objectFit: "cover" }} />
                     <div
                       style={{
                         position: "absolute",
@@ -756,13 +734,13 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center rounded-md bg-green-600 px-8 py-3 text-base font-bold text-white shadow-sm transition hover:bg-green-700"
+                  className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
                 >
                   Get Started Free
                 </Link>
                 <a
                   href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
-                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-900 bg-white px-8 py-3 text-base font-bold text-gray-900 transition hover:bg-gray-50"
+                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50 whitespace-nowrap"
                 >
                   Schools: Book a Demo
                 </a>
@@ -785,13 +763,29 @@ export default function HomePage() {
             >
               Simple pricing for every family
             </h2>
-            <div className="mx-auto grid max-w-[800px] grid-cols-1 gap-8 sm:grid-cols-2">
+            <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-3">
               <div className="mgk-card-ds bg-white p-8">
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
                 <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   Start free
+                </Link>
+              </div>
+              <div className="mgk-card-ds bg-white p-8">
+                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>School Starter</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                  $49<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
+                </p>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
+                  Classroom access, teacher dashboard, student progress tracking.
+                </p>
+                <Link
+                  href="/pricing"
+                  className="inline-flex w-full items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50"
+                  style={{ marginTop: 24, textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  View School Plan
                 </Link>
               </div>
               <div className="mgk-card-ds bg-white p-8" style={{ border: `2px solid ${PRIMARY}` }}>
@@ -823,22 +817,23 @@ export default function HomePage() {
               >
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <form className="mx-auto flex max-w-[480px] flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <input
-                    type="email"
-                    placeholder="Your email"
-                    className="h-[52px] flex-1 basis-[200px] rounded-md border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-900 outline-none ring-offset-white focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10"
-                  />
-                  <button
-                    type="submit"
-                    className="h-[52px] rounded-md bg-gray-900 px-7 text-sm font-bold text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.99]"
-                  >
-                    Start Free
-                  </button>
-                </div>
-              </form>
-              <p className="mt-4 text-sm font-semibold text-gray-500">No spam. Unsubscribe anytime.</p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
+                >
+                  Start Free Today
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50 whitespace-nowrap"
+                >
+                  View Pricing
+                </Link>
+              </div>
+              <p className="mt-4 text-sm font-semibold text-gray-500">
+                Free forever for first 10 lessons. No credit card.
+              </p>
             </div>
           </Inner>
         </section>
