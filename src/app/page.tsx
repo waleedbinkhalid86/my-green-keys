@@ -358,10 +358,10 @@ export default function HomePage() {
           </h1>
 
           <div
-            className="mx-auto mt-8 mb-10 max-w-2xl rounded-md border border-gray-200 bg-white px-8 py-6 text-center shadow-lg"
+            className="mx-auto mt-8 mb-10 max-w-2xl px-8 py-6 text-center"
             style={{ animation: "float-up 0.9s ease 0.5s both" }}
           >
-            <p className="text-base font-medium leading-relaxed text-gray-900 md:text-lg">
+            <p className="text-base font-medium leading-relaxed text-white md:text-lg">
               Built for{" "}
               <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">ages 6-14</span>.{" "}
               <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">100 lessons</span>,{" "}
@@ -374,29 +374,13 @@ export default function HomePage() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
             <Link
               href="/signup"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: 52,
-                padding: "0 28px",
-                borderRadius: 6,
-                background: "#fff",
-                color: DARK,
-                fontWeight: 800,
-                fontSize: "1rem",
-                textDecoration: "none",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              }}
-              className="hover:-translate-y-0.5 active:scale-[0.97]"
+              className="rounded-full bg-[#52B788] px-8 py-4 font-bold text-white transition hover:bg-[#40916C] hover:-translate-y-0.5 active:scale-[0.97]"
             >
               Start Free Today
             </Link>
             <button
               type="button"
-              className="btn-ghost"
-              style={{ fontSize: "1rem", padding: "0 28px", height: 52, display: "inline-flex", alignItems: "center" }}
+              className="rounded-full border-2 border-white px-8 py-4 font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
               onClick={() => setDemoModalOpen(true)}
             >
               Watch Demo
