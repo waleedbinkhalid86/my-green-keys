@@ -811,7 +811,7 @@ export default function HomePage() {
               <div className="mgk-card-ds bg-white p-8">
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>School Starter</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                  $49<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
+                  $149<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
                 </p>
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
                   Classroom access, teacher dashboard, student progress tracking.

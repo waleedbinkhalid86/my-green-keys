@@ -135,7 +135,7 @@ const SCHOOL_STARTER_FEATURES = [
   "Shared lesson library",
   "Admin dashboard access",
   "Priority onboarding support",
-  "Get started from $299/month",
+  "Get started from $149/month",
 ];
 
 const SCHOOL_GROWTH_FEATURES = [
@@ -425,7 +425,8 @@ function PricingPageContent() {
   };
 
   const familyDisplayPrice = isYearly ? "7.99" : "9.99";
-  const schoolDisplayPrice = "49.00";
+  const schoolDisplayPrice = "149.00";
+  const schoolGrowthDisplayPrice = "299.00";
 
   const splitPrice = (price: string) => {
     const [dollarsRaw, centsRaw] = price.split(".");
@@ -635,6 +636,18 @@ function PricingPageContent() {
               {/* School Growth */}
               <div className={cardShell}>
                 <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">School Growth</p>
+                <div className="mt-4">
+                  {(() => {
+                    const { dollars, cents } = splitPrice(schoolGrowthDisplayPrice);
+                    return (
+                      <div className="text-5xl font-black text-gray-900">
+                        <span>${dollars}</span>
+                        <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
+                      </div>
+                    );
+                  })()}
+                  <p className="mt-1 text-sm text-gray-600">/month</p>
+                </div>
                 <div className="mt-4 flex flex-wrap items-end gap-2">
                   <span className="text-5xl font-semibold text-gray-900">200</span>
                   <span className="text-sm text-gray-500">students</span>
@@ -791,6 +804,12 @@ function PricingPageContent() {
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="border-t border-gray-100 bg-white">
+                    <td className="px-6 py-3 font-medium text-gray-700">Price (monthly)</td>
+                    <td className="px-6 py-3 text-center text-sm text-gray-700">$0</td>
+                    <td className="px-6 py-3 text-center text-sm text-gray-700">$9.99/mo</td>
+                    <td className="px-6 py-3 text-center text-sm text-gray-700">$149/mo (Starter)</td>
+                  </tr>
                   {COMPARISON_GROUPS.map((group) => (
                     <React.Fragment key={group.category}>
                       <tr className="bg-gray-100">
@@ -820,6 +839,9 @@ function PricingPageContent() {
                 </tbody>
               </table>
             </div>
+            <p className="mt-4 text-center text-sm text-gray-600">
+              School Growth (up to 200 students) is <strong className="font-semibold text-gray-800">$299/mo</strong>.
+            </p>
           </div>
         </div>
       </section>
