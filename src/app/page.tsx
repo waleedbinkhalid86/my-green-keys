@@ -358,8 +358,16 @@ export default function HomePage() {
           </h1>
 
           <p
-            className="mx-auto block w-full max-w-2xl text-center text-white text-lg"
-            style={{ animation: "float-up 0.9s ease 0.5s both", marginTop: "2rem", marginBottom: "2.5rem" }}
+            className=""
+            style={{
+              textAlign: "center",
+              color: "white",
+              maxWidth: "600px",
+              marginLeft: "auto",
+              marginRight: "auto",
+              display: "block",
+              width: "100%",
+            }}
           >
             Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
             <br />
@@ -372,7 +380,15 @@ export default function HomePage() {
           >
             <Link
               href="/signup"
-              className="inline-block bg-[#52B788] text-white rounded-full px-8 py-4 font-bold hover:bg-[#40916C] transition"
+              style={{
+                backgroundColor: "#52B788",
+                color: "white",
+                borderRadius: "9999px",
+                padding: "16px 32px",
+                fontWeight: "bold",
+                display: "inline-block",
+                textDecoration: "none",
+              }}
             >
               Start Free Today
             </Link>
