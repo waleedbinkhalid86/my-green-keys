@@ -244,7 +244,15 @@ export default function LessonPhaseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 font-sans">
+    <div
+      className="font-sans"
+      style={{
+        backgroundColor: "#FAFAF7",
+        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+        minHeight: "100vh",
+      }}
+    >
       <section className="relative h-64 w-full md:h-80">
         <Image
           src={meta.image}

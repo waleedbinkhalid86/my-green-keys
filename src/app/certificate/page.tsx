@@ -146,19 +146,23 @@ export default function CertificatePage() {
 
   return (
     <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(180deg,#162d1e 0%, #2d6a4f 55%, #81c99e 100%)" }}
+      style={{
+        backgroundColor: "#FAFAF7",
+        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+        minHeight: "100vh",
+      }}
     >
       <div className="mgk-container mgk-section-tight">
         <div className="no-print" style={{ maxWidth: 980, margin: "0 auto 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900, letterSpacing: "0.12em" }}>
+          <div style={{ color: "#1B4332", fontWeight: 900, letterSpacing: "0.12em" }}>
             MY GREEN KEYS • CERTIFICATE
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={() => window.print()}
-              style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.15)", color: "white", fontWeight: 900, cursor: "pointer" }}
+              style={{ padding: "10px 12px", borderRadius: 12, border: "2px solid #52B788", background: "white", color: "#52B788", fontWeight: 900, cursor: "pointer" }}
             >
               Download / Print PDF
             </button>
@@ -173,7 +177,7 @@ export default function CertificatePage() {
         </div>
 
         {loading ? (
-          <div className="mgk-container max-w-[980px]" style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>
+          <div className="mgk-container max-w-[980px]" style={{ color: "#1B4332", fontWeight: 900 }}>
             Loading certificate...
           </div>
         ) : error ? (

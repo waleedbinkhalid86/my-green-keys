@@ -1486,8 +1486,12 @@ export default function LessonPage() {
 
   return (
     <div
-      className={`${nunito.className} min-h-screen bg-[#FAFAFA] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[length:18px_18px] antialiased`}
+      className={`${nunito.className} antialiased`}
       style={{
+        backgroundColor: "#FAFAF7",
+        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+        minHeight: "100vh",
         color: "#2C3E50",
         fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif",
       }}
