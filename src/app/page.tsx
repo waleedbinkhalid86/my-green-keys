@@ -357,16 +357,14 @@ export default function HomePage() {
             Help the Planet.
           </h1>
 
-          <div
-            className="mx-auto mt-8 mb-10"
-            style={{ animation: "float-up 0.9s ease 0.5s both" }}
+          <p
+            className="mx-auto max-w-2xl text-center text-white text-lg"
+            style={{ animation: "float-up 0.9s ease 0.5s both", marginTop: "2rem", marginBottom: "2.5rem" }}
           >
-            <p className="mx-auto max-w-2xl text-center text-base font-medium leading-relaxed text-white md:text-lg">
-              Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
-              <br />
-              that needs your child to type daily.
-            </p>
-          </div>
+            Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
+            <br />
+            that needs your child to type daily.
+          </p>
 
           <div
             className="flex flex-wrap items-center justify-center gap-4"
@@ -734,7 +732,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="pt-16 pb-24 md:pb-28 lg:pb-32">
+        <section className="mt-16 pt-16 pb-24 md:pb-28 lg:pb-32">
           <Inner>
             <h2
               className="mb-16"
@@ -754,7 +752,7 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
                 <Link
                   href="/signup"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
+                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
                 >
                   Start free
                 </Link>
@@ -769,7 +767,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
+                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
                 >
                   View School Plan
                 </Link>
@@ -782,7 +780,7 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
                 <Link
                   href="/pricing"
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
+                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
                 >
                   View Family Plan
                 </Link>
@@ -815,7 +813,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/pricing"
-                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50 whitespace-nowrap"
+                  className="px-8 py-4 rounded-full font-bold border-2 border-[#52B788] text-[#52B788] hover:bg-[#52B788] hover:text-white transition"
                 >
                   View Pricing
                 </Link>
