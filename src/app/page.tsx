@@ -240,9 +240,11 @@ export default function HomePage() {
 
       {/* HERO */}
       <section
-        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden py-24 md:py-28 lg:py-32"
+        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
         style={{
           background: "linear-gradient(180deg, #0A1F0F 0%, #1A3D1F 100%)",
+          paddingTop: "160px",
+          paddingBottom: "160px",
         }}
       >
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
@@ -375,8 +377,8 @@ export default function HomePage() {
           </p>
 
           <div
-            className="mt-12 mb-8 flex flex-wrap items-center justify-center gap-4"
-            style={{ animation: "float-up 0.9s ease 0.65s both" }}
+            className="flex flex-wrap items-center justify-center gap-4"
+            style={{ animation: "float-up 0.9s ease 0.65s both", marginTop: "48px", marginBottom: "32px" }}
           >
             <Link
               href="/signup"
@@ -400,7 +402,10 @@ export default function HomePage() {
               Watch Demo
             </button>
           </div>
-          <p className="my-12 inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
+          <p
+            className="inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm"
+            style={{ marginTop: "48px", marginBottom: "48px" }}
+          >
             No credit card required. Free forever.
           </p>
           </Inner>
@@ -435,11 +440,11 @@ export default function HomePage() {
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
         {/* TRUST BADGES */}
-        <section className="my-12 py-32">
+        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <Inner>
             <p
-              className="mb-16 text-center"
-              style={{ fontSize: "1.125rem", fontWeight: 800, color: DARK }}
+              className="text-center"
+              style={{ fontSize: "1.125rem", fontWeight: 800, color: DARK, marginBottom: "64px" }}
             >
               Privacy and safety built in
             </p>
@@ -465,20 +470,20 @@ export default function HomePage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section id="how-it-works" className="py-24 md:py-28 lg:py-32">
+        <section id="how-it-works" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <Inner>
             <h2
-              className="mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
                 fontWeight: 900,
                 color: DARK,
+                marginBottom: "60px",
               }}
             >
               Learning that actually works
             </h2>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
               {(
                 [
                   {
@@ -535,10 +540,9 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="features" className="py-24 md:py-28 lg:py-32">
+        <section id="features" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <Inner>
             <h2
-              className="mt-32 mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
@@ -548,18 +552,25 @@ export default function HomePage() {
                 marginLeft: "auto",
                 marginRight: "auto",
                 lineHeight: 1.2,
+                marginBottom: "60px",
               }}
             >
               Everything your child needs to become a typing champion
             </h2>
             <p
-              className="mx-auto mb-20 max-w-2xl text-center text-base font-semibold text-gray-600"
-              style={{ textAlign: "center", maxWidth: "600px", marginLeft: "auto", marginRight: "auto", display: "block" }}
+              className="text-base font-semibold text-gray-600"
+              style={{
+                marginBottom: "80px",
+                textAlign: "center",
+                maxWidth: "600px",
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
             >
               Lessons, rewards, and motivation — all designed to keep kids practicing every day.
             </p>
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
               {(
                 [
                   {
@@ -615,35 +626,39 @@ export default function HomePage() {
         </section>
 
         {/* GAMES */}
-        <section id="games-preview" className="mt-32 py-32" style={{ background: DARK }}>
+        <section
+          id="games-preview"
+          style={{ background: DARK, paddingTop: "160px", paddingBottom: "160px" }}
+        >
           <Inner>
             <h2
-              className="mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
                 fontWeight: 900,
                 color: "#fff",
+                marginBottom: "60px",
               }}
             >
               Learning through play
             </h2>
             <p
-              className="mb-20"
               style={{
+                marginBottom: "80px",
                 textAlign: "center",
+                maxWidth: "600px",
+                marginLeft: "auto",
+                marginRight: "auto",
                 color: "rgba(255,255,255,0.75)",
                 fontWeight: 600,
                 fontSize: "1.05rem",
-                maxWidth: 520,
-                marginLeft: "auto",
-                marginRight: "auto",
               }}
             >
               5 eco-themed games that make typing practice addictive
             </p>
             <div
               className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+              style={{ marginTop: "40px", marginBottom: "60px" }}
             >
               {PREVIEW_GAMES.map((g) => (
                 <Link
@@ -674,7 +689,7 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
-            <div className="my-12" style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "48px" }}>
               <Link
                 href="/games"
                 className="btn-ghost"
@@ -687,15 +702,28 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section className="mt-32 py-32">
+        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <div className="mgk-container">
-            <h2 className="mb-16 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+            <h2
+              className="text-center text-3xl font-black text-gray-900 md:text-4xl"
+              style={{ color: DARK, marginBottom: "60px" }}
+            >
               Join us as an early adopter
             </h2>
-            <p className="mx-auto mb-20 max-w-2xl text-center text-base font-semibold text-gray-600">
+            <p
+              className="text-base font-semibold text-gray-600"
+              style={{
+                textAlign: "center",
+                maxWidth: "600px",
+                marginLeft: "auto",
+                marginRight: "auto",
+                display: "block",
+                marginBottom: "80px",
+              }}
+            >
               Schools and families joining now get founding member benefits
             </p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "40px", marginBottom: "60px" }}>
               {(
                 [
                   {
@@ -728,11 +756,11 @@ export default function HomePage() {
                 </article>
               ))}
             </div>
-            <div className="mt-16 text-center">
-              <h3 className="mt-8 mb-16 text-xl font-bold text-gray-900" style={{ color: DARK }}>
+            <div className="text-center" style={{ marginTop: "64px" }}>
+              <h3 className="mt-8 text-xl font-bold text-gray-900" style={{ color: DARK }}>
                 Be among the first
               </h3>
-              <div className="my-12 flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-wrap items-center justify-center gap-4" style={{ marginTop: "48px", marginBottom: "48px" }}>
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -751,27 +779,31 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="mt-32 py-32">
+        <section style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <Inner>
             <h2
-              className="mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3vw, 2.2rem)",
                 fontWeight: 900,
                 color: DARK,
+                marginBottom: "60px",
               }}
             >
               Simple pricing for every family
             </h2>
-            <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-3">
+            <div
+              className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-3"
+              style={{ marginTop: "40px", marginBottom: "60px" }}
+            >
               <div className="mgk-card-ds bg-white p-8">
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
                 <Link
                   href="/signup"
-                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  style={{ marginTop: "48px", marginBottom: "48px" }}
                 >
                   Start free
                 </Link>
@@ -786,7 +818,8 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  style={{ marginTop: "48px", marginBottom: "48px" }}
                 >
                   View School Plan
                 </Link>
@@ -799,13 +832,14 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
                 <Link
                   href="/pricing"
-                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
+                  style={{ marginTop: "48px", marginBottom: "48px" }}
                 >
                   View Family Plan
                 </Link>
               </div>
             </div>
-            <p className="my-12" style={{ textAlign: "center" }}>
+            <p style={{ textAlign: "center", marginTop: "48px", marginBottom: "48px" }}>
               <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
                 See all plans →
               </Link>
@@ -814,16 +848,16 @@ export default function HomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="py-32 text-center">
+        <section className="text-center" style={{ paddingTop: "160px", paddingBottom: "160px" }}>
           <Inner>
             <div style={{ maxWidth: 560, margin: "0 auto" }}>
               <h2
-                className="mb-16 text-gray-900"
-                style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15 }}
+                className="text-gray-900"
+                style={{ fontSize: "clamp(1.65rem, 4vw, 2.5rem)", fontWeight: 900, lineHeight: 1.15, marginBottom: "60px" }}
               >
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <div className="my-12 flex flex-wrap items-center justify-center gap-6">
+              <div className="flex flex-wrap items-center justify-center gap-6" style={{ marginTop: "48px", marginBottom: "48px" }}>
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -837,7 +871,7 @@ export default function HomePage() {
                   View Pricing
                 </Link>
               </div>
-              <p className="my-12 text-sm font-semibold text-gray-500">
+              <p className="text-sm font-semibold text-gray-500" style={{ marginTop: "48px", marginBottom: "48px" }}>
                 Free forever for first 10 lessons. No credit card.
               </p>
             </div>
