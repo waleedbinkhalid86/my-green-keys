@@ -358,16 +358,13 @@ export default function HomePage() {
           </h1>
 
           <div
-            className="mx-auto mt-8 mb-10 max-w-2xl px-8 py-6 text-center"
+            className="mx-auto mt-8 mb-10 max-w-2xl text-center"
             style={{ animation: "float-up 0.9s ease 0.5s both" }}
           >
-            <p className="text-base font-medium leading-relaxed text-white md:text-lg">
-              Built for{" "}
-              <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">ages 6-14</span>.{" "}
-              <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">100 lessons</span>,{" "}
-              <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">5 games</span>, and a{" "}
-              <span className="rounded-sm bg-yellow-300 px-1.5 py-0.5 font-semibold">virtual pet</span> that needs
-              your child to type daily.
+            <p className="text-center text-base font-medium leading-relaxed text-white md:text-lg">
+              Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
+              <br />
+              that needs your child to type daily.
             </p>
           </div>
 
