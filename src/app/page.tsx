@@ -16,9 +16,9 @@ const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
 const BG = "#FAFAFA";
 
-function Inner({ children }: { children: React.ReactNode }) {
+function Inner({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="mgk-container">{children}</div>
+    <div className={["mgk-container", className].filter(Boolean).join(" ")}>{children}</div>
   );
 }
 
@@ -332,7 +332,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 w-full pb-32 text-center sm:pb-40">
-          <Inner>
+          <Inner className="text-center">
           <div className="mb-8" style={{ animation: "fade-in 0.8s ease 0.2s both" }}>
             <span className="inline-flex items-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-semibold text-white">
               <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-white" aria-hidden />
@@ -358,7 +358,7 @@ export default function HomePage() {
           </h1>
 
           <p
-            className="mx-auto max-w-2xl text-center text-white text-lg"
+            className="mx-auto block w-full max-w-2xl text-center text-white text-lg"
             style={{ animation: "float-up 0.9s ease 0.5s both", marginTop: "2rem", marginBottom: "2.5rem" }}
           >
             Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
@@ -372,7 +372,7 @@ export default function HomePage() {
           >
             <Link
               href="/signup"
-              className="rounded-full bg-[#52B788] px-8 py-4 font-bold text-white transition hover:bg-[#40916C] hover:-translate-y-0.5 active:scale-[0.97]"
+              className="inline-block bg-[#52B788] text-white rounded-full px-8 py-4 font-bold hover:bg-[#40916C] transition"
             >
               Start Free Today
             </Link>
@@ -673,7 +673,7 @@ export default function HomePage() {
             <h2 className="mb-4 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
               Join us as an early adopter
             </h2>
-            <p className="mx-auto mb-16 max-w-2xl text-center text-base font-semibold text-gray-600">
+            <p className="text-center mx-auto max-w-2xl mb-16 text-base font-semibold text-gray-600">
               Schools and families joining now get founding member benefits
             </p>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -735,7 +735,7 @@ export default function HomePage() {
         <section className="mt-16 pt-16 pb-24 md:pb-28 lg:pb-32">
           <Inner>
             <h2
-              className="mb-16"
+              className="mb-12"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3vw, 2.2rem)",
@@ -804,7 +804,7 @@ export default function HomePage() {
               >
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-wrap justify-center items-center gap-6 mt-8">
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
