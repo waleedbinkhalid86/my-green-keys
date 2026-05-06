@@ -6,7 +6,6 @@ import { Nunito } from "next/font/google";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
-  Bug,
   Check,
   Crown,
   Gamepad2,
@@ -20,9 +19,7 @@ import {
   Shield,
   Sprout,
   Star,
-  Sun,
   Target,
-  TreeDeciduous,
   Waves,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -351,10 +348,6 @@ export default function GamesHubPage() {
           33% { transform: translateY(-6px) translateX(4px); }
           66% { transform: translateY(4px) translateX(-3px); }
         }
-        @keyframes gamesHubLeaf {
-          0% { transform: translateY(-20%) rotate(0deg); opacity: 0.85; }
-          100% { transform: translateY(120vh) rotate(360deg); opacity: 0.2; }
-        }
         @keyframes gamesHubShimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
@@ -400,8 +393,7 @@ export default function GamesHubPage() {
           .games-hub-level-bounce,
           .games-hub-play-pulse,
           .games-hub-shimmer,
-          .games-hub-float,
-          .games-hub-leaf-fall {
+          .games-hub-float {
             animation: none !important;
           }
           .games-hub-game-card:hover {
@@ -410,15 +402,19 @@ export default function GamesHubPage() {
         }
       `}</style>
 
-      {/* Hero — full-width band at top; title first for visibility */}
+      {/* Hero — full-width photo header with overlay */}
       <header
         className="mgk-section-tight"
         style={{
+          backgroundImage: "url('/images/homepage/homepage-pet.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          minHeight: "320px",
           position: "relative",
           zIndex: 5,
           width: "100%",
-          minHeight: 180,
-          background: "#1A8F4E",
+          backgroundColor: "#2D6A4F",
           color: "#ffffff",
           paddingTop: 20,
           paddingBottom: "clamp(36px, 6vw, 52px)",
@@ -427,174 +423,92 @@ export default function GamesHubPage() {
         }}
       >
         <div
-          aria-hidden
           style={{
             position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            opacity: 0.22,
-            zIndex: 0,
-          }}
-        >
-          {[0, 1, 2, 3, 4, 5].map((i) => {
-            const DecoIcon = i % 3 === 0 ? Leaf : i % 3 === 1 ? Sprout : Star;
-            return (
-            <span
-              key={i}
-              className="games-hub-leaf-fall inline-flex text-white/90"
-              style={{
-                position: "absolute",
-                left: `${8 + i * 16}%`,
-                top: "-10%",
-                animation: `gamesHubLeaf ${14 + i * 2}s linear infinite`,
-                animationDelay: `${i * 1.2}s`,
-              }}
-            >
-              <DecoIcon className={i % 2 === 0 ? "h-5 w-5" : "h-4 w-4"} strokeWidth={2} aria-hidden />
-            </span>
-            );
-          })}
-        </div>
-
-        <div
-          className="games-hub-float text-white/90"
-          style={{
-            position: "absolute",
-            right: "8%",
-            top: "22%",
-            animation: "gamesHubFloat 4s ease-in-out infinite",
-            pointerEvents: "none",
-            opacity: 0.55,
-            zIndex: 0,
-          }}
-        >
-          <Star className="h-7 w-7 fill-white/20" strokeWidth={2} aria-hidden />
-        </div>
-        <div
-          className="text-white/90"
-          style={{
-            position: "absolute",
-            left: "6%",
-            top: "28%",
-            animation: "gamesHubFloatSlow 5.5s ease-in-out infinite",
-            pointerEvents: "none",
-            opacity: 0.5,
-            zIndex: 0,
-          }}
-        >
-          <Leaf className="h-6 w-6" strokeWidth={2} aria-hidden />
-        </div>
-
-        <div className="mgk-container relative z-[2]">
-          <div className="flex items-center justify-between gap-6">
-            <div className="min-w-0 flex-1">
-              <h1
-                className="flex flex-wrap items-center gap-3"
-                style={{
-                  color: "#ffffff",
-                  fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
-                  fontWeight: 800,
-                  margin: 0,
-                  lineHeight: 1.12,
-                  textShadow:
-                    "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
-                }}
-              >
-                <Gamepad2 className="h-9 w-9 shrink-0 text-white/95 sm:h-11 sm:w-11" strokeWidth={2} aria-hidden />
-                <span>Game Zone!</span>
-              </h1>
-              <p
-                style={{
-                  color: "#ffffff",
-                  margin: "14px 0 0",
-                  fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
-                  fontWeight: 700,
-                  opacity: 0.98,
-                  maxWidth: 560,
-                  lineHeight: 1.5,
-                }}
-              >
-                Learn to type while saving the planet!
-              </p>
-              {!loading ? (
-                <div
-                  className="mt-5 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center"
-                  style={{ position: "relative", zIndex: 2 }}
-                >
-                  <Link href="/ranger" className="inline-flex items-center" style={{ textDecoration: "none" }}>
-                    <RankBadge xp={rangerXp} rank={rangerRank} variant="full" />
-                  </Link>
-                  <p
-                    className="text-sm font-bold sm:max-w-xs"
-                    style={{ color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
-                  >
-                    Play different games to earn rank XP
-                  </p>
-                  <Link
-                    href="/ranger"
-                    className="hidden items-center gap-2 rounded-md border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
-                    style={{ textDecoration: "none" }}
-                  >
-                    <Shield className="h-4 w-4 shrink-0" aria-hidden />
-                    Ranger
-                  </Link>
-                </div>
-              ) : null}
-              <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
-                <Link
-                  href="/lesson"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    minHeight: 48,
-                    padding: "0 20px",
-                    borderRadius: 10,
-                    background: "rgba(255,255,255,0.22)",
-                    color: "#ffffff",
-                    fontWeight: 800,
-                    fontSize: 15,
-                    textDecoration: "none",
-                    border: "2px solid rgba(255,255,255,0.55)",
-                  }}
-                >
-                  ← Back to lessons
-                </Link>
-              </div>
-            </div>
-            <img
-              src="/images/homepage/how-2-typing.jpg"
-              alt=""
-              className="hidden h-auto max-w-[300px] shrink-0 md:block"
-            />
-          </div>
-        </div>
-
-        {/* Nature strip */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
+            top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            height: 28,
-            background: "linear-gradient(180deg, transparent, rgba(26,143,78,0.95))",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            gap: 10,
-            paddingBottom: 4,
-            fontSize: 18,
-            pointerEvents: "none",
-            zIndex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.45)",
+            borderRadius: "inherit",
           }}
-        >
-          <TreeDeciduous className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
-          <Sprout className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
-          <Leaf className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
-          <Sun className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
-          <Bug className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
-          <TreeDeciduous className="h-[18px] w-[18px] text-white/85" strokeWidth={2} aria-hidden />
+        />
+
+        <div className="mgk-container" style={{ position: "relative", zIndex: 10 }}>
+          <div className="min-w-0">
+            <h1
+              className="flex flex-wrap items-center gap-3"
+              style={{
+                color: "#ffffff",
+                fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
+                fontWeight: 800,
+                margin: 0,
+                lineHeight: 1.12,
+                textShadow:
+                  "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
+              }}
+            >
+              <Gamepad2 className="h-9 w-9 shrink-0 text-white/95 sm:h-11 sm:w-11" strokeWidth={2} aria-hidden />
+              <span>Game Zone!</span>
+            </h1>
+            <p
+              style={{
+                color: "#ffffff",
+                margin: "14px 0 0",
+                fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
+                fontWeight: 700,
+                opacity: 0.98,
+                maxWidth: 560,
+                lineHeight: 1.5,
+              }}
+            >
+              Learn to type while saving the planet!
+            </p>
+            {!loading ? (
+              <div
+                className="mt-5 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center"
+                style={{ position: "relative", zIndex: 2 }}
+              >
+                <Link href="/ranger" className="inline-flex items-center" style={{ textDecoration: "none" }}>
+                  <RankBadge xp={rangerXp} rank={rangerRank} variant="full" />
+                </Link>
+                <p
+                  className="text-sm font-bold sm:max-w-xs"
+                  style={{ color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+                >
+                  Play different games to earn rank XP
+                </p>
+                <Link
+                  href="/ranger"
+                  className="hidden items-center gap-2 rounded-md border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
+                  style={{ textDecoration: "none" }}
+                >
+                  <Shield className="h-4 w-4 shrink-0" aria-hidden />
+                  Ranger
+                </Link>
+              </div>
+            ) : null}
+            <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
+              <Link
+                href="/lesson"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  minHeight: 48,
+                  padding: "0 20px",
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.22)",
+                  color: "#ffffff",
+                  fontWeight: 800,
+                  fontSize: 15,
+                  textDecoration: "none",
+                  border: "2px solid rgba(255,255,255,0.55)",
+                }}
+              >
+                ← Back to lessons
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -771,25 +685,7 @@ export default function GamesHubPage() {
               <Target className="h-7 w-7 text-green-600" strokeWidth={2.25} aria-hidden />
               <span>Pick a game</span>
             </h2>
-            <div
-              className="mgk-grid games-hub-games-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-              }}
-            >
-              <style>{`
-                @media (min-width: 640px) {
-                  .games-hub-games-grid {
-                    grid-template-columns: repeat(2, 1fr) !important;
-                  }
-                }
-                @media (min-width: 1024px) {
-                  .games-hub-games-grid {
-                    grid-template-columns: repeat(3, 1fr) !important;
-                  }
-                }
-              `}</style>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {GAMES.map((g, i) => {
                 const GameCardIcon = g.Icon;
                 const lessonOk = done >= g.unlockLessons;
@@ -814,20 +710,15 @@ export default function GamesHubPage() {
                 return (
                   <article
                     key={g.slug}
-                    className={`games-hub-game-card games-hub-card-animate rounded-md bg-white shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-lg`}
+                    className={`games-hub-card-animate flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-xl`}
                     style={{
                       position: "relative",
-                      minHeight: 420,
-                      padding: 0,
                       boxSizing: "border-box",
                       border:
                         dimmed && mode !== "paid_lock"
                           ? "2px solid rgba(26,47,35,0.12)"
                           : "2px solid rgba(46,204,113,0.35)",
-                      display: "flex",
-                      flexDirection: "column",
                       opacity: mode === "paid_lock" ? 1 : dimmed ? 0.72 : 1,
-                      overflow: "hidden",
                       animationDelay: `${200 + i * 100}ms`,
                     }}
                   >
@@ -857,73 +748,23 @@ export default function GamesHubPage() {
                       </div>
                     )}
 
-                    <div
-                      style={{
-                        position: "relative",
-                        flex: "0 0 65%",
-                        minHeight: 200,
-                        width: "100%",
-                      }}
-                    >
+                    <div className="relative h-[180px] w-full shrink-0 overflow-hidden rounded-t-2xl">
                       <Image
                         src={g.imageSrc}
                         alt={`${g.name} game artwork`}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        style={{ objectFit: "cover" }}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover"
                         priority={i < 3}
-                      />
-                      <div
-                        aria-hidden
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          height: "55%",
-                          background:
-                            "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%)",
-                          pointerEvents: "none",
-                          zIndex: 1,
-                        }}
                       />
                     </div>
 
-                    <div
-                      style={{
-                        position: "relative",
-                        zIndex: 1,
-                        flex: "1 1 35%",
-                        minHeight: 0,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-end",
-                        padding: "16px 18px 18px",
-                        boxSizing: "border-box",
-                        background: "#fff",
-                      }}
-                    >
-                    <h3
-                      style={{
-                        color: "#1A2F23",
-                        fontSize: 18,
-                        fontWeight: 800,
-                        margin: "0 0 8px",
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      <GameCardIcon className="mr-2 inline h-5 w-5 shrink-0 align-[-2px] text-green-600" strokeWidth={2.25} aria-hidden />
+                    <div className="flex min-h-0 flex-1 flex-col p-5">
+                    <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-[#1B4332]">
+                      <GameCardIcon className="h-5 w-5 shrink-0 text-green-600" strokeWidth={2.25} aria-hidden />
                       {g.name}
                     </h3>
-                    <p
-                      style={{
-                        margin: "0 0 12px",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        lineHeight: 1.5,
-                        color: "#64748b",
-                      }}
-                    >
+                    <p className="mb-4 text-sm text-gray-600">
                       {g.description}
                     </p>
                     {stars != null && unlocked && mode === "play" && (
@@ -977,26 +818,12 @@ export default function GamesHubPage() {
                       {mode === "play" && (
                         <Link
                           href={g.slug}
-                          className="games-hub-play-pulse inline-flex items-center justify-center gap-0"
+                          className="games-hub-play-pulse inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#52B788] py-2.5 font-semibold text-white transition hover:bg-[#40916C]"
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: 52,
-                            minHeight: 52,
-                            width: "100%",
-                            padding: "0 18px",
-                            borderRadius: 10,
-                            background: "#1A8F4E",
-                            color: "#ffffff",
-                            fontWeight: 800,
-                            fontSize: 16,
                             textDecoration: "none",
-                            border: "3px solid rgba(255,255,255,0.5)",
-                            boxSizing: "border-box",
                           }}
                         >
-                          <Play className="mr-2 h-5 w-5 fill-current" strokeWidth={2} aria-hidden />
+                          <Play className="h-5 w-5 shrink-0 fill-current" strokeWidth={2} aria-hidden />
                           Play Now!
                         </Link>
                       )}
