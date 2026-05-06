@@ -264,8 +264,8 @@ export default function LoginPage() {
   };
 
   const inputClassName = cn(
-    "w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400",
-    "focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600",
+    "w-full rounded-md border border-[#D1E8DC] bg-white px-3 py-2 text-sm text-[#1B2D23] placeholder:text-[#4A6355]/70",
+    "focus:border-[#52B788] focus:outline-none focus:ring-1 focus:ring-[#52B788]",
     "disabled:cursor-not-allowed disabled:opacity-50"
   );
 
@@ -277,7 +277,7 @@ export default function LoginPage() {
         <AuthOrDivider />
 
         <div className="mb-4">
-          <label htmlFor="emailOrUsername" className="mb-1.5 block text-xs font-medium text-gray-700">
+          <label htmlFor="emailOrUsername" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
             Email
           </label>
           <input
@@ -304,10 +304,10 @@ export default function LoginPage() {
 
         <div className="mb-6">
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <label htmlFor="password" className="text-xs font-medium text-gray-700">
+            <label htmlFor="password" className="text-xs font-medium text-[#4A6355]">
               Password
             </label>
-            <Link href="/forgot-password" className="text-xs text-green-600 hover:text-green-700">
+            <Link href="/forgot-password" className="text-xs font-medium text-[#2D6A4F] hover:text-[#52B788]">
               Forgot?
             </Link>
           </div>
@@ -345,15 +345,15 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading || googleLoading}
-          className="w-full rounded-md bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-full bg-[#52B788] py-2.5 text-sm font-semibold text-white hover:bg-[#40916C] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading ? "Logging in…" : "Log in"}
         </button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-gray-500">
+      <p className="mt-8 text-center text-sm text-[#4A6355]">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-gray-900 hover:underline">
+        <Link href="/signup" className="font-semibold text-[#2D6A4F] hover:text-[#52B788]">
           Sign up
         </Link>
       </p>

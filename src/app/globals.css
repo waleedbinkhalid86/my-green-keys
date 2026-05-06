@@ -50,32 +50,35 @@
 }
 
 :root {
-  --green: #2ecc71;
-  --blue: #2196f3;
-  --yellow: #ffeb3b;
-  --navy: #1a2f23;
-  --bg: #fafafa;
-  --bg-alt: #f5f7fa;
-  --mgk-dark: #1a2f23;
-  --mgk-primary: #2ecc71;
-  --background: #fafafa;
-  --foreground: #1a2f23;
-  --card: #ffffff;
-  --card-foreground: #1a2f23;
-  --popover: #ffffff;
-  --popover-foreground: #1a2f23;
-  --primary: #2ecc71;
-  --primary-foreground: #ffffff;
-  --secondary: #ecfdf3;
-  --secondary-foreground: #1a2f23;
-  --muted: #f4f4f5;
-  --muted-foreground: #64748b;
-  --accent: #d1fae5;
-  --accent-foreground: #14532d;
+  /* Forest Canopy theme tokens */
+  --green: #52B788;
+  --blue: #2D6A4F;
+  --yellow: #74C69D;
+  --navy: #1B4332;
+  --bg: #F8FAF5;
+  --bg-alt: #F8FAF5;
+  --mgk-dark: #1B4332;
+  --mgk-primary: #52B788;
+
+  /* shadcn/ui tokens */
+  --background: #F8FAF5;
+  --foreground: #1B2D23;
+  --card: #FFFFFF;
+  --card-foreground: #1B2D23;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2D23;
+  --primary: #52B788;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E8F5EE;
+  --secondary-foreground: #1B4332;
+  --muted: #E8F5EE;
+  --muted-foreground: #4A6355;
+  --accent: #E8F5EE;
+  --accent-foreground: #1B4332;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #e7e7ea;
-  --input: #e7e7ea;
-  --ring: #2ecc7180;
+  --border: #D1E8DC;
+  --input: #D1E8DC;
+  --ring: #52B78880;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
