@@ -204,10 +204,15 @@ export default function GamesHubPage() {
   }, []);
 
   useEffect(() => {
-    refreshHubStars();
+    const t = window.setTimeout(() => {
+      refreshHubStars();
+    }, 0);
     const onFocus = () => refreshHubStars();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [refreshHubStars]);
 
   useEffect(() => {
