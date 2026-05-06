@@ -358,17 +358,20 @@ export default function HomePage() {
           </h1>
 
           <div
-            className="mx-auto mt-8 mb-10 max-w-2xl text-center"
+            className="mx-auto mt-8 mb-10"
             style={{ animation: "float-up 0.9s ease 0.5s both" }}
           >
-            <p className="text-center text-base font-medium leading-relaxed text-white md:text-lg">
+            <p className="mx-auto max-w-2xl text-center text-base font-medium leading-relaxed text-white md:text-lg">
               Built for ages 6-14. 100 lessons, 5 games, and a virtual pet
               <br />
               that needs your child to type daily.
             </p>
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", animation: "float-up 0.9s ease 0.65s both" }}>
+          <div
+            className="flex flex-wrap items-center justify-center gap-4"
+            style={{ animation: "float-up 0.9s ease 0.65s both" }}
+          >
             <Link
               href="/signup"
               className="rounded-full bg-[#52B788] px-8 py-4 font-bold text-white transition hover:bg-[#40916C] hover:-translate-y-0.5 active:scale-[0.97]"
@@ -418,7 +421,7 @@ export default function HomePage() {
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
         {/* TRUST BADGES */}
-        <section className="py-12 mt-8 mb-8">
+        <section className="py-20">
           <Inner>
             <p
               className="mb-16 text-center"
@@ -507,7 +510,7 @@ export default function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex-1 p-6">
+                  <div className="flex-1 p-6 pt-12">
                     <h3 className="mb-2 text-xl font-bold text-gray-900">{card.title}</h3>
                     <p className="text-sm leading-relaxed text-gray-600">{card.desc}</p>
                   </div>
@@ -521,7 +524,7 @@ export default function HomePage() {
         <section id="features" className="py-24 md:py-28 lg:py-32">
           <Inner>
             <h2
-              className="mb-4"
+              className="mt-16 mb-4"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
@@ -595,7 +598,7 @@ export default function HomePage() {
         </section>
 
         {/* GAMES */}
-        <section id="games-preview" className="py-24 md:py-28 lg:py-32" style={{ background: DARK }}>
+        <section id="games-preview" className="py-20 md:py-20 lg:py-20" style={{ background: DARK }}>
           <Inner>
             <h2
               className="mb-4"
@@ -667,7 +670,7 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section className="py-24 md:py-28 lg:py-32">
+        <section className="pt-4 pb-16">
           <div className="mgk-container">
             <h2 className="mb-4 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
               Join us as an early adopter
@@ -709,7 +712,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-16 text-center">
-              <h3 className="text-xl font-bold text-gray-900" style={{ color: DARK }}>
+              <h3 className="mt-8 mb-4 text-xl font-bold text-gray-900" style={{ color: DARK }}>
                 Be among the first
               </h3>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
@@ -731,7 +734,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="py-24 md:py-28 lg:py-32">
+        <section className="pt-16 pb-24 md:pb-28 lg:pb-32">
           <Inner>
             <h2
               className="mb-16"
@@ -749,7 +752,10 @@ export default function HomePage() {
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
-                <Link href="/signup" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Link
+                  href="/signup"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
+                >
                   Start free
                 </Link>
               </div>
@@ -763,8 +769,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="inline-flex w-full items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50"
-                  style={{ marginTop: 24, textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
                 >
                   View School Plan
                 </Link>
@@ -775,7 +780,10 @@ export default function HomePage() {
                   $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
                 </p>
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
-                <Link href="/pricing" className="btn-primary" style={{ marginTop: 24, width: "100%", textAlign: "center", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Link
+                  href="/pricing"
+                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#52B788] py-3 font-semibold text-white transition hover:bg-[#40916C]"
+                >
                   View Family Plan
                 </Link>
               </div>
