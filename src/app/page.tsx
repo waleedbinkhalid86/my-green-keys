@@ -375,7 +375,7 @@ export default function HomePage() {
           </p>
 
           <div
-            className="flex flex-wrap items-center justify-center gap-4"
+            className="mt-12 mb-8 flex flex-wrap items-center justify-center gap-4"
             style={{ animation: "float-up 0.9s ease 0.65s both" }}
           >
             <Link
@@ -400,7 +400,7 @@ export default function HomePage() {
               Watch Demo
             </button>
           </div>
-          <p className="mt-4 inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
+          <p className="my-12 inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
             No credit card required. Free forever.
           </p>
           </Inner>
@@ -435,7 +435,7 @@ export default function HomePage() {
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
         {/* TRUST BADGES */}
-        <section className="py-20">
+        <section className="my-12 py-32">
           <Inner>
             <p
               className="mb-16 text-center"
@@ -538,7 +538,7 @@ export default function HomePage() {
         <section id="features" className="py-24 md:py-28 lg:py-32">
           <Inner>
             <h2
-              className="mt-16 mb-4"
+              className="mt-32 mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3.5vw, 2.35rem)",
@@ -552,7 +552,10 @@ export default function HomePage() {
             >
               Everything your child needs to become a typing champion
             </h2>
-            <p className="mx-auto mb-16 max-w-2xl text-center text-base font-semibold text-gray-600">
+            <p
+              className="mx-auto mb-20 max-w-2xl text-center text-base font-semibold text-gray-600"
+              style={{ textAlign: "center", maxWidth: "600px", marginLeft: "auto", marginRight: "auto", display: "block" }}
+            >
               Lessons, rewards, and motivation — all designed to keep kids practicing every day.
             </p>
 
@@ -612,10 +615,10 @@ export default function HomePage() {
         </section>
 
         {/* GAMES */}
-        <section id="games-preview" className="py-20 md:py-20 lg:py-20" style={{ background: DARK }}>
+        <section id="games-preview" className="mt-32 py-32" style={{ background: DARK }}>
           <Inner>
             <h2
-              className="mb-4"
+              className="mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
@@ -626,7 +629,7 @@ export default function HomePage() {
               Learning through play
             </h2>
             <p
-              className="mb-16"
+              className="mb-20"
               style={{
                 textAlign: "center",
                 color: "rgba(255,255,255,0.75)",
@@ -671,7 +674,7 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
-            <div style={{ textAlign: "center", marginTop: 36 }}>
+            <div className="my-12" style={{ textAlign: "center" }}>
               <Link
                 href="/games"
                 className="btn-ghost"
@@ -684,12 +687,12 @@ export default function HomePage() {
         </section>
 
         {/* EARLY ACCESS */}
-        <section className="pt-4 pb-16">
+        <section className="mt-32 py-32">
           <div className="mgk-container">
-            <h2 className="mb-4 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
+            <h2 className="mb-16 text-center text-3xl font-black text-gray-900 md:text-4xl" style={{ color: DARK }}>
               Join us as an early adopter
             </h2>
-            <p className="text-center mx-auto max-w-2xl mb-16 text-base font-semibold text-gray-600">
+            <p className="mx-auto mb-20 max-w-2xl text-center text-base font-semibold text-gray-600">
               Schools and families joining now get founding member benefits
             </p>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -726,10 +729,10 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-16 text-center">
-              <h3 className="mt-8 mb-4 text-xl font-bold text-gray-900" style={{ color: DARK }}>
+              <h3 className="mt-8 mb-16 text-xl font-bold text-gray-900" style={{ color: DARK }}>
                 Be among the first
               </h3>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <div className="my-12 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -748,10 +751,10 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="mt-16 pt-16 pb-24 md:pb-28 lg:pb-32">
+        <section className="mt-32 py-32">
           <Inner>
             <h2
-              className="mb-12"
+              className="mb-16"
               style={{
                 textAlign: "center",
                 fontSize: "clamp(1.65rem, 3vw, 2.2rem)",
@@ -768,7 +771,7 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
                 <Link
                   href="/signup"
-                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
+                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
                 >
                   Start free
                 </Link>
@@ -783,7 +786,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
+                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
                 >
                   View School Plan
                 </Link>
@@ -796,13 +799,13 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
                 <Link
                   href="/pricing"
-                  className="w-full py-3 rounded-full font-semibold text-white bg-[#52B788] hover:bg-[#40916C] transition text-center block"
+                  className="my-12 block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
                 >
                   View Family Plan
                 </Link>
               </div>
             </div>
-            <p style={{ textAlign: "center", marginTop: 28 }}>
+            <p className="my-12" style={{ textAlign: "center" }}>
               <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
                 See all plans →
               </Link>
@@ -811,7 +814,7 @@ export default function HomePage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="py-24 md:py-28 lg:py-32 text-center">
+        <section className="py-32 text-center">
           <Inner>
             <div style={{ maxWidth: 560, margin: "0 auto" }}>
               <h2
@@ -820,7 +823,7 @@ export default function HomePage() {
               >
                 Ready to start your child&apos;s typing journey?
               </h2>
-              <div className="flex flex-wrap justify-center items-center gap-6 mt-8">
+              <div className="my-12 flex flex-wrap items-center justify-center gap-6">
                 <Link
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
@@ -834,7 +837,7 @@ export default function HomePage() {
                   View Pricing
                 </Link>
               </div>
-              <p className="mt-4 text-sm font-semibold text-gray-500">
+              <p className="my-12 text-sm font-semibold text-gray-500">
                 Free forever for first 10 lessons. No credit card.
               </p>
             </div>
