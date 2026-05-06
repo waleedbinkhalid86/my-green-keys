@@ -329,7 +329,9 @@ export default function GamesHubPage() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        background: "linear-gradient(180deg, #87CEEB 0%, #B8E0FE 45%, #E8F4FD 100%)",
+        backgroundColor: "#FAFAF7",
+        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
         color: "#1A2F23",
         position: "relative",
         overflowX: "hidden",
@@ -404,9 +406,6 @@ export default function GamesHubPage() {
           }
           .games-hub-game-card:hover {
             transform: none;
-          }
-          .games-hub-level-card:hover {
-            transform: none !important;
           }
         }
       `}</style>
@@ -487,77 +486,86 @@ export default function GamesHubPage() {
         </div>
 
         <div className="mgk-container relative z-[2]">
-          <h1
-            className="flex flex-wrap items-center gap-3"
-            style={{
-              color: "#ffffff",
-              fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
-              fontWeight: 800,
-              margin: 0,
-              lineHeight: 1.12,
-              textShadow:
-                "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
-            }}
-          >
-            <Gamepad2 className="h-9 w-9 shrink-0 text-white/95 sm:h-11 sm:w-11" strokeWidth={2} aria-hidden />
-            <span>Game Zone!</span>
-          </h1>
-          <p
-            style={{
-              color: "#ffffff",
-              margin: "14px 0 0",
-              fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
-              fontWeight: 700,
-              opacity: 0.98,
-              maxWidth: 560,
-              lineHeight: 1.5,
-            }}
-          >
-            Learn to type while saving the planet!
-          </p>
-          {!loading ? (
-            <div
-              className="mt-5 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center"
-              style={{ position: "relative", zIndex: 2 }}
-            >
-              <Link href="/ranger" className="inline-flex items-center" style={{ textDecoration: "none" }}>
-                <RankBadge xp={rangerXp} rank={rangerRank} variant="full" />
-              </Link>
+          <div className="flex items-center justify-between gap-6">
+            <div className="min-w-0 flex-1">
+              <h1
+                className="flex flex-wrap items-center gap-3"
+                style={{
+                  color: "#ffffff",
+                  fontSize: "clamp(2.25rem, 6vw, 3.25rem)",
+                  fontWeight: 800,
+                  margin: 0,
+                  lineHeight: 1.12,
+                  textShadow:
+                    "0 2px 8px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.5)",
+                }}
+              >
+                <Gamepad2 className="h-9 w-9 shrink-0 text-white/95 sm:h-11 sm:w-11" strokeWidth={2} aria-hidden />
+                <span>Game Zone!</span>
+              </h1>
               <p
-                className="text-sm font-bold sm:max-w-xs"
-                style={{ color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+                style={{
+                  color: "#ffffff",
+                  margin: "14px 0 0",
+                  fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
+                  fontWeight: 700,
+                  opacity: 0.98,
+                  maxWidth: 560,
+                  lineHeight: 1.5,
+                }}
               >
-                Play different games to earn rank XP
+                Learn to type while saving the planet!
               </p>
-              <Link
-                href="/ranger"
-                className="hidden items-center gap-2 rounded-md border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
-                style={{ textDecoration: "none" }}
-              >
-                <Shield className="h-4 w-4 shrink-0" aria-hidden />
-                Ranger
-              </Link>
+              {!loading ? (
+                <div
+                  className="mt-5 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center"
+                  style={{ position: "relative", zIndex: 2 }}
+                >
+                  <Link href="/ranger" className="inline-flex items-center" style={{ textDecoration: "none" }}>
+                    <RankBadge xp={rangerXp} rank={rangerRank} variant="full" />
+                  </Link>
+                  <p
+                    className="text-sm font-bold sm:max-w-xs"
+                    style={{ color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+                  >
+                    Play different games to earn rank XP
+                  </p>
+                  <Link
+                    href="/ranger"
+                    className="hidden items-center gap-2 rounded-md border-2 border-white/55 bg-white/20 px-4 py-2 text-sm font-extrabold text-white md:inline-flex"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Shield className="h-4 w-4 shrink-0" aria-hidden />
+                    Ranger
+                  </Link>
+                </div>
+              ) : null}
+              <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
+                <Link
+                  href="/lesson"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    minHeight: 48,
+                    padding: "0 20px",
+                    borderRadius: 10,
+                    background: "rgba(255,255,255,0.22)",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: 15,
+                    textDecoration: "none",
+                    border: "2px solid rgba(255,255,255,0.55)",
+                  }}
+                >
+                  ← Back to lessons
+                </Link>
+              </div>
             </div>
-          ) : null}
-          <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 20 }}>
-            <Link
-              href="/lesson"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 48,
-                padding: "0 20px",
-                borderRadius: 10,
-                background: "rgba(255,255,255,0.22)",
-                color: "#ffffff",
-                fontWeight: 800,
-                fontSize: 15,
-                textDecoration: "none",
-                border: "2px solid rgba(255,255,255,0.55)",
-              }}
-            >
-              ← Back to lessons
-            </Link>
+            <img
+              src="/images/homepage/how-2-typing.jpg"
+              alt=""
+              className="hidden h-auto max-w-[300px] shrink-0 md:block"
+            />
           </div>
         </div>
 
@@ -629,7 +637,7 @@ export default function GamesHubPage() {
               <p style={{ margin: "0 0 22px", fontWeight: 700, opacity: 0.88, lineHeight: 1.5, maxWidth: 720 }}>
                 This applies to every mini-game. Faster levels mean more eco points—less time and fewer misses!
               </p>
-              <div className="mgk-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {LEVEL_ORDER.map((id) => {
                   const def = GAME_LEVELS[id];
                   const isSel = selectedLevel.id === id;
@@ -640,8 +648,8 @@ export default function GamesHubPage() {
                       type="button"
                       onClick={() => handleLevelSelect(id)}
                       className={[
-                        "games-hub-level-card relative cursor-pointer rounded-md border bg-white p-5 text-center shadow-sm transition-all hover:scale-[1.03] hover:shadow-lg",
-                        isSel ? "border-green-500 bg-green-50" : "border-black/5",
+                        "relative flex h-full w-full cursor-pointer flex-col items-center rounded-2xl bg-white p-6 text-center shadow-md transition-shadow hover:shadow-xl",
+                        isSel ? "border-4 border-[#52B788]" : "border border-gray-200/80",
                         levelBounceId === id ? "games-hub-level-bounce" : "",
                         "games-hub-card-animate",
                       ]
@@ -653,32 +661,32 @@ export default function GamesHubPage() {
                       }}
                     >
                       {isRec && (
-                        <span
-                          className="absolute left-2 top-2 z-10 rounded-full border-2 border-[#1A8F4E] bg-white px-2.5 py-1 text-[11px] font-extrabold text-[#1A8F4E] shadow-md"
-                        >
+                        <span className="absolute left-3 top-3 z-10 rounded-full bg-[#1A8F4E] px-3 py-1 text-xs font-extrabold text-white shadow-sm">
                           Recommended
                         </span>
                       )}
                       {isSel && (
                         <span
-                          className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white"
+                          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[#52B788] text-white shadow-sm"
                           aria-hidden
                         >
                           <Check className="h-4 w-4" strokeWidth={2.5} />
                         </span>
                       )}
-                      <Image
-                        src={LEVEL_IMAGE_SRC[id]}
-                        alt={`${def.label} level`}
-                        width={80}
-                        height={80}
-                        className="mx-auto mb-3 block object-contain"
-                      />
-                      <div className="text-base font-bold text-gray-900">{def.label}</div>
-                      <p className="mt-1 text-xs text-gray-500">{LEVEL_DIFFICULTY_DESC[id]}</p>
-                      <div className="mt-3 text-xs font-bold leading-snug text-gray-700">
+                      <div className="flex h-[160px] w-full shrink-0 items-center justify-center">
+                        <Image
+                          src={LEVEL_IMAGE_SRC[id]}
+                          alt={`${def.label} level`}
+                          width={140}
+                          height={140}
+                          className="max-h-[160px] w-auto object-contain"
+                        />
+                      </div>
+                      <div className="mt-4 text-xl font-bold text-gray-900">{def.label}</div>
+                      <p className="mt-2 text-sm text-gray-600">{LEVEL_DIFFICULTY_DESC[id]}</p>
+                      <div className="mt-3 text-xs text-gray-500">
                         Speed {def.speedMultiplier}× · {def.lives} lives · {def.roundSeconds}s ·{" "}
-                        <span className="font-extrabold">{def.pointsMultiplier}× eco</span>
+                        <span className="font-semibold">{def.pointsMultiplier}× eco</span>
                       </div>
                     </button>
                   );
