@@ -16,6 +16,45 @@ const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
 const BG = "#FAFAFA";
 
+const PRIMARY_CTA_STYLE: React.CSSProperties = {
+  background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+  color: "white",
+  padding: "14px 32px",
+  borderRadius: "9999px",
+  fontWeight: "700",
+  fontSize: "16px",
+  boxShadow: "0 4px 14px rgba(82, 183, 136, 0.4)",
+  transition: "all 0.3s ease",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  border: "none",
+  cursor: "pointer",
+};
+
+const SECONDARY_CTA_STYLE: React.CSSProperties = {
+  background: "transparent",
+  color: "#1B4332",
+  padding: "14px 32px",
+  borderRadius: "9999px",
+  fontWeight: "700",
+  fontSize: "16px",
+  border: "2px solid #1B4332",
+  transition: "all 0.3s ease",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  cursor: "pointer",
+};
+
+const SECONDARY_CTA_STYLE_ON_DARK: React.CSSProperties = {
+  ...SECONDARY_CTA_STYLE,
+  color: "white",
+  border: "2px solid white",
+};
+
 function Inner({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={["mgk-container", className].filter(Boolean).join(" ")}>{children}</div>
@@ -135,7 +174,8 @@ export default function HomePage() {
           <DialogFooter className="gap-2 sm:justify-end">
             <Link
               href="/signup"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-green-700"
+              className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+              style={{ ...PRIMARY_CTA_STYLE, padding: "14px 20px", fontSize: "14px" }}
               onClick={() => setDemoModalOpen(false)}
             >
               Sign Up Free
@@ -195,8 +235,8 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/signup"
-                className="btn-primary"
-                style={{ fontSize: "0.85rem", padding: "0.6rem 1.4rem", height: 44, display: "inline-flex", alignItems: "center" }}
+                className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                style={{ ...PRIMARY_CTA_STYLE, padding: "10px 20px", fontSize: "14px" }}
               >
                 Start Free Today
               </Link>
@@ -382,21 +422,15 @@ export default function HomePage() {
           >
             <Link
               href="/signup"
-              style={{
-                backgroundColor: "#52B788",
-                color: "white",
-                borderRadius: "9999px",
-                padding: "16px 32px",
-                fontWeight: "bold",
-                display: "inline-block",
-                textDecoration: "none",
-              }}
+              className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+              style={PRIMARY_CTA_STYLE}
             >
               Start Free Today
             </Link>
             <button
               type="button"
-              className="rounded-full border-2 border-white px-8 py-4 font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
+              className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
+              style={SECONDARY_CTA_STYLE_ON_DARK}
               onClick={() => setDemoModalOpen(true)}
             >
               Watch Demo
@@ -692,8 +726,8 @@ export default function HomePage() {
             <div style={{ textAlign: "center", marginTop: "14px", marginBottom: "14px" }}>
               <Link
                 href="/games"
-                className="btn-ghost"
-                style={{ display: "inline-flex", alignItems: "center", height: 52, padding: "0 32px" }}
+                className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
+                style={SECONDARY_CTA_STYLE_ON_DARK}
               >
                 Explore All Games
               </Link>
@@ -763,13 +797,15 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center justify-center gap-4" style={{ marginTop: "14px", marginBottom: "14px" }}>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
+                  className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={PRIMARY_CTA_STYLE}
                 >
                   Get Started Free
                 </Link>
                 <a
                   href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
-                  className="inline-flex items-center justify-center rounded-md border-2 border-gray-300 bg-white px-8 py-4 text-base font-bold text-gray-900 transition hover:bg-gray-50 whitespace-nowrap"
+                  className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
+                  style={SECONDARY_CTA_STYLE}
                 >
                   Schools: Book a Demo
                 </a>
@@ -779,7 +815,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section style={{ paddingTop: "48px", paddingBottom: "48px" }}>
+        <section className="text-center" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <h2
               style={{
@@ -793,7 +829,7 @@ export default function HomePage() {
               Simple pricing for every family
             </h2>
             <div
-              className="mx-auto grid max-w-[1000px] grid-cols-1 gap-8 md:grid-cols-3"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
               style={{ marginTop: "12px", marginBottom: "18px" }}
             >
               <div className="mgk-card-ds bg-white p-8">
@@ -802,8 +838,14 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
                 <Link
                   href="/signup"
-                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "14px", marginBottom: "14px" }}
+                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={{
+                    ...PRIMARY_CTA_STYLE,
+                    width: "100%",
+                    textDecoration: "none",
+                    marginTop: "14px",
+                    marginBottom: "14px",
+                  }}
                 >
                   Start free
                 </Link>
@@ -818,8 +860,8 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "14px", marginBottom: "14px" }}
+                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
                 >
                   View School Plan
                 </Link>
@@ -832,8 +874,8 @@ export default function HomePage() {
                 <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
                 <Link
                   href="/pricing"
-                  className="block w-full rounded-full bg-[#52B788] py-3 text-center font-semibold text-white transition hover:bg-[#40916C]"
-                  style={{ marginTop: "14px", marginBottom: "14px" }}
+                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
                 >
                   View Family Plan
                 </Link>
@@ -860,13 +902,15 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center justify-center gap-6" style={{ marginTop: "14px", marginBottom: "14px" }}>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center rounded-md bg-green-500 px-8 py-4 text-base font-bold text-white transition hover:bg-green-600 whitespace-nowrap"
+                  className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={PRIMARY_CTA_STYLE}
                 >
                   Start Free Today
                 </Link>
                 <Link
                   href="/pricing"
-                  className="px-8 py-4 rounded-full font-bold border-2 border-[#52B788] text-[#52B788] hover:bg-[#52B788] hover:text-white transition"
+                  className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
+                  style={SECONDARY_CTA_STYLE}
                 >
                   View Pricing
                 </Link>
