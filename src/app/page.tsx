@@ -815,7 +815,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING PREVIEW */}
-        <section className="text-center" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
+        <section className="text-center w-full" style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
             <h2
               style={{
@@ -829,7 +829,7 @@ export default function HomePage() {
               Simple pricing for every family
             </h2>
             <div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto justify-items-center"
               style={{ marginTop: "12px", marginBottom: "18px" }}
             >
               <div className="mgk-card-ds bg-white p-8">
@@ -850,6 +850,20 @@ export default function HomePage() {
                   Start free
                 </Link>
               </div>
+              <div className="mgk-card-ds bg-white p-8" style={{ border: `2px solid ${PRIMARY}` }}>
+                <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
+                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
+                  $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
+                </p>
+                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
+                <Link
+                  href="/pricing"
+                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
+                >
+                  View Family Plan
+                </Link>
+              </div>
               <div className="mgk-card-ds bg-white p-8">
                 <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>School Starter</p>
                 <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
@@ -864,20 +878,6 @@ export default function HomePage() {
                   style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
                 >
                   View School Plan
-                </Link>
-              </div>
-              <div className="mgk-card-ds bg-white p-8" style={{ border: `2px solid ${PRIMARY}` }}>
-                <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
-                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                  $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
-                </p>
-                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
-                <Link
-                  href="/pricing"
-                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
-                >
-                  View Family Plan
                 </Link>
               </div>
             </div>
