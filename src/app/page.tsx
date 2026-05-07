@@ -1,16 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Leaf, Menu, MessageSquare, School, Users } from "lucide-react";
+import { Leaf, Menu, MessageSquare, School, Users, X } from "lucide-react";
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
@@ -159,30 +151,167 @@ const PREVIEW_GAMES = [
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [demoModalOpen, setDemoModalOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const isPausedRef = React.useRef(false);
+
+  const slides = React.useMemo(
+    () =>
+      [
+        {
+          src: "/images/homepage/homepage-hero.jpg",
+          caption: "Beautiful animated lessons",
+        },
+        {
+          src: "/images/homepage/how-2-typing.jpg",
+          caption: "Learn proper finger placement",
+        },
+        {
+          src: "/images/homepage/feature-pet.jpg",
+          caption: "Care for your virtual pet",
+        },
+        {
+          src: "/images/homepage/how-3-planet.jpg",
+          caption: "Earn eco-points, plant real trees",
+        },
+        {
+          // fallback (homepage-kids.jpg wasn't present in /public/images/homepage)
+          src: "/images/homepage/feature-lessons.jpg",
+          caption: "Loved by kids 6-14",
+        },
+      ] as const,
+    []
+  );
+
+  const closeModal = React.useCallback(() => setIsOpen(false), []);
+  const prevSlide = React.useCallback(
+    () => setCurrentSlide((s) => (s - 1 + slides.length) % slides.length),
+    [slides.length]
+  );
+  const nextSlide = React.useCallback(
+    () => setCurrentSlide((s) => (s + 1) % slides.length),
+    [slides.length]
+  );
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, closeModal]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const id = window.setInterval(() => {
+      if (isPausedRef.current) return;
+      setCurrentSlide((s) => (s + 1) % slides.length);
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [isOpen, slides.length]);
 
   return (
     <>
-      <Dialog open={demoModalOpen} onOpenChange={setDemoModalOpen}>
-        <DialogContent className="sm:max-w-md" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Demo video coming soon</DialogTitle>
-            <DialogDescription>
-              Demo video coming soon. Sign up free to try the product right now.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Link
-              href="/signup"
-              className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
-              style={{ ...PRIMARY_CTA_STYLE, padding: "14px 20px", fontSize: "14px" }}
-              onClick={() => setDemoModalOpen(false)}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 transition-opacity duration-200 ease-out"
+          onClick={closeModal}
+          style={{ opacity: 1, animation: "fade-in 0.18s ease-out both" }}
+        >
+          <div
+            className="relative w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="Close demo modal"
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
             >
-              Sign Up Free
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <X className="h-5 w-5" aria-hidden />
+            </button>
+
+            <h2 className="mb-4 text-center text-2xl font-bold text-[#1B4332]">See My Green Keys in Action</h2>
+
+            <div
+              className="select-none"
+              onMouseEnter={() => {
+                isPausedRef.current = true;
+              }}
+              onMouseLeave={() => {
+                isPausedRef.current = false;
+              }}
+            >
+              <div className="relative">
+                <div className="transition-opacity duration-500 ease-out" key={currentSlide}>
+                  <Image
+                    src={slides[currentSlide].src}
+                    alt=""
+                    width={1200}
+                    height={600}
+                    className="h-[300px] w-full rounded-xl object-cover"
+                    priority={false}
+                  />
+                  <p className="mt-3 text-center text-lg text-gray-700">{slides[currentSlide].caption}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-2">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentSlide(idx)}
+                    aria-label={`Go to slide ${idx + 1}`}
+                    className={[
+                      "h-2.5 w-2.5 rounded-full transition-colors",
+                      idx === currentSlide ? "bg-[#40916C]" : "bg-gray-300 hover:bg-gray-400",
+                    ].join(" ")}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <Link
+                href="/signup"
+                className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                style={{ ...PRIMARY_CTA_STYLE, textDecoration: "none" }}
+                onClick={closeModal}
+              >
+                Start Free Today →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <nav
         style={{
@@ -431,7 +560,7 @@ export default function HomePage() {
               type="button"
               className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
               style={SECONDARY_CTA_STYLE_ON_DARK}
-              onClick={() => setDemoModalOpen(true)}
+              onClick={() => setIsOpen(true)}
             >
               Watch Demo
             </button>
