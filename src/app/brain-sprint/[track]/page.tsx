@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { SAMPLE_LESSONS } from "@/lib/brain-sprint/lessons";
 import type { BrainSprintTrack } from "@/lib/brain-sprint/types";
@@ -10,20 +11,28 @@ const dottedBg: React.CSSProperties = {
   minHeight: "100vh",
 };
 
-function trackMeta(track: BrainSprintTrack) {
+function trackHeroMeta(track: BrainSprintTrack) {
   if (track === "math") {
     return {
-      eyebrow: "MATH MASTERY",
+      heroImage: "/images/brain-sprint/math-hero.png",
+      eyebrow: "TRACK 1",
+      eyebrowClass: "text-blue-300",
       title: "Math Mastery",
-      accent: "#3B82F6",
-      totalLessons: 10,
+      description: "Type the answer. Move fast. Get smarter.",
+      countLabel: "Lessons 1-10",
+      completedFraction: "0 / 10",
+      starsFraction: "0 / 30",
     } as const;
   }
   return {
-    eyebrow: "ECO GENIUS",
+    heroImage: "/images/brain-sprint/eco-hero.png",
+    eyebrow: "TRACK 2",
+    eyebrowClass: "text-green-300",
     title: "Eco Genius",
-    accent: "#52B788",
-    totalLessons: 5,
+    description: "Quiz your way through planet facts and habits.",
+    countLabel: "Lessons 1-5",
+    completedFraction: "0 / 5",
+    starsFraction: "0 / 15",
   } as const;
 }
 
@@ -36,11 +45,10 @@ export default async function BrainSprintTrackPage({
   const track = (rawTrack ?? "").toLowerCase().trim() as BrainSprintTrack;
 
   const lessonsForTrack = SAMPLE_LESSONS.filter((l) => l.track === track).sort((a, b) => a.number - b.number);
-  console.log(`[BrainSprint] track=${track} lessons=${lessonsForTrack.length}`);
 
   if (track !== "math" && track !== "eco") {
     return (
-      <div style={dottedBg} className="flex items-center justify-center">
+      <div style={dottedBg} className="flex min-h-screen items-center justify-center px-4">
         <div className="rounded-2xl bg-white p-8 shadow-md ring-1 ring-black/5">
           <div className="text-xl font-extrabold text-[#1B4332]">Track not found</div>
           <Link href="/brain-sprint" className="mt-3 inline-flex font-bold text-[#52B788]">
@@ -51,32 +59,63 @@ export default async function BrainSprintTrackPage({
     );
   }
 
-  const meta = trackMeta(track);
+  const meta = trackHeroMeta(track);
 
   return (
-    <div style={dottedBg}>
-      <section className="mgk-section-tight">
-        <div className="mgk-container">
-          <Link href="/brain-sprint" className="inline-flex font-extrabold text-[#1B4332] hover:underline">
-            ← Back to Brain Sprint
-          </Link>
+    <div style={dottedBg} className="min-h-screen font-sans">
+      <section className="relative h-[400px] w-full overflow-hidden">
+        <Image
+          src={meta.heroImage}
+          alt=""
+          fill
+          className="object-cover object-center"
+          sizes="100vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1B4332]/90 to-transparent" aria-hidden />
 
-          <div className="mx-auto mt-4 max-w-5xl rounded-2xl bg-white p-8 shadow-md ring-1 ring-black/5">
-            <div className="text-xs font-bold tracking-wider uppercase" style={{ color: meta.accent }}>
+        <Link
+          href="/brain-sprint"
+          className="absolute left-0 top-0 z-10 p-6 text-white/90 font-semibold transition hover:text-white"
+        >
+          ← Back to Brain Sprint
+        </Link>
+
+        <div className="absolute inset-0 flex items-end">
+          <div className="p-10">
+            <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${meta.eyebrowClass}`}>
               {meta.eyebrow}
-            </div>
-            <h1 className="mt-2 text-3xl font-extrabold text-[#1B4332]">{meta.title}</h1>
-            <p className="mt-2 text-sm font-semibold text-[#4A6355]">
-              Type the answer. Move fast. Get smarter.
             </p>
-          </div>
-
-          <div className="mx-auto mt-8 max-w-5xl">
-            <TrackLessonGrid track={track} totalLessons={meta.totalLessons} lessonsForTrack={lessonsForTrack} />
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-3">{meta.title}</h1>
+            <p className="text-lg text-white/90 mb-1">{meta.description}</p>
+            <p className="text-sm text-white/70">{meta.countLabel}</p>
           </div>
         </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto mt-[-50px] relative z-10 px-4">
+        <div className="bg-white rounded-2xl shadow-xl border border-[#D1E8DC] p-6">
+          <div className="grid grid-cols-3 text-center">
+            <div className="border-r border-gray-200 px-2">
+              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">{meta.completedFraction}</div>
+              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Completed</div>
+            </div>
+            <div className="border-r border-gray-200 px-2">
+              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">0</div>
+              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Score</div>
+            </div>
+            <div className="px-2">
+              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">{meta.starsFraction}</div>
+              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Stars</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section className="max-w-7xl mx-auto px-6 mt-12 pb-16">
+        <h2 className="text-2xl font-bold text-[#1B4332] mb-6">All Lessons</h2>
+        <TrackLessonGrid track={track} totalLessons={track === "math" ? 10 : 5} lessonsForTrack={lessonsForTrack} />
       </section>
     </div>
   );
 }
-
