@@ -430,30 +430,31 @@ function PricingPageContent() {
 
   return (
     <div
-      className={cn(
-        "min-h-screen w-full bg-[#FAFAFA] antialiased text-gray-900",
-        "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
-      )}
+      className="min-h-screen antialiased text-gray-900"
+      style={{
+        backgroundColor: "#FAFAF7",
+        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+      }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Hero */}
-      <section className="pt-20 pb-12 text-center md:pt-28 md:pb-16">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="mb-6 text-5xl font-bold leading-tight text-[#1B4332] md:text-6xl lg:text-7xl">
+      <section className="pb-12 pt-20 text-center md:pb-16 md:pt-28">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-[#1B4332] md:text-5xl lg:text-6xl">
             Pricing that grows with you
           </h1>
-          <p className="mx-auto mb-8 max-w-xl text-lg text-[#4A6355] md:text-xl">
+          <p className="mb-8 text-lg text-[#4A6355] md:text-xl">
             Free forever for trying out. Upgrade when ready. No hidden fees.
           </p>
-        </div>
-        <div className="flex justify-center mt-8 mb-12">
-          <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
+          <div className="mb-12 flex justify-center md:mb-16">
+            <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
+          </div>
         </div>
       </section>
 
-      {/* Pricing cards */}
-      <section className="mt-8 py-8 md:mt-12 md:py-12">
-        <div className="mx-auto max-w-6xl">
+      {/* Main pricing cards */}
+      <section className="pb-16 md:pb-24">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           {ecoGardenExpired ? (
             <div
               className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-center sm:text-left"
@@ -510,12 +511,11 @@ function PricingPageContent() {
               id="pricing-family-plan"
               className={cn(
                 primaryCardBase,
-                "-translate-y-0 md:-translate-y-3",
                 "bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white",
-                ecoGardenExpired && "ring-2 ring-amber-400 ring-offset-2 ring-offset-[#FAFAFA]"
+                ecoGardenExpired && "ring-2 ring-amber-400 ring-offset-2 ring-offset-[#FAFAF7]"
               )}
             >
-              <span className="absolute -top-3 right-6 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
+              <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
                 MOST POPULAR
               </span>
               <p className={tierEyebrow}>FAMILY</p>
@@ -575,13 +575,25 @@ function PricingPageContent() {
             </div>
           </div>
 
-          {/* Secondary plans */}
-          <div className="mt-24 md:mt-32">
-            <div className="mx-auto mb-10 max-w-5xl text-center">
-              <h2 className="text-2xl font-bold text-[#1B4332]">For larger schools</h2>
-              <p className="mt-2 text-sm text-[#4A6355]">Scale with confidence</p>
-            </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
+            {TRUST_SIGNALS.map((s) => (
+              <div key={s.label} className="inline-flex items-center gap-2">
+                <s.Icon className="h-4 w-4 text-[#52B788]" strokeWidth={2.25} aria-hidden />
+                <span>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* For larger schools */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">For larger schools</h2>
+            <p className="text-[#4A6355]">Scale with confidence</p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className={secondaryCardBase}>
                 <p className={tierEyebrowMuted}>SCHOOL GROWTH</p>
                 <div className="mt-4">
@@ -638,22 +650,14 @@ function PricingPageContent() {
                   ))}
                 </ul>
               </div>
-            </div>
           </div>
+        </div>
+      </section>
 
-          {/* Trust bar */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20 md:mb-4">
-            {TRUST_SIGNALS.map((s) => (
-              <div key={s.label} className="inline-flex items-center gap-2">
-                <s.Icon className="h-4 w-4 text-[#52B788]" strokeWidth={2.25} aria-hidden />
-                <span>{s.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Promo codes */}
-          <section className="mt-20 md:mt-24">
-            <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 shadow-md">
+      {/* Promo codes */}
+      <section className="py-12">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl bg-white p-6 shadow-md">
               <h2 className="mb-3 text-xl font-bold text-[#1B4332]">Have a promo code?</h2>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                 <Input
@@ -705,38 +709,39 @@ function PricingPageContent() {
                 </ul>
               </div>
             </div>
-          </section>
-
-          {testimonials.length > 0 ? (
-            <section className="mt-24 py-12 md:mt-32 md:py-16">
-              <div className="mx-auto max-w-4xl">
-                <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">What educators are saying</h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  {testimonials.slice(0, 2).map((t) => (
-                    <div key={t.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                      <Quote className="mb-3 h-6 w-6 text-[#52B788]" />
-                      <p className="mb-4 text-[#4A6355]">&ldquo;{t.quote}&rdquo;</p>
-                      <div className="text-sm">
-                        <div className="font-semibold text-[#1B4332]">{t.author}</div>
-                        <div className="text-[#4A6355]">
-                          {t.role}
-                          {t.organization ? ` • ${t.organization}` : null}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null}
         </div>
       </section>
 
+      {testimonials.length > 0 ? (
+        <section className="py-12 md:py-16">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">What educators are saying</h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {testimonials.slice(0, 2).map((t) => (
+                <div key={t.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                  <Quote className="mb-3 h-6 w-6 text-[#52B788]" />
+                  <p className="mb-4 text-[#4A6355]">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="text-sm">
+                    <div className="font-semibold text-[#1B4332]">{t.author}</div>
+                    <div className="text-[#4A6355]">
+                      {t.role}
+                      {t.organization ? ` • ${t.organization}` : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {/* Feature comparison */}
-      <section className="mt-24 py-20 md:mt-32 md:py-28">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-2 text-center text-3xl font-bold text-[#1B4332]">Compare every feature</h2>
-          <p className="mb-10 text-center text-base text-[#4A6355]">Side-by-side feature breakdown</p>
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Compare every feature</h2>
+            <p className="text-[#4A6355]">Side-by-side feature breakdown</p>
+          </div>
 
           <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-6 shadow-xl md:p-10">
             <div className="min-w-[720px] overflow-hidden rounded-2xl">
@@ -793,13 +798,13 @@ function PricingPageContent() {
       </section>
 
       {/* FAQ */}
-      <section className="mt-24 py-20 md:mt-32 md:py-28">
-        <div className="mx-auto max-w-3xl">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-[#1B4332]">Frequently asked questions</h2>
-            <p className="mt-2 text-sm text-[#4A6355]">Everything you need to know before you subscribe</p>
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Frequently asked questions</h2>
+            <p className="text-[#4A6355]">Everything you need to know before you subscribe</p>
           </div>
-          <div className="mt-8">
+          <div>
             {FAQ_ITEMS.slice(0, 6).map((faq, idx) => (
               <FaqItem
                 key={faq.q}
@@ -814,12 +819,17 @@ function PricingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="mt-20 py-16 md:mt-24 md:py-20 mb-20 md:mb-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="rounded-3xl bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] p-12 text-center md:p-16">
-            <h2 className="mb-4 text-4xl font-bold text-white md:text-5xl">Ready to start?</h2>
+      <section className="pb-20 md:pb-28">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div
+            className="rounded-3xl p-12 text-center md:p-16"
+            style={{
+              background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)",
+            }}
+          >
+            <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">Ready to start?</h2>
             <p className="mb-8 text-lg text-white/90">Free forever for the first 10 lessons. No credit card.</p>
-            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/signup"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-10 py-3.5 text-base font-bold text-[#1B4332] transition hover:scale-105"
@@ -836,7 +846,6 @@ function PricingPageContent() {
           </div>
         </div>
       </section>
-      </div>
     </div>
   );
 }
@@ -846,8 +855,13 @@ export default function PricingPage() {
     <Suspense
       fallback={
         <div
-          className="min-h-screen w-full bg-[#FAFAFA] antialiased"
-          style={{ fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif" }}
+          className="min-h-screen antialiased"
+          style={{
+            fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif",
+            backgroundColor: "#FAFAF7",
+            backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
         />
       }
     >
