@@ -13,17 +13,70 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { createQuest, deleteQuest, fetchActiveQuests, fetchCompletedQuests } from "@/lib/quests/api";
 import type { Quest, QuestDays } from "@/lib/quests/types";
 
-const questCardClass =
-  "rounded-2xl border border-[#D1E8DC] bg-white p-6 shadow-md";
+const SECTION_SHELL: React.CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: "20px",
+  padding: "28px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+  border: "1px solid #E5E7EB",
+  marginBottom: "24px",
+  scrollMarginTop: "112px",
+};
 
-const inputClassName =
-  "rounded-xl border border-gray-300 focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/40";
+const SECTION_H2: React.CSSProperties = {
+  fontSize: "20px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "20px",
+};
+
+const FORM_LABEL: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "8px",
+  display: "block",
+};
+
+const FORM_CONTROL: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 16px",
+  borderRadius: "12px",
+  border: "2px solid #E5E7EB",
+  fontSize: "14px",
+  background: "#FFFFFF",
+  transition: "border 0.2s",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const PRIMARY_CTA: React.CSSProperties = {
+  background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+  color: "#FFFFFF",
+  padding: "14px 24px",
+  borderRadius: "12px",
+  fontSize: "15px",
+  fontWeight: 700,
+  border: "none",
+  cursor: "pointer",
+  width: "100%",
+  marginTop: "16px",
+  boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
+};
+
+const ACTIVE_QUEST_CARD: React.CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: "16px",
+  padding: "24px",
+  border: "1px solid #E5E7EB",
+  borderLeft: "4px solid #52B788",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+};
 
 function sortCompletedForDisplay(quests: Quest[]): Quest[] {
   return [...quests]
@@ -154,7 +207,7 @@ export function HabitQuestsSection() {
   const atMaxActive = activeQuests.length >= 3;
 
   return (
-    <section id="parent-quests" className="scroll-mt-28 space-y-8">
+    <section id="parent-quests" style={SECTION_SHELL}>
       <Dialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
@@ -186,18 +239,15 @@ export function HabitQuestsSection() {
         </DialogContent>
       </Dialog>
 
-      <div className={cn(questCardClass, "mb-8")}>
-        <div className="flex flex-wrap items-start gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#2D6A4F]/10 text-[#1B4332]">
-            <ScrollText className="size-7" strokeWidth={2.25} aria-hidden />
-          </div>
-          <div>
-            <h2 className="text-4xl font-bold text-[#1B4332]">Habit Quests</h2>
-            <p className="mt-2 max-w-2xl text-base font-semibold leading-relaxed text-[#374151]">
-              Design custom daily challenges for your child. They build the habit, you set the reward.
-              Win-win.
-            </p>
-          </div>
+      <div className="mb-6 flex flex-wrap items-start gap-4">
+        <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#2D6A4F]/10 text-[#1B4332]">
+          <ScrollText className="size-7" strokeWidth={2.25} aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 style={SECTION_H2}>Habit Quests</h2>
+          <p className="max-w-2xl text-sm font-medium leading-relaxed text-[#4A6355]">
+            Design custom daily challenges for your child. They build the habit, you set the reward. Win-win.
+          </p>
         </div>
       </div>
 
@@ -213,19 +263,33 @@ export function HabitQuestsSection() {
       ) : null}
 
       <div className="space-y-4">
-        <h3 className="font-heading text-xl font-bold text-[#1B4332]">Active Quests</h3>
+        <h3 className="font-heading text-lg font-bold text-[#1B4332]">Active Quests</h3>
         {loading ? (
           <div className="mgk-skeleton h-40 rounded-2xl" />
         ) : activeQuests.length === 0 ? (
-          <div className={cn(questCardClass, "text-center font-semibold text-[#4A6355]")}>
+          <div
+            style={{
+              ...ACTIVE_QUEST_CARD,
+              borderLeft: "1px solid #E5E7EB",
+              textAlign: "center",
+              fontWeight: 600,
+              color: "#4A6355",
+            }}
+          >
             No active quests yet. Create one below!
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "24px",
+            }}
+          >
             {activeQuests.map((q) => {
               const pct = q.days_target > 0 ? Math.min(100, (q.current_day / q.days_target) * 100) : 0;
               return (
-                <div key={q.id} className={questCardClass}>
+                <div key={q.id} style={ACTIVE_QUEST_CARD}>
                   <h4 className="text-lg font-bold text-[#1B4332]">{q.title}</h4>
                   <p className="mt-1 text-sm font-semibold text-[#52B788]">{q.days_target}-day quest</p>
                   <ul className="mt-4 list-inside list-disc space-y-1 text-sm font-medium text-[#374151]">
@@ -265,60 +329,70 @@ export function HabitQuestsSection() {
 
       {atMaxActive ? (
         <div
-          className={cn(
-            questCardClass,
-            "border-amber-200 bg-amber-50/80 text-center text-sm font-semibold text-amber-950"
-          )}
+          className="text-center text-sm font-semibold text-amber-950"
+          style={{
+            borderRadius: "16px",
+            padding: "20px",
+            border: "1px solid #FDE68A",
+            background: "#FFFBEB",
+            marginTop: "8px",
+          }}
         >
           You&apos;ve reached the max of 3 active quests. Complete or delete one to add another.
         </div>
       ) : (
-        <div className={questCardClass}>
-          <h3 className="mb-6 font-heading text-xl font-bold text-[#1B4332]">Create New Quest</h3>
+        <div style={{ marginTop: "24px", borderTop: "1px solid #E5E7EB", paddingTop: "24px" }}>
+          <h3 className="mb-6 font-heading text-lg font-bold text-[#1B4332]">Create New Quest</h3>
           <form onSubmit={(e) => void handleCreate(e)} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="quest-title">Title</Label>
+            <div>
+              <label htmlFor="quest-title" style={FORM_LABEL}>
+                Title
+              </label>
               <Input
                 id="quest-title"
-                className={inputClassName}
+                className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                style={FORM_CONTROL}
                 maxLength={60}
                 placeholder="e.g. Become a Reading Star"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">{title.length}/60</p>
+              <p className="mt-1 text-xs text-[#6B7280]">{title.length}/60</p>
               {formErrors.title ? (
                 <p className="text-sm font-semibold text-destructive">{formErrors.title}</p>
               ) : null}
             </div>
 
             <div className="space-y-4">
-              <Label>Action plan</Label>
-              <div className="space-y-2">
+              <span style={FORM_LABEL}>Action plan</span>
+              <div>
                 <Input
-                  className={inputClassName}
+                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                  style={FORM_CONTROL}
                   placeholder="e.g. Read for 20 minutes"
                   value={action1}
                   onChange={(e) => setAction1(e.target.value)}
                 />
                 {formErrors.action1 ? (
-                  <p className="text-sm font-semibold text-destructive">{formErrors.action1}</p>
+                  <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.action1}</p>
                 ) : null}
               </div>
-              <div className="space-y-2">
+              <div>
                 <Input
-                  className={inputClassName}
+                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                  style={FORM_CONTROL}
                   placeholder="e.g. Write 1 sentence about it"
                   value={action2}
                   onChange={(e) => setAction2(e.target.value)}
                 />
                 {formErrors.action2 ? (
-                  <p className="text-sm font-semibold text-destructive">{formErrors.action2}</p>
+                  <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.action2}</p>
                 ) : null}
               </div>
-              <div className="space-y-2">
+              <div>
                 <Input
-                  className={inputClassName}
+                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                  style={FORM_CONTROL}
                   placeholder="e.g. Tell mom about it (optional)"
                   value={action3}
                   onChange={(e) => setAction3(e.target.value)}
@@ -326,14 +400,14 @@ export function HabitQuestsSection() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quest-length">Quest length</Label>
+            <div>
+              <label htmlFor="quest-length" style={FORM_LABEL}>
+                Quest length
+              </label>
               <select
                 id="quest-length"
-                className={cn(
-                  "flex h-11 w-full px-3 py-2 text-sm outline-none transition-colors",
-                  inputClassName
-                )}
+                className="focus:border-[#52B788]"
+                style={{ ...FORM_CONTROL, height: "48px", cursor: "pointer" }}
                 value={daysTarget}
                 onChange={(e) => setDaysTarget(Number(e.target.value) as QuestDays)}
               >
@@ -343,33 +417,36 @@ export function HabitQuestsSection() {
                 <option value={30}>30 days</option>
               </select>
               {formErrors.days ? (
-                <p className="text-sm font-semibold text-destructive">{formErrors.days}</p>
+                <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.days}</p>
               ) : null}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quest-reward">Reward</Label>
+            <div>
+              <label htmlFor="quest-reward" style={FORM_LABEL}>
+                Reward
+              </label>
               <Input
                 id="quest-reward"
-                className={inputClassName}
+                className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                style={FORM_CONTROL}
                 maxLength={100}
                 placeholder="e.g. New book of your choice"
                 value={reward}
                 onChange={(e) => setReward(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">{reward.length}/100</p>
+              <p className="mt-1 text-xs text-[#6B7280]">{reward.length}/100</p>
               {formErrors.reward ? (
-                <p className="text-sm font-semibold text-destructive">{formErrors.reward}</p>
+                <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.reward}</p>
               ) : null}
             </div>
 
-            <Button
+            <button
               type="submit"
               disabled={submitting}
-              className="h-12 w-full rounded-full bg-gradient-to-r from-[#1B4332] via-[#2D6A4F] to-[#52B788] font-bold text-white shadow-md hover:opacity-95"
+              style={{ ...PRIMARY_CTA, opacity: submitting ? 0.65 : 1 }}
             >
               {submitting ? "Creating…" : "Create Quest"}
-            </Button>
+            </button>
           </form>
         </div>
       )}
@@ -388,7 +465,16 @@ export function HabitQuestsSection() {
           )}
         </button>
         {historyOpen ? (
-          <div className={cn(questCardClass, "space-y-3")}>
+          <div
+            className="space-y-3"
+            style={{
+              borderRadius: "16px",
+              padding: "24px",
+              border: "1px solid #E5E7EB",
+              background: "#FFFFFF",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+            }}
+          >
             {completedQuests.length === 0 ? (
               <p className="text-center text-sm font-semibold text-[#4A6355]">
                 No completed or failed quests yet.

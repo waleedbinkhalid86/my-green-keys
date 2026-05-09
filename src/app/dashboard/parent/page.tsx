@@ -8,6 +8,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  CheckCircle,
   Clock,
   FileText,
   Flame,
@@ -32,12 +33,10 @@ import { awardXp, getProgress, XP_SOURCES, type RangerRank } from "@/lib/rangerH
 import { RankBadge, rankProgressFillClassName } from "@/components/RankBadge";
 import { ecoFacts } from "@/data/ecoFacts";
 import { getTodayDate } from "@/lib/streakHelpers";
-import { streakTierSurfaceClassName } from "@/components/StreakCounter";
 import { HabitQuestsSection } from "@/components/parent/HabitQuestsSection";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -58,8 +57,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const LeafIcon = () => (
@@ -81,9 +78,62 @@ const LeafIcon = () => (
 const selectClassName =
   "flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
 
-const compactSurfaceClass = "rounded-md bg-white shadow-sm ring-1 ring-black/5";
-const compactStatCardClass = cn(compactSurfaceClass, "p-4 h-32");
-const compactStatIconWrapClass = "flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-700";
+const SECTION_CARD: React.CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: "20px",
+  padding: "28px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+  border: "1px solid #E5E7EB",
+  marginBottom: "24px",
+};
+
+const SECTION_H2: React.CSSProperties = {
+  fontSize: "20px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "20px",
+};
+
+const INNER_PROGRESS_CARD: React.CSSProperties = {
+  background: "#F9FAFB",
+  borderRadius: "12px",
+  padding: "20px",
+  border: "1px solid #E5E7EB",
+};
+
+const FORM_LABEL: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "8px",
+  display: "block",
+};
+
+const FORM_CONTROL: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 16px",
+  borderRadius: "12px",
+  border: "2px solid #E5E7EB",
+  fontSize: "14px",
+  background: "#FFFFFF",
+  transition: "border 0.2s",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const PRIMARY_CTA: React.CSSProperties = {
+  background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+  color: "#FFFFFF",
+  padding: "14px 24px",
+  borderRadius: "12px",
+  fontSize: "15px",
+  fontWeight: 700,
+  border: "none",
+  cursor: "pointer",
+  width: "100%",
+  marginTop: "16px",
+  boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
+};
 
 const SIDEBAR_LINKS = [
   { href: "#parent-overview", label: "Overview", Icon: Home },
@@ -206,55 +256,56 @@ function toChildDashboard(row: ChildRow): Child {
 function ParentOverviewStreakCard({ child }: { child: Child }) {
   const streak = child.currentStreak;
   const longest = child.longestStreak;
-  const tier = streakTierSurfaceClassName(streak);
-  const isLegendary = streak >= 100;
   const today = getTodayDate();
   const streakAtRisk =
     streak > 0 && child.lastStreakDate !== null && child.lastStreakDate < today;
 
   return (
     <div
-      className={cn(
-        "rounded-md p-4 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md border-2 overflow-hidden",
-        tier,
-      )}
+      style={{
+        background: "linear-gradient(135deg, #FB923C 0%, #EA580C 45%, #DC2626 100%)",
+        padding: "24px",
+        borderRadius: "16px",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        gap: "20px",
+      }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className={cn("text-sm font-semibold", isLegendary ? "text-white/90" : "text-gray-700")}>
-          Daily Streak
-        </p>
-        <div className="flex shrink-0 items-center gap-2">
+      <div style={{ fontSize: "48px", fontWeight: 700, lineHeight: 1, minWidth: "64px" }}>{streak}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <p style={{ fontSize: "14px", fontWeight: 700, opacity: 0.95 }}>Daily Streak</p>
           <Link
             href="/ranger"
-            className={cn(
-              "hidden items-center gap-1 rounded-md px-2 py-1 text-xs font-bold transition hover:opacity-90 md:inline-flex",
-              isLegendary ? "text-white/95" : "text-purple-600",
-            )}
+            className="hidden items-center gap-1 text-xs font-bold text-white/95 underline-offset-2 hover:underline md:inline-flex"
           >
             <Shield className="h-3.5 w-3.5" aria-hidden />
             Ranger
           </Link>
-          <Flame
-            className={cn("h-8 w-8 shrink-0 stroke-[2.25]", streak > 0 ? "text-orange-500" : "text-gray-400")}
-            aria-hidden
-          />
         </div>
-      </div>
-      <p className={cn("mt-2 text-2xl font-bold tabular-nums leading-none", isLegendary && "text-white")}>
-        {streak}
-      </p>
-      <p className={cn("mt-2 text-sm font-semibold", isLegendary ? "text-white/95" : "text-gray-800")}>
-        {streak > 0 ? `${streak} day streak` : "Start a streak today"}
-      </p>
-      {streakAtRisk ? (
-        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-orange-600">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          Streak ends today!
+        <p style={{ fontSize: "16px", fontWeight: 600, marginTop: "8px" }}>
+          {streak > 0 ? `${streak} day streak` : "Start a streak today"}
         </p>
-      ) : null}
-      <p className={cn("mt-3 text-xs", isLegendary ? "text-white/75" : "text-gray-500")}>
-        Longest: {longest} days
-      </p>
+        {streakAtRisk ? (
+          <p
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              marginTop: "8px",
+              color: "#FEF3C7",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Streak ends today!
+          </p>
+        ) : null}
+        <p style={{ fontSize: "12px", opacity: 0.88, marginTop: "8px" }}>Longest: {longest} days</p>
+      </div>
+      <Flame className="hidden h-10 w-10 shrink-0 opacity-90 sm:block" strokeWidth={2.25} aria-hidden />
     </div>
   );
 }
@@ -266,38 +317,70 @@ function ParentOverviewRangerCard({ child }: { child: Child }) {
   const isMax = prog.nextRank === null;
 
   return (
-    <div className={cn(compactSurfaceClass, "p-4")}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-gray-700">Planet Ranger</p>
-        <Link
-          href="/ranger"
-          className="hidden items-center gap-1 text-xs font-bold text-purple-600 transition hover:opacity-90 md:inline-flex"
-        >
-          <Shield className="h-3.5 w-3.5" aria-hidden />
-          Details
-        </Link>
+    <div
+      style={{
+        background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 55%, #52B788 100%)",
+        padding: "24px",
+        borderRadius: "16px",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        gap: "20px",
+      }}
+    >
+      <div style={{ fontSize: "36px", fontWeight: 700, lineHeight: 1, minWidth: "56px" }}>
+        {xp.toLocaleString()}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <RankBadge xp={xp} rank={child.ranger_rank} variant="full" />
-      </div>
-      {isMax ? (
-        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-purple-600">
-          <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-          Maxed out!
-        </p>
-      ) : (
-        <>
-          <div className="mt-3 h-1.5 w-full rounded-md bg-gray-200">
-            <div
-              className={cn("h-full rounded-md transition-all", fill)}
-              style={{ width: `${prog.progressPercent}%` }}
-            />
-          </div>
-          <p className="mt-2 text-xs text-gray-500">
-            {prog.xpToNext.toLocaleString()} XP to {prog.nextRank?.label}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <p style={{ fontSize: "14px", fontWeight: 700, opacity: 0.95 }}>Planet Ranger</p>
+          <Link
+            href="/ranger"
+            className="hidden items-center gap-1 text-xs font-bold text-white/95 underline-offset-2 hover:underline md:inline-flex"
+          >
+            <Shield className="h-3.5 w-3.5" aria-hidden />
+            Details
+          </Link>
+        </div>
+        <div style={{ marginTop: "10px" }}>
+          <RankBadge xp={xp} rank={child.ranger_rank} variant="full" />
+        </div>
+        {isMax ? (
+          <p
+            style={{
+              marginTop: "10px",
+              fontSize: "14px",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+            Maxed out!
           </p>
-        </>
-      )}
+        ) : (
+          <>
+            <div
+              style={{
+                marginTop: "12px",
+                height: "6px",
+                width: "100%",
+                borderRadius: "6px",
+                background: "rgba(255,255,255,0.22)",
+              }}
+            >
+              <div
+                className={cn("h-full rounded-md transition-all", fill)}
+                style={{ width: `${prog.progressPercent}%` }}
+              />
+            </div>
+            <p style={{ fontSize: "12px", opacity: 0.92, marginTop: "6px" }}>
+              {prog.xpToNext.toLocaleString()} XP to {prog.nextRank?.label}
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -727,7 +810,7 @@ export default function ParentDashboard() {
   const wpmMax = Math.max(...wpmSeries, 1);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans">
+    <div className="font-sans">
       <Dialog
         open={showAddChildModal}
         onOpenChange={(open) => {
@@ -806,100 +889,173 @@ export default function ParentDashboard() {
         </DialogContent>
       </Dialog>
 
-      <div className="mx-auto flex w-full max-w-[1400px]">
+      <div className="flex min-h-screen w-full">
         <aside
-          className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
+          className="hidden shrink-0 lg:flex lg:flex-col"
+          style={{
+            width: "240px",
+            minHeight: "100vh",
+            background: "linear-gradient(180deg, #1B4332 0%, #2D6A4F 100%)",
+            padding: "24px 16px",
+            position: "sticky",
+            top: 0,
+          }}
           aria-label="Dashboard sections"
         >
-          <div className="mb-8 flex items-center gap-3 px-2">
-            <div className="flex size-10 items-center justify-center rounded-md bg-[#2ECC71] text-white">
+          <div
+            className="flex items-center gap-3"
+            style={{
+              padding: "16px",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              marginBottom: "24px",
+            }}
+          >
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
               <LeafIcon />
             </div>
             <div>
-              <p className="font-heading text-sm font-extrabold text-[#1A2F23]">My Green Keys</p>
-              <p className="text-xs font-semibold text-[#64748b]">Parent</p>
+              <p className="font-heading text-sm font-extrabold text-white">My Green Keys</p>
+              <p className="text-xs font-semibold text-white/70">Parent</p>
             </div>
           </div>
-          <nav className="flex flex-col gap-1">
+          <nav className="flex flex-col">
             {SIDEBAR_LINKS.map((item) => {
               const active = hash === item.href;
               const Icon = item.Icon;
+              const baseNav: React.CSSProperties = {
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                fontSize: "14px",
+                fontWeight: 500,
+                marginBottom: "4px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                textDecoration: "none",
+              };
+              const activeNav: React.CSSProperties = active
+                ? {
+                    background: "rgba(82, 183, 136, 0.2)",
+                    color: "#FFFFFF",
+                    borderLeft: "4px solid #52B788",
+                    paddingLeft: "12px",
+                  }
+                : {
+                    color: "rgba(255,255,255,0.8)",
+                  };
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
-                    active
-                      ? "bg-[#2ECC71]/12 text-[#15803d]"
-                      : "text-[#374151] hover:bg-[#FAFAFA] hover:text-[#1A2F23]"
-                  )}
+                  style={{ ...baseNav, ...activeNav }}
+                  className={cn(!active && "hover:bg-white/10 hover:text-white")}
                 >
-                  <Icon className={cn("size-5 shrink-0", active ? "text-[#2ECC71]" : "text-[#64748b]")} strokeWidth={2.25} />
+                  <Icon className="size-5 shrink-0 opacity-90" strokeWidth={2.25} />
                   {item.label}
                 </a>
               );
             })}
           </nav>
-          <div className="mt-auto pt-8">
+          <div style={{ marginTop: "auto", paddingTop: "24px" }}>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-red-50 hover:text-red-700"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "14px",
+                fontWeight: 500,
+                width: "100%",
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+              }}
+              className="transition-colors hover:bg-white/10 hover:text-white"
               onClick={async () => {
                 const supabase = createClient();
                 await supabase.auth.signOut();
                 window.location.href = "/login";
               }}
             >
-              <LogOut className="size-5" strokeWidth={2.25} />
+              <LogOut className="size-5 shrink-0" strokeWidth={2.25} />
               Logout
             </button>
           </div>
         </aside>
 
         <div
-          className={cn(
-            "min-w-0 flex-1",
-            // Dot-grid background on content area (Linear-like)
-            "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
-          )}
+          className="min-w-0 flex-1"
+          style={{
+            minHeight: "100vh",
+            backgroundColor: "#FAFAF7",
+            backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
         >
-          <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <div
+            style={{
+              maxWidth: "1280px",
+              margin: "0 auto",
+              paddingLeft: "32px",
+              paddingRight: "32px",
+              paddingTop: "32px",
+              paddingBottom: "60px",
+            }}
+          >
+            <div
+              style={{
+                marginBottom: "32px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}
+            >
               <div>
-                <p className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">
+                <h1
+                  style={{
+                    fontSize: "32px",
+                    fontWeight: 700,
+                    color: "#1B4332",
+                    marginBottom: "4px",
+                  }}
+                >
                   {greeting}, {parentName}!
-                </p>
-                <p className="text-sm font-semibold text-[#64748b]">
+                </h1>
+                <p style={{ fontSize: "14px", color: "#4A6355" }}>
                   {new Date().toLocaleDateString(undefined, {
                     weekday: "long",
+                    year: "numeric",
                     month: "long",
                     day: "numeric",
                   })}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon-sm" className="text-[#1A2F23] hover:bg-[#F1F5F9]" title="Notifications">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Button variant="ghost" size="icon-sm" className="text-[#1B4332] hover:bg-[#E8F5EE]" title="Notifications">
                   <Bell className="size-5" strokeWidth={2} />
                 </Button>
                 <a
                   href="#parent-billing"
                   title="Settings"
-                  className="inline-flex size-9 items-center justify-center rounded-md text-[#1A2F23] hover:bg-[#F1F5F9] lg:hidden"
+                  className="inline-flex size-9 items-center justify-center rounded-xl text-[#1B4332] hover:bg-[#E8F5EE] lg:hidden"
                 >
                   <Settings className="size-5" strokeWidth={2} />
                 </a>
                 <div
-                  className="flex size-10 items-center justify-center rounded-full bg-[#2ECC71]/20 text-sm font-extrabold text-[#15803d]"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#52B788]/25 text-sm font-extrabold text-[#1B4332]"
                   aria-hidden
                 >
                   {parentName.slice(0, 1).toUpperCase() || "P"}
                 </div>
               </div>
             </div>
-          </header>
-
-          <div className="mgk-container space-y-10 py-8 sm:py-10">
         {childrenError ? (
           <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
             {childrenError}
@@ -907,200 +1063,404 @@ export default function ParentDashboard() {
         ) : null}
 
         {certificateNotifs.length > 0 ? (
-          <div className="space-y-3">
+          <div>
             {certificateNotifs.map((n) => (
-              <Card key={n.id} className="border-primary/30 bg-primary/5">
-                <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                  <p className="text-sm font-semibold text-foreground">{n.message}</p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="border-primary/40"
-                    onClick={async () => {
-                      try {
-                        const supabase = createClient();
-                        await supabase
-                          .from("parent_notifications")
-                          .update({ read_at: new Date().toISOString() })
-                          .eq("id", n.id);
-                      } catch {
-                        // ignore
-                      } finally {
-                        setCertificateNotifs((prev) => prev.filter((x) => x.id !== n.id));
-                      }
-                    }}
-                  >
-                    Dismiss
-                  </Button>
-                </CardContent>
-              </Card>
+              <div
+                key={n.id}
+                style={{ ...SECTION_CARD, borderColor: "rgba(82, 183, 136, 0.35)", background: "#F0F9F4" }}
+                className="flex flex-wrap items-center justify-between gap-3"
+              >
+                <p className="text-sm font-semibold text-[#1B4332]">{n.message}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="border-[#52B788]/40 text-[#1B4332]"
+                  onClick={async () => {
+                    try {
+                      const supabase = createClient();
+                      await supabase
+                        .from("parent_notifications")
+                        .update({ read_at: new Date().toISOString() })
+                        .eq("id", n.id);
+                    } catch {
+                      // ignore
+                    } finally {
+                      setCertificateNotifs((prev) => prev.filter((x) => x.id !== n.id));
+                    }
+                  }}
+                >
+                  Dismiss
+                </Button>
+              </div>
             ))}
           </div>
         ) : null}
 
         {petWarnings.length > 0 ? (
-          <div className="space-y-3">
+          <div>
             {petWarnings.map((w) => (
-              <Card key={`${w.childName}-${w.petName}`} className="border-amber-200 bg-amber-50">
-                <CardContent className="flex items-start gap-2 py-4 text-sm font-semibold text-amber-900">
-                  <PawPrint className="mt-0.5 h-5 w-5 shrink-0 text-amber-800" strokeWidth={2} aria-hidden />
-                  <span>
-                    {w.petName} is hungry! Help {w.childName} type today!
-                  </span>
-                </CardContent>
-              </Card>
+              <div
+                key={`${w.childName}-${w.petName}`}
+                style={{ ...SECTION_CARD, borderColor: "#FDE68A", background: "#FFFBEB" }}
+                className="flex items-start gap-2 text-sm font-semibold text-amber-950"
+              >
+                <PawPrint className="mt-0.5 h-5 w-5 shrink-0 text-amber-800" strokeWidth={2} aria-hidden />
+                <span>
+                  {w.petName} is hungry! Help {w.childName} type today!
+                </span>
+              </div>
             ))}
           </div>
         ) : null}
 
         {childrenLoading ? (
-          <div className="mgk-grid sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="mgk-skeleton h-28 rounded-md" />
+              <div key={i} className="mgk-skeleton h-28 rounded-2xl" />
             ))}
           </div>
         ) : children.length === 0 ? (
-          <Card className="overflow-hidden">
-            <CardContent className="flex flex-col items-center gap-4 py-10 text-center sm:flex-row sm:text-left">
-              <div className="relative h-40 w-full max-w-[200px] shrink-0 overflow-hidden rounded-md">
-                <Image src="/images/ui/ui-empty-state.jpg" alt="" fill className="object-cover" sizes="200px" />
-              </div>
+          <section style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+              <Image
+                src="/images/ui/ui-empty-state.jpg"
+                alt=""
+                width={200}
+                height={160}
+                className="h-auto max-h-40 w-[200px] shrink-0 rounded-2xl object-cover opacity-90"
+                sizes="200px"
+              />
               <div className="flex-1 space-y-3">
-                <CardTitle className="font-heading text-xl">Add your first child</CardTitle>
-                <CardDescription className="text-base font-semibold">
+                <h2 className="font-heading text-lg font-bold text-[#1B4332]">Add your first child</h2>
+                <p className="text-base font-semibold text-[#4A6355]">
                   Create a linked child profile to track typing progress and eco actions.
-                </CardDescription>
-                <Button className="rounded-md" onClick={() => setShowAddChildModal(true)}>
+                </p>
+                <button
+                  type="button"
+                  style={{
+                    background: "linear-gradient(135deg, #52B788, #40916C)",
+                    color: "white",
+                    padding: "10px 20px",
+                    borderRadius: "9999px",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setShowAddChildModal(true)}
+                >
                   Add child
-                </Button>
+                </button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         ) : null}
 
-        <section id="parent-overview" className="scroll-mt-28">
-          <h2 className="font-heading mb-6 text-[20px] font-bold text-foreground">Overview</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className={compactStatCardClass}>
-              <div className={compactStatIconWrapClass}>
-                <BookOpen className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+        <section id="parent-overview" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <h2 style={SECTION_H2}>Overview</h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            <div
+              style={{
+                background: "linear-gradient(135deg, #F0F9F4 0%, #E8F5EE 100%)",
+                borderRadius: "16px",
+                padding: "20px",
+                border: "1px solid #D1E8DC",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "12px",
+                  background: "rgba(82, 183, 136, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "12px",
+                }}
+              >
+                <BookOpen className="h-5 w-5 text-[#52B788]" strokeWidth={2.25} aria-hidden />
               </div>
-              <p className="mt-3 text-xs text-gray-500">Lessons</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">
+              <div style={{ fontSize: "32px", fontWeight: 700, color: "#1B4332", marginBottom: "4px" }}>
                 {selectedChild?.lessonsCompleted ?? 0}
-              </p>
-              <p className="mt-2 text-xs text-gray-400">This child</p>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#4A6355",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Lessons
+              </div>
+              <div style={{ fontSize: "11px", color: "#6B7280", marginTop: "2px" }}>This child</div>
             </div>
 
-            <div className={compactStatCardClass}>
-              <div className={compactStatIconWrapClass}>
-                <Zap className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+            <div
+              style={{
+                background: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)",
+                borderRadius: "16px",
+                padding: "20px",
+                border: "1px solid #BFDBFE",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "12px",
+                  background: "rgba(82, 183, 136, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "12px",
+                }}
+              >
+                <Zap className="h-5 w-5 text-[#52B788]" strokeWidth={2.25} aria-hidden />
               </div>
-              <p className="mt-3 text-xs text-gray-500">Avg WPM</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{selectedChild?.avgWpm ?? 0}</p>
-              <p className="mt-2 text-xs text-gray-400">Last 7 days</p>
+              <div style={{ fontSize: "32px", fontWeight: 700, color: "#1B4332", marginBottom: "4px" }}>
+                {selectedChild?.avgWpm ?? 0}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#4A6355",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Avg WPM
+              </div>
+              <div style={{ fontSize: "11px", color: "#6B7280", marginTop: "2px" }}>Last 7 days</div>
             </div>
 
-            <div className={compactStatCardClass}>
-              <div className={compactStatIconWrapClass}>
-                <Target className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+            <div
+              style={{
+                background: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)",
+                borderRadius: "16px",
+                padding: "20px",
+                border: "1px solid #FDE68A",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "12px",
+                  background: "rgba(82, 183, 136, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "12px",
+                }}
+              >
+                <Target className="h-5 w-5 text-[#52B788]" strokeWidth={2.25} aria-hidden />
               </div>
-              <p className="mt-3 text-xs text-gray-500">Accuracy</p>
-              <p
-                className="mt-1 text-2xl font-bold leading-none"
-                style={{ color: (selectedChild?.accuracy ?? 0) >= 90 ? "#16a34a" : "#d97706" }}
+              <div
+                style={{
+                  fontSize: "32px",
+                  fontWeight: 700,
+                  marginBottom: "4px",
+                  color: (selectedChild?.accuracy ?? 0) >= 90 ? "#15803d" : "#d97706",
+                }}
               >
                 {selectedChild?.accuracy ?? 0}%
-              </p>
-              <p className="mt-2 text-xs text-gray-400">Recent sessions</p>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#4A6355",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Accuracy
+              </div>
+              <div style={{ fontSize: "11px", color: "#6B7280", marginTop: "2px" }}>Recent sessions</div>
             </div>
 
-            <div className={compactStatCardClass}>
-              <div className={compactStatIconWrapClass}>
-                <Leaf className="h-8 w-8" strokeWidth={2.25} aria-hidden />
+            <div
+              style={{
+                background: "linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)",
+                borderRadius: "16px",
+                padding: "20px",
+                border: "1px solid #99F6E4",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "12px",
+                  background: "rgba(82, 183, 136, 0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "12px",
+                }}
+              >
+                <Leaf className="h-5 w-5 text-[#52B788]" strokeWidth={2.25} aria-hidden />
               </div>
-              <p className="mt-3 text-xs text-gray-500">Eco</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{selectedChild?.ecoPhotos ?? 0}</p>
-              <p className="mt-2 text-xs text-gray-400">Approvals</p>
+              <div style={{ fontSize: "32px", fontWeight: 700, color: "#1B4332", marginBottom: "4px" }}>
+                {selectedChild?.ecoPhotos ?? 0}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#4A6355",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Eco
+              </div>
+              <div style={{ fontSize: "11px", color: "#6B7280", marginTop: "2px" }}>Approvals</div>
             </div>
           </div>
+        </section>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <section style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <h2 style={SECTION_H2}>Daily streak &amp; Planet Ranger</h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "16px",
+            }}
+          >
             {selectedChild ? (
               <ParentOverviewStreakCard child={selectedChild} />
             ) : (
-              <div className={cn(compactSurfaceClass, "min-h-[140px]")} aria-hidden />
+              <div style={{ minHeight: "140px", borderRadius: "16px", background: "#F3F4F6" }} aria-hidden />
             )}
             {selectedChild ? (
               <ParentOverviewRangerCard child={selectedChild} />
             ) : (
-              <div className={cn(compactSurfaceClass, "min-h-[140px]")} aria-hidden />
-            )}
-          </div>
-          <div
-            className={cn(
-              "mt-4 rounded-md bg-white p-4 shadow-sm ring-1 ring-black/5",
-              "flex flex-col gap-4 sm:flex-row sm:items-start"
-            )}
-          >
-            {!todaysFact ? (
-              <div className="flex w-full items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
-                  <Sprout className="size-6" strokeWidth={2.25} aria-hidden />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-lg font-bold text-gray-900">Today&apos;s Eco Fact</p>
-                  <p className="text-sm font-semibold text-gray-600">Loading today&apos;s fact...</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start gap-4">
-                  <div className="relative size-24 shrink-0 overflow-hidden rounded-md bg-emerald-50 sm:size-28">
-                    <Image
-                      src="/images/ui/ui-empty-garden.jpg"
-                      alt="Eco Fact illustration"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 96px, 112px"
-                      priority
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl" aria-hidden>
-                        {todaysFact.emoji}
-                      </span>
-                      <p className="text-lg font-bold text-gray-900">Today&apos;s Eco Fact</p>
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-700">{todaysFact.fact}</p>
-                    <p className="mt-2 text-xs italic text-gray-500">Source: {todaysFact.source}</p>
-                  </div>
-                </div>
-              </>
+              <div style={{ minHeight: "140px", borderRadius: "16px", background: "#F3F4F6" }} aria-hidden />
             )}
           </div>
         </section>
 
-        {children.length > 0 ? (
-          <section id="parent-children" className="scroll-mt-28 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-heading text-[20px] font-bold text-foreground">Children</h2>
-              <Button size="sm" onClick={() => setShowAddChildModal(true)}>
-                Add child
-              </Button>
+        <section style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <h2 style={SECTION_H2}>Today&apos;s Eco Fact</h2>
+          {!todaysFact ? (
+            <div className="flex w-full items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-xl bg-[#E8F5EE] text-[#52B788]">
+                <Sprout className="size-6" strokeWidth={2.25} aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-[#1B4332]">Today&apos;s Eco Fact</p>
+                <p className="text-sm font-medium text-[#4A6355]">Loading today&apos;s fact...</p>
+              </div>
             </div>
-            <Tabs value={selectedChildId} onValueChange={setSelectedChildId}>
-              <TabsList
-                variant="line"
-                className="h-auto min-h-10 w-full flex-wrap justify-start gap-2 rounded-md bg-[#F1F5F9] p-1 sm:w-auto"
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(72px, 120px) minmax(0, 1fr)",
+                gap: "20px",
+                alignItems: "center",
+                background: "linear-gradient(135deg, #E8F5EE 0%, #F0F9F4 100%)",
+                borderRadius: "16px",
+                padding: "20px",
+              }}
+            >
+              <div className="relative mx-auto h-[120px] w-[120px] shrink-0 overflow-hidden rounded-xl bg-white/50 sm:mx-0">
+                <Image
+                  src="/images/ui/ui-empty-garden.jpg"
+                  alt="Eco Fact illustration"
+                  fill
+                  className="object-cover"
+                  sizes="120px"
+                  priority
+                />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className="text-xs font-bold tracking-widest text-[#52B788]"
+                  style={{ textTransform: "uppercase", letterSpacing: "0.2em" }}
+                >
+                  Today&apos;s Eco Fact
+                </p>
+                <p className="mt-2 text-2xl leading-none" aria-hidden>
+                  {todaysFact.emoji}
+                </p>
+                <p className="mt-2 text-base font-medium leading-relaxed text-[#1B4332]">{todaysFact.fact}</p>
+                <p className="mt-2 text-xs italic text-[#6B7280]">Source: {todaysFact.source}</p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {children.length > 0 ? (
+          <section id="parent-children" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "8px" }}>
+              <h2 style={{ ...SECTION_H2, marginBottom: 0 }}>Children</h2>
+              <button
+                type="button"
+                style={{
+                  background: "linear-gradient(135deg, #52B788, #40916C)",
+                  color: "white",
+                  padding: "10px 20px",
+                  borderRadius: "9999px",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                onClick={() => setShowAddChildModal(true)}
               >
-                {children.map((child) => (
-                  <TabsTrigger
+                Add child
+              </button>
+            </div>
+            <div
+              role="tablist"
+              aria-label="Select child"
+              style={{
+                display: "flex",
+                gap: "8px",
+                borderBottom: "2px solid #E5E7EB",
+                marginBottom: "24px",
+                flexWrap: "wrap",
+              }}
+            >
+              {children.map((child) => {
+                const active = child.id === selectedChildId;
+                return (
+                  <button
                     key={child.id}
-                    value={child.id}
-                    className="gap-2 rounded-md data-[state=active]:bg-[#2ECC71] data-[state=active]:text-white"
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setSelectedChildId(child.id)}
+                    style={{
+                      padding: "12px 20px",
+                      color: active ? "#1B4332" : "#6B7280",
+                      borderBottom: active ? "3px solid #52B788" : "3px solid transparent",
+                      fontWeight: active ? 700 : 500,
+                      cursor: "pointer",
+                      background: "none",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      borderRight: "none",
+                      marginBottom: "-2px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "14px",
+                    }}
                   >
                     <UserRound
                       className={cn(
@@ -1112,25 +1472,23 @@ export default function ParentDashboard() {
                     />
                     <span>{child.name}</span>
                     {child.username ? (
-                      <Badge variant="secondary" className="ml-1 font-normal">
+                      <Badge variant="secondary" className="ml-0 font-normal">
                         @{child.username}
                       </Badge>
                     ) : null}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {children.map((c) => (
-                <TabsContent key={c.id} value={c.id} className="sr-only">
-                  {c.name}
-                </TabsContent>
-              ))}
-            </Tabs>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="sr-only" aria-live="polite">
+              {children.find((c) => c.id === selectedChildId)?.name ?? ""}
+            </p>
           </section>
         ) : null}
 
         {selectedChild ? (
-          <section id="parent-progress" className="scroll-mt-28 space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <section id="parent-progress" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+            <div className="flex flex-wrap items-center justify-between gap-4" style={{ marginBottom: "20px" }}>
               <div className="flex flex-wrap items-center gap-4">
                 <UserRound
                   className={cn(
@@ -1141,17 +1499,15 @@ export default function ParentDashboard() {
                   aria-hidden
                 />
                 <div>
-                  <h2 className="font-heading text-[20px] font-bold text-foreground">
-                    {selectedChild.name}&apos;s progress
-                  </h2>
-                  <p className="text-sm text-muted-foreground">Typing skills and eco actions</p>
+                  <h2 style={{ ...SECTION_H2, marginBottom: "4px" }}>{selectedChild.name}&apos;s progress</h2>
+                  <p className="text-sm text-[#4A6355]">Typing skills and eco actions</p>
                 </div>
               </div>
               {selectedChild.studentProfileId ? (
                 <Button
                   type="button"
                   variant="secondary"
-                  className="shrink-0 border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
+                  className="shrink-0 border-[#52B788]/40 bg-[#E8F5EE] text-[#1B4332] hover:bg-[#D1E8DC]"
                   onClick={() =>
                     window.open(`/report/${selectedChild.studentProfileId}`, "_blank", "noopener,noreferrer")
                   }
@@ -1160,59 +1516,51 @@ export default function ParentDashboard() {
                   Download Report
                 </Button>
               ) : (
-                <p className="max-w-xs break-words text-right text-xs text-muted-foreground">
+                <p className="max-w-xs break-words text-right text-xs text-[#6B7280]">
                   Link your child&apos;s account email to unlock printable reports.
                 </p>
               )}
             </div>
 
-            <div className="mgk-grid lg:grid-cols-3">
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="font-heading text-base">WPM (last 7 days)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex h-40 items-end gap-2">
-                    {wpmSeries.map((wpm, i) => (
-                      <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">{wpm}</span>
-                        <div
-                          className="w-full rounded-t-md bg-primary transition-all"
-                          style={{ height: `${(wpm / wpmMax) * 100}%`, minHeight: wpm > 0 ? 8 : 2 }}
-                        />
-                        <span className="text-[10px] text-muted-foreground">D{i + 1}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div style={INNER_PROGRESS_CARD}>
+                <p className="mb-4 font-heading text-base font-bold text-[#1B4332]">WPM (last 7 days)</p>
+                <div className="flex h-40 items-end gap-2">
+                  {wpmSeries.map((wpm, i) => (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <span className="text-[10px] text-[#6B7280]">{wpm}</span>
+                      <div
+                        className="w-full rounded-t-md bg-[#52B788] transition-all"
+                        style={{ height: `${(wpm / wpmMax) * 100}%`, minHeight: wpm > 0 ? 8 : 2 }}
+                      />
+                      <span className="text-[10px] text-[#6B7280]">D{i + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-heading text-base">Performance</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div style={INNER_PROGRESS_CARD}>
+                <p className="mb-4 font-heading text-base font-bold text-[#1B4332]">Performance</p>
+                <div className="space-y-4">
                   <div>
                     <div className="mb-2 flex justify-between text-sm">
-                      <span className="text-muted-foreground">Accuracy</span>
-                      <span className="font-semibold text-primary">{selectedChild.accuracy}%</span>
+                      <span className="text-[#6B7280]">Accuracy</span>
+                      <span className="font-semibold text-[#52B788]">{selectedChild.accuracy}%</span>
                     </div>
                     <Progress
                       value={selectedChild.accuracy}
                       className="[&_[data-slot=progress-track]]:h-2"
                     />
                   </div>
-                  <Card className="bg-muted/40">
-                    <CardContent className="py-4">
-                      <p className="flex items-center gap-2 font-heading text-lg font-bold">
-                        <Flame className="h-5 w-5 shrink-0 text-orange-500" strokeWidth={2.25} aria-hidden />
-                        {selectedChild.currentStreak} day streak
-                      </p>
-                      <p className="text-sm text-muted-foreground">Keep it going!</p>
-                    </CardContent>
-                  </Card>
+                  <div style={{ ...INNER_PROGRESS_CARD, background: "#FFFFFF" }}>
+                    <p className="flex items-center gap-2 font-heading text-lg font-bold text-[#1B4332]">
+                      <Flame className="h-5 w-5 shrink-0 text-orange-500" strokeWidth={2.25} aria-hidden />
+                      {selectedChild.currentStreak} day streak
+                    </p>
+                    <p className="text-sm text-[#6B7280]">Keep it going!</p>
+                  </div>
                   <div>
-                    <p className="mb-2 text-sm text-muted-foreground">Badges earned</p>
+                    <p className="mb-2 text-sm text-[#6B7280]">Badges earned</p>
                     <div className="flex flex-wrap gap-2">
                       {selectedChild.badges.map((badge, i) => (
                         <span key={i} className="text-2xl">
@@ -1221,89 +1569,91 @@ export default function ParentDashboard() {
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="border-primary/40 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="font-heading text-base">Next milestone</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{selectedChild.nextMilestone}</p>
-                </CardContent>
-              </Card>
+              <div style={{ ...INNER_PROGRESS_CARD, borderColor: "rgba(82, 183, 136, 0.35)", background: "#F0F9F4" }}>
+                <p className="mb-4 font-heading text-base font-bold text-[#1B4332]">Next milestone</p>
+                <p className="text-sm leading-relaxed text-[#4A6355]">{selectedChild.nextMilestone}</p>
+              </div>
             </div>
           </section>
         ) : null}
 
-        <section id="parent-lessons" className="scroll-mt-28 space-y-4">
-          <h2 className="font-heading text-[20px] font-bold text-foreground">
-            Create a custom typing lesson
-          </h2>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="lesson-title">Lesson name</Label>
-                <Input
-                  id="lesson-title"
-                  value={lessonName}
-                  onChange={(e) => setLessonName(e.target.value)}
-                  placeholder="Give this lesson a name…"
-                />
+        <section id="parent-lessons" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <h2 style={SECTION_H2}>Create a custom typing lesson</h2>
+          <div>
+            <div style={{ marginBottom: "16px" }}>
+              <label htmlFor="lesson-title" style={FORM_LABEL}>
+                Lesson name
+              </label>
+              <Input
+                id="lesson-title"
+                value={lessonName}
+                onChange={(e) => setLessonName(e.target.value)}
+                placeholder="Give this lesson a name…"
+                className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                style={FORM_CONTROL}
+              />
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <label htmlFor="lesson-body" style={FORM_LABEL}>
+                Lesson text
+              </label>
+              <Textarea
+                id="lesson-body"
+                value={lessonText}
+                onChange={(e) => setLessonText(e.target.value.slice(0, 500))}
+                placeholder="Paste text for your child to type…"
+                rows={5}
+                className="min-h-[120px] focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
+                style={FORM_CONTROL}
+              />
+              <p className="mt-1 text-xs text-[#6B7280]">{lessonText.length}/500 characters</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <span style={FORM_LABEL}>Difficulty</span>
+                <select
+                  className="focus:border-[#52B788]"
+                  style={{ ...FORM_CONTROL, height: "48px", cursor: "pointer" }}
+                  value={lessonDifficulty}
+                  onChange={(e) => setLessonDifficulty(e.target.value)}
+                >
+                  <option>Beginner</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lesson-body">Lesson text</Label>
-                <Textarea
-                  id="lesson-body"
-                  value={lessonText}
-                  onChange={(e) => setLessonText(e.target.value.slice(0, 500))}
-                  placeholder="Paste text for your child to type…"
-                  rows={5}
-                />
-                <p className="text-xs text-muted-foreground">{lessonText.length}/500 characters</p>
+              <div>
+                <span style={FORM_LABEL}>Assign to</span>
+                <select
+                  className="focus:border-[#52B788]"
+                  style={{ ...FORM_CONTROL, height: "48px", cursor: "pointer" }}
+                  value={selectedChildId}
+                  onChange={(e) => setSelectedChildId(e.target.value)}
+                >
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="mgk-grid sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Difficulty</Label>
-                  <select
-                    className={selectClassName}
-                    value={lessonDifficulty}
-                    onChange={(e) => setLessonDifficulty(e.target.value)}
-                  >
-                    <option>Beginner</option>
-                    <option>Intermediate</option>
-                    <option>Advanced</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Assign to</Label>
-                  <select
-                    className={selectClassName}
-                    value={selectedChildId}
-                    onChange={(e) => setSelectedChildId(e.target.value)}
-                  >
-                    {children.map((child) => (
-                      <option key={child.id} value={child.id}>
-                        {child.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={!lessonName || !lessonText}
-                onClick={handleSaveLesson}
-              >
-                Save &amp; assign lesson
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+            <button
+              type="button"
+              style={{ ...PRIMARY_CTA, opacity: !lessonName || !lessonText ? 0.5 : 1 }}
+              disabled={!lessonName || !lessonText}
+              onClick={handleSaveLesson}
+            >
+              Save &amp; assign lesson
+            </button>
+          </div>
 
           {customLessons.length > 0 ? (
-            <div className="space-y-3">
-              <h3 className="font-heading text-base font-semibold">Your custom lessons</h3>
+            <div className="space-y-3" style={{ marginTop: "24px" }}>
+              <h3 className="font-heading text-base font-semibold text-[#1B4332]">Your custom lessons</h3>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1336,11 +1686,11 @@ export default function ParentDashboard() {
 
         <HabitQuestsSection />
 
-        <section id="parent-eco" className="scroll-mt-28 space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="font-heading text-xl font-bold">Eco photos awaiting approval</h2>
+        <section id="parent-eco" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: "8px" }}>
+            <h2 style={{ ...SECTION_H2, marginBottom: 0 }}>Eco photos awaiting approval</h2>
             {!ecoLoading && pendingPhotos.length > 0 ? (
-              <span className="rounded-full bg-[#2ECC71] px-3 py-1 text-xs font-extrabold text-white">
+              <span className="rounded-full bg-[#52B788] px-3 py-1 text-xs font-extrabold text-white">
                 {pendingPhotos.length} pending
               </span>
             ) : null}
@@ -1402,21 +1752,28 @@ export default function ParentDashboard() {
               ))}
             </div>
           ) : pendingPhotos.length === 0 ? (
-            <Card className="overflow-hidden">
-              <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-                <div className="relative h-44 w-full max-w-[280px] overflow-hidden rounded-md">
-                  <Image src="/images/ui/ui-empty-garden.jpg" alt="" fill className="object-cover" sizes="280px" />
-                </div>
-                <p className="font-heading text-lg font-extrabold text-[#1A2F23]">No pending photos</p>
-                <p className="max-w-md text-sm font-semibold text-muted-foreground">
-                  When your children submit eco actions, they&apos;ll show up here for approval.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <Image
+                src="/images/ui/ui-empty-garden.jpg"
+                alt=""
+                width={200}
+                height={160}
+                className="h-auto opacity-80"
+                style={{ width: "200px", maxWidth: "100%" }}
+                sizes="200px"
+              />
+              <p className="text-lg font-bold text-[#1B4332]">No pending photos</p>
+              <p className="max-w-md text-sm text-[#6B7280]">
+                When your children submit eco actions, they&apos;ll show up here for approval.
+              </p>
+            </div>
           ) : (
-            <div className="mgk-grid sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {pendingPhotos.map((photo) => (
-                <Card key={photo.id} className="overflow-hidden">
+                <div
+                  key={photo.id}
+                  className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-sm"
+                >
                   {photo.photoUrl ? (
                     // Dynamic Supabase URLs + SVG filter; next/image adds little here
                     // eslint-disable-next-line @next/next/no-img-element
@@ -1429,20 +1786,20 @@ export default function ParentDashboard() {
                       }}
                     />
                   ) : (
-                    <div className="flex h-48 items-center justify-center bg-primary text-primary-foreground">
+                    <div className="flex h-48 items-center justify-center bg-[#52B788] text-white">
                       <Globe className="h-12 w-12 opacity-90" strokeWidth={2} aria-hidden />
                     </div>
                   )}
-                  <CardContent className="space-y-3 py-4">
-                    <p className="font-semibold">{actionLabel(photo.actionType)}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="space-y-3 p-4">
+                    <p className="font-semibold text-[#1B4332]">{actionLabel(photo.actionType)}</p>
+                    <p className="text-xs text-[#6B7280]">
                       {photo.dateSubmitted} ·{" "}
-                      <span className="font-semibold text-primary">+{photo.pointsAwarded} pts</span>
+                      <span className="font-semibold text-[#52B788]">+{photo.pointsAwarded} pts</span>
                     </p>
                     <div className="flex gap-2">
                       <Button
                         type="button"
-                        className="flex-1 bg-[#2ECC71] hover:bg-[#27ae60]"
+                        className="flex-1 bg-[#52B788] hover:bg-[#40916C]"
                         size="sm"
                         disabled={ecoApprovingId === photo.id}
                         onClick={() => void handleApprovePhoto(photo)}
@@ -1460,78 +1817,102 @@ export default function ParentDashboard() {
                         Reject
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </section>
 
-        <section id="parent-summary" className="scroll-mt-28 space-y-4">
-          <h2 className="font-heading text-[20px] font-bold text-foreground">This week</h2>
-          <Card>
-            <CardContent className="space-y-6 pt-6">
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { Icon: BookOpen, label: "Lessons", value: "—" },
-                  { Icon: Clock, label: "Time", value: "—" },
-                  { Icon: TrendingUp, label: "WPM", value: "—" },
-                  { Icon: Sprout, label: "Eco", value: "—" },
-                ].map(({ Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-4 py-2">
-                    <Icon className="h-4 w-4 text-gray-500" strokeWidth={2.25} aria-hidden />
-                    <span className="text-sm text-gray-600">{label}:</span>
-                    <span className="text-sm font-semibold text-gray-900">{value}</span>
-                  </div>
-                ))}
+        <section id="parent-summary" style={{ ...SECTION_CARD, scrollMarginTop: "112px" }}>
+          <h2 style={SECTION_H2}>This week</h2>
+          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", alignItems: "center" }}>
+            {[
+              { Icon: BookOpen, label: "Lessons", value: "—" },
+              { Icon: Clock, label: "Time", value: "—" },
+              { Icon: TrendingUp, label: "WPM", value: "—" },
+              { Icon: Sprout, label: "Eco", value: "—" },
+            ].map(({ Icon, label, value }) => (
+              <div key={label} className="flex items-center gap-2 text-[#1B4332]">
+                <Icon className="h-4 w-4 shrink-0 text-[#52B788]" strokeWidth={2.25} aria-hidden />
+                <span className="text-sm text-[#4A6355]">{label}</span>
+                <span className="text-sm font-bold text-[#1B4332]">{value}</span>
               </div>
+            ))}
+          </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-fit border-green-200 text-green-700 hover:bg-green-50"
-              >
-                Send report to email
-              </Button>
-            </CardContent>
-          </Card>
+          <button
+            type="button"
+            className="mt-6 transition-colors hover:bg-[#52B788] hover:text-white"
+            style={{
+              border: "2px solid #52B788",
+              background: "transparent",
+              color: "#52B788",
+              padding: "10px 20px",
+              borderRadius: "9999px",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            Send report to email
+          </button>
         </section>
 
-        <section id="parent-billing" className="scroll-mt-28 space-y-4 pb-16">
-          <h2 className="font-heading text-[20px] font-bold text-foreground">
-            Subscription &amp; billing
-          </h2>
-          <Card className="rounded-md border border-gray-100 bg-white">
-            <CardContent className="space-y-6 p-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Current plan</p>
-                  <p className="font-heading text-lg font-bold text-gray-900">Family plan</p>
-                  <p className="text-sm font-semibold text-green-700">$9.99/month</p>
-                  <p className="text-sm text-gray-500">Next billing date: May 25, 2026</p>
-                  <a href="#" className="text-sm font-medium text-gray-900 hover:underline">
-                    Manage subscription
-                  </a>
-                  <p className="pt-2 text-xs text-green-700">Your account is in good standing.</p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Promo code</p>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter promo code…"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <Button type="button" variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
-                      Apply
-                    </Button>
-                  </div>
-                </div>
+        <section id="parent-billing" style={{ ...SECTION_CARD, scrollMarginTop: "112px", paddingBottom: "36px" }}>
+          <h2 style={SECTION_H2}>Subscription &amp; billing</h2>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-xs text-[#6B7280]">Current plan</p>
+              <p className="font-heading text-2xl font-bold text-[#1B4332]">Family plan</p>
+              <p className="text-lg font-bold text-[#52B788]">$9.99/month</p>
+              <p className="text-sm text-[#6B7280]">Next billing date: May 25, 2026</p>
+              <a href="#" className="inline-block text-sm font-medium text-[#1B4332] underline underline-offset-2">
+                Manage subscription
+              </a>
+              <div
+                className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[#15803d]"
+                style={{ background: "#E8F5EE", border: "1px solid #D1E8DC" }}
+              >
+                <CheckCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                Your account is in good standing
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-[#4A6355]">Promo code</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <Input
+                  placeholder="Enter code"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="flex-1 rounded-xl border-2 border-[#E5E7EB] focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
+                  style={{
+                    padding: "14px 16px",
+                    fontSize: "15px",
+                  }}
+                />
+                <button
+                  type="button"
+                  style={{
+                    padding: "14px 32px",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
           </div>
         </div>
