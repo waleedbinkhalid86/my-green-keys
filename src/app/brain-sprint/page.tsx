@@ -37,9 +37,9 @@ export default function BrainSprintHubPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <Link
             href="/brain-sprint/math"
-            className="group rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer relative min-h-[280px] flex flex-col justify-end"
+            className="group rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer relative min-h-[280px] flex min-w-0 flex-col items-end justify-end"
             style={{
-              backgroundImage: "url('/images/brain-sprint/math-hero.jpg')",
+              backgroundImage: "url('/images/brain-sprint/math-hero.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
@@ -48,25 +48,27 @@ export default function BrainSprintHubPage() {
 
             <div className="absolute top-0 left-0 w-2 h-full bg-[#3B82F6]"></div>
 
-            <div className="relative p-6 text-white">
+            <div className="relative w-full max-w-full p-8 text-white">
               <div className="text-xs font-bold uppercase tracking-wider text-blue-200 mb-2">
                 Track 1
               </div>
-              <h3 className="text-3xl font-bold mb-2 group-hover:translate-x-1 transition">
+              <h3 className="max-w-full text-3xl font-bold mb-2 group-hover:translate-x-1 transition">
                 Math Mastery
               </h3>
-              <p className="text-sm text-white/90 mb-3">
+              <p className="max-w-full text-sm text-white/90 mb-3">
                 10 lessons · Addition to Division
               </p>
-              <div className="text-sm font-bold text-white">0 / 10 lessons →</div>
+              <div className="max-w-full text-sm font-bold text-white">
+                0 / 10 lessons →
+              </div>
             </div>
           </Link>
 
           <Link
             href="/brain-sprint/eco"
-            className="group rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer relative min-h-[280px] flex flex-col justify-end"
+            className="group rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer relative min-h-[280px] flex min-w-0 flex-col items-end justify-end"
             style={{
-              backgroundImage: "url('/images/brain-sprint/eco-hero.jpg')",
+              backgroundImage: "url('/images/brain-sprint/eco-hero.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
@@ -75,17 +77,19 @@ export default function BrainSprintHubPage() {
 
             <div className="absolute top-0 left-0 w-2 h-full bg-[#52B788]"></div>
 
-            <div className="relative p-6 text-white">
+            <div className="relative w-full max-w-full p-8 text-white">
               <div className="text-xs font-bold uppercase tracking-wider text-green-200 mb-2">
                 Track 2
               </div>
-              <h3 className="text-3xl font-bold mb-2 group-hover:translate-x-1 transition">
+              <h3 className="max-w-full text-3xl font-bold mb-2 group-hover:translate-x-1 transition">
                 Eco Genius
               </h3>
-              <p className="text-sm text-white/90 mb-3">
+              <p className="max-w-full text-sm text-white/90 mb-3">
                 5 lessons · Planet facts & habits
               </p>
-              <div className="text-sm font-bold text-white">0 / 5 lessons →</div>
+              <div className="max-w-full text-sm font-bold text-white">
+                0 / 5 lessons →
+              </div>
             </div>
           </Link>
         </div>
