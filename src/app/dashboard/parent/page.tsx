@@ -17,6 +17,7 @@ import {
   Sprout,
   LogOut,
   PawPrint,
+  ScrollText,
   Settings,
   Shield,
   Sparkles,
@@ -32,6 +33,7 @@ import { RankBadge, rankProgressFillClassName } from "@/components/RankBadge";
 import { ecoFacts } from "@/data/ecoFacts";
 import { getTodayDate } from "@/lib/streakHelpers";
 import { streakTierSurfaceClassName } from "@/components/StreakCounter";
+import { HabitQuestsSection } from "@/components/parent/HabitQuestsSection";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +91,7 @@ const SIDEBAR_LINKS = [
   { href: "#parent-progress", label: "Progress", Icon: BarChart3 },
   { href: "#parent-eco", label: "Eco Actions", Icon: Leaf },
   { href: "#parent-lessons", label: "Custom Lessons", Icon: BookOpen },
+  { href: "#parent-quests", label: "Habit Quests", Icon: ScrollText },
   { href: "#parent-summary", label: "Reports", Icon: FileText },
   { href: "#parent-billing", label: "Settings", Icon: Settings },
 ] as const;
@@ -1330,6 +1333,8 @@ export default function ParentDashboard() {
             </div>
           ) : null}
         </section>
+
+        <HabitQuestsSection />
 
         <section id="parent-eco" className="scroll-mt-28 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
