@@ -9,7 +9,10 @@ type GameState = "ready" | "playing" | "feedback" | "finished";
 type FeedbackType = "correct" | "wrong" | null;
 
 function normalizeAnswer(s: string): string {
-  return s.trim().toLowerCase();
+  const v = s.trim().toLowerCase();
+  if (v === "true") return "t";
+  if (v === "false") return "f";
+  return v;
 }
 
 function formatTime(s: number): string {
@@ -277,7 +280,7 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
                       handleSubmit();
                     }
                   }}
-                  inputMode="numeric"
+                  inputMode={lesson.track === "math" ? "numeric" : "text"}
                   autoFocus
                   className="w-full border-b-4 border-[#52B788] bg-transparent px-2 py-4 text-center text-3xl font-black text-[#1B4332] outline-none placeholder:text-gray-300"
                   placeholder="Type your answer"
