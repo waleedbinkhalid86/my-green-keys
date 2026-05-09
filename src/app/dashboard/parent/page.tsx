@@ -398,6 +398,9 @@ export default function ParentDashboard() {
   const [certificateNotifs, setCertificateNotifs] = useState<
     Array<{ id: string; message: string; createdAt: string }>
   >([]);
+  const [unseenQuestCompletions, setUnseenQuestCompletions] = useState<
+    Array<{ id: string; title: string; reward: string }>
+  >([]);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [addChildLoading, setAddChildLoading] = useState(false);
@@ -522,6 +525,24 @@ export default function ParentDashboard() {
         }
       } catch {
         setCertificateNotifs([]);
+      }
+
+      try {
+        const { data: unseenQuestData, error: unseenQuestErr } = await supabase
+          .from("quests")
+          .select("id, title, reward")
+          .eq("parent_id", userData.user.id)
+          .eq("status", "completed")
+          .or("completion_seen_by_parent.eq.false,completion_seen_by_parent.is.null");
+        if (!unseenQuestErr && unseenQuestData) {
+          setUnseenQuestCompletions(
+            unseenQuestData as Array<{ id: string; title: string; reward: string }>
+          );
+        } else {
+          setUnseenQuestCompletions([]);
+        }
+      } catch {
+        setUnseenQuestCompletions([]);
       }
 
       const { data, error } = await supabase
@@ -804,6 +825,37 @@ export default function ParentDashboard() {
 
   const handleDeleteLesson = (lessonId: string) => {
     setCustomLessons(customLessons.filter((l) => l.id !== lessonId));
+  };
+
+  const markQuestCompletionSeen = async (questId: string) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("quests")
+        .update({ completion_seen_by_parent: true })
+        .eq("id", questId);
+      if (error) throw error;
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        setUnseenQuestCompletions([]);
+        return;
+      }
+      const { data: unseenQuestData, error: unseenQuestErr } = await supabase
+        .from("quests")
+        .select("id, title, reward")
+        .eq("parent_id", userData.user.id)
+        .eq("status", "completed")
+        .or("completion_seen_by_parent.eq.false,completion_seen_by_parent.is.null");
+      if (!unseenQuestErr && unseenQuestData) {
+        setUnseenQuestCompletions(
+          unseenQuestData as Array<{ id: string; title: string; reward: string }>
+        );
+      } else {
+        setUnseenQuestCompletions([]);
+      }
+    } catch {
+      showToast("error", "Could not dismiss. If this keeps happening, run the quest SQL migration in Supabase.");
+    }
   };
 
   const wpmSeries = selectedChild?.wpmData.length ? selectedChild.wpmData : [0, 0, 0, 0, 0, 0, 0];
@@ -1092,6 +1144,58 @@ export default function ParentDashboard() {
                 >
                   Dismiss
                 </Button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {unseenQuestCompletions.length > 0 ? (
+          <div className="flex flex-col gap-4" style={{ marginBottom: "24px" }}>
+            {unseenQuestCompletions.map((q) => (
+              <div
+                key={q.id}
+                style={{
+                  background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+                  color: "#FFFFFF",
+                  padding: "20px 24px",
+                  borderRadius: "16px",
+                  marginBottom: "0",
+                  boxShadow: "0 8px 24px rgba(82,183,136,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div style={{ fontSize: "40px" }}>🎉</div>
+                  <div>
+                    <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: 2 }}>
+                      Quest Complete!
+                    </div>
+                    <div style={{ fontSize: "14px", opacity: 0.95 }}>
+                      &quot;{q.title}&quot; finished — time to give the reward:{" "}
+                      <strong>{q.reward}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => void markQuestCompletionSeen(q.id)}
+                  style={{
+                    background: "rgba(255,255,255,0.25)",
+                    color: "#FFFFFF",
+                    padding: "10px 20px",
+                    borderRadius: "9999px",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    border: "1px solid rgba(255,255,255,0.5)",
+                    cursor: "pointer",
+                  }}
+                >
+                  Got it ✓
+                </button>
               </div>
             ))}
           </div>

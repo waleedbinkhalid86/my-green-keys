@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, ScrollText } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, ScrollText } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +12,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { createQuest, deleteQuest, fetchActiveQuests, fetchCompletedQuests } from "@/lib/quests/api";
+import {
+  createQuest,
+  deleteQuest,
+  fetchActiveQuests,
+  fetchCompletedQuests,
+  updateQuest,
+} from "@/lib/quests/api";
 import {
   completeQuest,
   runStreakMaintenanceForQuests,
@@ -26,6 +31,7 @@ import {
   type QuestDays,
   type StrictnessPreset,
 } from "@/lib/quests/types";
+import { HabitQuestFormFields } from "@/components/parent/HabitQuestFormFields";
 
 const SECTION_SHELL: React.CSSProperties = {
   background: "#FFFFFF",
@@ -42,26 +48,6 @@ const SECTION_H2: React.CSSProperties = {
   fontWeight: 700,
   color: "#1B4332",
   marginBottom: "20px",
-};
-
-const FORM_LABEL: React.CSSProperties = {
-  fontSize: "13px",
-  fontWeight: 700,
-  color: "#1B4332",
-  marginBottom: "8px",
-  display: "block",
-};
-
-const FORM_CONTROL: React.CSSProperties = {
-  width: "100%",
-  padding: "12px 16px",
-  borderRadius: "12px",
-  border: "2px solid #E5E7EB",
-  fontSize: "14px",
-  background: "#FFFFFF",
-  transition: "border 0.2s",
-  outline: "none",
-  boxSizing: "border-box",
 };
 
 const PRIMARY_CTA: React.CSSProperties = {
@@ -119,6 +105,19 @@ function strictnessLabel(q: Quest): string {
   return `Custom: ${s} skips, ${r} reset`;
 }
 
+function strictnessFromQuest(q: Quest): {
+  preset: StrictnessPreset;
+  customSkip: number;
+  customReset: number;
+} {
+  const s = q.skip_days_allowed ?? 2;
+  const r = q.reset_after_misses ?? 3;
+  if (s === 3 && r === 5) return { preset: "easy", customSkip: s, customReset: r };
+  if (s === 2 && r === 3) return { preset: "normal", customSkip: s, customReset: r };
+  if (s === 0 && r === 1) return { preset: "strict", customSkip: s, customReset: r };
+  return { preset: "custom", customSkip: s, customReset: r };
+}
+
 export function HabitQuestsSection() {
   const { showToast } = useToast();
   const [activeQuests, setActiveQuests] = useState<Quest[]>([]);
@@ -142,6 +141,35 @@ export function HabitQuestsSection() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAction1, setEditAction1] = useState("");
+  const [editAction2, setEditAction2] = useState("");
+  const [editAction3, setEditAction3] = useState("");
+  const [editDaysTarget, setEditDaysTarget] = useState<QuestDays>(7);
+  const [editReward, setEditReward] = useState("");
+  const [editStrictnessPreset, setEditStrictnessPreset] = useState<StrictnessPreset>("normal");
+  const [editCustomSkipDays, setEditCustomSkipDays] = useState(2);
+  const [editCustomResetAfter, setEditCustomResetAfter] = useState(3);
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({});
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const openEditQuest = (q: Quest) => {
+    setEditingQuest(q);
+    setEditTitle(q.title);
+    const plan = Array.isArray(q.action_plan) ? q.action_plan : [];
+    setEditAction1(plan[0] ?? "");
+    setEditAction2(plan[1] ?? "");
+    setEditAction3(plan[2] ?? "");
+    setEditDaysTarget(q.days_target);
+    setEditReward(q.reward);
+    const st = strictnessFromQuest(q);
+    setEditStrictnessPreset(st.preset);
+    setEditCustomSkipDays(st.customSkip);
+    setEditCustomResetAfter(st.customReset);
+    setEditFormErrors({});
+  };
 
   const refreshQuests = useCallback(async () => {
     setLoadError("");
@@ -246,6 +274,54 @@ export function HabitQuestsSection() {
     }
   };
 
+  const validateEditForm = (): boolean => {
+    const next: Record<string, string> = {};
+    const t = editTitle.trim();
+    if (!t) next.title = "Title is required.";
+    else if (t.length > 60) next.title = "Title must be 60 characters or less.";
+    const a1 = editAction1.trim();
+    const a2 = editAction2.trim();
+    if (!a1) next.action1 = "Add at least two actions.";
+    if (!a2) next.action2 = "Add at least two actions.";
+    const r = editReward.trim();
+    if (!r) next.reward = "Reward is required.";
+    else if (r.length > 100) next.reward = "Reward must be 100 characters or less.";
+    if (![7, 14, 20, 30].includes(editDaysTarget)) next.days = "Choose a quest length.";
+    setEditFormErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleEditSave = async () => {
+    if (!editingQuest) return;
+    if (!validateEditForm()) return;
+    setEditSubmitting(true);
+    try {
+      const plan = [editAction1.trim(), editAction2.trim()];
+      const a3 = editAction3.trim();
+      if (a3) plan.push(a3);
+      const preset =
+        editStrictnessPreset === "custom"
+          ? { skip_days_allowed: editCustomSkipDays, reset_after_misses: editCustomResetAfter }
+          : STRICTNESS_PRESETS[editStrictnessPreset];
+      await updateQuest(editingQuest.id, {
+        title: editTitle.trim(),
+        action_plan: plan,
+        days_target: editDaysTarget,
+        reward: editReward.trim(),
+        skip_days_allowed: preset.skip_days_allowed,
+        reset_after_misses: preset.reset_after_misses,
+      });
+      showToast("success", "Quest updated.");
+      setEditingQuest(null);
+      await refreshQuests();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not update quest.";
+      showToast("error", message);
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const atMaxActive = activeQuests.length >= 3;
 
   return (
@@ -281,6 +357,63 @@ export function HabitQuestsSection() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={editingQuest !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingQuest(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Edit quest</DialogTitle>
+            <DialogDescription>
+              Fix typos or adjust the plan. Day progress and skip days used so far stay the same.
+            </DialogDescription>
+          </DialogHeader>
+          <HabitQuestFormFields
+            idPrefix="edit-"
+            title={editTitle}
+            setTitle={setEditTitle}
+            action1={editAction1}
+            setAction1={setEditAction1}
+            action2={editAction2}
+            setAction2={setEditAction2}
+            action3={editAction3}
+            setAction3={setEditAction3}
+            daysTarget={editDaysTarget}
+            setDaysTarget={setEditDaysTarget}
+            reward={editReward}
+            setReward={setEditReward}
+            strictnessPreset={editStrictnessPreset}
+            setStrictnessPreset={setEditStrictnessPreset}
+            customSkipDays={editCustomSkipDays}
+            setCustomSkipDays={setEditCustomSkipDays}
+            customResetAfter={editCustomResetAfter}
+            setCustomResetAfter={setEditCustomResetAfter}
+            formErrors={editFormErrors}
+          />
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full border-[#D1E8DC]"
+              disabled={editSubmitting}
+              onClick={() => setEditingQuest(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-full bg-[#52B788] hover:bg-[#40916C]"
+              disabled={editSubmitting}
+              onClick={() => void handleEditSave()}
+            >
+              {editSubmitting ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-6 flex flex-wrap items-start gap-4">
         <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#2D6A4F]/10 text-[#1B4332]">
           <ScrollText className="size-7" strokeWidth={2.25} aria-hidden />
@@ -301,7 +434,12 @@ export function HabitQuestsSection() {
             run the script from{" "}
             <code className="rounded bg-white/80 px-1">supabase/migrations/habit_quests.sql</code>
             {" "}and{" "}
-            <code className="rounded bg-white/80 px-1">supabase/migrations/quest_strictness.sql</code>.
+            <code className="rounded bg-white/80 px-1">supabase/migrations/quest_strictness.sql</code>
+            , and{" "}
+            <code className="rounded bg-white/80 px-1">
+              supabase/migrations/quest_completion_seen_by_parent.sql
+            </code>
+            .
           </p>
         </div>
       ) : null}
@@ -350,8 +488,23 @@ export function HabitQuestsSection() {
               const pct = q.days_target > 0 ? Math.min(100, (q.current_day / q.days_target) * 100) : 0;
               return (
                 <div key={q.id} style={ACTIVE_QUEST_CARD}>
-                  <h4 className="text-lg font-bold text-[#1B4332]">{q.title}</h4>
-                  <p className="mt-1 text-sm font-semibold text-[#52B788]">{q.days_target}-day quest</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h4 className="text-lg font-bold text-[#1B4332]">{q.title}</h4>
+                      <p className="mt-1 text-sm font-semibold text-[#52B788]">{q.days_target}-day quest</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 rounded-full border-[#D1E8DC] text-[#1B4332]"
+                      title="Edit quest"
+                      aria-label="Edit quest"
+                      onClick={() => openEditQuest(q)}
+                    >
+                      <Pencil className="size-4" strokeWidth={2.25} aria-hidden />
+                    </Button>
+                  </div>
                   <ul className="mt-4 list-inside list-disc space-y-1 text-sm font-medium text-[#374151]">
                     {(Array.isArray(q.action_plan) ? q.action_plan : []).map((line, i) => (
                       <li key={i}>{line}</li>
@@ -407,315 +560,28 @@ export function HabitQuestsSection() {
         <div style={{ marginTop: "24px", borderTop: "1px solid #E5E7EB", paddingTop: "24px" }}>
           <h3 className="mb-6 font-heading text-lg font-bold text-[#1B4332]">Create New Quest</h3>
           <form onSubmit={(e) => void handleCreate(e)} className="space-y-6">
-            <div>
-              <label htmlFor="quest-title" style={FORM_LABEL}>
-                Title
-              </label>
-              <Input
-                id="quest-title"
-                className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
-                style={FORM_CONTROL}
-                maxLength={60}
-                placeholder="e.g. Become a Reading Star"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <p className="mt-1 text-xs text-[#6B7280]">{title.length}/60</p>
-              {formErrors.title ? (
-                <p className="text-sm font-semibold text-destructive">{formErrors.title}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-4">
-              <span style={FORM_LABEL}>Action plan</span>
-              <div>
-                <Input
-                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
-                  style={FORM_CONTROL}
-                  placeholder="e.g. Read for 20 minutes"
-                  value={action1}
-                  onChange={(e) => setAction1(e.target.value)}
-                />
-                {formErrors.action1 ? (
-                  <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.action1}</p>
-                ) : null}
-              </div>
-              <div>
-                <Input
-                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
-                  style={FORM_CONTROL}
-                  placeholder="e.g. Write 1 sentence about it"
-                  value={action2}
-                  onChange={(e) => setAction2(e.target.value)}
-                />
-                {formErrors.action2 ? (
-                  <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.action2}</p>
-                ) : null}
-              </div>
-              <div>
-                <Input
-                  className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
-                  style={FORM_CONTROL}
-                  placeholder="e.g. Tell mom about it (optional)"
-                  value={action3}
-                  onChange={(e) => setAction3(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="quest-length" style={FORM_LABEL}>
-                Quest length
-              </label>
-              <select
-                id="quest-length"
-                className="focus:border-[#52B788]"
-                style={{ ...FORM_CONTROL, height: "48px", cursor: "pointer" }}
-                value={daysTarget}
-                onChange={(e) => setDaysTarget(Number(e.target.value) as QuestDays)}
-              >
-                <option value={7}>7 days</option>
-                <option value={14}>14 days</option>
-                <option value={20}>20 days</option>
-                <option value={30}>30 days</option>
-              </select>
-              {formErrors.days ? (
-                <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.days}</p>
-              ) : null}
-            </div>
-
-            <div>
-              <label htmlFor="quest-reward" style={FORM_LABEL}>
-                Reward
-              </label>
-              <Input
-                id="quest-reward"
-                className="focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/20"
-                style={FORM_CONTROL}
-                maxLength={100}
-                placeholder="e.g. New book of your choice"
-                value={reward}
-                onChange={(e) => setReward(e.target.value)}
-              />
-              <p className="mt-1 text-xs text-[#6B7280]">{reward.length}/100</p>
-              {formErrors.reward ? (
-                <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.reward}</p>
-              ) : null}
-            </div>
-
-            <div style={{ marginBottom: "20px" }}>
-              <label style={FORM_LABEL}>
-                <span aria-hidden>⚙️</span> Strictness
-              </label>
-              <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 12 }}>
-                How forgiving should this quest be?
-              </p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border:
-                      strictnessPreset === "easy" ? "2px solid #52B788" : "2px solid #E5E7EB",
-                    background: strictnessPreset === "easy" ? "#F0F9F4" : "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="strictness"
-                    value="easy"
-                    checked={strictnessPreset === "easy"}
-                    onChange={() => setStrictnessPreset("easy")}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "#1B4332" }}>🟢 Easy</div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>
-                      3 skip days · reset after 5 misses
-                    </div>
-                  </div>
-                </label>
-
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border:
-                      strictnessPreset === "normal" ? "2px solid #52B788" : "2px solid #E5E7EB",
-                    background: strictnessPreset === "normal" ? "#F0F9F4" : "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="strictness"
-                    value="normal"
-                    checked={strictnessPreset === "normal"}
-                    onChange={() => setStrictnessPreset("normal")}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "#1B4332" }}>
-                      🟡 Normal{" "}
-                      <span style={{ fontSize: 11, color: "#52B788", marginLeft: 6 }}>
-                        RECOMMENDED
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>
-                      2 skip days · reset after 3 misses
-                    </div>
-                  </div>
-                </label>
-
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border:
-                      strictnessPreset === "strict" ? "2px solid #52B788" : "2px solid #E5E7EB",
-                    background: strictnessPreset === "strict" ? "#F0F9F4" : "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="strictness"
-                    value="strict"
-                    checked={strictnessPreset === "strict"}
-                    onChange={() => setStrictnessPreset("strict")}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "#1B4332" }}>🔴 Strict</div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>
-                      0 skip days · reset after 1 miss
-                    </div>
-                  </div>
-                </label>
-
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border:
-                      strictnessPreset === "custom" ? "2px solid #52B788" : "2px solid #E5E7EB",
-                    background: strictnessPreset === "custom" ? "#F0F9F4" : "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="strictness"
-                    value="custom"
-                    checked={strictnessPreset === "custom"}
-                    onChange={() => setStrictnessPreset("custom")}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "#1B4332" }}>⚙️ Custom</div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>Set your own rules</div>
-                  </div>
-                </label>
-
-                {strictnessPreset === "custom" ? (
-                  <div
-                    style={{
-                      background: "#F9FAFB",
-                      padding: "16px",
-                      borderRadius: "12px",
-                      marginTop: "8px",
-                      display: "flex",
-                      gap: "16px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 180 }}>
-                      <label
-                        style={{
-                          fontSize: 12,
-                          color: "#4A6355",
-                          fontWeight: 700,
-                          marginBottom: 6,
-                          display: "block",
-                        }}
-                      >
-                        Skip days
-                      </label>
-                      <select
-                        value={customSkipDays}
-                        onChange={(e) => setCustomSkipDays(Number(e.target.value))}
-                        style={{
-                          width: "100%",
-                          padding: "10px 14px",
-                          borderRadius: "10px",
-                          border: "2px solid #E5E7EB",
-                          fontSize: 14,
-                          background: "#FFFFFF",
-                        }}
-                      >
-                        <option value={0}>0 (no skips)</option>
-                        <option value={1}>1 skip day</option>
-                        <option value={2}>2 skip days</option>
-                        <option value={3}>3 skip days</option>
-                        <option value={4}>4 skip days</option>
-                        <option value={5}>5 skip days</option>
-                        <option value={7}>7 skip days</option>
-                        <option value={10}>10 skip days</option>
-                      </select>
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 180 }}>
-                      <label
-                        style={{
-                          fontSize: 12,
-                          color: "#4A6355",
-                          fontWeight: 700,
-                          marginBottom: 6,
-                          display: "block",
-                        }}
-                      >
-                        Reset after misses
-                      </label>
-                      <select
-                        value={customResetAfter}
-                        onChange={(e) => setCustomResetAfter(Number(e.target.value))}
-                        style={{
-                          width: "100%",
-                          padding: "10px 14px",
-                          borderRadius: "10px",
-                          border: "2px solid #E5E7EB",
-                          fontSize: 14,
-                          background: "#FFFFFF",
-                        }}
-                      >
-                        <option value={1}>1 missed day</option>
-                        <option value={2}>2 missed days</option>
-                        <option value={3}>3 missed days</option>
-                        <option value={4}>4 missed days</option>
-                        <option value={5}>5 missed days</option>
-                        <option value={6}>6 missed days</option>
-                        <option value={7}>7 missed days</option>
-                        <option value={10}>10 missed days</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
+            <HabitQuestFormFields
+              idPrefix=""
+              title={title}
+              setTitle={setTitle}
+              action1={action1}
+              setAction1={setAction1}
+              action2={action2}
+              setAction2={setAction2}
+              action3={action3}
+              setAction3={setAction3}
+              daysTarget={daysTarget}
+              setDaysTarget={setDaysTarget}
+              reward={reward}
+              setReward={setReward}
+              strictnessPreset={strictnessPreset}
+              setStrictnessPreset={setStrictnessPreset}
+              customSkipDays={customSkipDays}
+              setCustomSkipDays={setCustomSkipDays}
+              customResetAfter={customResetAfter}
+              setCustomResetAfter={setCustomResetAfter}
+              formErrors={formErrors}
+            />
 
             <button
               type="submit"

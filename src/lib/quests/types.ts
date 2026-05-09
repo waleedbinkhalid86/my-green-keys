@@ -17,6 +17,8 @@ export interface Quest {
   created_at: string;
   completed_at: string | null;
   failed_at: string | null;
+  /** Parent dismissed the completion banner; omitted until column exists in DB. */
+  completion_seen_by_parent?: boolean | null;
 }
 
 export interface QuestProgress {
@@ -28,6 +30,16 @@ export interface QuestProgress {
 }
 
 export interface CreateQuestInput {
+  title: string;
+  action_plan: string[];
+  days_target: QuestDays;
+  reward: string;
+  skip_days_allowed: number;
+  reset_after_misses: number;
+}
+
+/** Editable quest fields only; does not touch progress or current_day. */
+export interface UpdateQuestInput {
   title: string;
   action_plan: string[];
   days_target: QuestDays;

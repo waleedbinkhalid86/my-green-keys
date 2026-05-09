@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Quest, CreateQuestInput, QuestProgress } from "./types";
+import type { Quest, CreateQuestInput, QuestProgress, UpdateQuestInput } from "./types";
 
 export async function fetchActiveQuests(): Promise<Quest[]> {
   const supabase = createClient();
@@ -23,6 +23,26 @@ export async function fetchCompletedQuests(): Promise<Quest[]> {
 
   if (error) throw error;
   return data || [];
+}
+
+export async function updateQuest(questId: string, input: UpdateQuestInput): Promise<Quest> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("quests")
+    .update({
+      title: input.title,
+      action_plan: input.action_plan,
+      days_target: input.days_target,
+      reward: input.reward,
+      skip_days_allowed: input.skip_days_allowed,
+      reset_after_misses: input.reset_after_misses,
+    })
+    .eq("id", questId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export async function createQuest(input: CreateQuestInput): Promise<Quest> {

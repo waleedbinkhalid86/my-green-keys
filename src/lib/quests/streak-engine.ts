@@ -111,6 +111,7 @@ export async function completeQuest(questId: string): Promise<boolean> {
     .update({
       status: "completed",
       completed_at: new Date().toISOString(),
+      completion_seen_by_parent: false,
     })
     .eq("id", questId)
     .eq("status", "active")

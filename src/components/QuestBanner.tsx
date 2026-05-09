@@ -28,6 +28,7 @@ import {
 } from "@/lib/quests/streak-engine";
 import { QUEST_BANNER_ALLOWED_PREFIXES } from "@/lib/quests/banner-routes";
 import { useToast } from "@/components/ui/Toast";
+import confetti from "canvas-confetti";
 
 /** Sticky offset so the bar sits below the global navbar (sticky z-50). */
 const BANNER_STICKY_TOP_PX = 64;
@@ -155,6 +156,34 @@ export default function QuestBanner() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!celebrateQuest) return;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    const colors = ["#52B788", "#FFD700", "#40916C", "#E8F5EE", "#FFFFFF"];
+    const burst = () => {
+      confetti({ particleCount: 110, spread: 72, origin: { y: 0.58 }, colors });
+      confetti({
+        particleCount: 55,
+        angle: 60,
+        spread: 50,
+        origin: { x: 0, y: 0.65 },
+        colors,
+      });
+      confetti({
+        particleCount: 55,
+        angle: 120,
+        spread: 50,
+        origin: { x: 1, y: 0.65 },
+        colors,
+      });
+    };
+    const t = window.setTimeout(burst, 80);
+    return () => clearTimeout(t);
+  }, [celebrateQuest]);
 
   const load = useCallback(async () => {
     try {
