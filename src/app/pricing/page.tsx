@@ -17,7 +17,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { testimonials } from "@/data/testimonials";
 
@@ -250,6 +249,163 @@ function PricingToggle({
   );
 }
 
+const primaryCardCtaBaseStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  padding: "16px 24px",
+  borderRadius: "9999px",
+  fontSize: "16px",
+  fontWeight: "700",
+  background: "#FFFFFF",
+  color: "#1B4332",
+  border: "none",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  marginTop: "8px",
+  marginBottom: "8px",
+};
+
+function PrimaryCardCta({
+  children,
+  disabled,
+  onClick,
+  href,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  href?: string;
+}) {
+  const [hover, setHover] = useState(false);
+  const interactive = !disabled;
+  const style: React.CSSProperties = {
+    ...primaryCardCtaBaseStyle,
+    textDecoration: "none",
+    opacity: disabled ? 0.6 : 1,
+    cursor: disabled ? "not-allowed" : "pointer",
+    transform: interactive && hover ? "scale(1.03)" : "scale(1)",
+    boxShadow:
+      interactive && hover
+        ? "0 8px 22px rgba(0,0,0,0.16)"
+        : "0 4px 12px rgba(0,0,0,0.1)",
+  };
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        style={style}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      style={style}
+      disabled={disabled}
+      onClick={onClick}
+      onMouseEnter={() => interactive && setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EnterpriseSalesLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        padding: "16px 24px",
+        borderRadius: "9999px",
+        fontSize: "16px",
+        fontWeight: "700",
+        background: hover ? "#1B4332" : "transparent",
+        color: hover ? "#FFFFFF" : "#1B4332",
+        border: "2px solid #1B4332",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        marginTop: "32px",
+        textDecoration: "none",
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {children}
+    </a>
+  );
+}
+
+function FinalCtaPrimaryLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      style={{
+        padding: "18px 40px",
+        borderRadius: "9999px",
+        fontSize: "18px",
+        fontWeight: "700",
+        background: "#FFFFFF",
+        color: "#1B4332",
+        border: "none",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        minWidth: "180px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textDecoration: "none",
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function FinalCtaOutlineLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <a
+      href={href}
+      style={{
+        padding: "18px 40px",
+        borderRadius: "9999px",
+        fontSize: "18px",
+        fontWeight: "700",
+        background: hover ? "#FFFFFF" : "transparent",
+        color: hover ? "#1B4332" : "#FFFFFF",
+        border: "2px solid #FFFFFF",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        minWidth: "180px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textDecoration: "none",
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {children}
+    </a>
+  );
+}
+
 function FaqItem({
   question,
   answer,
@@ -271,7 +427,15 @@ function FaqItem({
       >
         <span className="text-base font-bold text-[#1B4332] md:text-lg">{question}</span>
         <ChevronDown
-          className={cn("h-5 w-5 shrink-0 text-[#4A6355] transition-transform", isOpen && "rotate-180")}
+          className="shrink-0"
+          width={24}
+          height={24}
+          strokeWidth={2.25}
+          style={{
+            color: "#52B788",
+            transition: "transform 0.2s ease",
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+          }}
           aria-hidden
         />
       </button>
@@ -425,9 +589,6 @@ function PricingPageContent() {
     return () => window.clearTimeout(t);
   }, [ecoGardenExpired]);
 
-  const ctaWhite =
-    "mt-auto w-full rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-[#1B4332] shadow-sm transition hover:bg-white/95 hover:brightness-105 disabled:opacity-60";
-
   return (
     <div
       className="min-h-screen antialiased text-gray-900"
@@ -500,9 +661,7 @@ function PricingPageContent() {
               <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For families wanting to try Green Keys for an unlimited period of time
               </p>
-              <Link href="/signup" className={cn(ctaWhite, "mt-6 inline-flex items-center justify-center no-underline")}>
-                Start free
-              </Link>
+              <PrimaryCardCta href="/signup">Start free</PrimaryCardCta>
               <div className="my-6 border-t border-white/20" />
               <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
               <ul className="flex flex-1 flex-col gap-2.5">
@@ -535,9 +694,9 @@ function PricingPageContent() {
               <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For families who want unlimited lessons and full features
               </p>
-              <button type="button" className={cn(ctaWhite, "mt-6")} disabled={checkoutBusy} onClick={() => void openCheckout("family")}>
+              <PrimaryCardCta disabled={checkoutBusy} onClick={() => void openCheckout("family")}>
                 {checkoutBusy ? "Loading…" : "Choose Family"}
-              </button>
+              </PrimaryCardCta>
               <div className="my-6 border-t border-white/20" />
               <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
               <ul className="flex flex-1 flex-col gap-2.5">
@@ -564,14 +723,9 @@ function PricingPageContent() {
               <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For classrooms and teachers managing students at scale
               </p>
-              <button
-                type="button"
-                className={cn(ctaWhite, "mt-6")}
-                disabled={checkoutBusy}
-                onClick={() => void openCheckout("school_starter")}
-              >
+              <PrimaryCardCta disabled={checkoutBusy} onClick={() => void openCheckout("school_starter")}>
                 {checkoutBusy ? "Loading…" : "Choose School"}
-              </button>
+              </PrimaryCardCta>
               <div className="my-6 border-t border-white/20" />
               <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
               <ul className="flex flex-1 flex-col gap-2.5">
@@ -616,9 +770,26 @@ function PricingPageContent() {
                 <p className="mt-3 text-sm leading-relaxed text-[#4A6355]">For schools scaling their program</p>
                 <button
                   type="button"
-                  className="mt-8 w-full rounded-full bg-[#1B4332] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2D6A4F] disabled:opacity-60"
                   disabled={checkoutBusy}
                   onClick={() => void openCheckout("school_growth")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    padding: "16px 24px",
+                    borderRadius: "9999px",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: checkoutBusy ? "not-allowed" : "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.3)",
+                    marginTop: "32px",
+                    opacity: checkoutBusy ? 0.6 : 1,
+                  }}
                 >
                   {checkoutBusy ? "Loading…" : "Choose Growth"}
                 </button>
@@ -640,15 +811,9 @@ function PricingPageContent() {
                   <span className="text-6xl font-bold text-[#1B4332]">Custom</span>
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-[#4A6355]">Districts & multi-campus schools</p>
-                <a
-                  href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry"
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "mt-8 w-full rounded-full border-2 border-[#1B4332] bg-transparent py-3 text-sm font-bold text-[#1B4332] hover:bg-[#F0F9F4]"
-                  )}
-                >
+                <EnterpriseSalesLink href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry">
                   Contact enterprise sales
-                </a>
+                </EnterpriseSalesLink>
                 <div className="my-6 border-t border-[#D1E8DC]" />
                 <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">What&apos;s included:</p>
                 <ul className="space-y-2.5">
@@ -674,15 +839,31 @@ function PricingPageContent() {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   placeholder="Enter code"
-                  className="h-auto flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 text-base focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
+                  className="flex-1 rounded-xl border-2 border-gray-200 focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
+                  style={{
+                    padding: "14px 16px",
+                    fontSize: "15px",
+                  }}
                 />
-                <Button
+                <button
                   type="button"
                   onClick={handlePromoCode}
-                  className="h-auto rounded-xl bg-[#52B788] px-6 py-3 text-base font-bold text-white hover:bg-[#40916C]"
+                  style={{
+                    padding: "14px 32px",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
+                    whiteSpace: "nowrap",
+                  }}
                 >
                   Apply
-                </Button>
+                </button>
               </div>
               {promoResult ? (
                 <div
@@ -839,19 +1020,20 @@ function PricingPageContent() {
           >
             <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">Ready to start?</h2>
             <p className="mb-8 text-lg text-white/90">Free forever for the first 10 lessons. No credit card.</p>
-            <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Link
-                href="/signup"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-10 py-3.5 text-base font-bold text-[#1B4332] transition hover:scale-105"
-              >
-                Start Free
-              </Link>
-              <a
-                href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full border-2 border-white bg-transparent px-10 py-3.5 text-base font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
-              >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: "16px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                marginTop: "24px",
+              }}
+            >
+              <FinalCtaPrimaryLink href="/signup">Start Free</FinalCtaPrimaryLink>
+              <FinalCtaOutlineLink href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry">
                 Talk to Sales
-              </a>
+              </FinalCtaOutlineLink>
             </div>
           </div>
         </div>
