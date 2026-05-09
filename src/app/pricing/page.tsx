@@ -262,14 +262,14 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-5 transition-shadow hover:shadow-md">
+    <div className="mb-3 rounded-2xl border border-gray-100 bg-white px-6 py-5 shadow-sm transition-shadow hover:shadow-md">
       <button
         type="button"
         className="flex w-full items-center justify-between gap-4 text-left"
         onClick={onToggle}
         aria-expanded={isOpen}
       >
-        <span className="text-base font-bold text-[#1B4332]">{question}</span>
+        <span className="text-base font-bold text-[#1B4332] md:text-lg">{question}</span>
         <ChevronDown
           className={cn("h-5 w-5 shrink-0 text-[#4A6355] transition-transform", isOpen && "rotate-180")}
           aria-hidden
@@ -283,10 +283,15 @@ function FaqItem({
 }
 
 const primaryCardBase =
-  "relative flex h-full flex-col rounded-3xl p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl";
+  "relative flex h-full flex-col rounded-3xl p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl md:p-10";
 
 const secondaryCardBase =
-  "relative flex h-full flex-col rounded-3xl border border-[#D1E8DC] bg-white p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl";
+  "relative flex h-full flex-col rounded-3xl border border-[#D1E8DC] bg-white p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl md:p-10";
+
+const tierEyebrow =
+  "mb-3 text-center text-xs font-bold uppercase tracking-widest text-white/80";
+
+const tierEyebrowMuted = "mb-3 text-center text-xs font-bold uppercase tracking-widest text-[#4A6355]";
 
 function PricingPageContent() {
   const router = useRouter();
@@ -430,22 +435,25 @@ function PricingPageContent() {
         "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       )}
     >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Hero */}
-      <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <h1 className="text-4xl font-bold text-[#1B4332] md:text-5xl">Pricing that grows with you</h1>
-          <p className="mx-auto mt-3 max-w-xl text-base text-[#4A6355]">
+      <section className="pt-20 pb-12 text-center md:pt-28 md:pb-16">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="mb-6 text-5xl font-bold leading-tight text-[#1B4332] md:text-6xl lg:text-7xl">
+            Pricing that grows with you
+          </h1>
+          <p className="mx-auto mb-8 max-w-xl text-lg text-[#4A6355] md:text-xl">
             Free forever for trying out. Upgrade when ready. No hidden fees.
           </p>
-          <div className="mt-10">
-            <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
-          </div>
+        </div>
+        <div className="flex justify-center mt-8 mb-12">
+          <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
         </div>
       </section>
 
       {/* Pricing cards */}
-      <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4">
+      <section className="mt-8 py-8 md:mt-12 md:py-12">
+        <div className="mx-auto max-w-6xl">
           {ecoGardenExpired ? (
             <div
               className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-center sm:text-left"
@@ -474,7 +482,7 @@ function PricingPageContent() {
                 "bg-gradient-to-br from-[#52B788] to-[#40916C] text-white"
               )}
             >
-              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">FREE</p>
+              <p className={tierEyebrow}>FREE</p>
               <div className="mt-4 flex justify-center">
                 <span className="text-6xl font-bold text-white">$0</span>
               </div>
@@ -510,7 +518,7 @@ function PricingPageContent() {
               <span className="absolute -top-3 right-6 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
                 MOST POPULAR
               </span>
-              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">FAMILY</p>
+              <p className={tierEyebrow}>FAMILY</p>
               <div className="mt-4">
                 <GradientPrice price={familyDisplayPrice} />
               </div>
@@ -539,7 +547,7 @@ function PricingPageContent() {
                 "bg-gradient-to-br from-[#0E7490] to-[#0891B2] text-white"
               )}
             >
-              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">SCHOOL</p>
+              <p className={tierEyebrow}>SCHOOL</p>
               <div className="mt-4">
                 <GradientPrice price={schoolDisplayPrice} />
               </div>
@@ -568,14 +576,14 @@ function PricingPageContent() {
           </div>
 
           {/* Secondary plans */}
-          <div className="mt-16 md:mt-20">
-            <div className="mb-10 text-center">
+          <div className="mt-24 md:mt-32">
+            <div className="mx-auto mb-10 max-w-5xl text-center">
               <h2 className="text-2xl font-bold text-[#1B4332]">For larger schools</h2>
               <p className="mt-2 text-sm text-[#4A6355]">Scale with confidence</p>
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
               <div className={secondaryCardBase}>
-                <p className="text-sm font-bold uppercase tracking-widest text-[#4A6355]">SCHOOL GROWTH</p>
+                <p className={tierEyebrowMuted}>SCHOOL GROWTH</p>
                 <div className="mt-4">
                   <LightCardPrice price={schoolGrowthDisplayPrice} />
                 </div>
@@ -605,7 +613,7 @@ function PricingPageContent() {
               </div>
 
               <div className={secondaryCardBase}>
-                <p className="text-sm font-bold uppercase tracking-widest text-[#4A6355]">ENTERPRISE</p>
+                <p className={tierEyebrowMuted}>ENTERPRISE</p>
                 <div className="mt-4">
                   <span className="text-6xl font-bold text-[#1B4332]">Custom</span>
                 </div>
@@ -634,7 +642,7 @@ function PricingPageContent() {
           </div>
 
           {/* Trust bar */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20 md:mb-4">
             {TRUST_SIGNALS.map((s) => (
               <div key={s.label} className="inline-flex items-center gap-2">
                 <s.Icon className="h-4 w-4 text-[#52B788]" strokeWidth={2.25} aria-hidden />
@@ -644,7 +652,7 @@ function PricingPageContent() {
           </div>
 
           {/* Promo codes */}
-          <section className="mt-16 md:mt-20">
+          <section className="mt-20 md:mt-24">
             <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 shadow-md">
               <h2 className="mb-3 text-xl font-bold text-[#1B4332]">Have a promo code?</h2>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
@@ -700,7 +708,7 @@ function PricingPageContent() {
           </section>
 
           {testimonials.length > 0 ? (
-            <section className="py-16 md:py-20">
+            <section className="mt-24 py-12 md:mt-32 md:py-16">
               <div className="mx-auto max-w-4xl">
                 <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">What educators are saying</h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -725,17 +733,17 @@ function PricingPageContent() {
       </section>
 
       {/* Feature comparison */}
-      <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4">
+      <section className="mt-24 py-20 md:mt-32 md:py-28">
+        <div className="mx-auto max-w-5xl">
           <h2 className="mb-2 text-center text-3xl font-bold text-[#1B4332]">Compare every feature</h2>
           <p className="mb-10 text-center text-base text-[#4A6355]">Side-by-side feature breakdown</p>
 
-          <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-4 shadow-xl md:p-8">
+          <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-6 shadow-xl md:p-10">
             <div className="min-w-[720px] overflow-hidden rounded-2xl">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="rounded-t-2xl bg-[#1B4332] text-white">
-                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Feature</th>
+                    <th className="pl-6 pr-4 py-4 text-xs font-bold uppercase tracking-wider">Feature</th>
                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Free</th>
                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Family</th>
                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">School</th>
@@ -743,7 +751,7 @@ function PricingPageContent() {
                 </thead>
                 <tbody>
                   <tr className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-700">Price (monthly)</td>
+                    <td className="pl-6 pr-4 py-3 font-medium text-gray-700">Price (monthly)</td>
                     <td className="px-6 py-3 text-center text-sm text-gray-700">$0</td>
                     <td className="bg-[#F0F9F4] px-6 py-3 text-center text-sm text-gray-700">$9.99/mo</td>
                     <td className="px-6 py-3 text-center text-sm text-gray-700">$149/mo (Starter)</td>
@@ -753,14 +761,14 @@ function PricingPageContent() {
                       <tr className="bg-[#F8FAF5]">
                         <td
                           colSpan={4}
-                          className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#1B4332]"
+                          className="pl-6 py-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#1B4332]"
                         >
                           {group.category.toUpperCase()}
                         </td>
                       </tr>
                       {group.rows.map((row) => (
                         <tr key={row.feature} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                          <td className="px-6 py-3 font-medium text-gray-700">{row.feature}</td>
+                          <td className="pl-6 pr-4 py-3 font-medium text-gray-700">{row.feature}</td>
                           <td className="px-6 py-3 text-center">
                             <CompareCell value={row.free} />
                           </td>
@@ -785,8 +793,8 @@ function PricingPageContent() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-3xl px-4">
+      <section className="mt-24 py-20 md:mt-32 md:py-28">
+        <div className="mx-auto max-w-3xl">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-[#1B4332]">Frequently asked questions</h2>
             <p className="mt-2 text-sm text-[#4A6355]">Everything you need to know before you subscribe</p>
@@ -806,21 +814,21 @@ function PricingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-4">
+      <section className="mt-20 py-16 md:mt-24 md:py-20 mb-20 md:mb-24">
+        <div className="mx-auto max-w-5xl">
           <div className="rounded-3xl bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] p-12 text-center md:p-16">
             <h2 className="mb-4 text-4xl font-bold text-white md:text-5xl">Ready to start?</h2>
             <p className="mb-8 text-lg text-white/90">Free forever for the first 10 lessons. No credit card.</p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-bold text-[#1B4332] transition hover:scale-105"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-10 py-3.5 text-base font-bold text-[#1B4332] transition hover:scale-105"
               >
                 Start Free
               </Link>
               <a
                 href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry"
-                className="inline-flex items-center justify-center rounded-full border-2 border-white bg-transparent px-8 py-3 text-base font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border-2 border-white bg-transparent px-10 py-3.5 text-base font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
               >
                 Talk to Sales
               </a>
@@ -828,6 +836,7 @@ function PricingPageContent() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }
