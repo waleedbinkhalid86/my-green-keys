@@ -12,6 +12,8 @@ export interface Quest {
   status: QuestStatus;
   current_day: number;
   skip_days_remaining: number;
+  skip_days_allowed: number;
+  reset_after_misses: number;
   created_at: string;
   completed_at: string | null;
   failed_at: string | null;
@@ -30,4 +32,17 @@ export interface CreateQuestInput {
   action_plan: string[];
   days_target: QuestDays;
   reward: string;
+  skip_days_allowed: number;
+  reset_after_misses: number;
 }
+
+export type StrictnessPreset = "easy" | "normal" | "strict" | "custom";
+
+export const STRICTNESS_PRESETS: Record<
+  Exclude<StrictnessPreset, "custom">,
+  { skip_days_allowed: number; reset_after_misses: number }
+> = {
+  easy: { skip_days_allowed: 3, reset_after_misses: 5 },
+  normal: { skip_days_allowed: 2, reset_after_misses: 3 },
+  strict: { skip_days_allowed: 0, reset_after_misses: 1 },
+};

@@ -40,6 +40,9 @@ export async function createQuest(input: CreateQuestInput): Promise<Quest> {
       action_plan: input.action_plan,
       days_target: input.days_target,
       reward: input.reward,
+      skip_days_allowed: input.skip_days_allowed,
+      reset_after_misses: input.reset_after_misses,
+      skip_days_remaining: input.skip_days_allowed,
     })
     .select()
     .single();

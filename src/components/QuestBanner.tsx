@@ -20,6 +20,12 @@ import {
   fetchTodayProgress,
   toggleQuestAction,
 } from "@/lib/quests/api";
+import {
+  completeQuest,
+  resetQuest,
+  runStreakMaintenanceForQuests,
+  type QuestState,
+} from "@/lib/quests/streak-engine";
 import { QUEST_BANNER_ALLOWED_PREFIXES } from "@/lib/quests/banner-routes";
 import { useToast } from "@/components/ui/Toast";
 
@@ -44,6 +50,24 @@ function areAllQuestsCompleteForToday(
   return questList.every((q) => isQuestDayComplete(q, byQuest[q.id]));
 }
 
+function questStreak(quest: Quest, streakByQuest: Record<string, QuestState>) {
+  const s = streakByQuest[quest.id];
+  return {
+    current_day: s?.current_day ?? quest.current_day,
+    skip_days_remaining: s?.skip_days_remaining ?? quest.skip_days_remaining,
+    consecutive_miss_count: s?.consecutive_miss_count ?? 0,
+  };
+}
+
+function missWarningLine(quest: Quest, state: QuestState): string | null {
+  const th = quest.reset_after_misses ?? 3;
+  if (state.consecutive_miss_count >= th - 1) {
+    const more = th - state.consecutive_miss_count;
+    return `⚠️ ${state.consecutive_miss_count} day(s) missed — ${more} more = reset`;
+  }
+  return null;
+}
+
 const CELEBRATION_STYLE: CSSProperties = {
   position: "fixed",
   bottom: "24px",
@@ -61,6 +85,18 @@ const CELEBRATION_STYLE: CSSProperties = {
   gap: "10px",
 };
 
+const OVERLAY_STYLE: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(27, 67, 50, 0.55)",
+  backdropFilter: "blur(8px)",
+  zIndex: 100,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "20px",
+};
+
 export default function QuestBanner() {
   const pathname = usePathname() ?? "";
   const shouldShowOnRoute = ALLOWED_PREFIXES.some(
@@ -70,10 +106,15 @@ export default function QuestBanner() {
   const { showToast } = useToast();
   const [loaded, setLoaded] = useState(false);
   const [quests, setQuests] = useState<Quest[]>([]);
+  const [streakByQuest, setStreakByQuest] = useState<Record<string, QuestState>>(
+    {}
+  );
   const [progressByQuest, setProgressByQuest] = useState<
     Record<string, QuestProgress | null>
   >({});
   const [modalOpen, setModalOpen] = useState(false);
+  const [celebrateQuest, setCelebrateQuest] = useState<Quest | null>(null);
+  const [resetQuestTarget, setResetQuestTarget] = useState<Quest | null>(null);
   /** Toast on screen (including during opacity fade-out). */
   const [celebrationMounted, setCelebrationMounted] = useState(false);
   /** Opacity / visibility for fade in/out. */
@@ -116,18 +157,65 @@ export default function QuestBanner() {
   }, []);
 
   const load = useCallback(async () => {
-    const list = await fetchMyActiveQuests();
-    setQuests(list);
-    const entries = await Promise.all(
-      list.map(async (q) => {
-        const p = await fetchTodayProgress(q.id);
-        return [q.id, p] as const;
-      })
-    );
-    const next: Record<string, QuestProgress | null> = {};
-    for (const [id, p] of entries) next[id] = p;
-    setProgressByQuest(next);
-    setLoaded(true);
+    try {
+      let list = await fetchMyActiveQuests();
+      if (list.length === 0) {
+        setQuests([]);
+        setStreakByQuest({});
+        setCelebrateQuest(null);
+        setResetQuestTarget(null);
+        setProgressByQuest({});
+        return;
+      }
+
+      let states = await runStreakMaintenanceForQuests(list);
+      let celebrate: Quest | null = null;
+      let resetTarget: Quest | null = null;
+
+      for (const q of list) {
+        const s = states[q.id];
+        if (!s) continue;
+        if (s.is_completed) {
+          const did = await completeQuest(q.id);
+          if (did) celebrate = q;
+        } else if (s.needs_reset) {
+          resetTarget = q;
+        }
+      }
+
+      list = await fetchMyActiveQuests();
+      setQuests(list);
+
+      if (list.length > 0) {
+        states = await runStreakMaintenanceForQuests(list);
+        setStreakByQuest(states);
+      } else {
+        setStreakByQuest({});
+      }
+
+      if (celebrate) {
+        setCelebrateQuest(celebrate);
+        setResetQuestTarget(null);
+      } else if (resetTarget && list.some((q) => q.id === resetTarget.id)) {
+        setResetQuestTarget(resetTarget);
+        setCelebrateQuest(null);
+      } else {
+        setResetQuestTarget(null);
+        setCelebrateQuest(null);
+      }
+
+      const entries = await Promise.all(
+        list.map(async (q) => {
+          const p = await fetchTodayProgress(q.id);
+          return [q.id, p] as const;
+        })
+      );
+      const next: Record<string, QuestProgress | null> = {};
+      for (const [id, p] of entries) next[id] = p;
+      setProgressByQuest(next);
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -207,7 +295,141 @@ export default function QuestBanner() {
     });
   };
 
+  const closeQuestCelebration = () => {
+    setCelebrateQuest(null);
+    void load();
+  };
+
+  const handleConfirmReset = async () => {
+    if (!resetQuestTarget) return;
+    try {
+      await resetQuest(resetQuestTarget.id);
+      setResetQuestTarget(null);
+      await load();
+    } catch (e) {
+      console.error(e);
+      showToast("error", "Could not reset quest. Try again.");
+    }
+  };
+
   if (!shouldShowOnRoute) return null;
+
+  if (celebrateQuest) {
+    const q = celebrateQuest;
+    return (
+      <div style={OVERLAY_STYLE}>
+        <div
+          style={{
+            background: "linear-gradient(180deg, #FFFFFF 0%, #F0F9F4 100%)",
+            borderRadius: 24,
+            padding: 40,
+            maxWidth: 480,
+            width: "100%",
+            textAlign: "center",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+          }}
+        >
+          <div style={{ fontSize: 80, marginBottom: 20 }}>🏆</div>
+          <h2 style={{ fontSize: 36, fontWeight: 700, color: "#1B4332", margin: 0 }}>
+            Quest Complete!
+          </h2>
+          <p style={{ fontSize: 20, color: "#4A6355", marginBottom: 24 }}>
+            You finished &quot;{q.title}&quot; in {q.days_target} days!
+          </p>
+
+          <div
+            style={{
+              background: "linear-gradient(135deg, #FFD700, #F2B705)",
+              borderRadius: 20,
+              padding: 20,
+              marginBottom: 24,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 14,
+                color: "#92400E",
+                fontWeight: 700,
+                textTransform: "uppercase",
+              }}
+            >
+              🎁 Your Reward
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#1B2D23" }}>
+              {q.reward}
+            </div>
+          </div>
+
+          <p style={{ fontSize: 14, color: "#6B7280", marginBottom: 24 }}>
+            Show this to your parent to claim your reward! 🌟
+          </p>
+
+          <button
+            type="button"
+            onClick={closeQuestCelebration}
+            style={{
+              background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 999,
+              padding: "16px 32px",
+              fontSize: 17,
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 8px 24px rgba(82,183,136,0.35)",
+            }}
+          >
+            Awesome! 🎉
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (resetQuestTarget) {
+    const q = resetQuestTarget;
+    return (
+      <div style={OVERLAY_STYLE}>
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: 24,
+            padding: 36,
+            maxWidth: 440,
+            width: "100%",
+            textAlign: "center",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+          }}
+        >
+          <div style={{ fontSize: 60, marginBottom: 12 }}>💚</div>
+          <h2 style={{ fontSize: 26, fontWeight: 700, color: "#1B4332" }}>
+            Don&apos;t worry — let&apos;s start fresh!
+          </h2>
+          <p style={{ color: "#4A6355", marginBottom: 24, lineHeight: 1.5 }}>
+            We all miss days sometimes. Your &quot;{q.title}&quot; quest will restart from
+            Day 1. Your reward is still waiting! 🎁
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleConfirmReset()}
+            style={{
+              background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 999,
+              padding: "14px 28px",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 8px 24px rgba(82,183,136,0.35)",
+            }}
+          >
+            Start Over 🌱
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!loaded || quests.length === 0) return null;
 
@@ -220,6 +442,10 @@ export default function QuestBanner() {
   const primaryProgress = progressByQuest[primary.id];
   const completedSet = new Set(primaryProgress?.completed_actions ?? []);
   const moreCount = quests.filter((q) => q.id !== primary.id).length;
+  const primaryStreak = questStreak(primary, streakByQuest);
+  const primaryState = streakByQuest[primary.id];
+  const warn =
+    primaryState != null ? missWarningLine(primary, primaryState) : null;
 
   return (
     <>
@@ -291,7 +517,18 @@ export default function QuestBanner() {
                   fontWeight: 600,
                 }}
               >
-                Day {primary.current_day}/{primary.days_target}
+                Day {primaryStreak.current_day}/{primary.days_target}
+              </span>
+              <span
+                style={{
+                  background: "rgba(255,255,255,0.2)",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                ❄️ {primaryStreak.skip_days_remaining}
               </span>
               <div
                 style={{
@@ -320,7 +557,7 @@ export default function QuestBanner() {
               }}
             >
               <span style={{ fontSize: 14, fontWeight: 600 }}>
-                🔥 {primary.current_day}
+                🔥 {primaryStreak.current_day}
               </span>
               <span
                 style={{
@@ -343,6 +580,25 @@ export default function QuestBanner() {
               </span>
             </div>
           </div>
+
+          {warn ? (
+            <div
+              style={{
+                position: "sticky",
+                top: BANNER_STICKY_TOP_PX + 52,
+                zIndex: 29,
+                background: "#FFF8E1",
+                color: "#92400E",
+                padding: "8px 16px",
+                fontSize: 13,
+                fontWeight: 600,
+                textAlign: "center",
+                borderBottom: "1px solid #FDE68A",
+              }}
+            >
+              {warn}
+            </div>
+          ) : null}
 
           {modalOpen && (
             <div
@@ -405,6 +661,10 @@ export default function QuestBanner() {
                     (_, i) => !done.has(i)
                   ).length;
                   const fullDay = prog?.is_full_day_complete ?? false;
+                  const st = streakByQuest[quest.id];
+                  const disp = questStreak(quest, streakByQuest);
+                  const qWarn =
+                    st != null ? missWarningLine(quest, st) : null;
 
                   return (
                     <div key={quest.id}>
@@ -441,8 +701,32 @@ export default function QuestBanner() {
                           marginBottom: 8,
                         }}
                       >
-                        Day {quest.current_day} of {quest.days_target}
+                        Day {disp.current_day} of {quest.days_target}
                       </div>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          color: "#4A6355",
+                          margin: "4px 0 8px 0",
+                        }}
+                      >
+                        ❄️ {disp.skip_days_remaining} skip days remaining
+                      </p>
+                      {qWarn ? (
+                        <p
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "#92400E",
+                            background: "#FFF8E1",
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            marginBottom: 12,
+                          }}
+                        >
+                          {qWarn}
+                        </p>
+                      ) : null}
                       <p
                         style={{
                           fontSize: 14,
@@ -583,7 +867,7 @@ export default function QuestBanner() {
                               textTransform: "uppercase",
                             }}
                           >
-                            Current streak
+                            Quest days done
                           </div>
                           <div
                             style={{
@@ -592,7 +876,7 @@ export default function QuestBanner() {
                               color: "#1B4332",
                             }}
                           >
-                            🔥 {quest.current_day}
+                            🔥 {disp.current_day}
                           </div>
                         </div>
                         <div>
@@ -612,7 +896,7 @@ export default function QuestBanner() {
                               color: "#1B4332",
                             }}
                           >
-                            ❄️ {quest.skip_days_remaining}
+                            ❄️ {disp.skip_days_remaining}
                           </div>
                         </div>
                       </div>

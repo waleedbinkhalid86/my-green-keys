@@ -16,7 +16,16 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { createQuest, deleteQuest, fetchActiveQuests, fetchCompletedQuests } from "@/lib/quests/api";
-import type { Quest, QuestDays } from "@/lib/quests/types";
+import {
+  completeQuest,
+  runStreakMaintenanceForQuests,
+} from "@/lib/quests/streak-engine";
+import {
+  STRICTNESS_PRESETS,
+  type Quest,
+  type QuestDays,
+  type StrictnessPreset,
+} from "@/lib/quests/types";
 
 const SECTION_SHELL: React.CSSProperties = {
   background: "#FFFFFF",
@@ -101,6 +110,15 @@ function formatHistoryDate(q: Quest): string {
   }
 }
 
+function strictnessLabel(q: Quest): string {
+  const s = q.skip_days_allowed ?? 2;
+  const r = q.reset_after_misses ?? 3;
+  if (s === 3 && r === 5) return "Easy mode";
+  if (s === 2 && r === 3) return "Normal mode";
+  if (s === 0 && r === 1) return "Strict mode";
+  return `Custom: ${s} skips, ${r} reset`;
+}
+
 export function HabitQuestsSection() {
   const { showToast } = useToast();
   const [activeQuests, setActiveQuests] = useState<Quest[]>([]);
@@ -115,8 +133,12 @@ export function HabitQuestsSection() {
   const [action3, setAction3] = useState("");
   const [daysTarget, setDaysTarget] = useState<QuestDays>(7);
   const [reward, setReward] = useState("");
+  const [strictnessPreset, setStrictnessPreset] = useState<StrictnessPreset>("normal");
+  const [customSkipDays, setCustomSkipDays] = useState(2);
+  const [customResetAfter, setCustomResetAfter] = useState(3);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [completionBanner, setCompletionBanner] = useState<{ title: string } | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -124,7 +146,18 @@ export function HabitQuestsSection() {
   const refreshQuests = useCallback(async () => {
     setLoadError("");
     try {
-      const [active, completed] = await Promise.all([fetchActiveQuests(), fetchCompletedQuests()]);
+      let active = await fetchActiveQuests();
+      if (active.length > 0) {
+        const states = await runStreakMaintenanceForQuests(active as Quest[]);
+        for (const q of active as Quest[]) {
+          const st = states[q.id];
+          if (st?.is_completed && (await completeQuest(q.id))) {
+            setCompletionBanner({ title: q.title });
+          }
+        }
+        active = await fetchActiveQuests();
+      }
+      const completed = await fetchCompletedQuests();
       setActiveQuests(active as Quest[]);
       setCompletedQuests(sortCompletedForDisplay(completed as Quest[]));
     } catch (err) {
@@ -165,11 +198,17 @@ export function HabitQuestsSection() {
       const plan = [action1.trim(), action2.trim()];
       const a3 = action3.trim();
       if (a3) plan.push(a3);
+      const preset =
+        strictnessPreset === "custom"
+          ? { skip_days_allowed: customSkipDays, reset_after_misses: customResetAfter }
+          : STRICTNESS_PRESETS[strictnessPreset];
       await createQuest({
         title: title.trim(),
         action_plan: plan,
         days_target: daysTarget,
         reward: reward.trim(),
+        skip_days_allowed: preset.skip_days_allowed,
+        reset_after_misses: preset.reset_after_misses,
       });
       showToast("success", "Quest created! 🌟");
       setTitle("");
@@ -178,6 +217,9 @@ export function HabitQuestsSection() {
       setAction3("");
       setDaysTarget(7);
       setReward("");
+      setStrictnessPreset("normal");
+      setCustomSkipDays(2);
+      setCustomResetAfter(3);
       setFormErrors({});
       await refreshQuests();
     } catch (err) {
@@ -257,8 +299,26 @@ export function HabitQuestsSection() {
           <p className="mt-2 text-xs font-normal text-destructive/90">
             If you have not run the Habit Quests SQL migration in Supabase yet, open the SQL editor and
             run the script from{" "}
-            <code className="rounded bg-white/80 px-1">supabase/migrations/habit_quests.sql</code>.
+            <code className="rounded bg-white/80 px-1">supabase/migrations/habit_quests.sql</code>
+            {" "}and{" "}
+            <code className="rounded bg-white/80 px-1">supabase/migrations/quest_strictness.sql</code>.
           </p>
+        </div>
+      ) : null}
+
+      {completionBanner ? (
+        <div
+          className="mb-4 rounded-2xl border border-[#B7E4C7] bg-[#E8F5EE] px-4 py-3 text-sm font-bold text-[#1B4332] shadow-sm"
+          role="status"
+        >
+          🎉 {completionBanner.title} complete! Time to give the reward 🎁
+          <button
+            type="button"
+            className="ml-3 text-xs font-semibold text-[#2D6A4F] underline"
+            onClick={() => setCompletionBanner(null)}
+          >
+            Dismiss
+          </button>
         </div>
       ) : null}
 
@@ -310,7 +370,10 @@ export function HabitQuestsSection() {
                     <Progress value={pct} className="h-2.5 [&_[data-slot=progress-track]]:bg-[#E8F5E9]" />
                   </div>
                   <p className="mt-3 text-sm font-semibold text-[#4A6355]">
-                    Skip days remaining: <span aria-hidden>❄️</span> × {q.skip_days_remaining}
+                    <span aria-hidden>❄️</span> {q.skip_days_remaining} skip days remaining
+                  </p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#6B7280]">
+                    {strictnessLabel(q)}
                   </p>
                   <Button
                     type="button"
@@ -438,6 +501,220 @@ export function HabitQuestsSection() {
               {formErrors.reward ? (
                 <p className="mt-1 text-sm font-semibold text-destructive">{formErrors.reward}</p>
               ) : null}
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={FORM_LABEL}>
+                <span aria-hidden>⚙️</span> Strictness
+              </label>
+              <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 12 }}>
+                How forgiving should this quest be?
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    border:
+                      strictnessPreset === "easy" ? "2px solid #52B788" : "2px solid #E5E7EB",
+                    background: strictnessPreset === "easy" ? "#F0F9F4" : "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="strictness"
+                    value="easy"
+                    checked={strictnessPreset === "easy"}
+                    onChange={() => setStrictnessPreset("easy")}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#1B4332" }}>🟢 Easy</div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>
+                      3 skip days · reset after 5 misses
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    border:
+                      strictnessPreset === "normal" ? "2px solid #52B788" : "2px solid #E5E7EB",
+                    background: strictnessPreset === "normal" ? "#F0F9F4" : "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="strictness"
+                    value="normal"
+                    checked={strictnessPreset === "normal"}
+                    onChange={() => setStrictnessPreset("normal")}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#1B4332" }}>
+                      🟡 Normal{" "}
+                      <span style={{ fontSize: 11, color: "#52B788", marginLeft: 6 }}>
+                        RECOMMENDED
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>
+                      2 skip days · reset after 3 misses
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    border:
+                      strictnessPreset === "strict" ? "2px solid #52B788" : "2px solid #E5E7EB",
+                    background: strictnessPreset === "strict" ? "#F0F9F4" : "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="strictness"
+                    value="strict"
+                    checked={strictnessPreset === "strict"}
+                    onChange={() => setStrictnessPreset("strict")}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#1B4332" }}>🔴 Strict</div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>
+                      0 skip days · reset after 1 miss
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    border:
+                      strictnessPreset === "custom" ? "2px solid #52B788" : "2px solid #E5E7EB",
+                    background: strictnessPreset === "custom" ? "#F0F9F4" : "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="strictness"
+                    value="custom"
+                    checked={strictnessPreset === "custom"}
+                    onChange={() => setStrictnessPreset("custom")}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#1B4332" }}>⚙️ Custom</div>
+                    <div style={{ fontSize: 12, color: "#6B7280" }}>Set your own rules</div>
+                  </div>
+                </label>
+
+                {strictnessPreset === "custom" ? (
+                  <div
+                    style={{
+                      background: "#F9FAFB",
+                      padding: "16px",
+                      borderRadius: "12px",
+                      marginTop: "8px",
+                      display: "flex",
+                      gap: "16px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <label
+                        style={{
+                          fontSize: 12,
+                          color: "#4A6355",
+                          fontWeight: 700,
+                          marginBottom: 6,
+                          display: "block",
+                        }}
+                      >
+                        Skip days
+                      </label>
+                      <select
+                        value={customSkipDays}
+                        onChange={(e) => setCustomSkipDays(Number(e.target.value))}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          border: "2px solid #E5E7EB",
+                          fontSize: 14,
+                          background: "#FFFFFF",
+                        }}
+                      >
+                        <option value={0}>0 (no skips)</option>
+                        <option value={1}>1 skip day</option>
+                        <option value={2}>2 skip days</option>
+                        <option value={3}>3 skip days</option>
+                        <option value={4}>4 skip days</option>
+                        <option value={5}>5 skip days</option>
+                        <option value={7}>7 skip days</option>
+                        <option value={10}>10 skip days</option>
+                      </select>
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <label
+                        style={{
+                          fontSize: 12,
+                          color: "#4A6355",
+                          fontWeight: 700,
+                          marginBottom: 6,
+                          display: "block",
+                        }}
+                      >
+                        Reset after misses
+                      </label>
+                      <select
+                        value={customResetAfter}
+                        onChange={(e) => setCustomResetAfter(Number(e.target.value))}
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          border: "2px solid #E5E7EB",
+                          fontSize: 14,
+                          background: "#FFFFFF",
+                        }}
+                      >
+                        <option value={1}>1 missed day</option>
+                        <option value={2}>2 missed days</option>
+                        <option value={3}>3 missed days</option>
+                        <option value={4}>4 missed days</option>
+                        <option value={5}>5 missed days</option>
+                        <option value={6}>6 missed days</option>
+                        <option value={7}>7 missed days</option>
+                        <option value={10}>10 missed days</option>
+                      </select>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             <button
