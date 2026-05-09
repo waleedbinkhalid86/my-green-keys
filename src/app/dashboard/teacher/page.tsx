@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, startTransition, useState } from "react";
+import { useEffect, useMemo, startTransition, useState, type CSSProperties } from "react";
 import {
   Activity,
   Bird,
@@ -15,8 +15,8 @@ import {
   LogOut,
   Recycle,
   Settings,
-  Sparkles,
   Sprout,
+  Star,
   Trophy,
   Users,
   Zap,
@@ -26,8 +26,6 @@ import { loadReportBranding, saveReportBranding } from "@/lib/report/branding";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -58,11 +56,57 @@ const TEACHER_SIDEBAR = [
   { href: "#teacher-school", label: "School Settings", Icon: Settings },
 ] as const;
 
-const selectClassName =
-  "flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const SECTION_CARD: CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: "20px",
+  padding: "28px",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+  border: "1px solid #E5E7EB",
+  marginBottom: "24px",
+};
 
-const compactSurfaceClass = "rounded-md bg-white shadow-sm ring-1 ring-black/5";
-const compactStatCardClass = cn(compactSurfaceClass, "p-4 h-32 border border-gray-100");
+const SECTION_H2: CSSProperties = {
+  fontSize: "20px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "20px",
+};
+
+const FORM_LABEL: CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  color: "#1B4332",
+  marginBottom: "8px",
+  display: "block",
+};
+
+const FORM_CONTROL: CSSProperties = {
+  width: "100%",
+  padding: "12px 16px",
+  borderRadius: "12px",
+  border: "2px solid #E5E7EB",
+  fontSize: "14px",
+  background: "#FFFFFF",
+  transition: "border 0.2s",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const PRIMARY_CTA: CSSProperties = {
+  background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+  color: "#FFFFFF",
+  padding: "14px 24px",
+  borderRadius: "12px",
+  fontSize: "15px",
+  fontWeight: 700,
+  border: "none",
+  cursor: "pointer",
+  width: "100%",
+  marginTop: "16px",
+  boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
+};
+
+const SCROLL_SECTION: CSSProperties = { scrollMarginTop: "96px" };
 
 export default function TeacherDashboard() {
   const { showToast } = useToast();
@@ -333,33 +377,69 @@ export default function TeacherDashboard() {
     }
   };
 
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge className="border-primary/30 bg-primary/10 font-semibold text-primary hover:bg-primary/15">
-            Active
-          </Badge>
-        );
-      case "needs-attention":
-        return (
-          <Badge variant="outline" className="border-amber-300 bg-amber-50 font-semibold text-amber-900">
-            Needs attention
-          </Badge>
-        );
-      case "inactive":
-        return (
-          <Badge variant="outline" className="border-destructive/40 bg-destructive/10 font-semibold text-destructive">
-            Inactive
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
+  const rankCircleStyle = (rank: number): CSSProperties => {
+    if (rank === 1) {
+      return {
+        width: "50px",
+        height: "50px",
+        borderRadius: "50%",
+        background: "linear-gradient(135deg, #FCD34D, #F59E0B)",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        fontSize: "16px",
+        flexShrink: 0,
+      };
     }
+    if (rank === 2) {
+      return {
+        width: "50px",
+        height: "50px",
+        borderRadius: "50%",
+        background: "linear-gradient(135deg, #D1D5DB, #9CA3AF)",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        fontSize: "16px",
+        flexShrink: 0,
+      };
+    }
+    if (rank === 3) {
+      return {
+        width: "50px",
+        height: "50px",
+        borderRadius: "50%",
+        background: "linear-gradient(135deg, #FB923C, #C2410C)",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        fontSize: "16px",
+        flexShrink: 0,
+      };
+    }
+    return {
+      width: "50px",
+      height: "50px",
+      borderRadius: "50%",
+      background: "#E5E7EB",
+      color: "#6B7280",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 700,
+      fontSize: "16px",
+      flexShrink: 0,
+    };
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div style={{ minHeight: "100vh" }} className="font-sans">
       <Dialog
         open={showCreateClass}
         onOpenChange={(open) => {
@@ -398,43 +478,93 @@ export default function TeacherDashboard() {
         </DialogContent>
       </Dialog>
 
-      <div className="mx-auto flex w-full max-w-[1400px] min-h-screen bg-[#FAFAFA] font-sans">
+      <div style={{ display: "flex", minHeight: "100vh", width: "100%" }}>
         <aside
-          className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col border-r border-[#E5E7EB] bg-white py-8 pl-5 pr-3 lg:flex"
+          className="hidden shrink-0 lg:flex lg:flex-col"
+          style={{
+            width: "240px",
+            minHeight: "100vh",
+            background: "linear-gradient(180deg, #1B4332 0%, #2D6A4F 100%)",
+            padding: "24px 16px",
+            position: "sticky",
+            top: 0,
+          }}
           aria-label="Teacher navigation"
         >
-            <div className="mb-8 flex items-center gap-3 px-2">
-            <div className="flex size-10 items-center justify-center rounded-md bg-gray-900 text-white">
-              <Leaf className="h-6 w-6" strokeWidth={2.25} aria-hidden />
+          <div
+            className="flex items-center gap-3"
+            style={{
+              padding: "16px",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              marginBottom: "24px",
+            }}
+          >
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
+              <Leaf className="size-5" strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <p className="font-heading text-sm font-extrabold text-[#1A2F23]">My Green Keys</p>
-              <p className="text-xs font-semibold text-[#64748b]">Teacher</p>
+              <p className="font-heading text-sm font-extrabold text-white">My Green Keys</p>
+              <p className="text-xs font-semibold text-white/70">Teacher</p>
             </div>
           </div>
-          <nav className="flex flex-col gap-1">
+          <nav className="flex flex-col">
             {TEACHER_SIDEBAR.map((item) => {
               const active = hash === item.href;
               const Icon = item.Icon;
+              const baseNav: CSSProperties = {
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                fontSize: "14px",
+                fontWeight: 500,
+                marginBottom: "4px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                textDecoration: "none",
+              };
+              const activeNav: CSSProperties = active
+                ? {
+                    background: "rgba(82, 183, 136, 0.2)",
+                    color: "#FFFFFF",
+                    borderLeft: "4px solid #52B788",
+                    paddingLeft: "12px",
+                  }
+                : {
+                    color: "rgba(255,255,255,0.8)",
+                  };
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-all duration-200 ease-in-out",
-                    active ? "bg-[#2ECC71]/12 text-[#15803d]" : "text-[#374151] hover:bg-[#FAFAFA]"
-                  )}
+                  style={{ ...baseNav, ...activeNav }}
+                  className={cn(!active && "hover:bg-white/10 hover:text-white")}
                 >
-                  <Icon className={cn("size-5 shrink-0", active ? "text-[#2ECC71]" : "text-[#64748b]")} strokeWidth={2.25} />
+                  <Icon className="size-5 shrink-0 opacity-90" strokeWidth={2.25} />
                   {item.label}
                 </a>
               );
             })}
           </nav>
-          <div className="mt-auto pt-8">
+          <div style={{ marginTop: "auto", paddingTop: "24px" }}>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold text-[#64748b] transition-colors hover:bg-gray-50 hover:text-gray-900"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "14px",
+                fontWeight: 500,
+                width: "100%",
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+              }}
+              className="transition-colors hover:bg-white/10 hover:text-white"
               onClick={async () => {
                 const supabase = createClient();
                 await supabase.auth.signOut();
@@ -448,191 +578,319 @@ export default function TeacherDashboard() {
         </aside>
 
         <div
-          className={cn(
-            "min-w-0 flex-1",
-            // Dot-grid background on content area (Linear-like)
-            "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
-          )}
+          style={{
+            minWidth: 0,
+            flex: 1,
+            minHeight: "100vh",
+            backgroundColor: "#FAFAF7",
+            backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
         >
-          <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 px-6 py-4 backdrop-blur">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="font-heading text-lg font-extrabold text-[#1A2F23] sm:text-xl">
-                  Welcome back, {teacherName}
-                </p>
-                <p className="text-sm font-semibold text-[#64748b]">
-                  {activeClassLabel} · {activeStudentCount} students
-                </p>
-              </div>
-              <div className="flex size-10 items-center justify-center rounded-full bg-[#2ECC71]/20 text-sm font-extrabold text-[#15803d]" aria-hidden>
-                A
-              </div>
-            </div>
-          </header>
-
-          <div className="mgk-container space-y-10 py-8">
-        <section id="teacher-overview" className="scroll-mt-24">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              {
-                Icon: Users,
-                label: "Active Students",
-                value: activeStudentCount ? String(activeStudentCount) : "—",
-                sub: "This class",
-                iconClass: "bg-sky-50 text-sky-700",
-              },
-              {
-                Icon: BookOpen,
-                label: "Lessons Completed",
-                value: "—",
-                sub: "Connect analytics",
-                iconClass: "bg-green-50 text-green-700",
-              },
-              {
-                Icon: Zap,
-                label: "Class Avg WPM",
-                value: "—",
-                sub: "Last 7 days",
-                iconClass: "bg-yellow-50 text-yellow-700",
-              },
-              {
-                Icon: Leaf,
-                label: "Eco Actions",
-                value: "—",
-                sub: "This week",
-                iconClass: "bg-emerald-50 text-emerald-700",
-              },
-            ].map(({ Icon, label, value, sub, iconClass }) => (
-              <div key={label} className={compactStatCardClass}>
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", iconClass)}>
-                  <Icon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
-                </div>
-                <p className="mt-3 text-xs text-gray-500">{label}</p>
-                <p className="mt-1 text-2xl font-bold leading-none text-gray-900">{value}</p>
-                <p className="mt-2 text-xs text-gray-400">{sub}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            {[
-              { Icon: GraduationCap, label: "Class", value: activeClassLabel },
-              { Icon: Users, label: "Students", value: activeStudentCount ? String(activeStudentCount) : "—" },
-              { Icon: Activity, label: "Status", value: activeStudentCount ? "Active" : "Getting started" },
-            ].map(({ Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-4 py-2">
-                <Icon className="h-4 w-4 text-gray-500" strokeWidth={2.25} aria-hidden />
-                <span className="text-sm text-gray-600">{label}:</span>
-                <span className="text-sm font-semibold text-gray-900">{value}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="teacher-classes" className="scroll-mt-24">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="font-heading text-xl font-bold text-foreground">Class overview</h2>
-              {activeClass ? (
-                <p className="mt-1 text-sm font-semibold text-muted-foreground">
-                  <span className="font-mono font-bold text-[#1A2F23]">{activeClass.name}</span>
-                  <span className="mx-2 text-[#CBD5E1]">·</span>
-                  Code{" "}
-                  <span className="font-mono font-extrabold tracking-widest text-[#2ECC71]">{activeClass.code}</span>
-                </p>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {activeClass ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-md border-[#2ECC71]/40 font-bold"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(activeClass.code);
-                      showToast("success", "Class code copied!");
-                    } catch {
-                      showToast("error", "Could not copy code.");
-                    }
-                  }}
-                >
-                  <Copy className="mr-2 size-4" strokeWidth={2.5} />
-                  Copy code
-                </Button>
-              ) : null}
-              <Button
-                size="sm"
-                className="rounded-md bg-[#2ECC71] font-bold hover:bg-[#27ae60]"
-                onClick={() => {
-                  setCreateClassError("");
-                  setShowCreateClass(true);
+          <div
+            style={{
+              maxWidth: "1280px",
+              margin: "0 auto",
+              paddingLeft: "32px",
+              paddingRight: "32px",
+              paddingTop: "32px",
+              paddingBottom: "60px",
+            }}
+          >
+            <div style={{ marginBottom: "32px" }}>
+              <h1
+                style={{
+                  fontSize: "32px",
+                  fontWeight: 700,
+                  color: "#1B4332",
+                  marginBottom: "4px",
                 }}
               >
-                Create New Class
-              </Button>
+                Welcome back, {teacherName}!
+              </h1>
+              <p style={{ fontSize: "14px", color: "#4A6355" }}>
+                {activeClassLabel} · {activeStudentCount} {activeStudentCount === 1 ? "student" : "students"}
+              </p>
             </div>
-          </div>
 
-          {classesError ? (
-            <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {classesError}
-            </div>
-          ) : null}
-
-          {classesLoading ? (
-            <Card>
-              <CardContent className="py-8 text-muted-foreground">Loading classes…</CardContent>
-            </Card>
-          ) : classes.length === 0 ? (
-            <Card className="border-gray-200 bg-white">
-              <CardHeader>
-                <CardTitle className="font-heading text-base">No classes yet</CardTitle>
-                <CardDescription>Create a class to generate a code students can use to join.</CardDescription>
-              </CardHeader>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="space-y-6 pt-6">
-                <Tabs value={selectedClassId} onValueChange={setSelectedClassId}>
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <TabsList variant="line" className="h-auto min-h-9 flex-wrap justify-start">
-                      {classes.map((c) => (
-                        <TabsTrigger key={c.id} value={c.id}>
-                          {c.name}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    <div className="text-left md:text-right">
-                      <p className="text-xs font-medium text-muted-foreground">Class code</p>
-                      <p className="font-mono text-xl font-bold tracking-widest text-primary">
-                        {classes.find((c) => c.id === selectedClassId)?.code ?? "—"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Students join with this code on the Lesson page.</p>
+            <section id="teacher-overview" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                {[
+                  {
+                    Icon: Users,
+                    label: "Active Students",
+                    sub: "This class",
+                    value: activeStudentCount ? String(activeStudentCount) : "—",
+                    grad: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)",
+                    border: "#BFDBFE",
+                    iconBg: "rgba(59, 130, 246, 0.12)",
+                    iconColor: "#1D4ED8",
+                  },
+                  {
+                    Icon: BookOpen,
+                    label: "Lessons Completed",
+                    sub: "Connect analytics",
+                    value: "—",
+                    grad: "linear-gradient(135deg, #F0F9F4 0%, #E8F5EE 100%)",
+                    border: "#BBF7D0",
+                    iconBg: "rgba(34, 197, 94, 0.12)",
+                    iconColor: "#15803D",
+                  },
+                  {
+                    Icon: Zap,
+                    label: "Class Avg WPM",
+                    sub: "Last 7 days",
+                    value: "—",
+                    grad: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)",
+                    border: "#FDE68A",
+                    iconBg: "rgba(245, 158, 11, 0.15)",
+                    iconColor: "#B45309",
+                  },
+                  {
+                    Icon: Leaf,
+                    label: "Eco Actions",
+                    sub: "This week",
+                    value: "—",
+                    grad: "linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)",
+                    border: "#99F6E4",
+                    iconBg: "rgba(20, 184, 166, 0.12)",
+                    iconColor: "#0F766E",
+                  },
+                ].map(({ Icon, label, sub, value, grad, border, iconBg, iconColor }) => (
+                  <div
+                    key={label}
+                    style={{
+                      background: grad,
+                      borderRadius: "16px",
+                      padding: "20px",
+                      border: `1px solid ${border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "10px",
+                        background: iconBg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon className="size-5" style={{ color: iconColor }} strokeWidth={2.25} aria-hidden />
                     </div>
+                    <p
+                      style={{
+                        fontSize: "32px",
+                        fontWeight: 700,
+                        color: "#1B4332",
+                        marginTop: "12px",
+                        marginBottom: "8px",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {value}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "#4A6355",
+                        marginBottom: "6px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      {label}
+                    </p>
+                    <p style={{ fontSize: "11px", color: "#6B7280" }}>{sub}</p>
                   </div>
-                  {classes.map((c) => (
-                    <TabsContent key={c.id} value={c.id} className="sr-only">
-                      {c.name}
-                    </TabsContent>
-                  ))}
-                </Tabs>
+                ))}
+              </div>
 
-                <div>
-                  <h3 className="font-heading mb-3 text-base font-semibold">Enrolled students</h3>
-                  {studentsError ? (
-                    <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                      {studentsError}
-                    </div>
+              <div
+                style={{
+                  marginTop: "20px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "20px",
+                  fontSize: "13px",
+                  color: "#6B7280",
+                }}
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <GraduationCap className="size-4 shrink-0 text-[#9CA3AF]" strokeWidth={2} aria-hidden />
+                  <span>
+                    Class: <strong className="font-semibold text-[#4A6355]">{activeClassLabel}</strong>
+                  </span>
+                </span>
+                <span style={{ color: "#D1D5DB" }} aria-hidden>
+                  ·
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <Users className="size-4 shrink-0 text-[#9CA3AF]" strokeWidth={2} aria-hidden />
+                  <span>
+                    Students:{" "}
+                    <strong className="font-semibold text-[#4A6355]">
+                      {activeStudentCount ? String(activeStudentCount) : "—"}
+                    </strong>
+                  </span>
+                </span>
+                <span style={{ color: "#D1D5DB" }} aria-hidden>
+                  ·
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <Activity className="size-4 shrink-0 text-[#9CA3AF]" strokeWidth={2} aria-hidden />
+                  <span>
+                    Status:{" "}
+                    <strong className="font-semibold text-[#4A6355]">
+                      {activeStudentCount ? "Active" : "Getting started"}
+                    </strong>
+                  </span>
+                </span>
+              </div>
+            </section>
+
+            <section id="teacher-classes" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  marginBottom: "20px",
+                }}
+              >
+                <h2 style={{ ...SECTION_H2, marginBottom: 0 }}>Class overview</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                  {activeClass ? (
+                    <button
+                      type="button"
+                      className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#E8F5EE]"
+                      style={{
+                        padding: "10px 18px",
+                        borderRadius: "9999px",
+                        border: "2px solid #E5E7EB",
+                        background: "#FFFFFF",
+                        cursor: "pointer",
+                      }}
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(activeClass.code);
+                          showToast("success", "Class code copied!");
+                        } catch {
+                          showToast("error", "Could not copy code.");
+                        }
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Copy className="size-4" strokeWidth={2.5} aria-hidden />
+                        Copy code
+                      </span>
+                    </button>
                   ) : null}
-                  {studentsLoading ? (
-                    <Card className="border-dashed">
-                      <CardContent className="py-6 text-sm text-muted-foreground">Loading students…</CardContent>
-                    </Card>
-                  ) : enrolledStudents.length === 0 ? (
-                    <Card className="border-dashed">
-                      <CardContent className="py-6">
+                  <button
+                    type="button"
+                    style={{
+                      background: "linear-gradient(135deg, #52B788, #40916C)",
+                      color: "white",
+                      padding: "10px 20px",
+                      borderRadius: "9999px",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      setCreateClassError("");
+                      setShowCreateClass(true);
+                    }}
+                  >
+                    Create New Class
+                  </button>
+                </div>
+              </div>
+
+              {activeClass ? (
+                <p className="text-sm font-semibold text-[#4A6355]" style={{ marginBottom: "16px" }}>
+                  <span className="font-mono font-bold text-[#1B4332]">{activeClass.name}</span>
+                  <span className="mx-2 text-[#CBD5E1]">·</span>
+                  Code{" "}
+                  <span className="font-mono font-extrabold tracking-widest text-[#52B788]">{activeClass.code}</span>
+                </p>
+              ) : null}
+
+              {classesError ? (
+                <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {classesError}
+                </div>
+              ) : null}
+
+              {classesLoading ? (
+                <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-8 text-center text-sm text-[#6B7280]">
+                  Loading classes…
+                </div>
+              ) : classes.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "40px 20px",
+                    background: "#F9FAFB",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <h3 style={{ color: "#1B4332", fontWeight: 700, marginBottom: 8 }}>No classes yet</h3>
+                  <p style={{ color: "#6B7280", fontSize: 14 }}>
+                    Create a class to generate a code students can use to join.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <Tabs value={selectedClassId} onValueChange={setSelectedClassId}>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <TabsList variant="line" className="h-auto min-h-9 flex-wrap justify-start">
+                        {classes.map((c) => (
+                          <TabsTrigger key={c.id} value={c.id}>
+                            {c.name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      <div className="text-left md:text-right">
+                        <p className="text-xs font-medium text-muted-foreground">Class code</p>
+                        <p className="font-mono text-xl font-bold tracking-widest text-primary">
+                          {classes.find((c) => c.id === selectedClassId)?.code ?? "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Students join with this code on the Lesson page.</p>
+                      </div>
+                    </div>
+                    {classes.map((c) => (
+                      <TabsContent key={c.id} value={c.id} className="sr-only">
+                        {c.name}
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+
+                  <div>
+                    <h3 className="font-heading mb-3 text-base font-semibold text-[#1B4332]">Enrolled students</h3>
+                    {studentsError ? (
+                      <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        {studentsError}
+                      </div>
+                    ) : null}
+                    {studentsLoading ? (
+                      <div className="rounded-xl border border-dashed border-[#E5E7EB] py-6 text-center text-sm text-muted-foreground">
+                        Loading students…
+                      </div>
+                    ) : enrolledStudents.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-[#E5E7EB] py-6">
                         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
                           <Image
                             src="/images/ui/ui-empty-state.jpg"
@@ -649,337 +907,510 @@ export default function TeacherDashboard() {
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead className="text-right">Report</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {enrolledStudents.map((s) => (
-                          <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.full_name || s.id}</TableCell>
-                            <TableCell className="text-muted-foreground">{s.email || "—"}</TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
-                                onClick={() =>
-                                  window.open(`/report/${s.id}`, "_blank", "noopener,noreferrer")
-                                }
-                              >
-                                <FileBarChart className="mr-2 h-4 w-4" strokeWidth={2.25} aria-hidden />
-                                Generate Report
-                              </Button>
-                            </TableCell>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Student</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead className="text-right">Report</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
+                        </TableHeader>
+                        <TableBody>
+                          {enrolledStudents.map((s) => (
+                            <TableRow key={s.id}>
+                              <TableCell className="font-medium">{s.full_name || s.id}</TableCell>
+                              <TableCell className="text-muted-foreground">{s.email || "—"}</TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                                  onClick={() =>
+                                    window.open(`/report/${s.id}`, "_blank", "noopener,noreferrer")
+                                  }
+                                >
+                                  <FileBarChart className="mr-2 h-4 w-4" strokeWidth={2.25} aria-hidden />
+                                  Generate Report
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </section>
+              )}
+            </section>
 
-        <section id="teacher-leaderboard" className="scroll-mt-24">
-          <h2 className="font-heading mb-4 text-xl font-bold">Student leaderboard</h2>
-          <Card className="border border-gray-100">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                {leaderboardData.slice(0, 5).map((student) => (
-                  <div
-                    key={student.rank}
-                    className="flex items-center justify-between gap-4 rounded-md border border-gray-100 bg-white px-4 py-3"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">
-                        {student.rank}
-                      </div>
-                      <div className="flex size-9 items-center justify-center rounded-full bg-[#2ECC71]/15 text-xs font-extrabold text-[#15803d]">
-                        {initials(student.name)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{student.name}</p>
-                        <p className="text-xs text-gray-500">
-                          Accuracy {student.accuracy}% · Lessons {student.lessons}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">WPM</p>
-                        <p className="text-sm font-semibold text-gray-900">{student.wpm}</p>
-                      </div>
-                      <div className="text-lg">
-                        {student.badge === "trophy" ? (
-                          <Trophy className="h-5 w-5 text-amber-600" strokeWidth={2.25} aria-label="Trophy" />
-                        ) : student.badge === "star" ? (
-                          <Sparkles className="h-5 w-5 text-amber-500" strokeWidth={2.25} aria-label="Star" />
-                        ) : student.badge === "leaf" ? (
-                          <Leaf className="h-5 w-5 text-green-600" strokeWidth={2.25} aria-label="Eco badge" />
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="border-gray-200 text-gray-900 hover:bg-gray-50">
-                  Export report
-                </Button>
-                <Button variant="outline" size="sm" className="border-gray-200 text-gray-900 hover:bg-gray-50">
-                  View full leaderboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section id="teacher-students" className="scroll-mt-24">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-heading text-xl font-bold">All students</h2>
-            <Button variant="outline" size="sm">
-              Export CSV
-            </Button>
-          </div>
-          <Input
-            className="mb-4 max-w-md"
-            placeholder="Search students by name…"
-            value={searchStudent}
-            onChange={(e) => setSearchStudent(e.target.value)}
-          />
-          <Card className="border border-gray-100">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                {pagedStudents.map((student) => (
-                  <div
-                    key={student.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-gray-100 bg-white px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">{student.name}</p>
-                      <p className="text-xs text-gray-500">Last active: {student.lastActive}</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      {[
-                        { k: "WPM", v: String(student.wpm) },
-                        { k: "Accuracy", v: `${student.accuracy}%` },
-                        { k: "Lessons", v: String(student.lessons) },
-                      ].map(({ k, v }) => (
-                        <div key={k} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-3 py-2">
-                          <span className="text-xs text-gray-500">{k}</span>
-                          <span className="text-sm font-semibold text-gray-900">{v}</span>
-                        </div>
-                      ))}
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-gray-200 text-gray-900 hover:bg-gray-50"
-                          onClick={() => window.open(`/report/${student.id}`, "_blank", "noopener,noreferrer")}
-                        >
-                          View report
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-gray-200 text-gray-900 hover:bg-gray-50"
-                          onClick={() => showToast("info", "Messaging coming soon — contact via school email.")}
-                        >
-                          Message
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
-            <span>
-              Page {studentPage} of {studentPageCount}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={studentPage <= 1}
-                onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+            <section id="teacher-leaderboard" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  marginBottom: "20px",
+                }}
               >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={studentPage >= studentPageCount}
-                onClick={() => setStudentPage((p) => Math.min(studentPageCount, p + 1))}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+                <h2 style={{ ...SECTION_H2, marginBottom: 0 }}>Student leaderboard</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "9999px",
+                      border: "1px solid #E5E7EB",
+                      background: "#FFFFFF",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Export report
+                  </button>
+                  <button
+                    type="button"
+                    className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "9999px",
+                      border: "1px solid #E5E7EB",
+                      background: "#FFFFFF",
+                      cursor: "pointer",
+                    }}
+                  >
+                    View full leaderboard
+                  </button>
+                </div>
+              </div>
 
-          {selectedStudent ? (
-            <Card className="mt-4 border-primary/40">
-              <CardHeader>
-                <CardTitle className="font-heading text-base">
-                  Detailed progress — {filteredStudents.find((s) => s.id === selectedStudent)?.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="mgk-grid sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  ["Total WPM", filteredStudents.find((s) => s.id === selectedStudent)?.wpm],
-                  ["Accuracy", `${filteredStudents.find((s) => s.id === selectedStudent)?.accuracy}%`],
-                  ["Lessons", filteredStudents.find((s) => s.id === selectedStudent)?.lessons],
-                  ["Eco actions", "8"],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <p className="text-xs text-muted-foreground">{k}</p>
-                    <p className="font-heading text-2xl font-bold text-primary">{v}</p>
+              {leaderboardData.slice(0, 5).map((student) => (
+                <div
+                  key={student.rank}
+                  className="transition-all duration-200 hover:bg-[#E8F5EE]"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    marginBottom: "8px",
+                    background: "#F9FAFB",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+                    <div style={rankCircleStyle(student.rank)}>{student.rank}</div>
+                    <div
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "50%",
+                        background: "rgba(82, 183, 136, 0.2)",
+                        color: "#1B4332",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {initials(student.name)}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p className="truncate text-[15px] font-bold text-[#1B4332]">{student.name}</p>
+                      <p style={{ fontSize: "13px", color: "#6B7280" }}>
+                        Accuracy {student.accuracy}% · Lessons {student.lessons}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          ) : null}
-        </section>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontSize: "22px", fontWeight: 700, color: "#1B4332", lineHeight: 1.1 }}>
+                        {student.wpm}
+                      </p>
+                      <p style={{ fontSize: "11px", color: "#6B7280", fontWeight: 600 }}>WPM</p>
+                    </div>
+                    <div style={{ width: "28px", display: "flex", justifyContent: "center" }}>
+                      {student.badge === "trophy" ? (
+                        <Trophy className="size-6" style={{ color: "#F59E0B" }} strokeWidth={2.25} aria-label="Trophy" />
+                      ) : student.badge === "star" ? (
+                        <Star className="size-6" style={{ color: "#6B7280" }} strokeWidth={2.25} aria-label="Star" />
+                      ) : student.badge === "leaf" ? (
+                        <Leaf className="size-6" style={{ color: "#16A34A" }} strokeWidth={2.25} aria-label="Eco badge" />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
 
-        <section id="teacher-lessons" className="scroll-mt-24">
-          <h2 className="font-heading mb-4 text-xl font-bold">Assign a lesson</h2>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="lesson-name">Lesson name</Label>
-                <Input
+            <section id="teacher-students" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <h2 style={SECTION_H2}>All students</h2>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "20px",
+                }}
+              >
+                <input
+                  style={{ ...FORM_CONTROL, flex: "1 1 240px", marginBottom: 0, minWidth: "min(100%, 200px)" }}
+                  placeholder="Search students by name..."
+                  value={searchStudent}
+                  onChange={(e) => setSearchStudent(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "9999px",
+                    border: "1px solid #E5E7EB",
+                    background: "#FFFFFF",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  Export CSV
+                </button>
+              </div>
+
+              {pagedStudents.map((student) => (
+                <div
+                  key={student.id}
+                  className="transition-all duration-200 hover:border-[#52B788] hover:shadow-[0_4px_14px_rgba(82,183,136,0.12)]"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 20px",
+                    background: "#FFFFFF",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: "12px",
+                    marginBottom: "8px",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ minWidth: "140px" }}>
+                    <p className="text-[15px] font-bold text-[#1B4332]">{student.name}</p>
+                    <p style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
+                      Last active: {student.lastActive}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+                    {[
+                      { k: "WPM", v: String(student.wpm) },
+                      { k: "Accuracy", v: `${student.accuracy}%` },
+                      { k: "Lessons", v: String(student.lessons) },
+                    ].map(({ k, v }) => (
+                      <span key={k} style={{ fontSize: "13px", color: "#4A6355" }}>
+                        <span style={{ color: "#9CA3AF", marginRight: "6px" }}>{k}</span>
+                        <strong className="text-[#1B4332]">{v}</strong>
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="text-xs font-bold text-[#1B4332] transition-colors hover:bg-[#E8F5EE]"
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "9999px",
+                        border: "1px solid #E5E7EB",
+                        background: "#FFFFFF",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => window.open(`/report/${student.id}`, "_blank", "noopener,noreferrer")}
+                    >
+                      View report
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs font-bold text-[#52B788] transition-colors hover:bg-[#E8F5EE]"
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "9999px",
+                        border: "1px solid rgba(82, 183, 136, 0.35)",
+                        background: "rgba(82, 183, 136, 0.08)",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => showToast("info", "Messaging coming soon — contact via school email.")}
+                    >
+                      Message
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div
+                style={{
+                  marginTop: "20px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                }}
+              >
+                <span className="text-sm font-semibold text-[#6B7280]">
+                  Page {studentPage} of {studentPageCount}
+                </span>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    disabled={studentPage <= 1}
+                    className="text-sm font-bold text-[#1B4332] transition-colors enabled:hover:bg-[#E8F5EE] disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "9999px",
+                      border: "1px solid #E5E7EB",
+                      background: "#FFFFFF",
+                      cursor: studentPage <= 1 ? "not-allowed" : "pointer",
+                    }}
+                    onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={studentPage >= studentPageCount}
+                    className="text-sm font-bold text-[#1B4332] transition-colors enabled:hover:bg-[#E8F5EE] disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "9999px",
+                      border: "1px solid #E5E7EB",
+                      background: "#FFFFFF",
+                      cursor: studentPage >= studentPageCount ? "not-allowed" : "pointer",
+                    }}
+                    onClick={() => setStudentPage((p) => Math.min(studentPageCount, p + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+
+              {selectedStudent ? (
+                <div
+                  className="rounded-[20px] border border-[#52B788]/40 bg-[#F0F9F4] p-6"
+                  style={{ marginTop: "24px" }}
+                >
+                  <h3 className="font-heading text-base font-bold text-[#1B4332]">
+                    Detailed progress — {filteredStudents.find((s) => s.id === selectedStudent)?.name}
+                  </h3>
+                  <div
+                    className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                    style={{ marginTop: "16px" }}
+                  >
+                    {[
+                      ["Total WPM", filteredStudents.find((s) => s.id === selectedStudent)?.wpm],
+                      ["Accuracy", `${filteredStudents.find((s) => s.id === selectedStudent)?.accuracy}%`],
+                      ["Lessons", filteredStudents.find((s) => s.id === selectedStudent)?.lessons],
+                      ["Eco actions", "8"],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <p className="text-xs text-[#6B7280]">{k}</p>
+                        <p className="font-heading text-2xl font-bold text-[#52B788]">{v}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            <section id="teacher-lessons" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <h2 style={SECTION_H2}>Assign a lesson</h2>
+              <div style={{ marginBottom: "16px" }}>
+                <label htmlFor="lesson-name" style={FORM_LABEL}>
+                  Lesson name
+                </label>
+                <input
                   id="lesson-name"
+                  style={FORM_CONTROL}
                   value={lessonName}
                   onChange={(e) => setLessonName(e.target.value)}
                   placeholder="e.g. The water cycle"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lesson-body">Lesson text</Label>
-                <Textarea
+              <div style={{ marginBottom: "16px" }}>
+                <label htmlFor="lesson-body" style={FORM_LABEL}>
+                  Lesson text
+                </label>
+                <textarea
                   id="lesson-body"
+                  style={{ ...FORM_CONTROL, minHeight: "120px", resize: "vertical" as const }}
                   value={assignmentText}
                   onChange={(e) => setAssignmentText(e.target.value.slice(0, 1000))}
-                  rows={6}
                   placeholder="Paste passage or facts for students to type…"
                 />
-                <p className="text-xs text-muted-foreground">{assignmentText.length}/1000 characters</p>
+                <p className="text-xs text-muted-foreground" style={{ marginTop: "6px" }}>
+                  {assignmentText.length}/1000 characters
+                </p>
               </div>
-              <div className="mgk-grid md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>Difficulty</Label>
-                  <select className={selectClassName} value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "8px",
+                }}
+              >
+                <div>
+                  <span style={FORM_LABEL}>Difficulty</span>
+                  <select style={FORM_CONTROL} value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
                     <option>Beginner</option>
                     <option>Intermediate</option>
                     <option>Advanced</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Assign to</Label>
-                  <select className={selectClassName} value={assignTo} onChange={(e) => setAssignTo(e.target.value)}>
+                <div>
+                  <span style={FORM_LABEL}>Assign to</span>
+                  <select style={FORM_CONTROL} value={assignTo} onChange={(e) => setAssignTo(e.target.value)}>
                     <option value="class">Whole class</option>
-                    <option value="individual">Individual student</option>
+                    <option value="individual">Specific student</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Schedule</Label>
-                  <select className={selectClassName} value={schedule} onChange={(e) => setSchedule(e.target.value)}>
+                <div>
+                  <span style={FORM_LABEL}>Schedule</span>
+                  <select style={FORM_CONTROL} value={schedule} onChange={(e) => setSchedule(e.target.value)}>
                     <option value="now">Now</option>
-                    <option value="tomorrow">Tomorrow</option>
-                    <option value="pick">Pick date</option>
+                    <option value="later">Later</option>
                   </select>
                 </div>
               </div>
-              <Button className="w-full" size="lg">
+              <button type="button" style={PRIMARY_CTA}>
                 Assign lesson
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </section>
 
-          {savedLessons.length > 0 ? (
-            <div className="mt-6 space-y-3">
-              <h3 className="font-heading text-base font-semibold">Saved lesson library</h3>
+            <section style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <h2 style={SECTION_H2}>Saved lesson library</h2>
               {savedLessons.map((lesson) => (
-                <Card key={lesson.id}>
-                  <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                    <div>
-                      <p className="font-medium">{lesson.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Created {lesson.createdAt} · Used {lesson.uses}×
+                <div
+                  key={lesson.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 18px",
+                    background: "#F9FAFB",
+                    borderRadius: "12px",
+                    marginBottom: "8px",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div>
+                    <p className="text-[15px] font-bold text-[#1B4332]">{lesson.name}</p>
+                    <p style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
+                      Created {lesson.createdAt} · Used {lesson.uses}×
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "9999px",
+                        border: "none",
+                        background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+                        color: "#FFFFFF",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Reuse
+                    </button>
+                    <button
+                      type="button"
+                      className="text-sm font-bold text-red-600 underline-offset-2 hover:underline"
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "8px" }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section id="teacher-eco-feed" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <h2 style={SECTION_H2}>Recent eco actions</h2>
+              {ecoFeedData.map((item) => {
+                const EcoIcon = item.Icon;
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "14px 16px",
+                      background: "#F0F9F4",
+                      borderRadius: "12px",
+                      marginBottom: "8px",
+                      borderLeft: "4px solid #52B788",
+                    }}
+                  >
+                    <EcoIcon
+                      className="shrink-0"
+                      style={{ width: "24px", height: "24px", color: "#52B788" }}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "14px", color: "#1B4332" }}>
+                        <strong className="font-bold">{item.studentName}</strong> uploaded: {item.action}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="secondary">
-                        Reuse
-                      </Button>
-                      <Button size="sm" variant="destructive">
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : null}
-        </section>
+                    <span style={{ fontSize: "12px", color: "#6B7280", flexShrink: 0 }}>{item.time}</span>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="mt-3 text-sm font-bold text-[#52B788] underline-offset-2 hover:underline"
+                style={{ marginTop: "12px", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                View all
+              </button>
+            </section>
 
-        <section id="teacher-eco-feed" className="scroll-mt-24">
-          <h2 className="font-heading mb-4 text-xl font-bold">Recent eco actions</h2>
-          <div className="space-y-3">
-            {ecoFeedData.map((item) => {
-              const EcoIcon = item.Icon;
-              return (
-              <Card key={item.id} className="border border-gray-100 bg-white">
-                <CardContent className="py-4">
-                  <p className="flex flex-wrap items-center gap-2 font-medium">
-                    <EcoIcon className="h-5 w-5 shrink-0 text-green-700" strokeWidth={2} aria-hidden />
-                    <span>
-                      {item.studentName} uploaded: {item.action}
-                    </span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">— {item.time}</p>
-                </CardContent>
-              </Card>
-            );
-            })}
-          </div>
-          <Button variant="outline" className="mt-4 border-gray-200 text-gray-900 hover:bg-gray-50">
-            View all
-          </Button>
-        </section>
-
-        <section id="teacher-school" className="scroll-mt-24">
-          <h2 className="font-heading mb-4 text-xl font-bold">School customization</h2>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="school-name">School name</Label>
-                <Input id="school-name" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
+            <section id="teacher-school" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
+              <h2 style={SECTION_H2}>School customization</h2>
+              <div style={{ marginBottom: "16px" }}>
+                <label htmlFor="school-name" style={FORM_LABEL}>
+                  School name
+                </label>
+                <input
+                  id="school-name"
+                  style={FORM_CONTROL}
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="teacher-school-logo">School logo (optional)</Label>
-                <Input
+              <div style={{ marginBottom: "16px" }}>
+                <label htmlFor="teacher-school-logo" style={FORM_LABEL}>
+                  School logo (optional)
+                </label>
+                <input
                   id="teacher-school-logo"
                   type="file"
                   accept="image/*"
-                  className="cursor-pointer text-sm"
+                  style={{
+                    ...FORM_CONTROL,
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                  }}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -990,40 +1421,72 @@ export default function TeacherDashboard() {
                     reader.readAsDataURL(file);
                   }}
                 />
-                <p className="text-xs text-muted-foreground">Saved with school name for PDF reports · ~200×200px works well</p>
+                <p className="text-xs text-muted-foreground" style={{ marginTop: "6px" }}>
+                  Saved with school name for PDF reports · ~200×200px works well
+                </p>
               </div>
-              <div className="mgk-grid md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="primary-color">Primary color</Label>
-                  <div className="flex items-center gap-3">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "20px",
+                  marginBottom: "16px",
+                  alignItems: "end",
+                }}
+                className="max-sm:grid-cols-1"
+              >
+                <div>
+                  <label htmlFor="primary-color" style={FORM_LABEL}>
+                    Primary color
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                     <input
                       id="primary-color"
                       type="color"
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="h-10 w-20 cursor-pointer rounded border border-input"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        padding: 0,
+                        border: "2px solid #E5E7EB",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        background: primaryColor,
+                      }}
+                      aria-label="Pick primary color"
                     />
-                    <span className="font-mono text-sm text-muted-foreground">{primaryColor}</span>
+                    <span className="font-mono text-sm text-[#4A6355]">{primaryColor}</span>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Preview</p>
-                  <div className="h-10 w-full rounded-md border" style={{ backgroundColor: primaryColor }} />
+                <div>
+                  <span style={{ ...FORM_LABEL, marginBottom: "8px" }}>Preview</span>
+                  <button
+                    type="button"
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "none",
+                      background: primaryColor,
+                      color: "#FFFFFF",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      cursor: "default",
+                    }}
+                  >
+                    Sample button
+                  </button>
                 </div>
               </div>
-              <Button
+              <button
                 type="button"
-                className="w-full"
-                size="lg"
+                style={PRIMARY_CTA}
                 onClick={() => saveReportBranding({ name: schoolName.trim() || "School", logoDataUrl: schoolLogoDataUrl })}
               >
                 Save changes
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Reports section removed in favor of inline export actions */}
+              </button>
+            </section>
           </div>
         </div>
       </div>
