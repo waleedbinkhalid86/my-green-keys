@@ -437,8 +437,18 @@ function PricingPageContent() {
         backgroundSize: "20px 20px",
       }}
     >
+      <div
+        style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          paddingLeft: "32px",
+          paddingRight: "32px",
+          paddingTop: "60px",
+          paddingBottom: "60px",
+        }}
+      >
       {/* Hero */}
-      <section className="pb-12 pt-20 text-center md:pb-16 md:pt-28">
+      <section style={{ marginBottom: "80px" }} className="pb-12 pt-20 text-center md:pb-16 md:pt-28">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <h1 className="mb-6 text-4xl font-bold leading-tight text-[#1B4332] md:text-5xl lg:text-6xl">
             Pricing that grows with you
@@ -453,7 +463,7 @@ function PricingPageContent() {
       </section>
 
       {/* Main pricing cards */}
-      <section className="pb-16 md:pb-24">
+      <section style={{ marginBottom: "80px" }} className="pb-16 md:pb-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           {ecoGardenExpired ? (
             <div
@@ -587,7 +597,7 @@ function PricingPageContent() {
       </section>
 
       {/* For larger schools */}
-      <section className="py-16 md:py-24">
+      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">For larger schools</h2>
@@ -655,7 +665,7 @@ function PricingPageContent() {
       </section>
 
       {/* Promo codes */}
-      <section className="py-12">
+      <section style={{ marginBottom: "80px" }} className="py-12">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
             <div className="rounded-2xl bg-white p-6 shadow-md">
               <h2 className="mb-3 text-xl font-bold text-[#1B4332]">Have a promo code?</h2>
@@ -736,7 +746,7 @@ function PricingPageContent() {
       ) : null}
 
       {/* Feature comparison */}
-      <section className="py-16 md:py-24">
+      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Compare every feature</h2>
@@ -798,7 +808,7 @@ function PricingPageContent() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-24">
+      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Frequently asked questions</h2>
@@ -819,7 +829,7 @@ function PricingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="pb-20 md:pb-28">
+      <section style={{ marginBottom: "0" }} className="pb-20 md:pb-28">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div
             className="rounded-3xl p-12 text-center md:p-16"
@@ -846,6 +856,7 @@ function PricingPageContent() {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }
