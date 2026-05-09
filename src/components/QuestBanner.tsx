@@ -46,6 +46,14 @@ export default function QuestBanner() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    function handleAutoTrack() {
+      void load();
+    }
+    window.addEventListener("quest-auto-track", handleAutoTrack);
+    return () => window.removeEventListener("quest-auto-track", handleAutoTrack);
+  }, [load]);
+
   const handleToggleAction = async (
     questId: string,
     actionIndex: number,

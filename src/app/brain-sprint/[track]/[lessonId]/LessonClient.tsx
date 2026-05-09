@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import type { BrainSprintLesson } from "@/lib/brain-sprint/types";
 import { saveLessonResult } from "@/lib/brain-sprint/progress-api";
+import { triggerAutoTrack } from "@/lib/quests/auto-track";
 
 type GameState = "ready" | "playing" | "feedback" | "finished";
 type FeedbackType = "correct" | "wrong" | null;
@@ -282,8 +283,13 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
       best_streak: bestStreak,
       eco_points: ecoPoints,
     })
-      .then(() => {
-        if (!cancelled && finishRunIdRef.current === runId) setProgressSave("ok");
+      .then(async () => {
+        if (!cancelled && finishRunIdRef.current === runId) {
+          setProgressSave("ok");
+          const activity =
+            lesson.track === "math" ? "brain_sprint_math" : "brain_sprint_eco";
+          await triggerAutoTrack(activity);
+        }
       })
       .catch((err) => {
         console.error("Save failed:", err);

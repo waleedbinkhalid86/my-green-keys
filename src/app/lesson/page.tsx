@@ -5,6 +5,7 @@ import { Nunito } from "next/font/google";
 import { Flame, Shield } from "lucide-react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
+import { triggerAutoTrack } from "@/lib/quests/auto-track";
 import { getCurrentStreak, updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
 import { awardXp, getRangerProfile, XP_SOURCES, type XpAwardResult } from "@/lib/rangerHelpers";
 import { StreakCounter } from "@/components/StreakCounter";
@@ -1144,6 +1145,8 @@ export default function LessonPage() {
           const { error: insErr } = await supabase.from("student_progress").insert([payload]);
           if (insErr) throw insErr;
         }
+
+        void triggerAutoTrack("typing_lesson");
 
         const user = userData.user;
         if (!user?.id) {

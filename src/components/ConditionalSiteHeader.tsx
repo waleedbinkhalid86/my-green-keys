@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Leaf } from "lucide-react";
 import QuestBanner from "@/components/QuestBanner";
+import QuestAutoTrackToast from "@/components/QuestAutoTrackToast";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup"];
 
@@ -76,7 +77,12 @@ export default function ConditionalSiteHeader() {
           </nav>
         </div>
       </header>
-      {shouldShowQuestBanner(pathname) ? <QuestBanner /> : null}
+      {shouldShowQuestBanner(pathname) ? (
+        <>
+          <QuestBanner />
+          <QuestAutoTrackToast />
+        </>
+      ) : null}
     </>
   );
 }
