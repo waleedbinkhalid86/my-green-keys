@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
+import { CheckCircle2, XCircle } from "lucide-react";
 import type { BrainSprintLesson } from "@/lib/brain-sprint/types";
 
 type GameState = "ready" | "playing" | "feedback" | "finished";
@@ -62,6 +63,24 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
 
   const starsEarned = useMemo(() => starsForAccuracy(accuracyPct), [accuracyPct]);
   const ecoPointsEarned = useMemo(() => 5 + correctCount, [correctCount]);
+
+  const glassCardStyle: React.CSSProperties = {
+    background: "rgba(255, 255, 255, 0.6)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    border: "1px solid rgba(255, 255, 255, 0.8)",
+    borderRadius: "32px",
+    padding: "60px 48px",
+    boxShadow: "0 20px 60px rgba(27, 67, 50, 0.15)",
+  };
+
+  const hudPillStyle: React.CSSProperties = {
+    background: "rgba(255, 255, 255, 0.5)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.6)",
+    borderRadius: "9999px",
+    padding: "12px 24px",
+  };
 
   const finishLesson = () => {
     setGameState("finished");
@@ -170,10 +189,16 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
     if (gameState !== "feedback") return;
     const t = window.setTimeout(() => {
       advanceAfterFeedback();
-    }, 800);
+    }, 1500);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState, currentQuestionIndex]);
+
+  const progressPct = useMemo(() => {
+    if (totalQuestions <= 0) return 0;
+    const clamped = Math.min(totalQuestions, Math.max(1, currentQuestionIndex + 1));
+    return Math.round((clamped / totalQuestions) * 100);
+  }, [currentQuestionIndex, totalQuestions]);
 
   return (
     <div
@@ -182,27 +207,28 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
         backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
         backgroundSize: "20px 20px",
         minHeight: "100vh",
+        fontFamily: "Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
       }}
     >
       {gameState === "ready" && (
-        <div className="mgk-container flex min-h-[calc(100vh-64px)] items-center justify-center py-12">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-black/5">
+        <div className="mgk-container flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-3xl" style={glassCardStyle}>
             <div className="text-xs font-bold tracking-wider text-[#52B788] uppercase">BRAIN SPRINT</div>
-            <h1 className="mt-2 text-3xl font-extrabold text-[#1B4332]">Ready to start?</h1>
-            <p className="mt-2 text-sm font-semibold text-[#4A6355]">
+            <h1 className="mt-3 text-6xl font-bold text-[#1B4332]">Ready to start?</h1>
+            <p className="mt-4 text-base font-semibold text-[#4A6355]">
               {totalQuestions} questions · Type the answer · Press Enter to submit
             </p>
 
-            <div className="mt-6 flex items-center justify-between rounded-xl bg-[#E8F5EE] p-4">
+            <div className="mt-10 flex items-center justify-between rounded-2xl bg-white/50 p-6 ring-1 ring-white/40">
               <div>
                 <div className="text-sm font-extrabold text-[#1B4332]">Use 60-second timer?</div>
-                <div className="text-xs font-bold text-[#4A6355]">Optional speed bonus included</div>
+                <div className="mt-1 text-xs font-bold text-[#4A6355]">Optional speed bonus included</div>
               </div>
               <button
                 type="button"
                 onClick={() => setTimerEnabled((v) => !v)}
                 className={clsx(
-                  "relative h-9 w-16 rounded-full transition",
+                  "relative h-10 w-18 rounded-full transition",
                   timerEnabled ? "bg-[#52B788]" : "bg-gray-300"
                 )}
                 aria-pressed={timerEnabled}
@@ -219,7 +245,7 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
             <button
               type="button"
               onClick={startLesson}
-              className="mt-7 w-full rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-3.5 text-lg font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
+              className="mt-10 w-full rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-5 text-2xl font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
             >
               Start Lesson
             </button>
@@ -233,155 +259,150 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
         </div>
       )}
 
-      {gameState === "playing" && (
+      {(gameState === "playing" || gameState === "feedback") && (
         <div className="pb-10">
-          <div className="sticky top-0 z-40 border-b border-black/5 bg-white/90 backdrop-blur">
-            <div className="mgk-container flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-extrabold text-[#1B4332]">{lesson.title}</div>
-                <div className="text-xs font-bold text-[#4A6355]">
-                  Question {currentQuestionIndex + 1} / {totalQuestions}
+          <div className="mx-auto mt-6 mb-12 flex max-w-3xl items-center justify-between gap-6 px-4" style={hudPillStyle}>
+            <div className="min-w-0">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#4A6355]">LESSON</div>
+              <div className="truncate text-lg font-bold text-[#1B4332]">{lesson.title}</div>
+            </div>
+
+            <div className="flex items-center gap-8">
+              <div className="text-right">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#4A6355]">QUESTION</div>
+                <div className="text-lg font-bold text-[#1B4332]">
+                  {currentQuestionIndex + 1}/{totalQuestions}
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                {timerEnabled && (
-                  <div
-                    className={clsx(
-                      "text-sm font-black tabular-nums",
-                      timeRemaining < 10 ? "text-red-600" : "text-[#1B4332]"
-                    )}
-                    aria-label="Timer"
-                  >
-                    {formatTime(timeRemaining)}
+              {timerEnabled && (
+                <div className="text-right">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#4A6355]">TIMER</div>
+                  <div className={clsx("text-lg font-bold tabular-nums", timeRemaining < 10 ? "text-red-600" : "text-[#1B4332]")}>
+                    ⏱ {formatTime(timeRemaining)}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-right">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#4A6355]">SCORE</div>
+                <div className="text-lg font-bold text-[#1B4332]">{score}</div>
+              </div>
+
+              <div className="text-right">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#4A6355]">STREAK</div>
+                <div className="text-lg font-bold text-[#1B4332]">🔥 {streak}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
+            <div className="w-full max-w-3xl">
+              <div style={glassCardStyle}>
+                <div className="text-center text-6xl md:text-7xl font-bold text-[#1B4332] mb-12">
+                  {currentQuestion?.question ?? ""}
+                </div>
+
+                {gameState === "playing" && (
+                  <div>
+                    <input
+                      ref={inputRef}
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSubmit();
+                        }
+                      }}
+                      inputMode={lesson.track === "math" ? "numeric" : "text"}
+                      autoFocus
+                      className="w-full border-0 border-b-4 border-b-[#52B788] focus:border-b-[#1B4332] bg-transparent px-2 py-4 text-center text-5xl font-semibold text-[#1B4332] outline-none placeholder:text-[#4A6355]/50"
+                      placeholder="Type answer & press Enter"
+                      aria-label="Answer input"
+                    />
                   </div>
                 )}
-                <div className="text-sm font-extrabold text-[#1B4332]">
-                  Score: {score} <span className="opacity-40">·</span> Streak: 🔥{streak}
+
+                {gameState === "feedback" && feedbackType === "correct" && (
+                  <div className="mt-6 rounded-2xl border-2 border-[#52B788] bg-[#E8F5EE] p-6">
+                    <div className="flex items-center gap-5">
+                      <CheckCircle2 className="h-16 w-16 text-[#52B788]" aria-hidden />
+                      <div>
+                        <div className="text-2xl font-bold text-[#1B4332]">Correct!</div>
+                        <div className="mt-1 text-sm font-semibold text-[#52B788]">+10 points</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {gameState === "feedback" && feedbackType === "wrong" && (
+                  <div className="mt-6 rounded-2xl border-2 border-[#EF4444] bg-[#FEE2E2] p-6">
+                    <div className="flex items-center gap-5">
+                      <XCircle className="h-16 w-16 text-[#EF4444]" aria-hidden />
+                      <div className="min-w-0">
+                        <div className="text-2xl font-bold text-[#991B1B]">Not quite!</div>
+                        <div className="mt-2 text-lg font-semibold text-[#1B2D23]">
+                          The correct answer is:{" "}
+                          <span className="font-bold">{currentQuestion?.answer ?? ""}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-12">
+                  <div className="w-full h-2 bg-white/40 rounded-full">
+                    <div
+                      className="h-2 bg-[#52B788] rounded-full transition-all duration-500"
+                      style={{ width: `${progressPct}%` }}
+                      aria-hidden
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="mgk-container pt-10">
-            <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-black/5 transition">
-              <div className="text-center font-mono text-5xl font-black text-[#1B4332]">
-                {currentQuestion?.question ?? ""}
-              </div>
-
-              <div className="mt-8">
-                <input
-                  ref={inputRef}
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  inputMode={lesson.track === "math" ? "numeric" : "text"}
-                  autoFocus
-                  className="w-full border-b-4 border-[#52B788] bg-transparent px-2 py-4 text-center text-3xl font-black text-[#1B4332] outline-none placeholder:text-gray-300"
-                  placeholder="Type your answer"
-                  aria-label="Answer input"
-                />
-                <div className="mt-2 text-center text-xs font-bold text-[#4A6355]">
-                  Press Enter to submit
-                </div>
-              </div>
-            </div>
-
-            <div className="mx-auto mt-8 flex max-w-2xl gap-1.5">
-              {Array.from({ length: totalQuestions }).map((_, i) => (
-                <div
-                  key={i}
-                  className={clsx(
-                    "h-2 flex-1 rounded-full transition",
-                    i < answeredCount ? "bg-[#52B788]" : "bg-gray-200"
-                  )}
-                  aria-hidden
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {gameState === "feedback" && (
-        <div
-          className={clsx(
-            "fixed inset-0 z-[60] flex items-center justify-center text-center transition",
-            feedbackType === "correct" ? "bg-green-600" : "bg-red-600"
-          )}
-        >
-          <div className="px-6">
-            <div className="text-5xl font-black text-white">
-              {feedbackType === "correct" ? "✓ Correct!" : "✗ Wrong"}
-            </div>
-            {feedbackType === "wrong" && (
-              <div className="mt-4 text-xl font-extrabold text-white/95">
-                The answer was:{" "}
-                <span className="font-black">
-                  {currentQuestion?.answer ?? ""}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       )}
 
       {gameState === "finished" && (
-        <div className="mgk-container flex items-center justify-center py-12">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-black/5">
+        <div className="mgk-container flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-3xl" style={glassCardStyle}>
             <div className="text-xs font-bold tracking-wider text-[#52B788] uppercase">BRAIN SPRINT</div>
-            <h1 className="mt-2 text-4xl font-black text-[#1B4332]">Lesson Complete!</h1>
+            <h1 className="mt-3 text-6xl font-bold text-[#1B4332]">🎉 Lesson Complete!</h1>
             {isLessonComplete ? (
-              <p className="mt-2 text-sm font-semibold text-[#4A6355]">
+              <p className="mt-4 text-base font-semibold text-[#4A6355]">
                 Nice work — your stats are ready.
               </p>
             ) : null}
 
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-[#E8F5EE] p-5">
-                <div className="text-xs font-bold tracking-wider text-[#52B788] uppercase">Final score</div>
-                <div className="mt-1 text-4xl font-black text-[#1B4332]">{score}</div>
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Score</div>
+                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{score}</div>
               </div>
-              <div className="rounded-2xl bg-[#E3F2FD] p-5">
-                <div className="text-xs font-bold tracking-wider text-blue-600 uppercase">Accuracy</div>
-                <div className="mt-1 text-4xl font-black text-[#1B4332]">{accuracyPct}%</div>
+              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Accuracy</div>
+                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{accuracyPct}%</div>
               </div>
-              <div className="rounded-2xl bg-[#FFF8E1] p-5">
-                <div className="text-xs font-bold tracking-wider text-amber-600 uppercase">Correct</div>
-                <div className="mt-1 text-2xl font-black text-[#1B4332]">
-                  {correctCount} / {totalQuestions}
-                </div>
-                <div className="mt-1 text-sm font-bold text-[#4A6355]">Wrong: {wrongCount}</div>
-              </div>
-              <div className="rounded-2xl bg-[#F1F5F9] p-5">
-                <div className="text-xs font-bold tracking-wider text-slate-600 uppercase">Best streak</div>
-                <div className="mt-1 text-2xl font-black text-[#1B4332]">🔥 {bestStreak}</div>
-                <div className="mt-3 text-sm font-extrabold text-[#1B4332]">
-                  Stars earned:{" "}
-                  <span className="text-amber-600">{starsEarned} / 3</span>
-                </div>
-                <div className="mt-1 text-sm font-bold text-[#4A6355]">
-                  Eco-points earned: <span className="font-black text-[#1B4332]">{ecoPointsEarned}</span>
-                </div>
+              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Stars</div>
+                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{starsEarned} / 3</div>
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={resetToReady}
-                className="flex-1 rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-3 text-base font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
+                className="flex-1 rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-4 text-lg font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
               >
                 Play Again
               </button>
               <Link
                 href={`/brain-sprint/${lesson.track}`}
-                className="flex-1 rounded-full border-2 border-[#1B4332] py-3 text-center text-base font-extrabold text-[#1B4332] transition hover:bg-[#1B4332] hover:text-white"
+                className="flex-1 rounded-full border-2 border-[#1B4332] py-4 text-center text-lg font-extrabold text-[#1B4332] transition hover:bg-[#1B4332] hover:text-white"
                 style={{ textDecoration: "none" }}
               >
                 Back to {lesson.track === "math" ? "Math Mastery" : "Eco Genius"}
