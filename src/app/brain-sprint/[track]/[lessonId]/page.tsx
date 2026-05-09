@@ -3,13 +3,14 @@ import LessonClient from "./LessonClient";
 import { SAMPLE_LESSONS } from "@/lib/brain-sprint/lessons";
 import type { BrainSprintTrack } from "@/lib/brain-sprint/types";
 
-export default function BrainSprintLessonPage({
+export default async function BrainSprintLessonPage({
   params,
 }: {
-  params: { track: string; lessonId: string };
+  params: Promise<{ track: string; lessonId: string }>;
 }) {
-  const track = (params.track ?? "").toLowerCase().trim() as BrainSprintTrack;
-  const lessonId = (params.lessonId ?? "").toLowerCase().trim();
+  const { track: rawTrack, lessonId: rawLessonId } = await params;
+  const track = (rawTrack ?? "").toLowerCase().trim() as BrainSprintTrack;
+  const lessonId = (rawLessonId ?? "").toLowerCase().trim();
 
   if (track !== "math" && track !== "eco") notFound();
 

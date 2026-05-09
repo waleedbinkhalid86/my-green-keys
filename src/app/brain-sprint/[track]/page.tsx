@@ -27,8 +27,13 @@ function trackMeta(track: BrainSprintTrack) {
   } as const;
 }
 
-export default function BrainSprintTrackPage({ params }: { params: { track: string } }) {
-  const track = (params.track ?? "").toLowerCase().trim() as BrainSprintTrack;
+export default async function BrainSprintTrackPage({
+  params,
+}: {
+  params: Promise<{ track: string }>;
+}) {
+  const { track: rawTrack } = await params;
+  const track = (rawTrack ?? "").toLowerCase().trim() as BrainSprintTrack;
 
   const lessonsForTrack = SAMPLE_LESSONS.filter((l) => l.track === track).sort((a, b) => a.number - b.number);
   console.log(`[BrainSprint] track=${track} lessons=${lessonsForTrack.length}`);
