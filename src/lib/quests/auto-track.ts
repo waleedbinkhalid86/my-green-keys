@@ -82,6 +82,8 @@ export async function triggerAutoTrack(activity: AutoTrackActivity): Promise<{
 
     let questsUpdated = 0;
     let actionsTicked = 0;
+    /** Latest completed_actions per quest after this run (for all-daily-complete check). */
+    const latestCompletedByQuest: Record<string, number[]> = {};
 
     for (const quest of activeQuests) {
       const matchingActionIndexes: number[] = [];
@@ -95,6 +97,7 @@ export async function triggerAutoTrack(activity: AutoTrackActivity): Promise<{
 
       const todayProgress = await fetchTodayProgress(quest.id);
       const currentCompleted: number[] = todayProgress?.completed_actions || [];
+      latestCompletedByQuest[quest.id] = currentCompleted;
 
       const newToTick = matchingActionIndexes.filter(
         (idx) => !currentCompleted.includes(idx)
@@ -130,14 +133,32 @@ export async function triggerAutoTrack(activity: AutoTrackActivity): Promise<{
         }
       }
 
+      latestCompletedByQuest[quest.id] = updatedActions;
       questsUpdated++;
       actionsTicked += newToTick.length;
+    }
+
+    let allDailyComplete = false;
+    if (actionsTicked > 0) {
+      allDailyComplete = true;
+      for (const quest of activeQuests) {
+        let completed = latestCompletedByQuest[quest.id];
+        if (completed === undefined) {
+          const p = await fetchTodayProgress(quest.id);
+          completed = p?.completed_actions ?? [];
+          latestCompletedByQuest[quest.id] = completed;
+        }
+        if (completed.length !== quest.action_plan.length) {
+          allDailyComplete = false;
+          break;
+        }
+      }
     }
 
     if (actionsTicked > 0 && typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("quest-auto-track", {
-          detail: { actionsTicked, questsUpdated },
+          detail: { actionsTicked, questsUpdated, allDailyComplete },
         })
       );
     }

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Leaf } from "lucide-react";
 import QuestBanner from "@/components/QuestBanner";
 import QuestAutoTrackToast from "@/components/QuestAutoTrackToast";
+import { isQuestBannerAllowedPath } from "@/lib/quests/banner-routes";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup"];
 
@@ -13,42 +14,6 @@ function isHidden(pathname: string): boolean {
   if (pathname === "/") return true; // homepage has its own fixed nav
   if (HIDE_HEADER_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return true;
   return false;
-}
-
-const QUEST_BANNER_HIDE_PREFIXES = [
-  "/login",
-  "/signup",
-  "/admin",
-  "/pricing",
-  "/terms",
-  "/privacy",
-] as const;
-
-const QUEST_BANNER_SHOW_PREFIXES = [
-  "/lesson",
-  "/lesson-map",
-  "/games",
-  "/brain-sprint",
-  "/dashboard/parent",
-  "/dashboard/teacher",
-  "/certificate",
-] as const;
-
-function pathMatchesPrefix(pathname: string, prefix: string): boolean {
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
-}
-
-function shouldShowQuestBanner(pathname: string): boolean {
-  if (!pathname) return false;
-  if (pathname === "/") return false;
-  if (
-    QUEST_BANNER_HIDE_PREFIXES.some((p) => pathMatchesPrefix(pathname, p))
-  ) {
-    return false;
-  }
-  return QUEST_BANNER_SHOW_PREFIXES.some((p) =>
-    pathMatchesPrefix(pathname, p)
-  );
 }
 
 export default function ConditionalSiteHeader() {
@@ -77,7 +42,7 @@ export default function ConditionalSiteHeader() {
           </nav>
         </div>
       </header>
-      {shouldShowQuestBanner(pathname) ? (
+      {isQuestBannerAllowedPath(pathname) ? (
         <>
           <QuestBanner />
           <QuestAutoTrackToast />
