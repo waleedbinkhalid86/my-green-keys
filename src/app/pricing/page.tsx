@@ -3,31 +3,23 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Ban, Check, ChevronDown, Lock, Quote, Shield, Sprout } from "lucide-react";
+import {
+  Ban,
+  CheckCircle,
+  CheckCircle2,
+  ChevronDown,
+  Lock,
+  Minus,
+  Quote,
+  Shield,
+  Sprout,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { testimonials } from "@/data/testimonials";
-
-const LeafIconCustom = () => (
-  <svg
-    width={20}
-    height={20}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="text-primary-foreground"
-  >
-    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
-    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
-  </svg>
-);
 
 const PROMO_CODES: Record<string, { discount: string; type: string; applicable: string[] }> = {
   GREENSTART: { discount: "30% off", type: "percent", applicable: ["Family Plan"] },
@@ -163,69 +155,58 @@ const TRUST_SIGNALS = [
   { Icon: Ban, label: "No Ads" },
 ] as const;
 
-function PricingNav() {
+function splitPrice(price: string) {
+  const [dollarsRaw, centsRaw] = price.split(".");
+  const dollars = dollarsRaw || "0";
+  const cents = (centsRaw || "00").padEnd(2, "0").slice(0, 2);
+  return { dollars, cents };
+}
+
+function GradientPrice({
+  price,
+  className,
+}: {
+  price: string;
+  className?: string;
+}) {
+  const { dollars, cents } = splitPrice(price);
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur">
-      <div className="mgk-container flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-3 no-underline">
-          <div className="flex size-9 items-center justify-center rounded-md bg-gray-900 text-white">
-            <LeafIconCustom />{" "}
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-gray-900">
-            My Green Keys
-          </span>
-        </Link>
-        <div className="hidden items-center gap-8 md:flex">
-          {["Features", "Modules", "Schools"].map((l) => (
-            <Link
-              key={l}
-              href={`/#${l.toLowerCase()}`}
-              className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-            >
-              {l}
-            </Link>
-          ))}
-          <Link href="/pricing" className="text-sm font-semibold text-gray-900">
-            Pricing
-          </Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="hidden text-sm font-medium text-gray-600 hover:text-gray-900 md:inline"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/signup"
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "rounded-md border border-gray-300 bg-white font-medium text-gray-900 hover:bg-gray-50"
-            )}
-          >
-            Start free
-          </Link>
-        </div>
-      </div>
-    </nav>
+    <div className={cn("flex items-baseline justify-center", className)}>
+      <span className="text-6xl font-bold text-white">${dollars}</span>
+      <span className="text-3xl font-bold text-white">.{cents}</span>
+      <span className="ml-2 text-lg text-white/80">/month</span>
+    </div>
+  );
+}
+
+function LightCardPrice({ price }: { price: string }) {
+  const { dollars, cents } = splitPrice(price);
+  return (
+    <div className="flex items-baseline">
+      <span className="text-6xl font-bold text-[#1B4332]">${dollars}</span>
+      <span className="text-3xl font-bold text-[#1B4332]">.{cents}</span>
+      <span className="ml-2 text-lg text-[#4A6355]">/month</span>
+    </div>
   );
 }
 
 function CompareCell({ value }: { value: Cell }) {
   if (value === "yes") {
     return (
-      <span className="inline-flex text-green-600" aria-label="Included">
-        <Check className="h-5 w-5 stroke-[2.5]" strokeLinecap="round" strokeLinejoin="round" />
+      <span className="inline-flex justify-center text-[#52B788]" aria-label="Included">
+        <CheckCircle2 className="h-5 w-5 stroke-[2.25]" strokeLinecap="round" strokeLinejoin="round" />
       </span>
     );
   }
   if (value === "no") {
-    return <span className="text-lg font-light text-gray-300">—</span>;
+    return (
+      <span className="inline-flex justify-center text-gray-300" aria-hidden>
+        <Minus className="h-5 w-5 stroke-[2.25]" strokeLinecap="round" strokeLinejoin="round" />
+      </span>
+    );
   }
   return <span className="text-sm text-gray-700">{value}</span>;
 }
-
-const cardShell = "flex h-full flex-col rounded-md bg-white p-8 border border-gray-200 transition-colors hover:border-gray-300";
 
 function PricingToggle({
   isYearly,
@@ -236,13 +217,13 @@ function PricingToggle({
 }) {
   return (
     <div className="flex items-center justify-center">
-      <div className="inline-flex items-center gap-1 rounded-md bg-gray-100 p-1">
+      <div className="inline-flex items-center gap-1 rounded-full border border-[#D1E8DC] bg-white p-1 shadow-sm">
         <button
           type="button"
           onClick={() => onChange(false)}
           className={cn(
-            "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-            !isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            !isYearly ? "bg-[#1B4332] text-white" : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]"
           )}
           aria-pressed={!isYearly}
         >
@@ -252,14 +233,16 @@ function PricingToggle({
           type="button"
           onClick={() => onChange(true)}
           className={cn(
-            "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-            isYearly ? "bg-gray-900 text-white" : "bg-transparent text-gray-700 hover:bg-gray-200"
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            isYearly ? "bg-[#1B4332] text-white" : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]"
           )}
           aria-pressed={isYearly}
         >
           <span className="inline-flex items-center gap-2">
             Yearly
-            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Save 20%</span>
+            <span className="rounded-full bg-[#E8F5EE] px-2 py-0.5 text-xs font-semibold text-[#1B4332]">
+              Save 20%
+            </span>
           </span>
         </button>
       </div>
@@ -279,30 +262,31 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="rounded-md border border-gray-200 bg-white">
+    <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-5 transition-shadow hover:shadow-md">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left"
+        className="flex w-full items-center justify-between gap-4 text-left"
         onClick={onToggle}
         aria-expanded={isOpen}
       >
-        <span className="text-sm font-medium text-gray-900">{question}</span>
+        <span className="text-base font-bold text-[#1B4332]">{question}</span>
         <ChevronDown
-          className={cn("h-4 w-4 shrink-0 text-gray-400 transition-transform", isOpen && "rotate-180")}
+          className={cn("h-5 w-5 shrink-0 text-[#4A6355] transition-transform", isOpen && "rotate-180")}
           aria-hidden
         />
       </button>
-      <div
-        className={cn(
-          "grid transition-[grid-template-rows] duration-200 ease-out",
-          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        )}
-      >
-        <div className="overflow-hidden px-6 pb-4 text-sm leading-relaxed text-gray-600">{answer}</div>
-      </div>
+      {isOpen ? (
+        <p className="mt-3 border-t border-gray-100 pt-3 text-sm leading-relaxed text-[#4A6355]">{answer}</p>
+      ) : null}
     </div>
   );
 }
+
+const primaryCardBase =
+  "relative flex h-full flex-col rounded-3xl p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl";
+
+const secondaryCardBase =
+  "relative flex h-full flex-col rounded-3xl border border-[#D1E8DC] bg-white p-8 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl";
 
 function PricingPageContent() {
   const router = useRouter();
@@ -428,13 +412,6 @@ function PricingPageContent() {
   const schoolDisplayPrice = "149.00";
   const schoolGrowthDisplayPrice = "299.00";
 
-  const splitPrice = (price: string) => {
-    const [dollarsRaw, centsRaw] = price.split(".");
-    const dollars = dollarsRaw || "0";
-    const cents = (centsRaw || "00").padEnd(2, "0").slice(0, 2);
-    return { dollars, cents };
-  };
-
   useEffect(() => {
     if (!ecoGardenExpired || !familyPlanRef.current) return;
     const t = window.setTimeout(() => {
@@ -443,50 +420,46 @@ function PricingPageContent() {
     return () => window.clearTimeout(t);
   }, [ecoGardenExpired]);
 
+  const ctaWhite =
+    "mt-auto w-full rounded-full bg-white px-6 py-3 text-center text-sm font-bold text-[#1B4332] shadow-sm transition hover:bg-white/95 hover:brightness-105 disabled:opacity-60";
+
   return (
     <div
       className={cn(
         "min-h-screen w-full bg-[#FAFAFA] antialiased text-gray-900",
-        // Same dot-grid background as auth pages (MinimalAuthShell)
         "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       )}
     >
-      <PricingNav />
-
       {/* Hero */}
-      <section className="mgk-section text-center">
-        <div className="mgk-container">
-          <div className="mx-auto max-w-3xl">
-            <h1 className="text-center text-4xl font-bold text-gray-900 md:text-5xl">
-              Pricing that grows with you
-            </h1>
-            <p className="mx-auto mb-12 mt-3 max-w-xl text-center text-base text-gray-600">
-              Free forever for trying out. Upgrade when ready. No hidden fees.
-            </p>
-          </div>
-          <div className="mt-12">
+      <section className="py-16 md:py-20">
+        <div className="mx-auto max-w-3xl px-4 text-center">
+          <h1 className="text-4xl font-bold text-[#1B4332] md:text-5xl">Pricing that grows with you</h1>
+          <p className="mx-auto mt-3 max-w-xl text-base text-[#4A6355]">
+            Free forever for trying out. Upgrade when ready. No hidden fees.
+          </p>
+          <div className="mt-10">
             <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
           </div>
         </div>
       </section>
 
       {/* Pricing cards */}
-      <section className="mgk-section pt-0">
-        <div className="mgk-container">
+      <section className="py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-4">
           {ecoGardenExpired ? (
             <div
-              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-md border border-yellow-200 bg-yellow-50 p-4 text-center sm:text-left"
+              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-center sm:text-left"
               role="status"
             >
-              <Sprout className="mx-auto h-8 w-8 shrink-0 text-green-600 sm:mx-0" strokeWidth={2} aria-hidden />
-              <p className="text-base font-semibold text-[#1A2F23]">
+              <Sprout className="mx-auto h-8 w-8 shrink-0 text-[#52B788] sm:mx-0" strokeWidth={2} aria-hidden />
+              <p className="text-base font-semibold text-[#1B4332]">
                 Your garden is waiting. Upgrade to keep your plants growing.
               </p>
             </div>
           ) : null}
           {checkoutError ? (
             <div
-              className="mb-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+              className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
               role="alert"
             >
               {checkoutError}
@@ -495,24 +468,32 @@ function PricingPageContent() {
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Free */}
-            <div className="relative flex h-full flex-col rounded-md bg-emerald-400 p-8 text-white">
-              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">Free</p>
-              <div className="text-center">
-                <div className="text-5xl font-black">
-                  <span>${splitPrice("0.00").dollars}</span>
-                  <sup className="ml-1 text-2xl font-bold align-text-top">{splitPrice("0.00").cents}</sup>
-                </div>
-                <p className="mt-1 text-sm opacity-90">/forever</p>
+            <div
+              className={cn(
+                primaryCardBase,
+                "bg-gradient-to-br from-[#52B788] to-[#40916C] text-white"
+              )}
+            >
+              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">FREE</p>
+              <div className="mt-4 flex justify-center">
+                <span className="text-6xl font-bold text-white">$0</span>
               </div>
-              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For families wanting to try Green Keys for an unlimited period of time
               </p>
-              <Link
-                href="/signup"
-                className="mt-auto inline-flex w-full items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100"
-              >
+              <Link href="/signup" className={cn(ctaWhite, "mt-6 inline-flex items-center justify-center no-underline")}>
                 Start free
               </Link>
+              <div className="my-6 border-t border-white/20" />
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
+              <ul className="flex flex-1 flex-col gap-2.5">
+                {FREE_FEATURES.map((t) => (
+                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {/* Family — Most Popular */}
@@ -520,214 +501,163 @@ function PricingPageContent() {
               ref={familyPlanRef}
               id="pricing-family-plan"
               className={cn(
-                "relative flex h-full flex-col rounded-md bg-green-600 p-8 text-white",
-                ecoGardenExpired && "ring-2 ring-yellow-300 ring-offset-2"
+                primaryCardBase,
+                "-translate-y-0 md:-translate-y-3",
+                "bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white",
+                ecoGardenExpired && "ring-2 ring-amber-400 ring-offset-2 ring-offset-[#FAFAFA]"
               )}
             >
-              <div className="absolute right-3 top-3">
-                <span className="rounded-md bg-yellow-300 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-900">
-                  Most popular
-                </span>
+              <span className="absolute -top-3 right-6 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
+                MOST POPULAR
+              </span>
+              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">FAMILY</p>
+              <div className="mt-4">
+                <GradientPrice price={familyDisplayPrice} />
               </div>
-              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">Family</p>
-              <div className="text-center">
-                {(() => {
-                  const { dollars, cents } = splitPrice(familyDisplayPrice);
-                  return (
-                    <div className="text-5xl font-black">
-                      <span>${dollars}</span>
-                      <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
-                    </div>
-                  );
-                })()}
-                <p className="mt-1 text-sm opacity-90">/month</p>
-              </div>
-              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For families who want unlimited lessons and full features
               </p>
-              <button
-                type="button"
-                className="mt-auto w-full rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100 disabled:opacity-60"
-                disabled={checkoutBusy}
-                onClick={() => void openCheckout("family")}
-              >
+              <button type="button" className={cn(ctaWhite, "mt-6")} disabled={checkoutBusy} onClick={() => void openCheckout("family")}>
                 {checkoutBusy ? "Loading…" : "Choose Family"}
               </button>
+              <div className="my-6 border-t border-white/20" />
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
+              <ul className="flex flex-1 flex-col gap-2.5">
+                {FAMILY_FEATURES.map((t) => (
+                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {/* School */}
-            <div className="relative flex h-full flex-col rounded-md bg-teal-600 p-8 text-white">
-              <p className="mb-4 text-center text-xl font-bold uppercase tracking-wide">School</p>
-              <div className="text-center">
-                {(() => {
-                  const { dollars, cents } = splitPrice(schoolDisplayPrice);
-                  return (
-                    <div className="text-5xl font-black">
-                      <span>${dollars}</span>
-                      <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
-                    </div>
-                  );
-                })()}
-                <p className="mt-1 text-sm opacity-90">/month</p>
+            <div
+              className={cn(
+                primaryCardBase,
+                "bg-gradient-to-br from-[#0E7490] to-[#0891B2] text-white"
+              )}
+            >
+              <p className="mb-2 text-sm font-bold uppercase tracking-widest text-white/80">SCHOOL</p>
+              <div className="mt-4">
+                <GradientPrice price={schoolDisplayPrice} />
               </div>
-              <p className="mb-6 mt-3 text-center leading-relaxed opacity-90">
+              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                 For classrooms and teachers managing students at scale
               </p>
               <button
                 type="button"
-                className="mt-auto w-full rounded-md bg-white px-6 py-3 text-sm font-bold text-gray-900 hover:bg-gray-100 disabled:opacity-60"
+                className={cn(ctaWhite, "mt-6")}
                 disabled={checkoutBusy}
                 onClick={() => void openCheckout("school_starter")}
               >
                 {checkoutBusy ? "Loading…" : "Choose School"}
               </button>
+              <div className="my-6 border-t border-white/20" />
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
+              <ul className="flex flex-1 flex-col gap-2.5">
+                {SCHOOL_STARTER_FEATURES.filter((t) => t !== "Everything in Family").map((t) => (
+                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          {/* Plan includes */}
-          <section className="mt-12">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div>
-                <h3 className="mb-2 text-base font-bold text-emerald-700">Free includes</h3>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  {FREE_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-base font-bold text-green-700">Family includes</h3>
-                <p className="mb-3 text-sm text-gray-600">Everything in Free, and:</p>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  {FAMILY_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-base font-bold text-teal-700">School includes</h3>
-                <p className="mb-3 text-sm text-gray-600">Everything in Family, and:</p>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  {SCHOOL_STARTER_FEATURES.filter((t) => t !== "Everything in Family").map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* Secondary plans */}
+          <div className="mt-16 md:mt-20">
+            <div className="mb-10 text-center">
+              <h2 className="text-2xl font-bold text-[#1B4332]">For larger schools</h2>
+              <p className="mt-2 text-sm text-[#4A6355]">Scale with confidence</p>
             </div>
-          </section>
-
-          <div className="mgk-section-tight mt-12">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">For larger schools</h2>
-              <p className="text-sm text-gray-600 mb-8">Scale with confidence</p>
-            </div>
-            <div className="mgk-grid grid-cols-1 md:grid-cols-2">
-              {/* School Growth */}
-              <div className={cardShell}>
-                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">School Growth</p>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className={secondaryCardBase}>
+                <p className="text-sm font-bold uppercase tracking-widest text-[#4A6355]">SCHOOL GROWTH</p>
                 <div className="mt-4">
-                  {(() => {
-                    const { dollars, cents } = splitPrice(schoolGrowthDisplayPrice);
-                    return (
-                      <div className="text-5xl font-black text-gray-900">
-                        <span>${dollars}</span>
-                        <sup className="ml-1 text-2xl font-bold align-text-top">{cents}</sup>
-                      </div>
-                    );
-                  })()}
-                  <p className="mt-1 text-sm text-gray-600">/month</p>
+                  <LightCardPrice price={schoolGrowthDisplayPrice} />
                 </div>
                 <div className="mt-4 flex flex-wrap items-end gap-2">
-                  <span className="text-5xl font-semibold text-gray-900">200</span>
-                  <span className="text-sm text-gray-500">students</span>
+                  <span className="text-4xl font-bold text-[#1B4332]">200</span>
+                  <span className="text-sm font-medium text-[#4A6355]">students</span>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">For schools scaling their program</p>
-                <div className="my-6 border-t border-gray-100" />
-                <ul className="space-y-3">
+                <p className="mt-3 text-sm leading-relaxed text-[#4A6355]">For schools scaling their program</p>
+                <button
+                  type="button"
+                  className="mt-8 w-full rounded-full bg-[#1B4332] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2D6A4F] disabled:opacity-60"
+                  disabled={checkoutBusy}
+                  onClick={() => void openCheckout("school_growth")}
+                >
+                  {checkoutBusy ? "Loading…" : "Choose Growth"}
+                </button>
+                <div className="my-6 border-t border-[#D1E8DC]" />
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">What&apos;s included:</p>
+                <ul className="space-y-2.5">
                   {SCHOOL_GROWTH_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
-                      <span className="text-sm text-gray-700">{t}</span>
+                    <li key={t} className="flex items-start gap-2.5 text-sm text-[#1B4332]">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]" aria-hidden />
+                      <span>{t}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-8">
-                  <button
-                    type="button"
-                    className="w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-60"
-                    disabled={checkoutBusy}
-                    onClick={() => void openCheckout("school_growth")}
-                  >
-                    {checkoutBusy ? "Loading…" : "Choose Growth"}
-                  </button>
-                </div>
               </div>
 
-              {/* Enterprise */}
-              <div className={cardShell}>
-                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Enterprise</p>
-                <div className="mt-4 flex flex-wrap items-end gap-2">
-                  <span className="text-5xl font-semibold text-gray-900">Custom</span>
-                  <span className="text-sm text-gray-500">pricing</span>
+              <div className={secondaryCardBase}>
+                <p className="text-sm font-bold uppercase tracking-widest text-[#4A6355]">ENTERPRISE</p>
+                <div className="mt-4">
+                  <span className="text-6xl font-bold text-[#1B4332]">Custom</span>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">Districts & multi-campus schools</p>
-                <div className="my-6 border-t border-gray-100" />
-                <ul className="space-y-3">
+                <p className="mt-4 text-sm leading-relaxed text-[#4A6355]">Districts & multi-campus schools</p>
+                <a
+                  href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry"
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "mt-8 w-full rounded-full border-2 border-[#1B4332] bg-transparent py-3 text-sm font-bold text-[#1B4332] hover:bg-[#F0F9F4]"
+                  )}
+                >
+                  Contact enterprise sales
+                </a>
+                <div className="my-6 border-t border-[#D1E8DC]" />
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">What&apos;s included:</p>
+                <ul className="space-y-2.5">
                   {ENTERPRISE_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-green-600 mt-0.5" aria-hidden />
-                      <span className="text-sm text-gray-700">{t}</span>
+                    <li key={t} className="flex items-start gap-2.5 text-sm text-[#1B4332]">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]" aria-hidden />
+                      <span>{t}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-8">
-                  <a
-                    href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry"
-                    className="block w-full rounded-md border border-gray-300 bg-white py-2.5 text-center text-sm font-medium text-gray-900 hover:bg-gray-50"
-                  >
-                    Contact enterprise sales
-                  </a>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Trust bar */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-gray-500">
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
             {TRUST_SIGNALS.map((s) => (
               <div key={s.label} className="inline-flex items-center gap-2">
-                <s.Icon className="h-4 w-4 text-gray-400" strokeWidth={2.25} aria-hidden />
+                <s.Icon className="h-4 w-4 text-[#52B788]" strokeWidth={2.25} aria-hidden />
                 <span>{s.label}</span>
               </div>
             ))}
           </div>
 
           {/* Promo codes */}
-          <section className="mt-10">
-            <div className="mx-auto max-w-md">
-              <h2 className="text-center text-base font-medium text-gray-900">Have a promo code?</h2>
-              <div className="mt-4 flex gap-2">
+          <section className="mt-16 md:mt-20">
+            <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 shadow-md">
+              <h2 className="mb-3 text-xl font-bold text-[#1B4332]">Have a promo code?</h2>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                 <Input
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   placeholder="Enter code"
-                  className="h-10 flex-1 rounded-md border-gray-300 text-sm"
+                  className="h-auto flex-1 rounded-xl border-2 border-gray-200 px-4 py-3 text-base focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
                 />
                 <Button
                   type="button"
                   onClick={handlePromoCode}
-                  className="h-10 rounded-md bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800"
+                  className="h-auto rounded-xl bg-[#52B788] px-6 py-3 text-base font-bold text-white hover:bg-[#40916C]"
                 >
                   Apply
                 </Button>
@@ -735,7 +665,7 @@ function PricingPageContent() {
               {promoResult ? (
                 <div
                   className={cn(
-                    "mt-3 rounded-md border px-3 py-2 text-sm",
+                    "mt-3 rounded-xl border px-3 py-2 text-sm",
                     promoResult.type === "success"
                       ? "border-green-200 bg-green-50 text-green-800"
                       : "border-red-200 bg-red-50 text-red-800"
@@ -745,34 +675,42 @@ function PricingPageContent() {
                   {promoResult.message}
                 </div>
               ) : null}
-              <div className="mt-4 text-xs text-gray-500">
-                <p className="font-medium text-gray-700">Available codes</p>
-                <div className="mt-2 space-y-1">
+              <div className="mt-5 text-sm text-slate-500">
+                <p className="mb-2 font-medium text-slate-600">Available codes</p>
+                <div className="flex flex-wrap gap-2">
                   {Object.entries(PROMO_CODES).map(([code, info]) => (
-                    <p key={code}>
-                      <span className="font-mono text-gray-700">{code}</span> — {info.discount} ({info.applicable.join(", ")})
-                    </p>
+                    <span
+                      key={code}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-[#E8F5EE] px-2 py-1 font-mono text-sm text-[#1B4332]"
+                      title={`${info.discount} — ${info.applicable.join(", ")}`}
+                    >
+                      {code}
+                    </span>
                   ))}
                 </div>
+                <ul className="mt-3 list-none space-y-1 text-xs text-slate-500">
+                  {Object.entries(PROMO_CODES).map(([code, info]) => (
+                    <li key={code}>
+                      <span className="font-mono text-[#4A6355]">{code}</span> — {info.discount} ({info.applicable.join(", ")})
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </section>
 
           {testimonials.length > 0 ? (
-            <section className="mgk-section-tight">
-              <div className="mgk-container mx-auto max-w-4xl">
-                <h3 className="mb-8 text-center text-2xl font-bold text-gray-900">What educators are saying</h3>
+            <section className="py-16 md:py-20">
+              <div className="mx-auto max-w-4xl">
+                <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">What educators are saying</h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {testimonials.slice(0, 2).map((t) => (
-                    <div
-                      key={t.id}
-                      className="mgk-card-sm border border-gray-100 p-6"
-                    >
-                      <Quote className="mb-3 h-6 w-6 text-green-600" />
-                      <p className="mb-4 text-gray-700">&ldquo;{t.quote}&rdquo;</p>
+                    <div key={t.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                      <Quote className="mb-3 h-6 w-6 text-[#52B788]" />
+                      <p className="mb-4 text-[#4A6355]">&ldquo;{t.quote}&rdquo;</p>
                       <div className="text-sm">
-                        <div className="font-semibold text-gray-900">{t.author}</div>
-                        <div className="text-gray-600">
+                        <div className="font-semibold text-[#1B4332]">{t.author}</div>
+                        <div className="text-[#4A6355]">
                           {t.role}
                           {t.organization ? ` • ${t.organization}` : null}
                         </div>
@@ -787,46 +725,46 @@ function PricingPageContent() {
       </section>
 
       {/* Feature comparison */}
-      <section className="mgk-section-tight">
-        <div className="mgk-container">
-          <h2 className="mb-2 text-center text-3xl font-bold text-gray-900">Compare every feature</h2>
-          <p className="mb-12 text-center text-base text-gray-600">Side-by-side feature breakdown</p>
+      <section className="py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="mb-2 text-center text-3xl font-bold text-[#1B4332]">Compare every feature</h2>
+          <p className="mb-10 text-center text-base text-[#4A6355]">Side-by-side feature breakdown</p>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[720px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-4 shadow-xl md:p-8">
+            <div className="min-w-[720px] overflow-hidden rounded-2xl">
               <table className="w-full border-collapse text-left text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                    <th className="px-6 py-3">Feature</th>
-                    <th className="px-6 py-3 text-center text-emerald-700">Free</th>
-                    <th className="px-6 py-3 text-center text-green-700">Family</th>
-                    <th className="px-6 py-3 text-center text-teal-700">School</th>
+                <thead>
+                  <tr className="rounded-t-2xl bg-[#1B4332] text-white">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">Feature</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Free</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Family</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">School</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-t border-gray-100 bg-white">
+                  <tr className="border-b border-gray-100 transition-colors hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-700">Price (monthly)</td>
                     <td className="px-6 py-3 text-center text-sm text-gray-700">$0</td>
-                    <td className="px-6 py-3 text-center text-sm text-gray-700">$9.99/mo</td>
+                    <td className="bg-[#F0F9F4] px-6 py-3 text-center text-sm text-gray-700">$9.99/mo</td>
                     <td className="px-6 py-3 text-center text-sm text-gray-700">$149/mo (Starter)</td>
                   </tr>
                   {COMPARISON_GROUPS.map((group) => (
                     <React.Fragment key={group.category}>
-                      <tr className="bg-gray-100">
-                        <td colSpan={4} className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-700">
+                      <tr className="bg-[#F8FAF5]">
+                        <td
+                          colSpan={4}
+                          className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#1B4332]"
+                        >
                           {group.category.toUpperCase()}
                         </td>
                       </tr>
-                      {group.rows.map((row, idx) => (
-                        <tr
-                          key={row.feature}
-                          className={cn("border-t border-gray-100", idx % 2 === 1 ? "bg-gray-50/50" : "bg-white")}
-                        >
+                      {group.rows.map((row) => (
+                        <tr key={row.feature} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
                           <td className="px-6 py-3 font-medium text-gray-700">{row.feature}</td>
                           <td className="px-6 py-3 text-center">
                             <CompareCell value={row.free} />
                           </td>
-                          <td className="px-6 py-3 text-center">
+                          <td className="bg-[#F0F9F4] px-6 py-3 text-center">
                             <CompareCell value={row.family} />
                           </td>
                           <td className="px-6 py-3 text-center">
@@ -839,21 +777,21 @@ function PricingPageContent() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-4 text-center text-sm text-gray-600">
-              School Growth (up to 200 students) is <strong className="font-semibold text-gray-800">$299/mo</strong>.
+            <p className="mt-6 text-center text-sm text-[#4A6355]">
+              School Growth (up to 200 students) is <strong className="font-semibold text-[#1B4332]">$299/mo</strong>.
             </p>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="mgk-section-tight">
-        <div className="mgk-container">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-gray-900">Frequently asked questions</h2>
-            <p className="mt-2 text-sm text-gray-600">Everything you need to know before you subscribe</p>
+      <section className="py-16 md:py-20">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-[#1B4332]">Frequently asked questions</h2>
+            <p className="mt-2 text-sm text-[#4A6355]">Everything you need to know before you subscribe</p>
           </div>
-          <div className="mx-auto mt-8 max-w-2xl space-y-3">
+          <div className="mt-8">
             {FAQ_ITEMS.slice(0, 6).map((faq, idx) => (
               <FaqItem
                 key={faq.q}
@@ -868,23 +806,23 @@ function PricingPageContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="mgk-section">
-        <div className="mgk-container">
-          <div className="rounded-md bg-gray-900 p-12 text-center text-white">
-            <h2 className="text-3xl font-semibold">Ready to start?</h2>
-            <p className="mt-2 text-sm text-gray-400">Free forever for the first 10 lessons. No credit card.</p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <section className="py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="rounded-3xl bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] p-12 text-center md:p-16">
+            <h2 className="mb-4 text-4xl font-bold text-white md:text-5xl">Ready to start?</h2>
+            <p className="mb-8 text-lg text-white/90">Free forever for the first 10 lessons. No credit card.</p>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-md bg-white px-6 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100"
+                className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-bold text-[#1B4332] transition hover:scale-105"
               >
-                Start free
+                Start Free
               </Link>
               <a
                 href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry"
-                className="inline-flex items-center justify-center rounded-md border border-gray-700 px-6 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+                className="inline-flex items-center justify-center rounded-full border-2 border-white bg-transparent px-8 py-3 text-base font-bold text-white transition hover:bg-white hover:text-[#1B4332]"
               >
-                Talk to sales
+                Talk to Sales
               </a>
             </div>
           </div>

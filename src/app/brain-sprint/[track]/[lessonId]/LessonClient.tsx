@@ -32,6 +32,59 @@ function starsForAccuracy(accPct: number): number {
   return 0;
 }
 
+function renderQuestion(text: string) {
+  // Detect multi-choice: must have at least " a)" and " b)" in the text
+  const isMC = /\sa\)/i.test(text) && /\sb\)/i.test(text);
+
+  if (!isMC) {
+    return (
+      <div className="text-5xl md:text-6xl font-bold text-[#1B4332] text-center leading-tight">
+        {text}
+      </div>
+    );
+  }
+
+  // Split into header + options
+  // Pattern: "Header text: a) optA b) optB c) optC"
+  const match = text.match(/^(.*?)\s*a\)\s*(.*?)(?:\s+b\)\s*(.*?))?(?:\s+c\)\s*(.*?))?$/i);
+
+  if (!match) {
+    return (
+      <div className="text-5xl md:text-6xl font-bold text-[#1B4332] text-center leading-tight">
+        {text}
+      </div>
+    );
+  }
+
+  const [, header, optA, optB, optC] = match;
+
+  return (
+    <div>
+      <div className="text-4xl md:text-5xl font-bold text-[#1B4332] mb-8 text-center leading-tight">
+        {header.trim().replace(/:$/, "")}
+      </div>
+      <div className="flex flex-col gap-3 max-w-md mx-auto">
+        <div className="text-2xl font-semibold text-[#1B4332] bg-white/60 backdrop-blur rounded-xl px-6 py-3 border border-white/80 flex items-center">
+          <span className="text-[#52B788] font-bold mr-3 text-3xl">a)</span>
+          <span>{optA?.trim()}</span>
+        </div>
+        {optB && (
+          <div className="text-2xl font-semibold text-[#1B4332] bg-white/60 backdrop-blur rounded-xl px-6 py-3 border border-white/80 flex items-center">
+            <span className="text-[#52B788] font-bold mr-3 text-3xl">b)</span>
+            <span>{optB.trim()}</span>
+          </div>
+        )}
+        {optC && (
+          <div className="text-2xl font-semibold text-[#1B4332] bg-white/60 backdrop-blur rounded-xl px-6 py-3 border border-white/80 flex items-center">
+            <span className="text-[#52B788] font-bold mr-3 text-3xl">c)</span>
+            <span>{optC.trim()}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) {
   const totalQuestions = lesson.questions.length;
 
@@ -355,8 +408,8 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
           <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
             <div className="w-full max-w-3xl">
               <div style={glassCardStyle}>
-                <div className="text-center text-6xl md:text-7xl font-bold text-[#1B4332] mb-12">
-                  {currentQuestion?.question ?? ""}
+                <div className="mb-12">
+                  {currentQuestion ? renderQuestion(currentQuestion.question) : null}
                 </div>
 
                 {gameState === "playing" && (
