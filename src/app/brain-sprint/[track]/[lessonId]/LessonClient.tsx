@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import type { BrainSprintLesson } from "@/lib/brain-sprint/types";
+import { saveLessonResult } from "@/lib/brain-sprint/progress-api";
 
 type GameState = "ready" | "playing" | "feedback" | "finished";
 type FeedbackType = "correct" | "wrong" | null;
+type ProgressSaveState = "idle" | "saving" | "ok" | "err";
 
 function normalizeAnswer(s: string): string {
   const v = s.trim().toLowerCase();
@@ -45,6 +47,9 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
   const [feedbackType, setFeedbackType] = useState<FeedbackType>(null);
   const [isLessonComplete, setIsLessonComplete] = useState(false);
   const [bestStreak, setBestStreak] = useState(0);
+  const [progressSave, setProgressSave] = useState<ProgressSaveState>("idle");
+  const finishRunIdRef = useRef(0);
+  const lastPersistedFinishRunIdRef = useRef(-1);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const questionStartAtRef = useRef<number>(0);
@@ -83,12 +88,14 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
   };
 
   const finishLesson = () => {
+    finishRunIdRef.current += 1;
     setGameState("finished");
     setFeedbackType(null);
     setIsLessonComplete(true);
   };
 
   const resetToReady = () => {
+    setProgressSave("idle");
     setTimeRemaining(60);
     setCurrentQuestionIndex(0);
     setUserAnswer("");
@@ -104,6 +111,7 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
   };
 
   const startLesson = () => {
+    setProgressSave("idle");
     setTimeRemaining(60);
     setCurrentQuestionIndex(0);
     setUserAnswer("");
@@ -193,6 +201,54 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState, currentQuestionIndex]);
+
+  useEffect(() => {
+    if (gameState !== "finished") return;
+
+    const runId = finishRunIdRef.current;
+    if (lastPersistedFinishRunIdRef.current === runId) return;
+    lastPersistedFinishRunIdRef.current = runId;
+
+    const accuracy =
+      totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const stars = starsForAccuracy(
+      totalQuestions > 0
+        ? Math.round((correctCount / totalQuestions) * 100)
+        : 0,
+    );
+    const ecoPoints = 5 + correctCount;
+
+    let cancelled = false;
+    setProgressSave("saving");
+    saveLessonResult({
+      lesson_id: lesson.id,
+      track: lesson.track,
+      score,
+      stars,
+      accuracy,
+      best_streak: bestStreak,
+      eco_points: ecoPoints,
+    })
+      .then(() => {
+        if (!cancelled && finishRunIdRef.current === runId) setProgressSave("ok");
+      })
+      .catch((err) => {
+        console.error("Save failed:", err);
+        if (!cancelled && finishRunIdRef.current === runId) setProgressSave("err");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    gameState,
+    lesson.id,
+    lesson.track,
+    score,
+    bestStreak,
+    correctCount,
+    totalQuestions,
+  ]);
 
   const progressPct = useMemo(() => {
     if (totalQuestions <= 0) return 0;
@@ -371,43 +427,59 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
           <div className="w-full max-w-3xl" style={glassCardStyle}>
             <div className="text-xs font-bold tracking-wider text-[#52B788] uppercase">BRAIN SPRINT</div>
             <h1 className="mt-3 text-6xl font-bold text-[#1B4332]">🎉 Lesson Complete!</h1>
-            {isLessonComplete ? (
-              <p className="mt-4 text-base font-semibold text-[#4A6355]">
-                Nice work — your stats are ready.
-              </p>
-            ) : null}
 
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
-                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Score</div>
-                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{score}</div>
+            {progressSave === "saving" ? (
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 py-8">
+                <Loader2 className="h-12 w-12 animate-spin text-[#52B788]" aria-hidden />
+                <p className="text-base font-semibold text-[#4A6355]">Saving progress…</p>
               </div>
-              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
-                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Accuracy</div>
-                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{accuracyPct}%</div>
-              </div>
-              <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
-                <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Stars</div>
-                <div className="mt-2 text-4xl font-bold text-[#1B4332]">{starsEarned} / 3</div>
-              </div>
-            </div>
+            ) : (
+              <>
+                {isLessonComplete ? (
+                  <p className="mt-4 text-base font-semibold text-[#4A6355]">
+                    Nice work — your stats are ready.
+                  </p>
+                ) : null}
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={resetToReady}
-                className="flex-1 rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-4 text-lg font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
-              >
-                Play Again
-              </button>
-              <Link
-                href={`/brain-sprint/${lesson.track}`}
-                className="flex-1 rounded-full border-2 border-[#1B4332] py-4 text-center text-lg font-extrabold text-[#1B4332] transition hover:bg-[#1B4332] hover:text-white"
-                style={{ textDecoration: "none" }}
-              >
-                Back to {lesson.track === "math" ? "Math Mastery" : "Eco Genius"}
-              </Link>
-            </div>
+                {progressSave === "err" ? (
+                  <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
+                    Couldn&apos;t save progress. Your results are shown below — try again later or check your connection.
+                  </p>
+                ) : null}
+
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                    <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Score</div>
+                    <div className="mt-2 text-4xl font-bold text-[#1B4332]">{score}</div>
+                  </div>
+                  <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                    <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Accuracy</div>
+                    <div className="mt-2 text-4xl font-bold text-[#1B4332]">{accuracyPct}%</div>
+                  </div>
+                  <div className="rounded-2xl bg-white/45 p-5 ring-1 ring-white/40">
+                    <div className="text-xs font-bold tracking-wider text-[#4A6355] uppercase">Stars</div>
+                    <div className="mt-2 text-4xl font-bold text-[#1B4332]">{starsEarned} / 3</div>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={resetToReady}
+                    className="flex-1 rounded-full bg-gradient-to-r from-[#52B788] to-[#40916C] py-4 text-lg font-extrabold text-white shadow-md transition hover:scale-[1.02] hover:shadow-xl"
+                  >
+                    Play Again
+                  </button>
+                  <Link
+                    href={`/brain-sprint/${lesson.track}`}
+                    className="flex-1 rounded-full border-2 border-[#1B4332] py-4 text-center text-lg font-extrabold text-[#1B4332] transition hover:bg-[#1B4332] hover:text-white"
+                    style={{ textDecoration: "none" }}
+                  >
+                    Back to {lesson.track === "math" ? "Math Mastery" : "Eco Genius"}
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SAMPLE_LESSONS } from "@/lib/brain-sprint/lessons";
 import type { BrainSprintTrack } from "@/lib/brain-sprint/types";
-import TrackLessonGrid from "./TrackLessonGrid";
+import TrackPageBody from "./TrackPageBody";
 
 const dottedBg: React.CSSProperties = {
   backgroundColor: "#FAFAF7",
@@ -20,8 +20,6 @@ function trackHeroMeta(track: BrainSprintTrack) {
       title: "Math Mastery",
       description: "Type the answer. Move fast. Get smarter.",
       countLabel: "Lessons 1-10",
-      completedFraction: "0 / 10",
-      starsFraction: "0 / 30",
     } as const;
   }
   return {
@@ -31,8 +29,6 @@ function trackHeroMeta(track: BrainSprintTrack) {
     title: "Eco Genius",
     description: "Quiz your way through planet facts and habits.",
     countLabel: "Lessons 1-5",
-    completedFraction: "0 / 5",
-    starsFraction: "0 / 15",
   } as const;
 }
 
@@ -93,29 +89,12 @@ export default async function BrainSprintTrackPage({
         </div>
       </section>
 
-      <div className="max-w-5xl mx-auto mt-[-50px] relative z-10 px-4">
-        <div className="bg-white rounded-2xl shadow-xl border border-[#D1E8DC] p-6">
-          <div className="grid grid-cols-3 text-center">
-            <div className="border-r border-gray-200 px-2">
-              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">{meta.completedFraction}</div>
-              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Completed</div>
-            </div>
-            <div className="border-r border-gray-200 px-2">
-              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">0</div>
-              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Score</div>
-            </div>
-            <div className="px-2">
-              <div className="text-3xl md:text-4xl font-bold text-[#1B4332]">{meta.starsFraction}</div>
-              <div className="text-sm text-[#4A6355] uppercase tracking-wider mt-1">Stars</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <section className="max-w-7xl mx-auto px-6 mt-12 pb-16">
-        <h2 className="text-2xl font-bold text-[#1B4332] mb-6">All Lessons</h2>
-        <TrackLessonGrid track={track} totalLessons={track === "math" ? 10 : 5} lessonsForTrack={lessonsForTrack} />
-      </section>
+      <TrackPageBody
+        track={track}
+        totalLessons={track === "math" ? 10 : 5}
+        maxStars={track === "math" ? 30 : 15}
+        lessonsForTrack={lessonsForTrack}
+      />
     </div>
   );
 }

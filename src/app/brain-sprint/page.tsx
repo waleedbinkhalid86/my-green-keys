@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import type { BrainSprintProgress } from "@/lib/brain-sprint/progress-types";
+import { fetchAllProgress } from "@/lib/brain-sprint/progress-api";
 
 const dottedBg: React.CSSProperties = {
   backgroundColor: "#FAFAF7",
@@ -44,7 +49,32 @@ const ctaPillStyle: React.CSSProperties = {
   border: "1px solid rgba(255, 255, 255, 0.4)",
 };
 
+const TOTAL_LESSONS_AVAILABLE = 15;
+
 export default function BrainSprintHubPage() {
+  const [progress, setProgress] = useState<BrainSprintProgress[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const rows = await fetchAllProgress();
+      if (!cancelled) {
+        setProgress(rows);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const completedCount = progress.filter((p) => p.is_completed).length;
+  const ecoPointsSum = progress.reduce((sum, p) => sum + p.eco_points_earned, 0);
+  const mathCompleted = progress.filter((p) => p.track === "math" && p.is_completed).length;
+  const ecoCompleted = progress.filter((p) => p.track === "eco" && p.is_completed).length;
+
   return (
     <div style={dottedBg} className="min-h-screen py-12 px-4">
       <div style={headerCardStyle} className="max-w-6xl mx-auto mt-8 mb-12">
@@ -63,19 +93,25 @@ export default function BrainSprintHubPage() {
             <div className="text-xs font-bold text-[#4A6355] uppercase tracking-wider mb-2">
               Total lessons
             </div>
-            <div className="text-4xl font-bold text-[#1B4332]">0</div>
+            <div className="text-4xl font-bold text-[#1B4332]">
+              {loading ? "…" : TOTAL_LESSONS_AVAILABLE}
+            </div>
           </div>
           <div style={statBoxStyle}>
             <div className="text-xs font-bold text-[#4A6355] uppercase tracking-wider mb-2">
               Completed
             </div>
-            <div className="text-4xl font-bold text-[#1B4332]">0</div>
+            <div className="text-4xl font-bold text-[#1B4332]">
+              {loading ? "…" : completedCount}
+            </div>
           </div>
           <div style={statBoxStyle}>
             <div className="text-xs font-bold text-[#4A6355] uppercase tracking-wider mb-2">
               Eco-points
             </div>
-            <div className="text-4xl font-bold text-[#1B4332]">0</div>
+            <div className="text-4xl font-bold text-[#1B4332]">
+              {loading ? "…" : ecoPointsSum}
+            </div>
           </div>
         </div>
       </div>
@@ -124,7 +160,9 @@ export default function BrainSprintHubPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white font-semibold text-sm transition-all"
               style={ctaPillStyle}
             >
-              <span>0 / 10 lessons</span>
+              <span>
+                {loading ? "…" : `${mathCompleted} / 10`} lessons
+              </span>
               <span className="group-hover:translate-x-1 transition-transform">
                 →
               </span>
@@ -175,7 +213,9 @@ export default function BrainSprintHubPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white font-semibold text-sm transition-all"
               style={ctaPillStyle}
             >
-              <span>0 / 5 lessons</span>
+              <span>
+                {loading ? "…" : `${ecoCompleted} / 5`} lessons
+              </span>
               <span className="group-hover:translate-x-1 transition-transform">
                 →
               </span>
