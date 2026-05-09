@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito, Poppins } from "next/font/google";
 import "./globals.css";
+import ConditionalSiteHeader from "@/components/ConditionalSiteHeader";
 import ConditionalSiteFooter from "@/components/ConditionalSiteFooter";
 import { Providers } from "@/components/Providers";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html lang="en" className={cn("h-full", nunito.variable, poppins.variable)}>
       <body className="min-h-full flex flex-col font-sans antialiased">
         <Providers>
+          <ConditionalSiteHeader />
           <main className="flex-1">{children}</main>
           <ConditionalSiteFooter />
         </Providers>
