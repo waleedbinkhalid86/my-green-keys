@@ -603,7 +603,7 @@ export default function LessonPage() {
       const { data: enrollment, error: enrollError } = await supabase
         .from("class_enrollments")
         .select("class_id")
-        .eq("student_id", userData.user.id)
+        .eq("student_auth_user_id", userData.user.id)
         .limit(1)
         .maybeSingle();
 
@@ -616,11 +616,12 @@ export default function LessonPage() {
 
       const { data: cls, error: clsError } = await supabase
         .from("classes")
-        .select("id, name, code")
+        .select("id, name, class_code")
         .eq("id", classId)
         .single();
       if (clsError) throw clsError;
-      setCurrentClass(cls as { id: string; name: string; code: string });
+      const row = cls as { id: string; name: string; class_code: string };
+      setCurrentClass({ id: row.id, name: row.name, code: row.class_code });
     } catch {
       // Non-blocking — lesson should still work even if class lookup fails.
       setCurrentClass(null);
@@ -1395,8 +1396,8 @@ export default function LessonPage() {
 
       const { data: cls, error: clsError } = await supabase
         .from("classes")
-        .select("id, name, code")
-        .eq("code", code)
+        .select("id, name, class_code")
+        .eq("class_code", code)
         .single();
       if (clsError) throw clsError;
 
@@ -1404,8 +1405,15 @@ export default function LessonPage() {
       const { error: enrollError } = await supabase
         .from("class_enrollments")
         .upsert(
-          { class_id: classId, student_id: userData.user.id },
-          { onConflict: "class_id,student_id" }
+          {
+            class_id: classId,
+            student_auth_user_id: userData.user.id,
+            display_name:
+              (userData.user.user_metadata as { display_name?: string } | undefined)?.display_name?.trim() ||
+              userData.user.email?.split("@")[0] ||
+              "Student",
+          },
+          { onConflict: "class_id,student_auth_user_id" }
         );
       if (enrollError) throw enrollError;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, startTransition, useState, type CSSProperties } from "react";
+import { useEffect, startTransition, useState, type CSSProperties } from "react";
 import {
   Activity,
   Bird,
@@ -22,6 +22,13 @@ import {
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  archiveClass,
+  createClass,
+  fetchEnrollmentCountsByClassIds,
+  fetchMyClasses,
+} from "@/lib/kid-login/class-api";
+import type { SchoolClass } from "@/lib/kid-login/types";
 import { loadReportBranding, saveReportBranding } from "@/lib/report/branding";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
@@ -45,8 +52,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 const TEACHER_SIDEBAR = [
   { href: "#teacher-overview", label: "Overview", Icon: LayoutDashboard },
   { href: "#teacher-classes", label: "My Classes", Icon: GraduationCap },
@@ -128,27 +133,22 @@ export default function TeacherDashboard() {
   const [teacherId, setTeacherId] = useState<string>("");
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState("");
-  const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [enrollmentCounts, setEnrollmentCounts] = useState<Record<string, number>>({});
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [createClassName, setCreateClassName] = useState("");
+  const [createClassSchool, setCreateClassSchool] = useState("");
+  const [createClassGrade, setCreateClassGrade] = useState("");
   const [createClassLoading, setCreateClassLoading] = useState(false);
   const [createClassError, setCreateClassError] = useState("");
+  const [showClassCodeModal, setShowClassCodeModal] = useState(false);
+  const [newlyCreatedClass, setNewlyCreatedClass] = useState<SchoolClass | null>(null);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
   const [enrolledStudents, setEnrolledStudents] = useState<
     Array<{ id: string; full_name: string | null; email: string | null }>
   >([]);
-
-  const generateClassCode = useMemo(() => {
-    const alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-    return () => {
-      const suffix = Array.from({ length: 3 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(
-        ""
-      );
-      return `GRN${suffix}`;
-    };
-  }, []);
 
   const leaderboardData = [
     { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "trophy" as const },
@@ -212,7 +212,7 @@ export default function TeacherDashboard() {
 
   const activeClass = classes.find((c) => c.id === selectedClassId);
   const activeClassLabel = activeClass?.name?.trim() || "Your class";
-  const activeStudentCount = enrolledStudents.length;
+  const activeStudentCount = enrollmentCounts[selectedClassId] ?? enrolledStudents.length;
 
   const initials = (name: string) =>
     name
@@ -231,6 +231,7 @@ export default function TeacherDashboard() {
       if (userError) throw userError;
       if (!userData.user) {
         setClasses([]);
+        setEnrollmentCounts({});
         setTeacherId("");
         setSelectedClassId("");
         setClassesError("You must be logged in to view classes.");
@@ -238,22 +239,21 @@ export default function TeacherDashboard() {
       }
       setTeacherId(userData.user.id);
 
-      const { data, error } = await supabase
-        .from("classes")
-        .select("id, name, code")
-        .eq("teacher_id", userData.user.id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      const list = (data as Array<{ id: string; name: string; code: string }> | null) ?? [];
+      const list = await fetchMyClasses();
+      const counts = await fetchEnrollmentCountsByClassIds(list.map((c) => c.id));
       setClasses(list);
+      setEnrollmentCounts(counts);
       if (list.length > 0) {
-        setSelectedClassId((prev) => prev || list[0].id);
+        setSelectedClassId((prev) =>
+          prev && list.some((c) => c.id === prev) ? prev : list[0].id
+        );
       } else {
         setSelectedClassId("");
       }
     } catch (err) {
       setClassesError(err instanceof Error ? err.message : "Failed to load classes.");
       setClasses([]);
+      setEnrollmentCounts({});
       setSelectedClassId("");
     } finally {
       setClassesLoading(false);
@@ -271,10 +271,12 @@ export default function TeacherDashboard() {
       const supabase = createClient();
       const { data: enrollments, error: enrollErr } = await supabase
         .from("class_enrollments")
-        .select("student_id")
+        .select("student_auth_user_id")
         .eq("class_id", classId);
       if (enrollErr) throw enrollErr;
-      const studentIds = ((enrollments as Array<{ student_id: string }> | null) ?? []).map((e) => e.student_id);
+      const studentIds = ((enrollments as Array<{ student_auth_user_id: string }> | null) ?? []).map(
+        (e) => e.student_auth_user_id
+      );
       if (studentIds.length === 0) {
         setEnrolledStudents([]);
         return;
@@ -342,39 +344,52 @@ export default function TeacherDashboard() {
         return;
       }
 
-      const supabase = createClient();
+      const newRow = await createClass({
+        name: createClassName.trim(),
+        school_name: createClassSchool.trim() || undefined,
+        grade_level: createClassGrade.trim() || undefined,
+      });
 
-      let lastErr: unknown = null;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const code = generateClassCode();
-        const { error } = await supabase.from("classes").insert([
-          {
-            teacher_id: teacherId,
-            name: createClassName.trim(),
-            code,
-            school_id: null,
-          },
-        ]);
-
-        if (!error) {
-          setShowCreateClass(false);
-          setCreateClassName("");
-          await loadClasses();
-          return;
-        }
-
-        lastErr = error;
-        if (!String((error as { message?: string }).message || "").toLowerCase().includes("duplicate")) {
-          break;
-        }
-      }
-
-      throw lastErr ?? new Error("Failed to create class.");
+      setShowCreateClass(false);
+      setCreateClassName("");
+      setCreateClassSchool("");
+      setCreateClassGrade("");
+      setNewlyCreatedClass(newRow);
+      setShowClassCodeModal(true);
+      await loadClasses();
+      setSelectedClassId(newRow.id);
     } catch (err) {
       setCreateClassError(err instanceof Error ? err.message : "Failed to create class.");
     } finally {
       setCreateClassLoading(false);
     }
+  };
+
+  const handleArchiveClass = async (classId: string) => {
+    if (!window.confirm("Archive this class? Students keep accounts but the class will be hidden from your list.")) {
+      return;
+    }
+    try {
+      await archiveClass(classId);
+      showToast("success", "Class archived.");
+      if (selectedClassId === classId) setSelectedClassId("");
+      await loadClasses();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Could not archive class.");
+    }
+  };
+
+  const copyClassCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast("success", "Class code copied!");
+    } catch {
+      showToast("error", "Could not copy code.");
+    }
+  };
+
+  const scrollToEnrolledStudents = () => {
+    document.getElementById("teacher-enrolled-students")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const rankCircleStyle = (rank: number): CSSProperties => {
@@ -450,22 +465,54 @@ export default function TeacherDashboard() {
         <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
             <DialogTitle>Create class</DialogTitle>
-            <DialogDescription>Generates a 6-character class code (example: GRN42X).</DialogDescription>
+            <DialogDescription>
+              We&apos;ll generate a unique 8-character class code students can use to join.
+            </DialogDescription>
           </DialogHeader>
           {createClassError ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
               {createClassError}
             </div>
           ) : null}
-          <div className="space-y-2">
-            <Label htmlFor="create-class-name">Class name</Label>
-            <Input
-              id="create-class-name"
-              value={createClassName}
-              onChange={(e) => setCreateClassName(e.target.value)}
-              placeholder="e.g. Grade 4A"
-              disabled={createClassLoading}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-class-name">Class name</Label>
+              <Input
+                id="create-class-name"
+                value={createClassName}
+                onChange={(e) => setCreateClassName(e.target.value)}
+                placeholder="e.g. Mrs. Khan's Grade 7B"
+                disabled={createClassLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-class-school">School name (optional)</Label>
+              <Input
+                id="create-class-school"
+                value={createClassSchool}
+                onChange={(e) => setCreateClassSchool(e.target.value)}
+                placeholder="e.g. Green Valley Primary"
+                disabled={createClassLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-class-grade">Grade level (optional)</Label>
+              <select
+                id="create-class-grade"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
+                value={createClassGrade}
+                onChange={(e) => setCreateClassGrade(e.target.value)}
+                disabled={createClassLoading}
+              >
+                <option value="">—</option>
+                <option value="K">K</option>
+                {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((g) => (
+                  <option key={g} value={g}>
+                    Grade {g}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
             <Button variant="outline" type="button" disabled={createClassLoading} onClick={() => setShowCreateClass(false)}>
@@ -475,6 +522,66 @@ export default function TeacherDashboard() {
               {createClassLoading ? "Creating…" : "Create class"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showClassCodeModal}
+        onOpenChange={(open) => {
+          setShowClassCodeModal(open);
+          if (!open) setNewlyCreatedClass(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <div className="flex flex-col items-center text-center">
+            <div className="text-6xl" aria-hidden>
+              🎓
+            </div>
+            <DialogHeader className="mt-2">
+              <DialogTitle className="text-center text-xl">
+                {newlyCreatedClass?.name ? `${newlyCreatedClass.name} is ready!` : "Class is ready!"}
+              </DialogTitle>
+              <DialogDescription className="text-center">
+                Share this class code with your students. They&apos;ll use it to join.
+              </DialogDescription>
+            </DialogHeader>
+            {newlyCreatedClass ? (
+              <div
+                className="mt-4 w-full rounded-2xl border-2 border-[#52B788] bg-[#F0F9F4] px-4 py-5"
+                style={{ boxShadow: "0 4px 12px rgba(82, 183, 136, 0.2)" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-[#40916C]">Class code</p>
+                <p
+                  className="mt-2 break-all font-mono text-4xl font-extrabold text-[#1B4332]"
+                  style={{ letterSpacing: "0.25em" }}
+                >
+                  {newlyCreatedClass.class_code}
+                </p>
+              </div>
+            ) : null}
+            <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+              <Button
+                type="button"
+                className="w-full bg-[#52B788] hover:bg-[#40916C] sm:w-auto"
+                disabled={!newlyCreatedClass}
+                onClick={() => newlyCreatedClass && void copyClassCode(newlyCreatedClass.class_code)}
+              >
+                <Copy className="mr-2 h-4 w-4" aria-hidden />
+                Copy code
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  setShowClassCodeModal(false);
+                  setNewlyCreatedClass(null);
+                }}
+              >
+                Got it ✓
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -783,12 +890,8 @@ export default function TeacherDashboard() {
                         cursor: "pointer",
                       }}
                       onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(activeClass.code);
-                          showToast("success", "Class code copied!");
-                        } catch {
-                          showToast("error", "Could not copy code.");
-                        }
+                        if (!activeClass) return;
+                        await copyClassCode(activeClass.class_code);
                       }}
                     >
                       <span className="inline-flex items-center gap-2">
@@ -824,7 +927,9 @@ export default function TeacherDashboard() {
                   <span className="font-mono font-bold text-[#1B4332]">{activeClass.name}</span>
                   <span className="mx-2 text-[#CBD5E1]">·</span>
                   Code{" "}
-                  <span className="font-mono font-extrabold tracking-widest text-[#52B788]">{activeClass.code}</span>
+                  <span className="font-mono font-extrabold tracking-widest text-[#52B788]">
+                    {activeClass.class_code}
+                  </span>
                 </p>
               ) : null}
 
@@ -854,31 +959,75 @@ export default function TeacherDashboard() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <Tabs value={selectedClassId} onValueChange={setSelectedClassId}>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <TabsList variant="line" className="h-auto min-h-9 flex-wrap justify-start">
-                        {classes.map((c) => (
-                          <TabsTrigger key={c.id} value={c.id}>
-                            {c.name}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                      <div className="text-left md:text-right">
-                        <p className="text-xs font-medium text-muted-foreground">Class code</p>
-                        <p className="font-mono text-xl font-bold tracking-widest text-primary">
-                          {classes.find((c) => c.id === selectedClassId)?.code ?? "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Students join with this code on the Lesson page.</p>
-                      </div>
-                    </div>
-                    {classes.map((c) => (
-                      <TabsContent key={c.id} value={c.id} className="sr-only">
-                        {c.name}
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {classes.map((c) => {
+                      const selected = c.id === selectedClassId;
+                      const count = enrollmentCounts[c.id] ?? 0;
+                      return (
+                        <div
+                          key={c.id}
+                          className={cn(
+                            "rounded-2xl border bg-white p-4 transition-shadow",
+                            selected ? "border-[#52B788] shadow-[0_4px_14px_rgba(82,183,136,0.15)]" : "border-[#E5E7EB]"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-heading truncate text-base font-extrabold text-[#1B4332]">{c.name}</p>
+                              {c.school_name ? (
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">{c.school_name}</p>
+                              ) : null}
+                              <p className="mt-2 text-xs font-semibold text-[#6B7280]">
+                                {count} {count === 1 ? "student" : "students"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <code className="rounded-lg border border-[#D1E8DC] bg-[#F9FAFB] px-2.5 py-1.5 font-mono text-sm font-bold tracking-wider text-[#1B4332]">
+                              {c.class_code}
+                            </code>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8 border-[#52B788]/50 text-xs font-semibold"
+                              onClick={() => void copyClassCode(c.class_code)}
+                            >
+                              <Copy className="mr-1 h-3.5 w-3.5" aria-hidden />
+                              Copy
+                            </Button>
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className={cn(
+                                "font-semibold",
+                                selected ? "bg-[#1B4332] hover:bg-[#1B4332]/90" : "bg-[#52B788] hover:bg-[#40916C]"
+                              )}
+                              onClick={() => {
+                                setSelectedClassId(c.id);
+                                scrollToEnrolledStudents();
+                              }}
+                            >
+                              View students
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="border-destructive/40 font-semibold text-destructive hover:bg-destructive/10"
+                              onClick={() => void handleArchiveClass(c.id)}
+                            >
+                              Archive class
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                  <div>
+                  <div id="teacher-enrolled-students">
                     <h3 className="font-heading mb-3 text-base font-semibold text-[#1B4332]">Enrolled students</h3>
                     {studentsError ? (
                       <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">

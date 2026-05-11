@@ -71,8 +71,8 @@ async function canAccessStudentReport(
   if (classIds.length > 0) {
     const { data: en } = await supabase
       .from("class_enrollments")
-      .select("student_id")
-      .eq("student_id", studentId)
+      .select("student_auth_user_id")
+      .eq("student_auth_user_id", studentId)
       .in("class_id", classIds)
       .limit(1)
       .maybeSingle();

@@ -10,6 +10,7 @@ import {
   BookOpen,
   CheckCircle,
   Clock,
+  Copy,
   FileText,
   Flame,
   Globe,
@@ -29,6 +30,8 @@ import {
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { generateUniqueKidCode } from "@/lib/kid-login/code-generator";
+import { createStudentAccountPreserveSession } from "@/lib/kid-login/account-creator";
 import { awardXp, getProgress, XP_SOURCES, type RangerRank } from "@/lib/rangerHelpers";
 import { RankBadge, rankProgressFillClassName } from "@/components/RankBadge";
 import { ecoFacts } from "@/data/ecoFacts";
@@ -169,6 +172,8 @@ interface Child {
   wpmData: number[];
   nextMilestone: string;
   ecoActions: { type: string; date: string; approved: boolean }[];
+  login_code: string | null;
+  auth_user_id: string | null;
 }
 
 interface CustomLesson {
@@ -195,6 +200,8 @@ type ChildRow = {
   age: number | null;
   gender: "boy" | "girl" | null;
   username: string | null;
+  login_code: string | null;
+  auth_user_id: string | null;
 };
 
 type ParentNotifRow = {
@@ -250,6 +257,8 @@ function toChildDashboard(row: ChildRow): Child {
     wpmData: [],
     nextMilestone: "Complete lessons to unlock badges",
     ecoActions: [],
+    login_code: row.login_code ?? null,
+    auth_user_id: row.auth_user_id ?? null,
   };
 }
 
@@ -405,6 +414,10 @@ export default function ParentDashboard() {
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [addChildLoading, setAddChildLoading] = useState(false);
   const [addChildError, setAddChildError] = useState("");
+  const [showKidCodeReveal, setShowKidCodeReveal] = useState(false);
+  const [revealedKidCode, setRevealedKidCode] = useState<{ name: string; login_code: string } | null>(
+    null
+  );
   const [childForm, setChildForm] = useState({
     name: "",
     username: "",
@@ -547,53 +560,55 @@ export default function ParentDashboard() {
 
       const { data, error } = await supabase
         .from("children")
-        .select("id, full_name, age, gender, username")
+        .select("id, full_name, age, gender, username, login_code, auth_user_id")
         .eq("parent_id", userData.user.id)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
       const mapped = (data as ChildRow[] | null)?.map(toChildDashboard) ?? [];
 
-      const usernames = mapped.map((c) => c.username).filter(Boolean);
-      let withProfileIds: Child[] = mapped;
-      if (usernames.length === 0) {
-        setChildren(mapped);
-        if (mapped.length > 0) {
-          setSelectedChildId((prev) => prev || mapped[0].id);
-        } else {
-          setSelectedChildId("");
+      const authIds = mapped.map((c) => c.auth_user_id).filter(Boolean) as string[];
+      const usernames = mapped.map((c) => c.username?.trim()).filter(Boolean) as string[];
+
+      let profileRows: PetProfileRow[] = [];
+      if (authIds.length > 0) {
+        const { data: byId, error: idErr } = await supabase
+          .from("profiles")
+          .select(
+            "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes, ranger_xp, ranger_rank",
+          )
+          .in("id", authIds);
+        if (!idErr && byId) profileRows.push(...(byId as PetProfileRow[]));
+      }
+      if (usernames.length > 0) {
+        const { data: byEmail, error: emailErr } = await supabase
+          .from("profiles")
+          .select(
+            "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes, ranger_xp, ranger_rank",
+          )
+          .in("email", usernames);
+        if (!emailErr && byEmail) {
+          const seen = new Set(profileRows.map((p) => p.id));
+          for (const row of byEmail as PetProfileRow[]) {
+            if (!seen.has(row.id)) {
+              seen.add(row.id);
+              profileRows.push(row);
+            }
+          }
         }
-        setPetWarnings([]);
-        return;
       }
 
-      const { data: petProfiles, error: petError } = await supabase
-        .from("profiles")
-        .select(
-          "id, email, pet_type, pet_name, pet_health, current_streak, longest_streak, last_streak_date, streak_freezes, ranger_xp, ranger_rank",
-        )
-        .in("email", usernames as string[]);
-      if (petError) {
-        setChildren(mapped);
-        if (mapped.length > 0) {
-          setSelectedChildId((prev) => prev || mapped[0].id);
-        } else {
-          setSelectedChildId("");
-        }
-        setPetWarnings([]);
-        return;
-      }
-
-      const profileRows = (petProfiles as PetProfileRow[] | null) ?? [];
+      const profileById = new Map(profileRows.map((p) => [p.id, p]));
       const profileByEmail = new Map(
         profileRows.map((p) => [String(p.email ?? "").trim().toLowerCase(), p])
       );
-      withProfileIds = mapped.map((c) => {
-        const key = c.username.trim().toLowerCase();
-        const p = profileByEmail.get(key);
+      const withProfileIds = mapped.map((c) => {
+        const p =
+          (c.auth_user_id ? profileById.get(c.auth_user_id) : undefined) ??
+          (c.username ? profileByEmail.get(c.username.trim().toLowerCase()) : undefined);
         return {
           ...c,
-          studentProfileId: p?.id ?? null,
+          studentProfileId: p?.id ?? c.auth_user_id ?? null,
           currentStreak: Number(p?.current_streak ?? 0),
           longestStreak: Number(p?.longest_streak ?? 0),
           lastStreakDate: p?.last_streak_date ?? null,
@@ -612,8 +627,9 @@ export default function ParentDashboard() {
 
       const warnings: Array<{ childName: string; petName: string; petHealth: number }> = [];
       for (const c of withProfileIds) {
-        if (!c.username) continue;
-        const p = profileByEmail.get(c.username.trim().toLowerCase());
+        const p =
+          (c.auth_user_id ? profileById.get(c.auth_user_id) : undefined) ??
+          (c.username ? profileByEmail.get(c.username.trim().toLowerCase()) : undefined);
         if (!p) continue;
         const health = Number(p.pet_health ?? 100);
         if (Number.isFinite(health) && health < 40) {
@@ -698,22 +714,33 @@ export default function ParentDashboard() {
         setAddChildError("Please enter a valid age.");
         return;
       }
-      if (!childForm.username.trim()) {
-        setAddChildError("Username is required.");
-        return;
-      }
 
-      const { error } = await supabase.from("children").insert([
-        {
+      const childName = childForm.name.trim();
+      const loginCode = await generateUniqueKidCode();
+      const { auth_user_id } = await createStudentAccountPreserveSession({
+        full_name: childName,
+        age,
+      });
+
+      const usernameTrim = childForm.username.trim();
+      const { error } = await supabase
+        .from("children")
+        .insert({
           parent_id: userData.user.id,
-          full_name: childForm.name.trim(),
+          full_name: childName,
           age,
           gender: childForm.gender,
-          username: childForm.username.trim(),
-        },
-      ]);
+          username: usernameTrim || null,
+          login_code: loginCode,
+          auth_user_id: auth_user_id,
+          code_created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
       if (error) throw error;
 
+      setRevealedKidCode({ name: childName, login_code: loginCode });
+      setShowKidCodeReveal(true);
       setShowAddChildModal(false);
       setChildForm({ name: "", username: "", age: "8", gender: "boy" });
       await loadChildren();
@@ -722,6 +749,15 @@ export default function ParentDashboard() {
       setAddChildError(message);
     } finally {
       setAddChildLoading(false);
+    }
+  };
+
+  const copyKidLoginCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast("success", "Login code copied!");
+    } catch {
+      showToast("error", "Could not copy code.");
     }
   };
 
@@ -892,7 +928,7 @@ export default function ParentDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="child-username">Username</Label>
+              <Label htmlFor="child-username">Username (optional)</Label>
               <Input
                 id="child-username"
                 value={childForm.username}
@@ -900,7 +936,10 @@ export default function ParentDashboard() {
                 placeholder="e.g. sarah10"
                 disabled={addChildLoading}
               />
-              <p className="text-xs text-muted-foreground">Used for linking and identifying the child.</p>
+              <p className="text-xs text-muted-foreground">
+                Optional legacy link if it matches a student account email. A secure kid login code is created
+                automatically.
+              </p>
             </div>
             <div className="mgk-grid sm:grid-cols-2">
               <div className="space-y-2">
@@ -938,6 +977,66 @@ export default function ParentDashboard() {
               {addChildLoading ? "Adding…" : "Add child"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showKidCodeReveal}
+        onOpenChange={(open) => {
+          setShowKidCodeReveal(open);
+          if (!open) setRevealedKidCode(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <div className="flex flex-col items-center text-center">
+            <div className="text-5xl" aria-hidden>
+              🔑
+            </div>
+            <DialogHeader className="mt-2">
+              <DialogTitle className="text-center text-xl">
+                {revealedKidCode?.name ? `${revealedKidCode.name} is set up!` : "Child is set up!"}
+              </DialogTitle>
+              <DialogDescription className="text-center">
+                Save this login code. Your child will use it to sign in (kid login coming soon).
+              </DialogDescription>
+            </DialogHeader>
+            {revealedKidCode ? (
+              <div
+                className="mt-4 w-full rounded-2xl border-2 border-[#52B788] bg-[#F0F9F4] px-4 py-5"
+                style={{ boxShadow: "0 4px 12px rgba(82, 183, 136, 0.2)" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-[#40916C]">Kid login code</p>
+                <p
+                  className="mt-2 break-all font-mono text-3xl font-extrabold tracking-[0.2em] text-[#1B4332]"
+                  style={{ letterSpacing: "0.15em" }}
+                >
+                  {revealedKidCode.login_code}
+                </p>
+              </div>
+            ) : null}
+            <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+              <Button
+                type="button"
+                className="w-full bg-[#52B788] hover:bg-[#40916C] sm:w-auto"
+                disabled={!revealedKidCode}
+                onClick={() => revealedKidCode && void copyKidLoginCode(revealedKidCode.login_code)}
+              >
+                <Copy className="mr-2 h-4 w-4" aria-hidden />
+                Copy code
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  setShowKidCodeReveal(false);
+                  setRevealedKidCode(null);
+                }}
+              >
+                Got it ✓
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -1587,6 +1686,47 @@ export default function ParentDashboard() {
             <p className="sr-only" aria-live="polite">
               {children.find((c) => c.id === selectedChildId)?.name ?? ""}
             </p>
+            <div className="mt-6 space-y-3">
+              {children.map((child) => (
+                <div
+                  key={child.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-heading text-sm font-extrabold text-[#1B4332]">{child.name}</p>
+                    <p className="text-xs text-[#6B7280]">Login code for kid sign-in</p>
+                  </div>
+                  {child.login_code ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <code className="rounded-lg border border-[#D1E8DC] bg-white px-3 py-2 font-mono text-sm font-bold tracking-wider text-[#1B4332]">
+                        {child.login_code}
+                      </code>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 border-[#52B788]/50 font-semibold"
+                        onClick={() => void copyKidLoginCode(child.login_code!)}
+                      >
+                        <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                        Copy
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled
+                      className="shrink-0 opacity-70"
+                      title="Available in a future update"
+                    >
+                      Generate Code
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           </section>
         ) : null}
 
