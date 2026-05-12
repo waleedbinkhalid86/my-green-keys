@@ -9,11 +9,63 @@ const BG_DEEP = "#1B4332";
 const BG_MID = "#2D6A4F";
 const ACCENT = "#52B788";
 
+/** Parent-created child login code (see `generateUniqueKidCode`). */
+const PARENT_KID_CODE_LENGTH = 6;
+/** Teacher class join code (see `generateUniqueClassCode`). */
+const TEACHER_CLASS_CODE_LENGTH = 8;
+
 const KID_ERROR =
   "Hmm, that code didn't work. Check it with your parent or teacher.";
 
 function normalizeKidInput(raw: string): string {
   return raw.replace(/\s/g, "").toUpperCase();
+}
+
+type KidCodeKind = "parent" | "class" | "invalid";
+
+function classifyKidCode(normalized: string): KidCodeKind {
+  if (normalized.length === TEACHER_CLASS_CODE_LENGTH) return "class";
+  if (normalized.length === PARENT_KID_CODE_LENGTH) return "parent";
+  return "invalid";
+}
+
+/**
+ * Overwrites lesson localStorage cache so a new kid never inherits the
+ * previous browser profile ("Hi {wrong name}!").
+ */
+async function syncLessonUserProfileCacheFromServer(): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, gender, age")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const row = profile as {
+    full_name?: string | null;
+    gender?: string | null;
+    age?: number | null;
+  } | null;
+
+  const name = row?.full_name?.trim() || "Friend";
+  const gender =
+    row?.gender === "girl" || row?.gender === "boy" ? row.gender : "boy";
+  const age =
+    typeof row?.age === "number" && Number.isFinite(row.age) ? row.age : 8;
+
+  try {
+    localStorage.setItem(
+      "userProfile",
+      JSON.stringify({ name, age, gender })
+    );
+  } catch {
+    /* ignore quota / private mode */
+  }
 }
 
 async function redirectAfterStudentSession(): Promise<void> {
@@ -65,50 +117,56 @@ export default function KidLoginPage() {
     e.preventDefault();
     setError("");
     const normalized = normalizeKidInput(codeInput);
+    const kind = classifyKidCode(normalized);
 
-    if (normalized.length === 8) {
+    // ── 8-character teacher class code: self-enroll flow (name collected next step) ──
+    if (kind === "class") {
       setPendingClassCode(normalized);
       setStep("class-name");
       return;
     }
 
-    if (normalized.length !== 6) {
-      setError(
-        "Your code should be 6 letters or numbers from home, or 8 from your teacher."
-      );
+    // ── 6-character parent kid code: existing child row — sign in immediately, no name prompt ──
+    if (kind === "parent") {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+
+        const { data: child, error: qErr } = await supabase
+          .from("children")
+          .select("internal_email, internal_password")
+          .eq("login_code", normalized)
+          .maybeSingle();
+
+        if (qErr || !child?.internal_email || !child?.internal_password) {
+          setError(KID_ERROR);
+          return;
+        }
+
+        const { error: signErr } = await supabase.auth.signInWithPassword({
+          email: child.internal_email,
+          password: child.internal_password,
+        });
+
+        if (signErr) {
+          setError(KID_ERROR);
+          return;
+        }
+
+        await syncLessonUserProfileCacheFromServer();
+        await redirectAfterStudentSession();
+      } catch {
+        setError(KID_ERROR);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data: child, error: qErr } = await supabase
-        .from("children")
-        .select("internal_email, internal_password")
-        .eq("login_code", normalized)
-        .maybeSingle();
-
-      if (qErr || !child?.internal_email || !child?.internal_password) {
-        setError(KID_ERROR);
-        return;
-      }
-
-      const { error: signErr } = await supabase.auth.signInWithPassword({
-        email: child.internal_email,
-        password: child.internal_password,
-      });
-
-      if (signErr) {
-        setError(KID_ERROR);
-        return;
-      }
-
-      await redirectAfterStudentSession();
-    } catch {
-      setError(KID_ERROR);
-    } finally {
-      setLoading(false);
-    }
+    setError(
+      "Your code should be 6 letters or numbers from home, or 8 from your teacher."
+    );
   };
 
   const handleClassJoinSubmit = async (e: React.FormEvent) => {
@@ -122,10 +180,14 @@ export default function KidLoginPage() {
 
     setLoading(true);
     try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+
       await joinClassWithCode({
         class_code: pendingClassCode,
         display_name: name,
       });
+      await syncLessonUserProfileCacheFromServer();
       await redirectAfterStudentSession();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
