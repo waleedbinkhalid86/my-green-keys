@@ -18,6 +18,7 @@ import {
   Leaf,
   Sprout,
   LogOut,
+  Pencil,
   PawPrint,
   ScrollText,
   Settings,
@@ -30,7 +31,11 @@ import {
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { generateUniqueKidCode } from "@/lib/kid-login/code-generator";
+import {
+  generateUniqueKidCode,
+  isKidCodeAvailable,
+  isValidCustomCode,
+} from "@/lib/kid-login/code-generator";
 import { createStudentAccountPreserveSession } from "@/lib/kid-login/account-creator";
 import { awardXp, getProgress, XP_SOURCES, type RangerRank } from "@/lib/rangerHelpers";
 import { RankBadge, rankProgressFillClassName } from "@/components/RankBadge";
@@ -418,6 +423,15 @@ export default function ParentDashboard() {
   const [revealedKidCode, setRevealedKidCode] = useState<{ name: string; login_code: string } | null>(
     null
   );
+  const [customizeChild, setCustomizeChild] = useState<{
+    id: string;
+    name: string;
+    login_code: string;
+  } | null>(null);
+  const [customizeInput, setCustomizeInput] = useState("");
+  const [customizeAvail, setCustomizeAvail] = useState<boolean | null>(null);
+  const [customizeCheckingAvail, setCustomizeCheckingAvail] = useState(false);
+  const [customizeSaving, setCustomizeSaving] = useState(false);
   const [childForm, setChildForm] = useState({
     name: "",
     username: "",
@@ -763,6 +777,98 @@ export default function ParentDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (!customizeChild) return;
+
+    const normalized = customizeInput.trim().toUpperCase();
+    if (!normalized) {
+      setCustomizeAvail(null);
+      setCustomizeCheckingAvail(false);
+      return;
+    }
+    if (normalized === customizeChild.login_code.trim().toUpperCase()) {
+      setCustomizeAvail(null);
+      setCustomizeCheckingAvail(false);
+      return;
+    }
+    const fmt = isValidCustomCode(normalized, 4, 12);
+    if (!fmt.ok) {
+      setCustomizeAvail(null);
+      setCustomizeCheckingAvail(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCustomizeCheckingAvail(true);
+    setCustomizeAvail(null);
+    const handle = setTimeout(async () => {
+      try {
+        const ok = await isKidCodeAvailable(normalized);
+        if (!cancelled) setCustomizeAvail(ok);
+      } catch {
+        if (!cancelled) setCustomizeAvail(null);
+      } finally {
+        if (!cancelled) setCustomizeCheckingAvail(false);
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [customizeInput, customizeChild]);
+
+  const handleSaveCustomLoginCode = async () => {
+    if (!customizeChild) return;
+    const normalized = customizeInput.trim().toUpperCase();
+    if (!normalized) {
+      showToast("error", "Enter a new login code.");
+      return;
+    }
+    if (normalized === customizeChild.login_code.trim().toUpperCase()) {
+      showToast("info", "That is already the current code.");
+      return;
+    }
+    const fmt = isValidCustomCode(normalized, 4, 12);
+    if (!fmt.ok) {
+      showToast("error", fmt.reason ?? "Invalid code format.");
+      return;
+    }
+    if (customizeCheckingAvail || customizeAvail !== true) {
+      showToast("error", "Wait until the code shows as available, or fix any issues.");
+      return;
+    }
+
+    setCustomizeSaving(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("children")
+        .update({
+          login_code: normalized,
+          code_created_at: new Date().toISOString(),
+        })
+        .eq("id", customizeChild.id);
+      if (error) throw error;
+      showToast("success", `Login code updated to ${normalized}`);
+      setCustomizeChild(null);
+      setCustomizeInput("");
+      setCustomizeAvail(null);
+      setCustomizeCheckingAvail(false);
+      await loadChildren();
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "message" in err && typeof (err as { message: unknown }).message === "string"
+          ? (err as { message: string }).message
+          : err instanceof Error
+            ? err.message
+            : "Failed to update login code.";
+      showToast("error", message);
+    } finally {
+      setCustomizeSaving(false);
+    }
+  };
+
   const handleSaveLesson = () => {
     if (lessonName && lessonText) {
       const newLesson: CustomLesson = {
@@ -898,6 +1004,21 @@ export default function ParentDashboard() {
 
   const wpmSeries = selectedChild?.wpmData.length ? selectedChild.wpmData : [0, 0, 0, 0, 0, 0, 0];
   const wpmMax = Math.max(...wpmSeries, 1);
+
+  const customizeNormalized = customizeInput.trim().toUpperCase();
+  const customizeFormatResult = isValidCustomCode(customizeNormalized, 4, 12);
+  const customizeSameAsCurrent =
+    customizeChild !== null &&
+    customizeNormalized.length > 0 &&
+    customizeNormalized === customizeChild.login_code.trim().toUpperCase();
+  const customizeCanSave =
+    customizeChild !== null &&
+    customizeNormalized.length > 0 &&
+    customizeFormatResult.ok &&
+    !customizeSameAsCurrent &&
+    customizeAvail === true &&
+    !customizeCheckingAvail &&
+    !customizeSaving;
 
   return (
     <div className="font-sans">
@@ -1039,6 +1160,145 @@ export default function ParentDashboard() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={customizeChild !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCustomizeChild(null);
+            setCustomizeInput("");
+            setCustomizeAvail(null);
+            setCustomizeCheckingAvail(false);
+            setCustomizeSaving(false);
+          }
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md"
+          showCloseButton
+          style={{
+            borderRadius: "16px",
+            border: "1px solid rgba(82, 183, 136, 0.35)",
+            background: "rgba(255, 255, 255, 0.96)",
+            boxShadow: "0 8px 32px rgba(27, 67, 50, 0.12)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle style={{ color: "#1B4332" }}>
+              {customizeChild ? `Customize ${customizeChild.name}'s login code` : "Customize login code"}
+            </DialogTitle>
+            <DialogDescription>
+              Letters and numbers only (4–12 characters). Avoid 0, O, I, 1, and L. Your child&apos;s account stays the
+              same.
+            </DialogDescription>
+          </DialogHeader>
+          {customizeChild ? (
+            <div className="space-y-4">
+              <div>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "#6B7280",
+                    marginBottom: "8px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Current code
+                </p>
+                <div
+                  style={{
+                    borderRadius: "12px",
+                    border: "1px solid #E5E7EB",
+                    background: "#F3F4F6",
+                    padding: "12px 16px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      color: "#9CA3AF",
+                      letterSpacing: "0.1em",
+                      margin: 0,
+                    }}
+                  >
+                    {customizeChild.login_code}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customize-login-code" style={{ color: "#1B4332", fontWeight: 700 }}>
+                  New code
+                </Label>
+                <Input
+                  id="customize-login-code"
+                  value={customizeInput}
+                  onChange={(e) => setCustomizeInput(e.target.value.toUpperCase().slice(0, 12))}
+                  placeholder="e.g. ALI2026"
+                  disabled={customizeSaving}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="font-mono tracking-wider focus-visible:border-[#52B788] focus-visible:ring-[#52B788]/25"
+                  style={{ ...FORM_CONTROL, borderColor: "#E5E7EB" }}
+                />
+                <p style={{ fontSize: "12px", color: "#6B7280", margin: 0 }}>
+                  {customizeNormalized.length}/12 · uppercase automatically
+                </p>
+              </div>
+              <div style={{ minHeight: "24px" }}>
+                {customizeNormalized.length > 0 && !customizeFormatResult.ok ? (
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#DC2626", margin: 0 }}>
+                    {customizeFormatResult.reason}
+                  </p>
+                ) : null}
+                {customizeFormatResult.ok && customizeSameAsCurrent ? (
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "#D97706", margin: 0 }}>
+                    Enter a different code than the current one.
+                  </p>
+                ) : null}
+                {customizeFormatResult.ok && customizeNormalized.length > 0 && !customizeSameAsCurrent ? (
+                  customizeCheckingAvail ? (
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#4A6355", margin: 0 }}>
+                      Checking availability…
+                    </p>
+                  ) : customizeAvail === true ? (
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#15803D", margin: 0 }}>✓ Available</p>
+                  ) : customizeAvail === false ? (
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#DC2626", margin: 0 }}>✗ Already taken</p>
+                  ) : null
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={customizeSaving}
+              onClick={() => {
+                setCustomizeChild(null);
+                setCustomizeInput("");
+                setCustomizeAvail(null);
+                setCustomizeCheckingAvail(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#52B788] hover:bg-[#40916C] disabled:opacity-50"
+              disabled={!customizeCanSave}
+              onClick={() => void handleSaveCustomLoginCode()}
+            >
+              {customizeSaving ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1712,6 +1972,26 @@ export default function ParentDashboard() {
                       >
                         <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden />
                         Copy
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        title="Customize login code"
+                        className="shrink-0 border-[#2D6A4F]/40 font-semibold text-[#1B4332] hover:bg-[#E8F5EE]"
+                        onClick={() => {
+                          setCustomizeChild({
+                            id: child.id,
+                            name: child.name,
+                            login_code: child.login_code!,
+                          });
+                          setCustomizeInput("");
+                          setCustomizeAvail(null);
+                          setCustomizeCheckingAvail(false);
+                        }}
+                      >
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                        Customize
                       </Button>
                     </div>
                   ) : (

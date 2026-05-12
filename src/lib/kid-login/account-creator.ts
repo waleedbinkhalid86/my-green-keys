@@ -1,14 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-
-function generateInternalEmail(): string {
-  const random = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
-  return `child-${random}@mygreenkeys.kids`;
-}
-
-function generateInternalPassword(): string {
-  const random = crypto.randomUUID() + crypto.randomUUID();
-  return random.replace(/-/g, "").slice(0, 32);
-}
+import { generateInternalEmail, generateInternalPassword } from "@/lib/kid-login/internal-credentials";
 
 export interface CreateStudentAccountResult {
   auth_user_id: string;
