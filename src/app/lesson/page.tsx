@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Nunito } from "next/font/google";
 import { Flame, Shield } from "lucide-react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
+import { fetchCustomLessonsForViewer, type CustomLessonRow } from "@/lib/lessons/custom-lessons-api";
+import { isChildAccount } from "@/lib/kid-login/family-resolver";
 import { createClient } from "@/lib/supabase/client";
 import { triggerAutoTrack } from "@/lib/quests/auto-track";
 import { getCurrentStreak, updateStreak, type StreakUpdateResult } from "@/lib/streakHelpers";
@@ -511,6 +513,32 @@ const ECO_ACTIONS: Array<{
   { type: "water_for_birds", label: "🐦 Water on roof for birds", points: 400 },
 ];
 
+function lessonFromCustomContent(title: string, content: string): Lesson {
+  const sentence = content.trim() || " ";
+  const t = title.trim() || "Custom lesson";
+  const drill = sentence.length > 160 ? `${sentence.slice(0, 160)}…` : sentence;
+  return {
+    id: 0,
+    phase: 1,
+    phaseName: "From parent",
+    title: t,
+    newKeys: [],
+    drill,
+    sentence,
+    module: "typing",
+    targetWPM: 20,
+  };
+}
+
+const CUSTOM_LESSON_PHASE_STRIP: (typeof phases)[number] = {
+  id: 1,
+  name: "From parent",
+  icon: "✏️",
+  lessons: 0,
+  color: "#52B788",
+  description: "Lesson assigned by your parent",
+};
+
 export default function LessonPage() {
   const [currentLessonId, setCurrentLessonId] = useState(1);
   const [userInput, setUserInput] = useState("");
@@ -546,6 +574,9 @@ export default function LessonPage() {
   const [joinClassError, setJoinClassError] = useState("");
   const [joinClassSuccess, setJoinClassSuccess] = useState("");
   const [currentClass, setCurrentClass] = useState<{ id: string; name: string; code: string } | null>(null);
+  const [customLessonRows, setCustomLessonRows] = useState<CustomLessonRow[]>([]);
+  const [customLessonsLoading, setCustomLessonsLoading] = useState(false);
+  const [activeCustomLessonId, setActiveCustomLessonId] = useState<string | null>(null);
 
   // Virtual Pet state (stored in Supabase profiles)
   const [petLoading, setPetLoading] = useState(true);
@@ -643,9 +674,27 @@ export default function LessonPage() {
     return () => URL.revokeObjectURL(url);
   }, [ecoFile]);
 
-  // Get current lesson data
-  const currentLesson = lessons.find(l => l.id === currentLessonId) || lessons[0];
-  const currentPhase = phases.find(p => p.id === currentLesson.phase);
+  const activeCustomRow = useMemo(
+    () => customLessonRows.find((r) => r.id === activeCustomLessonId) ?? null,
+    [customLessonRows, activeCustomLessonId],
+  );
+
+  const builtInLesson = useMemo(
+    () => lessons.find((l) => l.id === currentLessonId) || lessons[0],
+    [currentLessonId],
+  );
+
+  const currentLesson = useMemo(() => {
+    if (activeCustomRow) {
+      return lessonFromCustomContent(activeCustomRow.title ?? "", activeCustomRow.content ?? "");
+    }
+    return builtInLesson;
+  }, [activeCustomRow, builtInLesson]);
+
+  const currentPhase = useMemo(() => {
+    if (activeCustomRow) return CUSTOM_LESSON_PHASE_STRIP;
+    return phases.find((p) => p.id === builtInLesson.phase) ?? phases[0];
+  }, [activeCustomRow, builtInLesson.phase]);
 
   // Initialize from localStorage
   useEffect(() => {
@@ -664,8 +713,10 @@ export default function LessonPage() {
     
     const queryLessonId = queryLesson ? Number(queryLesson) : NaN;
     if (Number.isFinite(queryLessonId) && queryLessonId >= 1 && queryLessonId <= 100) {
+      setActiveCustomLessonId(null);
       setCurrentLessonId(queryLessonId);
       localStorage.setItem("currentLessonId", String(queryLessonId));
+      localStorage.removeItem("activeCustomLessonId");
       return;
     }
 
@@ -675,6 +726,35 @@ export default function LessonPage() {
   useEffect(() => {
     void loadCurrentClass();
   }, []);
+
+  useEffect(() => {
+    void (async () => {
+      setCustomLessonsLoading(true);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setCustomLessonRows([]);
+          return;
+        }
+        const kid = await isChildAccount(user.id);
+        const rows = await fetchCustomLessonsForViewer();
+        setCustomLessonRows(kid ? rows : []);
+      } finally {
+        setCustomLessonsLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (customLessonsLoading) return;
+    const saved = typeof window !== "undefined" ? localStorage.getItem("activeCustomLessonId") : null;
+    if (saved && customLessonRows.some((r) => r.id === saved)) {
+      setActiveCustomLessonId(saved);
+    }
+  }, [customLessonsLoading, customLessonRows]);
 
   useEffect(() => {
     const run = async () => {
@@ -941,10 +1021,18 @@ export default function LessonPage() {
     petPulseTimeoutRef.current = setTimeout(() => setPetPulse(false), 300);
   };
 
-  // Save current lesson to localStorage
+  // Save current lesson + custom selection to localStorage
   useEffect(() => {
     localStorage.setItem("currentLessonId", currentLessonId.toString());
   }, [currentLessonId]);
+
+  useEffect(() => {
+    if (activeCustomLessonId) {
+      localStorage.setItem("activeCustomLessonId", activeCustomLessonId);
+    } else {
+      localStorage.removeItem("activeCustomLessonId");
+    }
+  }, [activeCustomLessonId]);
 
   // Initialize typing
   useEffect(() => {
@@ -964,7 +1052,7 @@ export default function LessonPage() {
     setIsComplete(false);
     setStars(0);
     setShowKeyboardInstruction(true);
-  }, [currentLessonId]);
+  }, [currentLessonId, activeCustomLessonId]);
 
   // Calculate WPM and accuracy against the sentence
   useEffect(() => {
@@ -1119,10 +1207,14 @@ export default function LessonPage() {
   // Pick a lesson-linked eco fact when lesson completes
   useEffect(() => {
     if (!isComplete) return;
+    if (activeCustomLessonId) {
+      setLessonFact(pickEcoFact(`custom:${activeCustomLessonId}`));
+      return;
+    }
     const fact = ecoFacts.find((f) => f.lessonId === currentLessonId) ?? pickEcoFact(`lesson:${currentLessonId}`);
     setLessonFact(fact);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isComplete, currentLessonId]);
+  }, [isComplete, currentLessonId, activeCustomLessonId]);
 
   // Persist progress + trigger certificates at milestones.
   useEffect(() => {
@@ -1135,29 +1227,31 @@ export default function LessonPage() {
         if (userError) throw userError;
         if (!userData.user) return;
 
-        // 1) Mark current lesson as completed in student_progress (update if exists, else insert).
-        const existing = await supabase
-          .from("student_progress")
-          .select("id")
-          .eq("student_id", userData.user.id)
-          .eq("lesson_id", currentLessonId)
-          .maybeSingle();
+        if (!activeCustomLessonId) {
+          // 1) Mark current built-in lesson as completed in student_progress (update if exists, else insert).
+          const existing = await supabase
+            .from("student_progress")
+            .select("id")
+            .eq("student_id", userData.user.id)
+            .eq("lesson_id", currentLessonId)
+            .maybeSingle();
 
-        const payload: Record<string, unknown> = {
-          student_id: userData.user.id,
-          lesson_id: currentLessonId,
-          completed: true,
-          wpm: Number(stats.wpm) || 0,
-          accuracy: Number(stats.accuracy) || 0,
-          completed_at: new Date().toISOString(),
-        };
+          const payload: Record<string, unknown> = {
+            student_id: userData.user.id,
+            lesson_id: currentLessonId,
+            completed: true,
+            wpm: Number(stats.wpm) || 0,
+            accuracy: Number(stats.accuracy) || 0,
+            completed_at: new Date().toISOString(),
+          };
 
-        if (existing.data?.id) {
-          const { error: updErr } = await supabase.from("student_progress").update(payload).eq("id", existing.data.id);
-          if (updErr) throw updErr;
-        } else {
-          const { error: insErr } = await supabase.from("student_progress").insert([payload]);
-          if (insErr) throw insErr;
+          if (existing.data?.id) {
+            const { error: updErr } = await supabase.from("student_progress").update(payload).eq("id", existing.data.id);
+            if (updErr) throw updErr;
+          } else {
+            const { error: insErr } = await supabase.from("student_progress").insert([payload]);
+            if (insErr) throw insErr;
+          }
         }
 
         void triggerAutoTrack("typing_lesson");
@@ -1185,21 +1279,28 @@ export default function LessonPage() {
             if (stats.accuracy >= 90) lessonStars++;
             if (stats.wpm >= (currentLesson.targetWPM || 20)) lessonStars++;
 
+            const xpBaseMsg = activeCustomLessonId
+              ? `Completed parent lesson: ${currentLesson.title}`
+              : `Completed lesson ${currentLesson.id}: ${currentLesson.title}`;
+
             const baseXp = await awardXp(
               user.id,
               10,
               XP_SOURCES.LESSON_COMPLETE,
-              `Completed lesson ${currentLesson.id}: ${currentLesson.title}`,
+              xpBaseMsg,
               supabase
             );
 
             let bonusResult: XpAwardResult | null = null;
             if (lessonStars === 3) {
+              const bonusMsg = activeCustomLessonId
+                ? `3-star bonus: ${currentLesson.title}`
+                : `3-star bonus: lesson ${currentLesson.id}`;
               bonusResult = await awardXp(
                 user.id,
                 5,
                 XP_SOURCES.LESSON_THREE_STARS,
-                `3-star bonus: lesson ${currentLesson.id}`,
+                bonusMsg,
                 supabase
               );
             }
@@ -1223,7 +1324,11 @@ export default function LessonPage() {
           }
         }
 
-        // 2) Count completed lessons
+        if (activeCustomLessonId) {
+          return;
+        }
+
+        // 2) Count completed lessons (built-in only)
         const { data: countRows, error: countErr } = await supabase
           .from("student_progress")
           .select("lesson_id, completed")
@@ -1281,19 +1386,27 @@ export default function LessonPage() {
   }, [isComplete]);
 
   const handleNextLesson = () => {
+    setActiveCustomLessonId(null);
     if (currentLessonId < 100) {
       setCurrentLessonId(currentLessonId + 1);
     }
   };
 
   const handlePrevLesson = () => {
+    setActiveCustomLessonId(null);
     if (currentLessonId > 1) {
       setCurrentLessonId(currentLessonId - 1);
     }
   };
 
   const handleSelectLesson = (lessonId: number) => {
+    setActiveCustomLessonId(null);
     setCurrentLessonId(lessonId);
+    setShowLessonMap(false);
+  };
+
+  const selectParentCustomLesson = (id: string) => {
+    setActiveCustomLessonId(id);
     setShowLessonMap(false);
   };
 
@@ -1442,7 +1555,12 @@ export default function LessonPage() {
   };
 
   const progressPercent = (userInput.length / currentLesson.sentence.length) * 100;
-  const lessonProgress = ((currentLessonId - 1) / 100) * 100;
+  const lessonProgress = useMemo(() => {
+    if (activeCustomLessonId && currentLesson.sentence.length > 0) {
+      return Math.min(100, (userInput.length / currentLesson.sentence.length) * 100);
+    }
+    return ((currentLessonId - 1) / 100) * 100;
+  }, [activeCustomLessonId, currentLesson.sentence.length, currentLessonId, userInput.length]);
 
   const lessonKeyIndex = nextLessonKeyIndex(currentLesson.sentence, userInput);
   const guideHighlightKey =
@@ -1452,7 +1570,7 @@ export default function LessonPage() {
 
   useEffect(() => {
     setShowKeyboardInstruction(true);
-  }, [lessonKeyIndex, currentLessonId]);
+  }, [lessonKeyIndex, currentLessonId, activeCustomLessonId]);
 
   const ecoWordCount = useMemo(() => {
     const targetWords = currentLesson.sentence.trim().split(/\s+/).filter(Boolean);
@@ -2498,7 +2616,15 @@ export default function LessonPage() {
         >
           <div style={{ minWidth: 0, overflow: "hidden" }}>
             <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.75, marginBottom: 3, letterSpacing: "0.02em" }}>
-              Lesson {currentLessonId} of 100 <span style={{ opacity: 0.55 }}>·</span> 📚 {currentPhase?.name ?? "Typing"}
+              {activeCustomLessonId ? (
+                <>
+                  Custom lesson <span style={{ opacity: 0.55 }}>·</span> 📚 {currentPhase?.name ?? "From parent"}
+                </>
+              ) : (
+                <>
+                  Lesson {currentLessonId} of 100 <span style={{ opacity: 0.55 }}>·</span> 📚 {currentPhase?.name ?? "Typing"}
+                </>
+              )}
             </div>
             <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
@@ -2521,6 +2647,60 @@ export default function LessonPage() {
           </div>
         </div>
       </div>
+
+      {(customLessonsLoading || customLessonRows.length > 0) && (
+        <div style={{ background: "#F0F9F4", borderBottom: "1px solid rgba(82, 183, 136, 0.25)" }}>
+          <div className="mgk-container" style={{ paddingTop: 10, paddingBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 900, color: "#1B4332", marginBottom: 8 }}>
+              {customLessonsLoading ? "Loading parent lessons…" : "Custom lessons from your parent"}
+            </div>
+            {!customLessonsLoading && customLessonRows.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                {customLessonRows.map((row) => {
+                  const active = activeCustomLessonId === row.id;
+                  return (
+                    <button
+                      key={row.id}
+                      type="button"
+                      onClick={() => selectParentCustomLesson(row.id)}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        border: active ? "2px solid #1A8F4E" : "1px solid #C7ECD9",
+                        background: active ? "#FFFFFF" : "rgba(255,255,255,0.75)",
+                        color: "#1B4332",
+                        fontWeight: 800,
+                        fontSize: 13,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {row.title?.trim() || "Untitled lesson"}
+                    </button>
+                  );
+                })}
+                {activeCustomLessonId ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveCustomLessonId(null)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: "1px solid #E5E7EB",
+                      background: "#FFFFFF",
+                      color: "#6B7280",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Back to main lessons
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {joinClassSuccess && (
         <div style={{ background: "#E8F5E9", borderBottom: "1px solid #4CAF50", color: "#2e7d32", fontWeight: 800 }}>

@@ -442,6 +442,7 @@ export default function ParentDashboard() {
   const [lessonText, setLessonText] = useState("");
   const [lessonName, setLessonName] = useState("");
   const [lessonDifficulty, setLessonDifficulty] = useState("Beginner");
+  const [lessonSaving, setLessonSaving] = useState(false);
   const [customLessons, setCustomLessons] = useState<CustomLesson[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
@@ -526,6 +527,7 @@ export default function ParentDashboard() {
       if (!userData.user) {
         setChildren([]);
         setSelectedChildId("");
+        setCustomLessons([]);
         setChildrenError("You must be logged in to view your children.");
         return;
       }
@@ -639,6 +641,32 @@ export default function ParentDashboard() {
         setSelectedChildId("");
       }
 
+      try {
+        const { data: lessonsRows, error: clErr } = await supabase
+          .from("custom_lessons")
+          .select("id, title, content, difficulty, assigned_child_id, created_at")
+          .eq("created_by", userData.user.id)
+          .order("created_at", { ascending: false });
+        if (!clErr && lessonsRows) {
+          setCustomLessons(
+            (lessonsRows as Array<Record<string, unknown>>).map((row) => ({
+              id: String(row.id),
+              name: String(row.title ?? ""),
+              text: String(row.content ?? ""),
+              difficulty: String(row.difficulty ?? "Beginner"),
+              assignedTo: String(row.assigned_child_id ?? ""),
+              createdAt: row.created_at
+                ? new Date(String(row.created_at)).toLocaleDateString()
+                : "",
+            }))
+          );
+        } else {
+          setCustomLessons([]);
+        }
+      } catch {
+        setCustomLessons([]);
+      }
+
       const warnings: Array<{ childName: string; petName: string; petHealth: number }> = [];
       for (const c of withProfileIds) {
         const p =
@@ -660,6 +688,7 @@ export default function ParentDashboard() {
       setChildrenError(message);
       setChildren([]);
       setSelectedChildId("");
+      setCustomLessons([]);
     } finally {
       setChildrenLoading(false);
     }
@@ -869,20 +898,68 @@ export default function ParentDashboard() {
     }
   };
 
-  const handleSaveLesson = () => {
-    if (lessonName && lessonText) {
-      const newLesson: CustomLesson = {
-        id: Date.now().toString(),
-        name: lessonName,
-        text: lessonText,
-        difficulty: lessonDifficulty,
-        assignedTo: selectedChildId,
-        createdAt: new Date().toLocaleDateString(),
+  const handleSaveLesson = async () => {
+    const name = lessonName.trim();
+    const text = lessonText.trim();
+    if (!name || !text) {
+      showToast("error", "Add a lesson name and lesson text.");
+      return;
+    }
+    if (!selectedChildId) {
+      showToast("error", "Add a child profile first, then pick who this lesson is for.");
+      return;
+    }
+    setLessonSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("You must be logged in.");
+
+      const { data: inserted, error } = await supabase
+        .from("custom_lessons")
+        .insert({
+          created_by: userData.user.id,
+          title: name,
+          content: text,
+          difficulty: lessonDifficulty,
+          assigned_child_id: selectedChildId,
+        })
+        .select("id, title, content, difficulty, assigned_child_id, created_at")
+        .single();
+
+      if (error) throw error;
+      const row = inserted as {
+        id: string;
+        title?: string | null;
+        content?: string | null;
+        difficulty?: string | null;
+        assigned_child_id?: string | null;
+        created_at?: string | null;
       };
-      setCustomLessons([...customLessons, newLesson]);
+      const newLesson: CustomLesson = {
+        id: row.id,
+        name: row.title ?? name,
+        text: row.content ?? text,
+        difficulty: row.difficulty ?? lessonDifficulty,
+        assignedTo: row.assigned_child_id ?? selectedChildId,
+        createdAt: row.created_at ? new Date(row.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
+      };
+      setCustomLessons((prev) => [newLesson, ...prev]);
       setLessonName("");
       setLessonText("");
       setLessonDifficulty("Beginner");
+      showToast("success", "Lesson saved and assigned.");
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "message" in err && typeof (err as { message: unknown }).message === "string"
+          ? (err as { message: string }).message
+          : err instanceof Error
+            ? err.message
+            : "Could not save lesson. If this persists, run the custom-lessons SQL migration in Supabase.";
+      showToast("error", message);
+    } finally {
+      setLessonSaving(false);
     }
   };
 
@@ -967,8 +1044,23 @@ export default function ParentDashboard() {
     }
   };
 
-  const handleDeleteLesson = (lessonId: string) => {
-    setCustomLessons(customLessons.filter((l) => l.id !== lessonId));
+  const handleDeleteLesson = async (lessonId: string) => {
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!userData.user) {
+        showToast("error", "You must be logged in.");
+        return;
+      }
+      const { error } = await supabase.from("custom_lessons").delete().eq("id", lessonId).eq("created_by", userData.user.id);
+      if (error) throw error;
+      setCustomLessons((prev) => prev.filter((l) => l.id !== lessonId));
+      showToast("success", "Lesson removed.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete lesson.";
+      showToast("error", message);
+    }
   };
 
   const markQuestCompletionSeen = async (questId: string) => {
@@ -1019,6 +1111,13 @@ export default function ParentDashboard() {
     customizeAvail === true &&
     !customizeCheckingAvail &&
     !customizeSaving;
+
+  const canSaveCustomLesson =
+    children.length > 0 &&
+    Boolean(selectedChildId) &&
+    lessonName.trim().length > 0 &&
+    lessonText.trim().length > 0 &&
+    !lessonSaving;
 
   return (
     <div className="font-sans">
@@ -2184,12 +2283,15 @@ export default function ParentDashboard() {
             </div>
             <button
               type="button"
-              style={{ ...PRIMARY_CTA, opacity: !lessonName || !lessonText ? 0.5 : 1 }}
-              disabled={!lessonName || !lessonText}
-              onClick={handleSaveLesson}
+              style={{ ...PRIMARY_CTA, opacity: canSaveCustomLesson ? 1 : 0.5 }}
+              disabled={!canSaveCustomLesson}
+              onClick={() => void handleSaveLesson()}
             >
-              Save &amp; assign lesson
+              {lessonSaving ? "Saving…" : "Save &amp; assign lesson"}
             </button>
+            {children.length === 0 ? (
+              <p className="mt-2 text-sm text-[#6B7280]">Add a child on your dashboard first, then you can assign custom lessons.</p>
+            ) : null}
           </div>
 
           {customLessons.length > 0 ? (
