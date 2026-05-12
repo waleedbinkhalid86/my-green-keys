@@ -66,6 +66,14 @@ async function canAccessStudentReport(
 ): Promise<boolean> {
   if (viewerId === studentId) return true;
 
+  const { data: childByAuth } = await supabase
+    .from("children")
+    .select("id")
+    .eq("parent_id", viewerId)
+    .eq("auth_user_id", studentId)
+    .maybeSingle();
+  if (childByAuth) return true;
+
   const { data: classes } = await supabase.from("classes").select("id").eq("teacher_id", viewerId);
   const classIds = (classes as { id: string }[] | null)?.map((c) => c.id) ?? [];
   if (classIds.length > 0) {

@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { fetchMyActiveQuests, fetchTodayProgress } from "./api";
 
+// Auto-track scans the family's quest list: fetchMyActiveQuests resolves parent_id
+// via getFamilyOwnerId (see src/lib/kid-login/family-resolver.ts).
+
 // Examples of what gets auto-tracked:
 //
 // Action: "Practice typing for 15 minutes"

@@ -1,11 +1,22 @@
 import { createClient } from "@/lib/supabase/client";
+import {
+  assertParentCanManageQuests,
+  getFamilyOwnerId,
+} from "@/lib/kid-login/family-resolver";
 import type { Quest, CreateQuestInput, QuestProgress, UpdateQuestInput } from "./types";
 
 export async function fetchActiveQuests(): Promise<Quest[]> {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const ownerId = await getFamilyOwnerId(user.id);
   const { data, error } = await supabase
     .from("quests")
     .select("*")
+    .eq("parent_id", ownerId)
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
@@ -15,9 +26,16 @@ export async function fetchActiveQuests(): Promise<Quest[]> {
 
 export async function fetchCompletedQuests(): Promise<Quest[]> {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const ownerId = await getFamilyOwnerId(user.id);
   const { data, error } = await supabase
     .from("quests")
     .select("*")
+    .eq("parent_id", ownerId)
     .in("status", ["completed", "failed"])
     .order("completed_at", { ascending: false });
 
@@ -26,6 +44,7 @@ export async function fetchCompletedQuests(): Promise<Quest[]> {
 }
 
 export async function updateQuest(questId: string, input: UpdateQuestInput): Promise<Quest> {
+  await assertParentCanManageQuests();
   const supabase = createClient();
   const { data, error } = await supabase
     .from("quests")
@@ -46,6 +65,7 @@ export async function updateQuest(questId: string, input: UpdateQuestInput): Pro
 }
 
 export async function createQuest(input: CreateQuestInput): Promise<Quest> {
+  await assertParentCanManageQuests();
   const supabase = createClient();
   const {
     data: { user },
@@ -72,12 +92,13 @@ export async function createQuest(input: CreateQuestInput): Promise<Quest> {
 }
 
 export async function deleteQuest(questId: string): Promise<void> {
+  await assertParentCanManageQuests();
   const supabase = createClient();
   const { error } = await supabase.from("quests").delete().eq("id", questId);
   if (error) throw error;
 }
 
-/** Active quests for the current user (kid); single-account families use parent_id = user.id. */
+/** Active quests for the family: parent's list, or linked kid resolves to parent_id. */
 export async function fetchMyActiveQuests(): Promise<Quest[]> {
   const supabase = createClient();
   const {
@@ -85,10 +106,11 @@ export async function fetchMyActiveQuests(): Promise<Quest[]> {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
+  const ownerId = await getFamilyOwnerId(user.id);
   const { data, error } = await supabase
     .from("quests")
     .select("*")
-    .eq("parent_id", user.id)
+    .eq("parent_id", ownerId)
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
