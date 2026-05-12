@@ -359,6 +359,9 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Link href="/kid-login" className="nav-link hidden md:block">
+                Kid login
+              </Link>
               <Link href="/login" className="nav-link hidden md:block">
                 Log In
               </Link>
@@ -396,6 +399,9 @@ export default function HomePage() {
                   </a>
                   <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     Pricing
+                  </Link>
+                  <Link href="/kid-login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                    Kid login
                   </Link>
                   <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     Log In
@@ -570,6 +576,12 @@ export default function HomePage() {
             style={{ marginTop: "14px", marginBottom: "14px" }}
           >
             No credit card required. Free forever.
+          </p>
+          <p style={{ marginTop: 4, fontSize: "0.95rem", color: "rgba(255,255,255,0.88)" }}>
+            Kid with a code from home or school?{" "}
+            <Link href="/kid-login" className="font-semibold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white">
+              Kid login
+            </Link>
           </p>
           </Inner>
         </div>

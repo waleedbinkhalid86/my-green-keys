@@ -351,7 +351,14 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-[#4A6355]">
+      <p className="mt-6 text-center text-sm text-[#4A6355]">
+        Student with a code?{" "}
+        <Link href="/kid-login" className="font-semibold text-[#2D6A4F] hover:text-[#52B788]">
+          Kid login
+        </Link>
+      </p>
+
+      <p className="mt-4 text-center text-sm text-[#4A6355]">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="font-semibold text-[#2D6A4F] hover:text-[#52B788]">
           Sign up

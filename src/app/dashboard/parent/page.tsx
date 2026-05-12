@@ -570,7 +570,7 @@ export default function ParentDashboard() {
       const authIds = mapped.map((c) => c.auth_user_id).filter(Boolean) as string[];
       const usernames = mapped.map((c) => c.username?.trim()).filter(Boolean) as string[];
 
-      let profileRows: PetProfileRow[] = [];
+      const profileRows: PetProfileRow[] = [];
       if (authIds.length > 0) {
         const { data: byId, error: idErr } = await supabase
           .from("profiles")
@@ -717,7 +717,7 @@ export default function ParentDashboard() {
 
       const childName = childForm.name.trim();
       const loginCode = await generateUniqueKidCode();
-      const { auth_user_id } = await createStudentAccountPreserveSession({
+      const { auth_user_id, internal_email, internal_password } = await createStudentAccountPreserveSession({
         full_name: childName,
         age,
       });
@@ -733,6 +733,8 @@ export default function ParentDashboard() {
           username: usernameTrim || null,
           login_code: loginCode,
           auth_user_id: auth_user_id,
+          internal_email,
+          internal_password,
           code_created_at: new Date().toISOString(),
         })
         .select()

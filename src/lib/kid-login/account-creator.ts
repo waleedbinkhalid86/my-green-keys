@@ -13,6 +13,7 @@ function generateInternalPassword(): string {
 export interface CreateStudentAccountResult {
   auth_user_id: string;
   internal_email: string;
+  internal_password: string;
 }
 
 // Internal: creates auth user + profiles row
@@ -58,6 +59,7 @@ export async function createStudentAccountForChild(data: {
   return {
     auth_user_id: signUpData.user.id,
     internal_email: internal_email,
+    internal_password: internal_password,
   };
 }
 
