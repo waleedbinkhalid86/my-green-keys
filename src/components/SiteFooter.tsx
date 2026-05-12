@@ -25,8 +25,14 @@ export default function SiteFooter() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} className="h-10 w-10 shrink-0" />
-              <span className="text-lg font-bold text-white">My Green Keys</span>
+              <Image
+                src="/logo-bgr.png"
+                alt="My Green Keys logo"
+                width={52}
+                height={52}
+                className="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
+              />
+              <span className="text-lg font-bold leading-tight text-white">My Green Keys</span>
             </div>
             <p className="mt-2 max-w-xs text-sm text-gray-400">
               Learn to Type. Help the Planet.

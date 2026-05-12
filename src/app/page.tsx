@@ -328,8 +328,15 @@ export default function HomePage() {
         <Inner>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} style={{ width: 40, height: 40, flexShrink: 0 }} priority />
-              <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
+              <Image
+                src="/logo-bgr.png"
+                alt="My Green Keys logo"
+                width={52}
+                height={52}
+                className="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
+                priority
+              />
+              <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em", lineHeight: 1.2 }}>My Green Keys</span>
             </Link>
 
             <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">

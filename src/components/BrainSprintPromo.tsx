@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
 /** Hero art for homepage promo (see also eco-hero.png in same folder). */
 const BRAIN_SPRINT_PROMO_IMAGE_SRC = "/images/brain-sprint/math-hero.png";
@@ -31,28 +30,53 @@ export function BrainSprintPromo() {
         backgroundColor: "#F0F9F4",
         backgroundImage: "radial-gradient(rgba(45, 106, 79, 0.14) 1px, transparent 1px)",
         backgroundSize: "18px 18px",
+        borderTop: "1px solid rgba(27, 67, 50, 0.16)",
+        boxShadow: "inset 0 10px 14px -12px rgba(26, 47, 35, 0.12)",
       }}
-      className="py-12 md:py-20"
+      className="pt-14 pb-14 md:pt-20 md:pb-20"
     >
-      <div className="mgk-container max-w-[1200px]">
-        <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
-          <div className="flex w-full justify-center md:w-[400px] md:max-w-[400px] md:flex-shrink-0 md:justify-start">
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          paddingLeft: 24,
+          paddingRight: 24,
+        }}
+      >
+        <div className="flex flex-col items-center gap-8 md:flex-row md:gap-12">
+          <div
+            style={{
+              flexShrink: 0,
+              width: "100%",
+              maxWidth: 480,
+              display: "flex",
+              justifyContent: "center",
+            }}
+            className="md:justify-start"
+          >
             <div
-              className="relative w-full overflow-hidden rounded-xl shadow-sm"
-              style={{ maxWidth: 400, aspectRatio: "4 / 3" }}
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 480,
+                aspectRatio: "4 / 3",
+                borderRadius: 18,
+                overflow: "hidden",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
+              }}
             >
               <Image
                 src={BRAIN_SPRINT_PROMO_IMAGE_SRC}
                 alt="Brain Sprint — math and eco lesson preview"
                 fill
-                sizes="(max-width: 768px) 100vw, 400px"
-                className="object-cover"
+                sizes="(max-width: 767px) 100vw, 480px"
+                style={{ objectFit: "cover" }}
                 priority={false}
               />
             </div>
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 w-full flex-1 md:w-auto">
             <span
               style={{
                 display: "inline-block",

@@ -42,7 +42,14 @@ export function MinimalAuthShell({
         >
           <div className="w-full">
             <div className="mb-8 flex justify-center">
-              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} className="h-10 w-10" priority />
+              <Image
+                src="/logo-bgr.png"
+                alt="My Green Keys logo"
+                width={52}
+                height={52}
+                className="h-11 w-11 md:h-[52px] md:w-[52px]"
+                priority
+              />
             </div>
 
             <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">{title}</h1>
