@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { GraduationCap, Leaf, School, Users } from "lucide-react";
+import { GraduationCap, School, Users } from "lucide-react";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { MinimalAuthShell } from "@/components/auth/MinimalAuthShell";
 import { createClient } from "@/lib/supabase/client";

@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MinimalAuthShell({
@@ -43,7 +42,7 @@ export function MinimalAuthShell({
         >
           <div className="w-full">
             <div className="mb-8 flex justify-center">
-              <Leaf className="h-8 w-8 text-green-600" strokeWidth={2} aria-hidden />
+              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} className="h-10 w-10" priority />
             </div>
 
             <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">{title}</h1>

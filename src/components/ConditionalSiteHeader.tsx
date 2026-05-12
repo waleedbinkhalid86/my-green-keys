@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf } from "lucide-react";
 import QuestBanner from "@/components/QuestBanner";
 import QuestAutoTrackToast from "@/components/QuestAutoTrackToast";
 import { isQuestBannerAllowedPath } from "@/lib/quests/banner-routes";
@@ -26,7 +26,7 @@ export default function ConditionalSiteHeader() {
       <header className="sticky top-0 z-50 bg-[#1B4332] text-white py-4">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <Link href="/lesson" className="flex items-center gap-2 text-white">
-            <Leaf className="h-6 w-6" aria-hidden />
+            <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} className="h-10 w-10 shrink-0" priority />
             <span>My Green Keys</span>
           </Link>
 

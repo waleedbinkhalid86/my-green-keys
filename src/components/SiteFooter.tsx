@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Leaf } from "lucide-react";
 
 function FooterLink({
   href,
@@ -25,7 +25,7 @@ export default function SiteFooter() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <Leaf className="h-6 w-6 shrink-0 text-green-500" aria-hidden />
+              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} className="h-10 w-10 shrink-0" />
               <span className="text-lg font-bold text-white">My Green Keys</span>
             </div>
             <p className="mt-2 max-w-xs text-sm text-gray-400">

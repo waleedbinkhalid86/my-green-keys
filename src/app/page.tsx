@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Leaf, Menu, MessageSquare, School, Users, X } from "lucide-react";
+import { Menu, MessageSquare, School, Users, X } from "lucide-react";
 import React from "react";
 import { BrainSprintPromo } from "@/components/BrainSprintPromo";
 
@@ -328,19 +328,7 @@ export default function HomePage() {
         <Inner>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 6,
-                  background: PRIMARY,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Leaf className="h-5 w-5 text-white" strokeWidth={2.5} aria-hidden />
-              </div>
+              <Image src="/logo-bgr.png" alt="My Green Keys logo" width={40} height={40} style={{ width: 40, height: 40, flexShrink: 0 }} priority />
               <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em" }}>My Green Keys</span>
             </Link>
 

@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: "My Green Keys – Learn to Type. Help the Planet.",
   description:
     "A premium educational typing platform for kids aged 6–14. Learn keyboard skills, sustainability, health tips, and manners.",
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
