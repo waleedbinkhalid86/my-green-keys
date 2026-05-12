@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Leaf, Menu, MessageSquare, School, Users, X } from "lucide-react";
 import React from "react";
+import { BrainSprintPromo } from "@/components/BrainSprintPromo";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
@@ -614,6 +615,8 @@ export default function HomePage() {
         className="bg-[#FAFAFA] antialiased text-gray-900
           bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]"
       >
+        <BrainSprintPromo />
+
         {/* TRUST BADGES */}
         <section style={{ paddingTop: "48px", paddingBottom: "48px" }}>
           <Inner>
