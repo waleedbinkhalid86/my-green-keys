@@ -791,7 +791,7 @@ export default function ParentDashboard() {
       setCustomizeCheckingAvail(false);
       return;
     }
-    const fmt = isValidCustomCode(normalized, 4, 12);
+    const fmt = isValidCustomCode(normalized, 6, 6);
     if (!fmt.ok) {
       setCustomizeAvail(null);
       setCustomizeCheckingAvail(false);
@@ -829,7 +829,7 @@ export default function ParentDashboard() {
       showToast("info", "That is already the current code.");
       return;
     }
-    const fmt = isValidCustomCode(normalized, 4, 12);
+    const fmt = isValidCustomCode(normalized, 6, 6);
     if (!fmt.ok) {
       showToast("error", fmt.reason ?? "Invalid code format.");
       return;
@@ -1006,7 +1006,7 @@ export default function ParentDashboard() {
   const wpmMax = Math.max(...wpmSeries, 1);
 
   const customizeNormalized = customizeInput.trim().toUpperCase();
-  const customizeFormatResult = isValidCustomCode(customizeNormalized, 4, 12);
+  const customizeFormatResult = isValidCustomCode(customizeNormalized, 6, 6);
   const customizeSameAsCurrent =
     customizeChild !== null &&
     customizeNormalized.length > 0 &&
@@ -1191,8 +1191,7 @@ export default function ParentDashboard() {
               {customizeChild ? `Customize ${customizeChild.name}'s login code` : "Customize login code"}
             </DialogTitle>
             <DialogDescription>
-              Letters and numbers only (4–12 characters). Avoid 0, O, I, 1, and L. Your child&apos;s account stays the
-              same.
+              Exactly 6 characters. Letters and numbers, no 0/O/I/1/L. Your child&apos;s account stays the same.
             </DialogDescription>
           </DialogHeader>
           {customizeChild ? (
@@ -1236,11 +1235,27 @@ export default function ParentDashboard() {
                 <Label htmlFor="customize-login-code" style={{ color: "#1B4332", fontWeight: 700 }}>
                   New code
                 </Label>
+                {customizeChild.login_code.trim().length !== 6 ? (
+                  <p
+                    role="alert"
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#B45309",
+                      margin: "0 0 8px 0",
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    ⚠️ This code has an invalid length and won&apos;t work for kid login. Please enter a new
+                    6-character code.
+                  </p>
+                ) : null}
                 <Input
                   id="customize-login-code"
                   value={customizeInput}
-                  onChange={(e) => setCustomizeInput(e.target.value.toUpperCase().slice(0, 12))}
-                  placeholder="e.g. ALI2026"
+                  onChange={(e) => setCustomizeInput(e.target.value.toUpperCase().slice(0, 6))}
+                  placeholder="e.g. AB23XY"
+                  maxLength={6}
                   disabled={customizeSaving}
                   autoComplete="off"
                   spellCheck={false}
@@ -1248,7 +1263,7 @@ export default function ParentDashboard() {
                   style={{ ...FORM_CONTROL, borderColor: "#E5E7EB" }}
                 />
                 <p style={{ fontSize: "12px", color: "#6B7280", margin: 0 }}>
-                  {customizeNormalized.length}/12 · uppercase automatically
+                  {customizeNormalized.length}/6 · uppercase automatically
                 </p>
               </div>
               <div style={{ minHeight: "24px" }}>
