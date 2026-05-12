@@ -14,6 +14,7 @@ import { RankBadge } from "@/components/RankBadge";
 import { RankUpCelebration } from "@/components/RankUpCelebration";
 import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
+import { playSound } from "@/lib/sounds/play-sound";
 import { PetWidget } from "@/components/PetWidget";
 import "../globals.css";
 
@@ -1070,6 +1071,7 @@ export default function LessonPage() {
 
     // Check if lesson complete
     if (value === currentLesson.sentence) {
+      playSound("complete");
       setIsComplete(true);
       // Calculate stars
       let earnedStars = 1;

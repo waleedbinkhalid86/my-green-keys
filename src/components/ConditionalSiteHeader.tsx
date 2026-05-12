@@ -6,6 +6,7 @@ import { Leaf } from "lucide-react";
 import QuestBanner from "@/components/QuestBanner";
 import QuestAutoTrackToast from "@/components/QuestAutoTrackToast";
 import { isQuestBannerAllowedPath } from "@/lib/quests/banner-routes";
+import { MuteToggle } from "@/components/ui/MuteToggle";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup"];
 
@@ -29,17 +30,20 @@ export default function ConditionalSiteHeader() {
             <span>My Green Keys</span>
           </Link>
 
-          <nav className="flex gap-6">
-            <Link href="/lesson-map" className="text-white hover:text-[#52B788]">
-              Lessons
-            </Link>
-            <Link href="/brain-sprint" className="text-white hover:text-[#52B788]">
-              Brain Sprint
-            </Link>
-            <Link href="/games" className="text-white hover:text-[#52B788]">
-              Games
-            </Link>
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="flex gap-6">
+              <Link href="/lesson-map" className="text-white hover:text-[#52B788]">
+                Lessons
+              </Link>
+              <Link href="/brain-sprint" className="text-white hover:text-[#52B788]">
+                Brain Sprint
+              </Link>
+              <Link href="/games" className="text-white hover:text-[#52B788]">
+                Games
+              </Link>
+            </nav>
+            <MuteToggle />
+          </div>
         </div>
       </header>
       {isQuestBannerAllowedPath(pathname) ? (

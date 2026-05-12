@@ -7,6 +7,7 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import type { BrainSprintLesson } from "@/lib/brain-sprint/types";
 import { saveLessonResult } from "@/lib/brain-sprint/progress-api";
 import { triggerAutoTrack } from "@/lib/quests/auto-track";
+import { playSound } from "@/lib/sounds/play-sound";
 
 type GameState = "ready" | "playing" | "feedback" | "finished";
 type FeedbackType = "correct" | "wrong" | null;
@@ -214,12 +215,12 @@ export default function LessonClient({ lesson }: { lesson: BrainSprintLesson }) 
       setBestStreak((b) => Math.max(b, nextStreak));
       setCorrectCount((n) => n + 1);
       setFeedbackType("correct");
-      console.log("[BrainSprint] ding (placeholder)");
+      playSound("correct");
     } else {
       setStreak(0);
       setWrongCount((n) => n + 1);
       setFeedbackType("wrong");
-      console.log("[BrainSprint] buzz (placeholder)");
+      playSound("wrong");
     }
 
     setGameState("feedback");

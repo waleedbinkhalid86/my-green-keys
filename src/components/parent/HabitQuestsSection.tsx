@@ -32,6 +32,7 @@ import {
   type StrictnessPreset,
 } from "@/lib/quests/types";
 import { HabitQuestFormFields } from "@/components/parent/HabitQuestFormFields";
+import { playSound } from "@/lib/sounds/play-sound";
 
 const SECTION_SHELL: React.CSSProperties = {
   background: "#FFFFFF",
@@ -180,6 +181,7 @@ export function HabitQuestsSection() {
         for (const q of active as Quest[]) {
           const st = states[q.id];
           if (st?.is_completed && (await completeQuest(q.id))) {
+            playSound("complete");
             setCompletionBanner({ title: q.title });
           }
         }
