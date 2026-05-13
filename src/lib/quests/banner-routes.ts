@@ -1,5 +1,6 @@
 /** Routes where the quest banner (and auto-track toast) may appear. */
 export const QUEST_BANNER_ALLOWED_PREFIXES = [
+  "/home",
   "/lesson",
   "/lesson-map",
   "/brain-sprint",

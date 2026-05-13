@@ -74,7 +74,7 @@ async function redirectAfterStudentSession(): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    window.location.href = "/lesson";
+    window.location.href = "/";
     return;
   }
   const { data: profile } = await supabase
@@ -84,7 +84,7 @@ async function redirectAfterStudentSession(): Promise<void> {
     .maybeSingle();
 
   const accountTypeRedirectMap: Record<string, string> = {
-    student: "/lesson",
+    student: "/home",
     parent: "/dashboard/parent",
     teacher: "/dashboard/teacher",
   };
