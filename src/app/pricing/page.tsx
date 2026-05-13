@@ -15,18 +15,11 @@ import {
   Sprout,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { redeemPromoCode } from "@/lib/promo/redeem";
 import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/Toast";
 import { testimonials } from "@/data/testimonials";
-
-const PROMO_CODES: Record<string, { discount: string; type: string; applicable: string[] }> = {
-  GREENSTART: { discount: "30% off", type: "percent", applicable: ["Family Plan"] },
-  FAMILY2024: { discount: "2 months free", type: "free_months", applicable: ["Family Plan"] },
-  SCHOOL100: { discount: "20% off", type: "percent", applicable: ["School Plan"] },
-  BACK2SCHOOL: { discount: "50% off first month", type: "percent", applicable: ["School Plan"] },
-  WELCOME10: { discount: "10% off", type: "percent", applicable: ["All Plans"] },
-};
 
 const FAQ_ITEMS = [
   {
@@ -459,15 +452,15 @@ const tierEyebrowMuted = "mb-3 text-center text-xs font-bold uppercase tracking-
 
 function PricingPageContent() {
   const router = useRouter();
+  const { showToast } = useToast();
   const searchParams = useSearchParams();
   const source = searchParams.get("source");
   const ecoGardenExpired = source === "eco_garden_expired";
   const familyPlanRef = useRef<HTMLDivElement | null>(null);
   const [isYearly, setIsYearly] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [promoResult, setPromoResult] = useState<{ type: "success" | "error"; message: string } | null>(
-    null
-  );
+  const [promoRedeemError, setPromoRedeemError] = useState<string | null>(null);
+  const [redeemBusy, setRedeemBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -560,21 +553,28 @@ function PricingPageContent() {
     }
   };
 
-  const handlePromoCode = () => {
-    const code = promoCode.toUpperCase();
-    if (PROMO_CODES[code]) {
-      const codeInfo = PROMO_CODES[code];
-      setPromoResult({
-        type: "success",
-        message: `${code} applied! You get ${codeInfo.discount}`,
-      });
-    } else {
-      setPromoResult({
-        type: "error",
-        message: "Invalid code. Please try again.",
-      });
+  const handleRedeemPromo = async () => {
+    setPromoRedeemError(null);
+    setRedeemBusy(true);
+    try {
+      const result = await redeemPromoCode(promoCode);
+      if (!result.success) {
+        setPromoRedeemError(result.message);
+        return;
+      }
+      const expiresLabel = result.expires_at
+        ? new Date(result.expires_at).toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" })
+        : "the date shown in your account";
+      showToast(
+        "success",
+        `🎉 Code redeemed! You have 3 months of free access until ${expiresLabel}.`
+      );
+      router.push("/dashboard/parent");
+    } catch {
+      setPromoRedeemError("Something went wrong. Please try again.");
+    } finally {
+      setRedeemBusy(false);
     }
-    setTimeout(() => setPromoResult(null), 3000);
   };
 
   const familyDisplayPrice = isYearly ? "7.99" : "9.99";
@@ -645,6 +645,77 @@ function PricingPageContent() {
               {checkoutError}
             </div>
           ) : null}
+
+          {/* Free-access promo codes (e.g. GoGreen) — redeem above paid tiers */}
+          <div
+            className="mb-10 rounded-2xl border p-6 shadow-md sm:p-8"
+            style={{
+              background: "linear-gradient(145deg, #F0F9F4 0%, #FFFFFF 55%)",
+              borderColor: "#2D6A4F",
+              boxShadow: "0 8px 28px rgba(27, 67, 50, 0.08)",
+            }}
+          >
+            <h2 className="mb-1 text-xl font-bold" style={{ color: "#1B4332" }}>
+              Have a promo code?
+            </h2>
+            <p className="mb-4 text-sm" style={{ color: "#2D6A4F" }}>
+              Enter your code for complimentary full access for a limited time. One redemption per account.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="E.G. GOGREEN"
+                autoComplete="off"
+                spellCheck={false}
+                disabled={redeemBusy}
+                className="min-w-0 flex-1 rounded-xl border-2 outline-none transition-colors focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/25 disabled:opacity-60"
+                style={{
+                  padding: "14px 16px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  borderColor: "#D1E8DC",
+                  color: "#1B4332",
+                  backgroundColor: "#FFFFFF",
+                }}
+              />
+              <button
+                type="button"
+                disabled={redeemBusy || !promoCode.trim()}
+                onClick={() => void handleRedeemPromo()}
+                style={{
+                  padding: "14px 32px",
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  background: redeemBusy || !promoCode.trim() ? "#94D2B8" : "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
+                  color: "#FFFFFF",
+                  border: "none",
+                  cursor: redeemBusy || !promoCode.trim() ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {redeemBusy ? "Redeeming…" : "Redeem"}
+              </button>
+            </div>
+            {promoRedeemError ? (
+              <p
+                className="mt-3 rounded-xl border px-3 py-2 text-sm font-medium"
+                style={{
+                  borderColor: "#FECACA",
+                  backgroundColor: "#FEF2F2",
+                  color: "#B91C1C",
+                }}
+                role="alert"
+              >
+                {promoRedeemError}
+              </p>
+            ) : null}
+          </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Free */}
@@ -826,80 +897,6 @@ function PricingPageContent() {
                 </ul>
               </div>
           </div>
-        </div>
-      </section>
-
-      {/* Promo codes */}
-      <section style={{ marginBottom: "80px" }} className="py-12">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-2xl bg-white p-6 shadow-md">
-              <h2 className="mb-3 text-xl font-bold text-[#1B4332]">Have a promo code?</h2>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                <Input
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Enter code"
-                  className="flex-1 rounded-xl border-2 border-gray-200 focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "15px",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handlePromoCode}
-                  style={{
-                    padding: "14px 32px",
-                    borderRadius: "12px",
-                    fontSize: "15px",
-                    fontWeight: "700",
-                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Apply
-                </button>
-              </div>
-              {promoResult ? (
-                <div
-                  className={cn(
-                    "mt-3 rounded-xl border px-3 py-2 text-sm",
-                    promoResult.type === "success"
-                      ? "border-green-200 bg-green-50 text-green-800"
-                      : "border-red-200 bg-red-50 text-red-800"
-                  )}
-                  role="status"
-                >
-                  {promoResult.message}
-                </div>
-              ) : null}
-              <div className="mt-5 text-sm text-slate-500">
-                <p className="mb-2 font-medium text-slate-600">Available codes</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(PROMO_CODES).map(([code, info]) => (
-                    <span
-                      key={code}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-[#E8F5EE] px-2 py-1 font-mono text-sm text-[#1B4332]"
-                      title={`${info.discount} — ${info.applicable.join(", ")}`}
-                    >
-                      {code}
-                    </span>
-                  ))}
-                </div>
-                <ul className="mt-3 list-none space-y-1 text-xs text-slate-500">
-                  {Object.entries(PROMO_CODES).map(([code, info]) => (
-                    <li key={code}>
-                      <span className="font-mono text-[#4A6355]">{code}</span> — {info.discount} ({info.applicable.join(", ")})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
         </div>
       </section>
 
