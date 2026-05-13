@@ -434,11 +434,11 @@ export default function HomePage() {
 
       {/* HERO */}
       <section
-        className="relative flex min-h-screen flex-col items-stretch overflow-hidden"
+        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
         style={{
           background: "linear-gradient(180deg, #0A1F0F 0%, #1A3D1F 100%)",
           paddingTop: "48px",
-          paddingBottom: 0,
+          paddingBottom: "48px",
         }}
       >
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
@@ -527,7 +527,7 @@ export default function HomePage() {
           </svg>
         </div>
 
-        <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center px-4 py-8 text-center sm:px-6 sm:py-10">
+        <div className="relative z-10 w-full pb-32 text-center sm:pb-40">
           <Inner className="text-center">
           <div className="mb-8" style={{ animation: "fade-in 0.8s ease 0.2s both" }}>
             <span className="inline-flex items-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-semibold text-white">
@@ -572,7 +572,7 @@ export default function HomePage() {
 
           <div
             className="flex flex-wrap items-center justify-center gap-4"
-            style={{ animation: "float-up 0.9s ease 0.65s both", marginTop: "14px", marginBottom: 0 }}
+            style={{ animation: "float-up 0.9s ease 0.65s both", marginTop: "14px", marginBottom: "10px" }}
           >
             <Link
               href="/signup"
@@ -590,82 +590,42 @@ export default function HomePage() {
               Watch Demo
             </button>
           </div>
-          <div
-            className="mx-auto flex max-w-lg flex-col items-center"
-            style={{ marginTop: "16px", gap: "12px", animation: "float-up 0.9s ease 0.75s both" }}
+          <p
+            className="inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm"
+            style={{ marginTop: "14px", marginBottom: "14px" }}
           >
-            <p className="text-sm font-medium text-white sm:text-[0.95rem]">No credit card required. Free forever.</p>
-            <p className="text-sm text-white sm:text-[0.95rem]">
-              Kid with a code from home or school?{" "}
-              <Link href="/kid-login" className="font-semibold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white">
-                Kid login
-              </Link>
-            </p>
-          </div>
+            No credit card required. Free forever.
+          </p>
+          <p style={{ marginTop: 4, fontSize: "0.95rem", color: "rgba(255,255,255,0.88)" }}>
+            Kid with a code from home or school?{" "}
+            <Link href="/kid-login" className="font-semibold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white">
+              Kid login
+            </Link>
+          </p>
           </Inner>
         </div>
 
-        {/* Thin forest accent between hero and Brain Sprint — tall art clipped so only treetops / hill peek through */}
-        <div
-          aria-hidden
-          className="relative z-[1] w-full shrink-0"
-          style={{
-            height: "clamp(56px, 12vw, 96px)",
-            overflow: "hidden",
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 210,
-              transform: "translateY(-58px)",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 130,
-                background: "linear-gradient(180deg,transparent 0%,#235c2a 100%)",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 62,
-                background: "#2d6e1e",
-                borderTopLeftRadius: "50% 18px",
-                borderTopRightRadius: "50% 18px",
-              }}
-            />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 210, pointerEvents: "none" }}>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 130, background: "linear-gradient(180deg,transparent 0%,#235c2a 100%)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 62, background: "#2d6e1e", borderTopLeftRadius: "50% 18px", borderTopRightRadius: "50% 18px" }} />
 
-            <Tree style={{ left: "2%", bottom: 42 }} scale={1.2} />
-            <Tree style={{ left: "9%", bottom: 32 }} scale={0.9} delay="0.5s" />
-            <Tree style={{ left: "17%", bottom: 50 }} scale={1.5} delay="1s" />
-            <Tree style={{ left: "26%", bottom: 36 }} scale={1.0} delay="0.3s" />
-            <Tree style={{ left: "37%", bottom: 46 }} scale={1.3} delay="0.8s" />
-            <Tree style={{ left: "49%", bottom: 32 }} scale={0.85} delay="0.2s" />
-            <Tree style={{ left: "59%", bottom: 50 }} scale={1.4} delay="1.2s" />
-            <Tree style={{ left: "69%", bottom: 36 }} scale={1.0} delay="0.6s" />
-            <Tree style={{ left: "78%", bottom: 46 }} scale={1.2} delay="0.9s" />
-            <Tree style={{ left: "87%", bottom: 32 }} scale={0.9} delay="0.4s" />
-            <Tree style={{ left: "93%", bottom: 42 }} scale={1.1} delay="1.1s" />
+          <Tree style={{ left: "2%", bottom: 42 }} scale={1.2} />
+          <Tree style={{ left: "9%", bottom: 32 }} scale={0.9} delay="0.5s" />
+          <Tree style={{ left: "17%", bottom: 50 }} scale={1.5} delay="1s" />
+          <Tree style={{ left: "26%", bottom: 36 }} scale={1.0} delay="0.3s" />
+          <Tree style={{ left: "37%", bottom: 46 }} scale={1.3} delay="0.8s" />
+          <Tree style={{ left: "49%", bottom: 32 }} scale={0.85} delay="0.2s" />
+          <Tree style={{ left: "59%", bottom: 50 }} scale={1.4} delay="1.2s" />
+          <Tree style={{ left: "69%", bottom: 36 }} scale={1.0} delay="0.6s" />
+          <Tree style={{ left: "78%", bottom: 46 }} scale={1.2} delay="0.9s" />
+          <Tree style={{ left: "87%", bottom: 32 }} scale={0.9} delay="0.4s" />
+          <Tree style={{ left: "93%", bottom: 42 }} scale={1.1} delay="1.1s" />
 
-            <Flower style={{ left: "6%", bottom: 58 }} color="#FF6B6B" />
-            <Flower style={{ left: "22%", bottom: 60 }} color="#FFEB3B" delay="0.7s" />
-            <Flower style={{ left: "44%", bottom: 58 }} color="#FF8E53" delay="1.3s" />
-            <Flower style={{ left: "65%", bottom: 62 }} color="#e91e63" delay="0.4s" />
-            <Flower style={{ left: "83%", bottom: 58 }} color="#FFEB3B" delay="1s" />
-          </div>
+          <Flower style={{ left: "6%", bottom: 58 }} color="#FF6B6B" />
+          <Flower style={{ left: "22%", bottom: 60 }} color="#FFEB3B" delay="0.7s" />
+          <Flower style={{ left: "44%", bottom: 58 }} color="#FF8E53" delay="1.3s" />
+          <Flower style={{ left: "65%", bottom: 62 }} color="#e91e63" delay="0.4s" />
+          <Flower style={{ left: "83%", bottom: 58 }} color="#FFEB3B" delay="1s" />
         </div>
       </section>
 
