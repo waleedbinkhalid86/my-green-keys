@@ -38,7 +38,7 @@ export default function ConditionalSiteHeader() {
           <div className="flex items-center justify-between gap-3">
             <SiteBrandLogoLink
               linkClassName="flex min-w-0 items-center gap-3 text-white no-underline"
-              imageClassName="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
+              imageClassName="h-12 w-12 shrink-0 md:h-[60px] md:w-[60px]"
               spanClassName="leading-tight"
               imagePriority
             />

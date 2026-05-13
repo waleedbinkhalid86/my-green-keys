@@ -333,7 +333,7 @@ export default function HomePage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
             <SiteBrandLogoLink
               linkClassName="flex items-center gap-3 no-underline"
-              imageClassName="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
+              imageClassName="h-12 w-12 shrink-0 md:h-[60px] md:w-[60px]"
               spanClassName="text-[1.05rem] font-extrabold leading-tight tracking-tight text-white"
               imagePriority
             />

@@ -32,8 +32,8 @@ export function SiteBrandLogoLink({
       <Image
         src="/logo-bgr.png"
         alt="My Green Keys logo"
-        width={52}
-        height={52}
+        width={60}
+        height={60}
         className={imageClassName}
         priority={imagePriority}
       />

@@ -33,7 +33,7 @@ export function BrainSprintPromo() {
         borderTop: "1px solid rgba(27, 67, 50, 0.16)",
         boxShadow: "inset 0 10px 14px -12px rgba(26, 47, 35, 0.12)",
       }}
-      className="pt-14 pb-14 md:pt-20 md:pb-20"
+      className="pt-8 pb-14 md:pt-12 md:pb-20"
     >
       <div
         style={{
