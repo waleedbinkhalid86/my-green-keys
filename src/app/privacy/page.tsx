@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   description: "Privacy Policy for My Green Keys (COPPA + GDPR).",
 };
 
-const UPDATED = "April 30, 2026";
-const CONTACT_EMAIL = "waleedbinkhalid86@gmail.com";
+const UPDATED = "May 13, 2026";
+const CONTACT_EMAIL = "mygreenkeys26@gmail.com";
 
 function Container({ children }: { children: React.ReactNode }) {
   return <div className="mgk-container max-w-[900px]">{children}</div>;

@@ -56,7 +56,7 @@ export default function SiteFooter() {
             <nav className="flex flex-col">
               <FooterLink href="/">Story</FooterLink>
               <a
-                href="mailto:waleedbinkhalid86@gmail.com"
+                href="mailto:mygreenkeys26@gmail.com"
                 className="mb-3 block text-sm text-gray-400 transition-colors hover:text-white last:mb-0"
               >
                 Contact
@@ -67,8 +67,9 @@ export default function SiteFooter() {
           <div>
             <h3 className="mb-4 text-sm font-semibold text-white">Legal</h3>
             <nav className="flex flex-col">
-              <FooterLink href="/terms">Terms</FooterLink>
-              <FooterLink href="/privacy">Privacy</FooterLink>
+              <FooterLink href="/privacy">Privacy Policy</FooterLink>
+              <FooterLink href="/terms">Terms of Service</FooterLink>
+              <FooterLink href="/refund">Refund Policy</FooterLink>
               <FooterLink href="/privacy">Cookies</FooterLink>
               <FooterLink href="/privacy">COPPA</FooterLink>
             </nav>

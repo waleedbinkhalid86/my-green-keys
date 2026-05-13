@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Terms of Service for My Green Keys.",
 };
 
-const UPDATED = "April 30, 2026";
+const UPDATED = "May 13, 2026";
 
 function Container({ children }: { children: React.ReactNode }) {
   return <div className="mgk-container max-w-[900px]">{children}</div>;
@@ -127,10 +127,10 @@ export default function TermsPage() {
               at any time. You may be able to delete accounts from within the app (when available) or
               by contacting us at{" "}
               <a
-                href="mailto:waleedbinkhalid86@gmail.com"
+                href="mailto:mygreenkeys26@gmail.com"
                 className="font-semibold text-[var(--green)] underline underline-offset-4"
               >
-                waleedbinkhalid86@gmail.com
+                mygreenkeys26@gmail.com
               </a>
               . We will verify the requester’s authority where appropriate to protect children.
             </P>
@@ -166,10 +166,10 @@ export default function TermsPage() {
             <P>
               If you have questions about these Terms, COPPA, or GDPR requests, contact us at{" "}
               <a
-                href="mailto:waleedbinkhalid86@gmail.com"
+                href="mailto:mygreenkeys26@gmail.com"
                 className="font-semibold text-[var(--green)] underline underline-offset-4"
               >
-                waleedbinkhalid86@gmail.com
+                mygreenkeys26@gmail.com
               </a>
               .
             </P>

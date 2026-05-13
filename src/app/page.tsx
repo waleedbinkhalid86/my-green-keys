@@ -965,7 +965,7 @@ export default function HomePage() {
                   Get Started Free
                 </Link>
                 <a
-                  href="mailto:waleedbinkhalid86@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
+                  href="mailto:mygreenkeys26@gmail.com?subject=My%20Green%20Keys%20School%20Demo"
                   className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
                   style={SECONDARY_CTA_STYLE}
                 >
