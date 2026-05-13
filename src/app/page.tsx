@@ -4,6 +4,9 @@ import Link from "next/link";
 import { Menu, MessageSquare, School, Users, X } from "lucide-react";
 import React from "react";
 import { BrainSprintPromo } from "@/components/BrainSprintPromo";
+import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
+import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
+import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
@@ -151,6 +154,7 @@ const PREVIEW_GAMES = [
 ] as const;
 
 export default function HomePage() {
+  const { authReady, isLoggedIn } = useAuthProfileRoute();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
   const [currentSlide, setCurrentSlide] = React.useState(0);
@@ -327,17 +331,12 @@ export default function HomePage() {
       >
         <Inner>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-              <Image
-                src="/logo-bgr.png"
-                alt="My Green Keys logo"
-                width={52}
-                height={52}
-                className="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
-                priority
-              />
-              <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.01em", lineHeight: 1.2 }}>My Green Keys</span>
-            </Link>
+            <SiteBrandLogoLink
+              linkClassName="flex items-center gap-3 no-underline"
+              imageClassName="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
+              spanClassName="text-[1.05rem] font-extrabold leading-tight tracking-tight text-white"
+              imagePriority
+            />
 
             <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
               <a href="#how-it-works" className="nav-link">
@@ -355,19 +354,27 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <Link href="/kid-login" className="nav-link hidden md:block">
-                Kid login
-              </Link>
-              <Link href="/login" className="nav-link hidden md:block">
-                Log In
-              </Link>
-              <Link
-                href="/signup"
-                className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                style={{ ...PRIMARY_CTA_STYLE, padding: "10px 20px", fontSize: "14px" }}
-              >
-                Start Free Today
-              </Link>
+              {!authReady ? null : isLoggedIn ? (
+                <div className="hidden md:block">
+                  <GlobalLogoutButton />
+                </div>
+              ) : (
+                <>
+                  <Link href="/kid-login" className="nav-link hidden md:block">
+                    Kid login
+                  </Link>
+                  <Link href="/login" className="nav-link hidden md:block">
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                    style={{ ...PRIMARY_CTA_STYLE, padding: "10px 20px", fontSize: "14px" }}
+                  >
+                    Start Free Today
+                  </Link>
+                </>
+              )}
               <button
                 type="button"
                 className="md:hidden inline-flex items-center justify-center rounded-md px-3 py-2 text-white/90 hover:text-white hover:bg-white/10"
@@ -396,12 +403,28 @@ export default function HomePage() {
                   <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
                     Pricing
                   </Link>
-                  <Link href="/kid-login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    Kid login
-                  </Link>
-                  <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    Log In
-                  </Link>
+                  {authReady && isLoggedIn ? (
+                    <div className="flex justify-center pt-1" onClick={() => setMobileMenuOpen(false)}>
+                      <GlobalLogoutButton />
+                    </div>
+                  ) : !authReady ? null : (
+                    <>
+                      <Link href="/kid-login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                        Kid login
+                      </Link>
+                      <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                        Log In
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                        style={{ ...PRIMARY_CTA_STYLE, padding: "10px 20px", fontSize: "14px", textAlign: "center" }}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Start Free Today
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

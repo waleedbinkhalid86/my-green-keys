@@ -555,9 +555,6 @@ export default function LessonPage() {
   const [messages, setMessages] = useState<string[]>([]);
   const [showKeyboardInstruction, setShowKeyboardInstruction] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  /** From Supabase `profiles.account_type`; used to show kid-only UI (e.g. log out). */
-  const [viewerAccountType, setViewerAccountType] = useState<string | null>(null);
-  const [kidLogoutBusy, setKidLogoutBusy] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showLessonMap, setShowLessonMap] = useState(false);
   const [showTypingRulesModal, setShowTypingRulesModal] = useState(false);
@@ -796,7 +793,6 @@ export default function LessonPage() {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!userData.user) {
-        setViewerAccountType(null);
         setPetError("You must be logged in to use the virtual pet.");
         setShowPetSetup(false);
         return;
@@ -810,10 +806,6 @@ export default function LessonPage() {
         .eq("id", userData.user.id)
         .single();
       if (profileError) throw profileError;
-
-      setViewerAccountType(
-        ((profile as { account_type?: string | null })?.account_type as string | undefined) ?? null
-      );
 
       const onboarding = Boolean((profile as any)?.onboarding_completed);
       setOnboardingCompleted(onboarding);
@@ -858,7 +850,6 @@ export default function LessonPage() {
         }
       }
     } catch (err) {
-      setViewerAccountType(null);
       setPetError(err instanceof Error ? err.message : "Failed to load pet.");
     } finally {
       setPetLoading(false);
@@ -1617,22 +1608,6 @@ export default function LessonPage() {
       setUserProfile(profile);
       localStorage.setItem("userProfile", JSON.stringify(profile));
       setShowWelcomeModal(false);
-    }
-  };
-
-  const handleStudentLogout = async () => {
-    setKidLogoutBusy(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      try {
-        localStorage.removeItem("userProfile");
-      } catch {
-        /* ignore */
-      }
-      window.location.href = "/kid-login";
-    } finally {
-      setKidLogoutBusy(false);
     }
   };
 
@@ -2485,27 +2460,6 @@ export default function LessonPage() {
                 <div style={{ fontSize: 13, fontWeight: 900, opacity: 0.92, whiteSpace: "nowrap" }}>
                   Hi {userProfile.name}!
                 </div>
-              ) : null}
-              {viewerAccountType === "student" ? (
-                <button
-                  type="button"
-                  onClick={() => void handleStudentLogout()}
-                  disabled={kidLogoutBusy}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "rgba(255,255,255,0.92)",
-                    border: "1px solid rgba(82, 183, 136, 0.55)",
-                    borderRadius: 9999,
-                    background: "rgba(45, 106, 79, 0.35)",
-                    cursor: kidLogoutBusy ? "not-allowed" : "pointer",
-                    opacity: kidLogoutBusy ? 0.65 : 1,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {kidLogoutBusy ? "…" : "Log out"}
-                </button>
               ) : null}
             </div>
 

@@ -217,7 +217,10 @@ export default function KidHomePage() {
               href={card.href}
               className="block cursor-pointer overflow-hidden rounded-[20px] bg-white text-inherit no-underline shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[4px] hover:shadow-[0_10px_24px_rgba(0,0,0,0.1)]"
             >
-              <div className="relative h-[200px] w-full overflow-hidden rounded-t-[20px]">
+              <div
+                className="relative w-full overflow-hidden rounded-t-[20px]"
+                style={{ aspectRatio: "1 / 1" }}
+              >
                 <Image
                   src={card.imageSrc}
                   alt=""

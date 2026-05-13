@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 
 export function MinimalAuthShell({
   title,
@@ -42,13 +43,11 @@ export function MinimalAuthShell({
         >
           <div className="w-full">
             <div className="mb-8 flex justify-center">
-              <Image
-                src="/logo-bgr.png"
-                alt="My Green Keys logo"
-                width={52}
-                height={52}
-                className="h-11 w-11 md:h-[52px] md:w-[52px]"
-                priority
+              <SiteBrandLogoLink
+                linkClassName="flex justify-center no-underline"
+                imageClassName="h-11 w-11 md:h-[52px] md:w-[52px]"
+                imageOnly
+                imagePriority
               />
             </div>
 

@@ -100,9 +100,14 @@ const OVERLAY_STYLE: CSSProperties = {
 
 export default function QuestBanner() {
   const pathname = usePathname() ?? "";
-  const shouldShowOnRoute = ALLOWED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
+  /** Kid hub (/home) uses the welcome banner + hub cards; no sticky quest strip. */
+  const hideOnKidHubHome =
+    pathname === "/home" || pathname.startsWith("/home/");
+  const shouldShowOnRoute =
+    !hideOnKidHubHome &&
+    ALLOWED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
 
   const { showToast } = useToast();
   const [loaded, setLoaded] = useState(false);
@@ -254,15 +259,17 @@ export default function QuestBanner() {
 
   useEffect(() => {
     function handleAutoTrack() {
-      const onAllowed = ALLOWED_PREFIXES.some(
-        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-      );
+      const onAllowed =
+        !hideOnKidHubHome &&
+        ALLOWED_PREFIXES.some(
+          (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+        );
       if (!onAllowed) return;
       void load();
     }
     window.addEventListener("quest-auto-track", handleAutoTrack);
     return () => window.removeEventListener("quest-auto-track", handleAutoTrack);
-  }, [load, pathname]);
+  }, [hideOnKidHubHome, load, pathname]);
 
   useEffect(() => {
     if (!loaded || quests.length === 0 || !shouldShowOnRoute) return;

@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { SiteFooterBrand } from "@/components/SiteFooterBrand";
 
 function FooterLink({
   href,
@@ -24,16 +24,7 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/logo-bgr.png"
-                alt="My Green Keys logo"
-                width={52}
-                height={52}
-                className="h-11 w-11 shrink-0 md:h-[52px] md:w-[52px]"
-              />
-              <span className="text-lg font-bold leading-tight text-white">My Green Keys</span>
-            </div>
+            <SiteFooterBrand />
             <p className="mt-2 max-w-xs text-sm text-gray-400">
               Learn to Type. Help the Planet.
             </p>
