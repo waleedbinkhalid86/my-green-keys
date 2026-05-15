@@ -20,13 +20,56 @@ const poppins = Poppins({
   display: "swap",
 });
 
+const siteDescription =
+  "A daily learning platform for kids 6–14. Typing, math, and eco lessons that build daily habits — not just screen time. Try free.";
+
 export const metadata: Metadata = {
-  title: "My Green Keys – Learn to Type. Help the Planet.",
-  description:
-    "A premium educational typing platform for kids aged 6–14. Learn keyboard skills, sustainability, health tips, and manners.",
+  metadataBase: new URL("https://mygreenkeys.com"),
+  title: {
+    default: "My Green Keys — Daily learning habits for kids 6–14",
+    template: "%s | My Green Keys",
+  },
+  description: siteDescription,
+  keywords: [
+    "typing for kids",
+    "kids typing app",
+    "homeschool typing",
+    "kids learning app",
+    "educational software for kids",
+    "typing software for schools",
+    "daily learning habits",
+    "kids math app",
+    "eco lessons for kids",
+  ],
+  authors: [{ name: "My Green Keys" }],
   icons: {
     icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  openGraph: {
+    title: "My Green Keys — Daily learning habits for kids 6–14",
+    description: siteDescription,
+    url: "https://mygreenkeys.com",
+    siteName: "My Green Keys",
+    images: [{ url: "/logo-bgr.png", width: 1200, height: 630, alt: "My Green Keys" }],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "My Green Keys — Daily learning habits for kids 6–14",
+    description: siteDescription,
+    images: ["/logo-bgr.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

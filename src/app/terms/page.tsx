@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | My Green Keys",
-  description: "Terms of Service for My Green Keys.",
+  title: "Terms of Service",
+  description: "Terms of service for My Green Keys.",
 };
 
 const UPDATED = "May 13, 2026";

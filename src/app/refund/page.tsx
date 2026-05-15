@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Refund Policy | My Green Keys",
-  description: "Refund Policy for My Green Keys subscriptions.",
+  title: "Refund Policy",
+  description: "Our refund policy for paid subscriptions.",
 };
 
 const UPDATED = "May 13, 2026";

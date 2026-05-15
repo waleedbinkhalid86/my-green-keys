@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | My Green Keys",
-  description: "Privacy Policy for My Green Keys (COPPA + GDPR).",
+  title: "Privacy Policy",
+  description:
+    "How My Green Keys protects your family's privacy. COPPA and GDPR compliant.",
 };
 
 const UPDATED = "May 13, 2026";
