@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import QuestBanner from "@/components/QuestBanner";
@@ -11,6 +10,7 @@ import { MuteToggle } from "@/components/ui/MuteToggle";
 import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
+import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup"];
 
@@ -39,7 +39,7 @@ export default function ConditionalSiteHeader() {
             <SiteBrandLogoLink
               linkClassName="flex min-w-0 items-center gap-3 text-white no-underline"
               imageClassName="h-12 w-12 shrink-0 md:h-[60px] md:w-[60px]"
-              spanClassName="leading-tight"
+              spanClassName="whitespace-nowrap leading-tight"
               imagePriority
             />
 
@@ -55,66 +55,46 @@ export default function ConditionalSiteHeader() {
               </Link>
             </nav>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden items-center gap-3 md:flex">
-                <MuteToggle />
-                {authReady ? (
-                  isLoggedIn ? (
-                    <GlobalLogoutButton />
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        className="text-sm font-semibold text-white/95 no-underline hover:text-[#52B788]"
-                      >
-                        Log In
-                      </Link>
-                      <Link href="/signup" className={primaryCtaClass}>
-                        Start Free Today
-                      </Link>
-                    </>
-                  )
-                ) : null}
-              </div>
-
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-white/90 hover:bg-white/10 hover:text-white md:hidden"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
-                onClick={() => setMobileOpen((o) => !o)}
-              >
-                {mobileOpen ? <X className="h-6 w-6" strokeWidth={2} aria-hidden /> : <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />}
-              </button>
+            <div className="hidden items-center gap-3 md:flex">
+              <MuteToggle />
+              {authReady ? (
+                isLoggedIn ? (
+                  <GlobalLogoutButton />
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-sm font-semibold text-white/95 no-underline hover:text-[#52B788]"
+                    >
+                      Log In
+                    </Link>
+                    <Link href="/signup" className={primaryCtaClass}>
+                      Start Free Today
+                    </Link>
+                  </>
+                )
+              ) : null}
             </div>
-          </div>
 
-          {mobileOpen ? (
-            <div className="mt-3 border-t border-white/15 pt-3 md:hidden">
-              <nav className="flex flex-col gap-1">
-                <Link
-                  href="/lesson-map"
-                  className="rounded-md py-2 text-white/95 no-underline hover:bg-white/10 hover:text-[#52B788]"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Lessons
-                </Link>
-                <Link
-                  href="/brain-sprint"
-                  className="rounded-md py-2 text-white/95 no-underline hover:bg-white/10 hover:text-[#52B788]"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Brain Sprint
-                </Link>
-                <Link
-                  href="/games"
-                  className="rounded-md py-2 text-white/95 no-underline hover:bg-white/10 hover:text-[#52B788]"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Games
-                </Link>
-              </nav>
-              <div className="mt-4 flex flex-col items-stretch gap-3 border-t border-white/10 pt-4">
+            <MobileNavDrawer open={mobileOpen} onOpenChange={setMobileOpen} hamburgerClassName="text-white">
+              <Link
+                href="/lesson-map"
+                className={mobileDrawerLinkClass}
+                onClick={() => setMobileOpen(false)}
+              >
+                Lessons
+              </Link>
+              <Link
+                href="/brain-sprint"
+                className={mobileDrawerLinkClass}
+                onClick={() => setMobileOpen(false)}
+              >
+                Brain Sprint
+              </Link>
+              <Link href="/games" className={mobileDrawerLinkClass} onClick={() => setMobileOpen(false)}>
+                Games
+              </Link>
+              <div className="mt-4 flex flex-col items-stretch gap-3 border-t border-white/10 px-1 pt-4">
                 <div className="flex justify-center">
                   <MuteToggle />
                 </div>
@@ -127,14 +107,14 @@ export default function ConditionalSiteHeader() {
                     <>
                       <Link
                         href="/login"
-                        className="rounded-full border border-white/25 py-2 text-center text-sm font-semibold text-white no-underline hover:bg-white/10"
+                        className="flex min-h-12 items-center justify-center rounded-full border border-white/25 text-sm font-semibold text-white no-underline hover:bg-white/10"
                         onClick={() => setMobileOpen(false)}
                       >
                         Log In
                       </Link>
                       <Link
                         href="/signup"
-                        className={`${primaryCtaClass} justify-center`}
+                        className={`${primaryCtaClass} min-h-12 justify-center`}
                         onClick={() => setMobileOpen(false)}
                       >
                         Start Free Today
@@ -143,8 +123,8 @@ export default function ConditionalSiteHeader() {
                   )
                 ) : null}
               </div>
-            </div>
-          ) : null}
+            </MobileNavDrawer>
+          </div>
         </div>
       </header>
       {isQuestBannerAllowedPath(pathname) ? (

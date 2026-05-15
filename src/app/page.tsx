@@ -1,12 +1,13 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, MessageSquare, School, Users, X } from "lucide-react";
+import { MessageSquare, School, Users, X } from "lucide-react";
 import React from "react";
 import { BrainSprintPromo } from "@/components/BrainSprintPromo";
 import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
+import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
 
 const DARK = "#1A2F23";
 const PRIMARY = "#2ECC71";
@@ -330,16 +331,16 @@ export default function HomePage() {
         }}
       >
         <Inner>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", gap: 12 }}>
             <SiteBrandLogoLink
-              linkClassName="flex items-center gap-3 no-underline"
+              linkClassName="flex min-w-0 items-center gap-2 sm:gap-3 no-underline"
               imageClassName="h-12 w-12 shrink-0 md:h-[60px] md:w-[60px]"
-              spanClassName="text-[1.05rem] font-extrabold leading-tight tracking-tight text-white"
+              spanClassName="whitespace-nowrap text-[0.95rem] font-extrabold leading-tight tracking-tight text-white sm:text-[1.05rem]"
               imagePriority
             />
 
-            <div style={{ display: "flex", alignItems: "center", gap: 32 }} className="hidden md:flex">
-              <a href="#how-it-works" className="nav-link">
+            <div className="hidden items-center md:flex" style={{ gap: 32 }}>
+              <a href="#how-it-works" className="nav-link whitespace-nowrap">
                 How it works
               </a>
               <a href="#features" className="nav-link">
@@ -353,17 +354,15 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div className="hidden items-center md:flex" style={{ gap: 16 }}>
               {!authReady ? null : isLoggedIn ? (
-                <div className="hidden md:block">
-                  <GlobalLogoutButton />
-                </div>
+                <GlobalLogoutButton />
               ) : (
                 <>
-                  <Link href="/kid-login" className="nav-link hidden md:block">
+                  <Link href="/kid-login" className="nav-link whitespace-nowrap">
                     Kid login
                   </Link>
-                  <Link href="/login" className="nav-link hidden md:block">
+                  <Link href="/login" className="nav-link">
                     Log In
                   </Link>
                   <Link
@@ -375,60 +374,51 @@ export default function HomePage() {
                   </Link>
                 </>
               )}
-              <button
-                type="button"
-                className="md:hidden inline-flex items-center justify-center rounded-md px-3 py-2 text-white/90 hover:text-white hover:bg-white/10"
-                onClick={() => setMobileMenuOpen((v) => !v)}
-                aria-label="Open menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />
-              </button>
             </div>
+
+            <MobileNavDrawer
+              open={mobileMenuOpen}
+              onOpenChange={setMobileMenuOpen}
+              hamburgerClassName="text-white"
+              drawerBackground={DARK}
+            >
+              <a href="#how-it-works" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                How it works
+              </a>
+              <a href="#features" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                Features
+              </a>
+              <a href="#games-preview" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                Games
+              </a>
+              <Link href="/pricing" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                Pricing
+              </Link>
+              {authReady && isLoggedIn ? (
+                <div className="px-4 pt-2" onClick={() => setMobileMenuOpen(false)}>
+                  <GlobalLogoutButton />
+                </div>
+              ) : !authReady ? null : (
+                <>
+                  <Link href="/kid-login" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                    Kid login
+                  </Link>
+                  <Link href="/login" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="mx-4 mt-2 flex min-h-12 items-center justify-center rounded-full text-center font-bold text-white no-underline hover:brightness-110"
+                    style={{ ...PRIMARY_CTA_STYLE, padding: "12px 20px", fontSize: "14px" }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Start Free Today
+                  </Link>
+                </>
+              )}
+            </MobileNavDrawer>
           </div>
 
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4">
-              <div className="mt-2 rounded-md border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
-                <div className="flex flex-col gap-3">
-                  <a href="#how-it-works" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    How it works
-                  </a>
-                  <a href="#features" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    Features
-                  </a>
-                  <a href="#games-preview" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    Games
-                  </a>
-                  <Link href="/pricing" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    Pricing
-                  </Link>
-                  {authReady && isLoggedIn ? (
-                    <div className="flex justify-center pt-1" onClick={() => setMobileMenuOpen(false)}>
-                      <GlobalLogoutButton />
-                    </div>
-                  ) : !authReady ? null : (
-                    <>
-                      <Link href="/kid-login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                        Kid login
-                      </Link>
-                      <Link href="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                        Log In
-                      </Link>
-                      <Link
-                        href="/signup"
-                        className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                        style={{ ...PRIMARY_CTA_STYLE, padding: "10px 20px", fontSize: "14px", textAlign: "center" }}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Start Free Today
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </Inner>
       </nav>
 
