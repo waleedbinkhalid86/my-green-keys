@@ -464,12 +464,29 @@ function PricingPageContent() {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const priceIds = useMemo(() => {
     const family = process.env.NEXT_PUBLIC_PADDLE_FAMILY_PRICE_ID || "";
     const schoolStarter = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_STARTER_PRICE_ID || "";
     const schoolGrowth = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_GROWTH_PRICE_ID || "";
     return { family, schoolStarter, schoolGrowth };
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session?.user);
+      setAuthReady(true);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+      setAuthReady(true);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -661,47 +678,85 @@ function PricingPageContent() {
             <p className="mb-4 text-sm" style={{ color: "#2D6A4F" }}>
               Enter your code for complimentary full access for a limited time. One redemption per account.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                placeholder="E.G. GOGREEN"
-                autoComplete="off"
-                spellCheck={false}
-                disabled={redeemBusy}
-                className="min-w-0 flex-1 rounded-xl border-2 outline-none transition-colors focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/25 disabled:opacity-60"
-                style={{
-                  padding: "14px 16px",
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                  borderColor: "#D1E8DC",
-                  color: "#1B4332",
-                  backgroundColor: "#FFFFFF",
-                }}
-              />
-              <button
-                type="button"
-                disabled={redeemBusy || !promoCode.trim()}
-                onClick={() => void handleRedeemPromo()}
-                style={{
-                  padding: "14px 32px",
-                  borderRadius: "12px",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  background: redeemBusy || !promoCode.trim() ? "#94D2B8" : "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
-                  color: "#FFFFFF",
-                  border: "none",
-                  cursor: redeemBusy || !promoCode.trim() ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {redeemBusy ? "Redeeming…" : "Redeem"}
-              </button>
-            </div>
+            {!authReady ? (
+              <p className="text-sm font-medium" style={{ color: "#4A6355" }}>
+                Loading…
+              </p>
+            ) : isLoggedIn ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="E.G. GOGREEN"
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={redeemBusy}
+                  className="min-w-0 flex-1 rounded-xl border-2 outline-none transition-colors focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/25 disabled:opacity-60"
+                  style={{
+                    padding: "14px 16px",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    letterSpacing: "0.04em",
+                    borderColor: "#D1E8DC",
+                    color: "#1B4332",
+                    backgroundColor: "#FFFFFF",
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={redeemBusy || !promoCode.trim()}
+                  onClick={() => void handleRedeemPromo()}
+                  style={{
+                    padding: "14px 32px",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    background: redeemBusy || !promoCode.trim() ? "#94D2B8" : "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: redeemBusy || !promoCode.trim() ? "not-allowed" : "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {redeemBusy ? "Redeeming…" : "Redeem"}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/signup"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "14px 32px",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    background: "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
+                    textDecoration: "none",
+                    width: "100%",
+                  }}
+                >
+                  Sign up to redeem a promo code
+                </Link>
+                <p className="text-sm" style={{ color: "#4A6355" }}>
+                  Already have an account?{" "}
+                  <Link href="/login" className="font-semibold underline" style={{ color: "#2D6A4F" }}>
+                    Log in to redeem
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
             {promoRedeemError ? (
               <p
                 className="mt-3 rounded-xl border px-3 py-2 text-sm font-medium"
