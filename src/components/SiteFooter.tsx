@@ -47,7 +47,7 @@ export default function SiteFooter() {
               <FooterLink href="/lesson">Lessons</FooterLink>
               <FooterLink href="/games">Games</FooterLink>
               <FooterLink href="/pricing">Pricing</FooterLink>
-              <FooterLink href="/pricing#schools">For Schools</FooterLink>
+              <FooterLink href="/schools">For Schools</FooterLink>
             </nav>
           </div>
 
