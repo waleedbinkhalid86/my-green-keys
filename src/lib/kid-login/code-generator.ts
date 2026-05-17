@@ -1,18 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
-
-// Excluded confusing chars: 0, O, I, 1, L
-const ALLOWED_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-const KID_CODE_LENGTH = 6;
-const CLASS_CODE_LENGTH = 8;
-
-function generateRandomCode(length: number): string {
-  let code = "";
-  for (let i = 0; i < length; i++) {
-    const idx = Math.floor(Math.random() * ALLOWED_CHARS.length);
-    code += ALLOWED_CHARS[idx];
-  }
-  return code;
-}
+import {
+  CLASS_CODE_LENGTH,
+  generateRandomCode,
+  isValidCustomCode as isValidCustomCodeCore,
+  KID_CODE_LENGTH,
+} from "@/lib/kid-login/code-core";
 
 // Generate unique kid login code (6 chars), checking children table
 export async function generateUniqueKidCode(): Promise<string> {
@@ -48,30 +40,12 @@ export async function generateUniqueClassCode(): Promise<string> {
   throw new Error("Could not generate unique class code");
 }
 
-// Validate custom code format
 export function isValidCustomCode(
   code: string,
   minLen = 4,
   maxLen = 12
-): {
-  ok: boolean;
-  reason?: string;
-} {
-  if (!code || code.length < minLen) {
-    return { ok: false, reason: `Code must be at least ${minLen} characters` };
-  }
-  if (code.length > maxLen) {
-    return { ok: false, reason: `Code must be ${maxLen} characters or less` };
-  }
-
-  const normalized = code.toUpperCase();
-  for (const char of normalized) {
-    if (!ALLOWED_CHARS.includes(char)) {
-      return { ok: false, reason: `Character "${char}" not allowed (avoid 0, O, I, 1, L)` };
-    }
-  }
-
-  return { ok: true };
+): ReturnType<typeof isValidCustomCodeCore> {
+  return isValidCustomCodeCore(code, minLen, maxLen);
 }
 
 export async function isKidCodeAvailable(code: string): Promise<boolean> {

@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   archiveClass,
   createClass,
+  fetchClassEnrollments,
   fetchEnrollmentCountsByClassIds,
   fetchMyClasses,
 } from "@/lib/kid-login/class-api";
@@ -52,6 +53,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BulkStudentUploadModal } from "@/components/teacher/BulkStudentUploadModal";
 const TEACHER_SIDEBAR = [
   { href: "#teacher-overview", label: "Overview", Icon: LayoutDashboard },
   { href: "#teacher-classes", label: "My Classes", Icon: GraduationCap },
@@ -149,6 +151,7 @@ export default function TeacherDashboard() {
   const [enrolledStudents, setEnrolledStudents] = useState<
     Array<{ id: string; full_name: string | null; email: string | null }>
   >([]);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   const leaderboardData = [
     { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "trophy" as const },
@@ -268,26 +271,14 @@ export default function TeacherDashboard() {
     setStudentsLoading(true);
     setStudentsError("");
     try {
-      const supabase = createClient();
-      const { data: enrollments, error: enrollErr } = await supabase
-        .from("class_enrollments")
-        .select("student_auth_user_id")
-        .eq("class_id", classId);
-      if (enrollErr) throw enrollErr;
-      const studentIds = ((enrollments as Array<{ student_auth_user_id: string }> | null) ?? []).map(
-        (e) => e.student_auth_user_id
+      const enrollments = await fetchClassEnrollments(classId);
+      setEnrolledStudents(
+        enrollments.map((e) => ({
+          id: e.student_auth_user_id,
+          full_name: e.display_name,
+          email: null,
+        }))
       );
-      if (studentIds.length === 0) {
-        setEnrolledStudents([]);
-        return;
-      }
-
-      const { data: profiles, error: profilesErr } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .in("id", studentIds);
-      if (profilesErr) throw profilesErr;
-      setEnrolledStudents((profiles as Array<{ id: string; full_name: string | null; email: string | null }> | null) ?? []);
     } catch (err) {
       setStudentsError(err instanceof Error ? err.message : "Failed to load students.");
       setEnrolledStudents([]);
@@ -584,6 +575,20 @@ export default function TeacherDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {selectedClassId && activeClass ? (
+        <BulkStudentUploadModal
+          open={showBulkUpload}
+          onOpenChange={setShowBulkUpload}
+          classId={selectedClassId}
+          className={activeClass.name}
+          schoolName={activeClass.school_name || schoolName}
+          onStudentsAdded={() => {
+            void loadClasses();
+            void loadEnrolledStudents(selectedClassId);
+          }}
+        />
+      ) : null}
 
       <div style={{ display: "flex", minHeight: "100vh", width: "100%" }}>
         <aside
@@ -1028,7 +1033,30 @@ export default function TeacherDashboard() {
                   </div>
 
                   <div id="teacher-enrolled-students">
-                    <h3 className="font-heading mb-3 text-base font-semibold text-[#1B4332]">Enrolled students</h3>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "12px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <h3 className="font-heading text-base font-semibold text-[#1B4332]">
+                        Enrolled students
+                      </h3>
+                      {selectedClassId ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-[#52B788] font-semibold hover:bg-[#40916C]"
+                          onClick={() => setShowBulkUpload(true)}
+                        >
+                          Bulk add students
+                        </Button>
+                      ) : null}
+                    </div>
                     {studentsError ? (
                       <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                         {studentsError}
@@ -1052,8 +1080,18 @@ export default function TeacherDashboard() {
                           <div>
                             <div className="text-base font-extrabold text-[#1A2F23]">No students enrolled yet</div>
                             <div className="mt-1 text-sm font-semibold text-muted-foreground">
-                              Share your class code so students can join, then come back to view progress.
+                              Share your class code or use bulk add to register students with kid login codes.
                             </div>
+                            {selectedClassId ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="mt-4 bg-[#52B788] font-semibold hover:bg-[#40916C]"
+                                onClick={() => setShowBulkUpload(true)}
+                              >
+                                Bulk add students
+                              </Button>
+                            ) : null}
                           </div>
                         </div>
                       </div>
