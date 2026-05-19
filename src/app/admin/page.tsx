@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -56,8 +57,10 @@ const tableCard: CSSProperties = {
 };
 
 const METRIC_LABELS = [
-  { key: "totalSignups" as const, label: "Total signups" },
-  { key: "signupsLast7Days" as const, label: "Signups last 7 days" },
+  { key: "parents" as const, label: "Parents" },
+  { key: "teachers" as const, label: "Teachers" },
+  { key: "parentsLast7Days" as const, label: "Parents (7d)" },
+  { key: "teachersLast7Days" as const, label: "Teachers (7d)" },
   { key: "payingCustomers" as const, label: "Paying customers" },
   { key: "loginsToday" as const, label: "Logins today" },
   { key: "totalKids" as const, label: "Total kids" },
@@ -74,11 +77,13 @@ function AdminTable({
   error,
 }: {
   title: string;
-  columns: [string, string, string];
+  columns: string[];
   rows: AdminRow[] | null;
   emptyMessage?: string;
   error?: boolean;
 }) {
+  const colCount = columns.length;
+
   return (
     <section style={tableCard}>
       <div
@@ -129,7 +134,7 @@ function AdminTable({
           {error ? (
             <tr>
               <td
-                colSpan={3}
+                colSpan={colCount}
                 style={{ padding: "20px 16px", color: "#2D6A4F", fontWeight: 600 }}
               >
                 Error loading
@@ -151,6 +156,11 @@ function AdminTable({
                   {row.name}
                 </td>
                 <td style={{ padding: "12px 16px", color: "#2D6A4F" }}>{row.email}</td>
+                {columns.includes("Type") ? (
+                  <td style={{ padding: "12px 16px", color: "#2D6A4F" }}>
+                    {row.type ?? "—"}
+                  </td>
+                ) : null}
                 <td style={{ padding: "12px 16px", color: "#2D6A4F" }}>
                   {formatRelativeTime(row.time)}
                 </td>
@@ -159,7 +169,7 @@ function AdminTable({
           ) : (
             <tr>
               <td
-                colSpan={3}
+                colSpan={colCount}
                 style={{ padding: "20px 16px", color: "#2D6A4F" }}
               >
                 {emptyMessage ?? "No data yet."}
@@ -172,7 +182,11 @@ function AdminTable({
   );
 }
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ includeTest?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -187,8 +201,12 @@ export default async function AdminDashboardPage() {
     redirect("/");
   }
 
+  const params = await searchParams;
+  const includeTest = params.includeTest === "1";
   const refreshedAt = new Date();
-  const data = await fetchAdminDashboardData();
+  const data = await fetchAdminDashboardData({ includeTest });
+
+  const toggleHref = includeTest ? "/admin" : "/admin?includeTest=1";
 
   return (
     <div style={pageBg}>
@@ -203,9 +221,14 @@ export default async function AdminDashboardPage() {
             grid-template-columns: repeat(2, 1fr);
           }
         }
+        @media (min-width: 768px) {
+          .admin-metrics-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
         @media (min-width: 1024px) {
           .admin-metrics-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
           }
         }
         .admin-tables-row {
@@ -254,24 +277,60 @@ export default async function AdminDashboardPage() {
               Internal — Waleed only
             </p>
           </div>
-          <p
+          <div
             style={{
-              margin: 0,
-              fontSize: "13px",
-              fontWeight: 600,
-              color: "#74C69D",
-              whiteSpace: "nowrap",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: "10px",
             }}
           >
-            Last refreshed:{" "}
-            {refreshedAt.toLocaleString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </p>
+            <Link
+              href={toggleHref}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#2D6A4F",
+                textDecoration: "none",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-flex",
+                  width: "16px",
+                  height: "16px",
+                  border: "2px solid #52B788",
+                  borderRadius: "3px",
+                  background: includeTest ? "#52B788" : "transparent",
+                  boxSizing: "border-box",
+                  flexShrink: 0,
+                }}
+              />
+              Include test accounts
+            </Link>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#74C69D",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Last refreshed:{" "}
+              {refreshedAt.toLocaleString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
         </header>
 
         <section className="admin-metrics-grid" aria-label="Key metrics">
@@ -307,13 +366,13 @@ export default async function AdminDashboardPage() {
         <div className="admin-tables-row">
           <AdminTable
             title="Last 10 signups"
-            columns={["Name", "Email", "Signed up"]}
+            columns={["Name", "Email", "Type", "Signed up"]}
             rows={data.lastSignups}
             error={data.lastSignups === null}
           />
           <AdminTable
             title="Last 10 logins"
-            columns={["Name", "Email", "Last login"]}
+            columns={["Name", "Email", "Type", "Last login"]}
             rows={data.lastLogins}
             error={data.lastLogins === null}
           />

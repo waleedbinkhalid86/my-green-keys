@@ -3,17 +3,25 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 const PAID_PLANS = new Set(["family", "school_starter", "school_growth"]);
 const GOGREEN_CODE = "GOGREEN";
+const TEST_EXCLUDE_OR = "is_test.eq.false,is_test.is.null";
+
+export type AdminFetchOptions = {
+  includeTest?: boolean;
+};
 
 export type AdminRow = {
   name: string;
   email: string;
   time: string | null;
+  type?: string;
 };
 
 export type AdminDashboardData = {
   metrics: {
-    totalSignups: string;
-    signupsLast7Days: string;
+    parents: string;
+    teachers: string;
+    parentsLast7Days: string;
+    teachersLast7Days: string;
     payingCustomers: string;
     loginsToday: string;
     totalKids: string;
@@ -62,6 +70,15 @@ export function formatRelativeTime(iso: string | null | undefined): string {
   });
 }
 
+function formatAccountType(accountType: string | null | undefined): string {
+  const t = (accountType ?? "").toLowerCase().trim();
+  if (t === "parent") return "Parent";
+  if (t === "teacher") return "Teacher";
+  if (t === "student") return "Student";
+  if (!t) return "—";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 function displayName(
   profileName: string | null | undefined,
   authUser: User | undefined,
@@ -78,6 +95,13 @@ function displayName(
   return fallback;
 }
 
+type OrCapableQuery = { or: (filters: string) => OrCapableQuery };
+
+function applyTestFilter<T extends OrCapableQuery>(query: T, includeTest: boolean): T {
+  if (includeTest) return query;
+  return query.or(TEST_EXCLUDE_OR) as T;
+}
+
 async function listAllAuthUsers(admin: ReturnType<typeof createServiceRoleClient>): Promise<User[]> {
   const users: User[] = [];
   let page = 1;
@@ -92,9 +116,38 @@ async function listAllAuthUsers(admin: ReturnType<typeof createServiceRoleClient
   return users;
 }
 
-async function safeCount(
-  run: () => Promise<number>
-): Promise<string> {
+async function fetchNonTestProfileIds(
+  admin: ReturnType<typeof createServiceRoleClient>,
+  includeTest: boolean
+): Promise<Set<string> | null> {
+  if (includeTest) return null;
+
+  const ids = new Set<string>();
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await applyTestFilter(
+      admin.from("profiles").select("id"),
+      false
+    ).range(from, from + pageSize - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    for (const row of rows) ids.add(row.id);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+  return ids;
+}
+
+function userPassesTestFilter(
+  userId: string,
+  nonTestIds: Set<string> | null
+): boolean {
+  if (nonTestIds === null) return true;
+  return nonTestIds.has(userId);
+}
+
+async function safeCount(run: () => Promise<number>): Promise<string> {
   try {
     const n = await run();
     return String(n);
@@ -103,9 +156,7 @@ async function safeCount(
   }
 }
 
-async function safeMetricPair(
-  run: () => Promise<string>
-): Promise<string> {
+async function safeMetricPair(run: () => Promise<string>): Promise<string> {
   try {
     return await run();
   } catch {
@@ -113,14 +164,19 @@ async function safeMetricPair(
   }
 }
 
-export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
+export async function fetchAdminDashboardData(
+  options: AdminFetchOptions = {}
+): Promise<AdminDashboardData> {
+  const includeTest = options.includeTest === true;
   const admin = createServiceRoleClient();
   const todayStart = startOfTodayUtc().getTime();
   const sevenDaysAgo = sevenDaysAgoIso();
 
   const [
-    totalSignups,
-    signupsLast7Days,
+    parents,
+    teachers,
+    parentsLast7Days,
+    teachersLast7Days,
     payingCustomers,
     loginsToday,
     totalKids,
@@ -132,16 +188,37 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     goGreenRedemptions,
   ] = await Promise.all([
     safeCount(async () => {
-      const { count, error } = await admin
-        .from("profiles")
-        .select("id", { count: "exact", head: true });
+      const { count, error } = await applyTestFilter(
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        includeTest
+      ).eq("account_type", "parent");
       if (error) throw error;
       return count ?? 0;
     }),
     safeCount(async () => {
-      const { count, error } = await admin
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
+      const { count, error } = await applyTestFilter(
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        includeTest
+      ).eq("account_type", "teacher");
+      if (error) throw error;
+      return count ?? 0;
+    }),
+    safeCount(async () => {
+      const { count, error } = await applyTestFilter(
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        includeTest
+      )
+        .eq("account_type", "parent")
+        .gte("created_at", sevenDaysAgo);
+      if (error) throw error;
+      return count ?? 0;
+    }),
+    safeCount(async () => {
+      const { count, error } = await applyTestFilter(
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        includeTest
+      )
+        .eq("account_type", "teacher")
         .gte("created_at", sevenDaysAgo);
       if (error) throw error;
       return count ?? 0;
@@ -159,9 +236,13 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
       return ids.size;
     }),
     safeCount(async () => {
-      const users = await listAllAuthUsers(admin);
+      const [users, nonTestIds] = await Promise.all([
+        listAllAuthUsers(admin),
+        fetchNonTestProfileIds(admin, includeTest),
+      ]);
       return users.filter((u) => {
         if (!u.last_sign_in_at) return false;
+        if (!userPassesTestFilter(u.id, nonTestIds)) return false;
         return new Date(u.last_sign_in_at).getTime() >= todayStart;
       }).length;
     }),
@@ -223,9 +304,12 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     }),
     (async (): Promise<AdminRow[] | null> => {
       try {
-        const { data, error } = await admin
-          .from("profiles")
-          .select("full_name, email, created_at")
+        const { data, error } = await applyTestFilter(
+          admin
+            .from("profiles")
+            .select("full_name, email, created_at, account_type"),
+          includeTest
+        )
           .order("created_at", { ascending: false })
           .limit(10);
         if (error) throw error;
@@ -233,6 +317,7 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
           name: displayName(row.full_name, undefined, "—"),
           email: row.email?.trim() || "—",
           time: row.created_at,
+          type: formatAccountType(row.account_type),
         }));
       } catch {
         return null;
@@ -240,17 +325,21 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     })(),
     (async (): Promise<AdminRow[] | null> => {
       try {
-        const [users, { data: profiles }] = await Promise.all([
+        const [users, profilesResult] = await Promise.all([
           listAllAuthUsers(admin),
-          admin.from("profiles").select("id, full_name, email"),
+          applyTestFilter(
+            admin.from("profiles").select("id, full_name, email, account_type"),
+            includeTest
+          ),
         ]);
 
-        const profileById = new Map(
-          (profiles ?? []).map((p) => [p.id, p] as const)
-        );
+        const { data: profiles, error: profErr } = profilesResult;
+        if (profErr) throw profErr;
+
+        const profileById = new Map((profiles ?? []).map((p) => [p.id, p] as const));
 
         const sorted = users
-          .filter((u) => u.last_sign_in_at)
+          .filter((u) => u.last_sign_in_at && profileById.has(u.id))
           .sort(
             (a, b) =>
               new Date(b.last_sign_in_at!).getTime() -
@@ -259,11 +348,12 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
           .slice(0, 10);
 
         return sorted.map((u) => {
-          const profile = profileById.get(u.id);
+          const profile = profileById.get(u.id)!;
           return {
-            name: displayName(profile?.full_name, u, "—"),
-            email: profile?.email?.trim() || u.email?.trim() || "—",
+            name: displayName(profile.full_name, u, "—"),
+            email: profile.email?.trim() || u.email?.trim() || "—",
             time: u.last_sign_in_at ?? null,
+            type: formatAccountType(profile.account_type),
           };
         });
       } catch {
@@ -290,24 +380,26 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
         if (!rows?.length) return [];
 
         const userIds = rows.map((r) => r.user_id);
-        const { data: profiles, error: profErr } = await admin
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", userIds);
+        const { data: profiles, error: profErr } = await applyTestFilter(
+          admin.from("profiles").select("id, full_name, email").in("id", userIds),
+          includeTest
+        );
         if (profErr) throw profErr;
 
         const profileById = new Map(
           (profiles ?? []).map((p) => [p.id, p] as const)
         );
 
-        return rows.map((row) => {
-          const profile = profileById.get(row.user_id);
-          return {
-            name: displayName(profile?.full_name, undefined, "—"),
-            email: profile?.email?.trim() || "—",
-            time: row.redeemed_at,
-          };
-        });
+        return rows
+          .filter((row) => profileById.has(row.user_id))
+          .map((row) => {
+            const profile = profileById.get(row.user_id)!;
+            return {
+              name: displayName(profile.full_name, undefined, "—"),
+              email: profile.email?.trim() || "—",
+              time: row.redeemed_at,
+            };
+          });
       } catch {
         return null;
       }
@@ -316,8 +408,10 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
 
   return {
     metrics: {
-      totalSignups,
-      signupsLast7Days,
+      parents,
+      teachers,
+      parentsLast7Days,
+      teachersLast7Days,
       payingCustomers,
       loginsToday,
       totalKids,
