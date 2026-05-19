@@ -5,6 +5,7 @@ import ConditionalSiteHeader from "@/components/ConditionalSiteHeader";
 import ConditionalSiteFooter from "@/components/ConditionalSiteFooter";
 import { Providers } from "@/components/Providers";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -84,6 +85,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <ConditionalSiteFooter />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
