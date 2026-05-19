@@ -12,7 +12,7 @@ import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
 import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
 
-const HIDE_HEADER_PREFIXES = ["/login", "/signup"];
+const HIDE_HEADER_PREFIXES = ["/login", "/signup", "/admin"];
 
 function isHidden(pathname: string): boolean {
   if (!pathname) return true;

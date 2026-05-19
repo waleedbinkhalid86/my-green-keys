@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import SiteFooter from "@/components/SiteFooter";
 
-const HIDE_FOOTER_PREFIXES = ["/login", "/signup"];
+const HIDE_FOOTER_PREFIXES = ["/login", "/signup", "/admin"];
 
 export default function ConditionalSiteFooter() {
   const pathname = usePathname() || "";
