@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Facebook } from "lucide-react";
 import { SiteFooterBrand } from "@/components/SiteFooterBrand";
+import { SOCIAL_LINKS } from "@/lib/social-links";
 
 function FooterLink({
   href,
@@ -38,6 +40,20 @@ export default function SiteFooter() {
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
                 Ad-Free
               </span>
+            </div>
+            <div className="mt-6">
+              <h3 className="mb-4 text-sm font-semibold uppercase text-white">
+                Follow us
+              </h3>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit My Green Keys on Facebook"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border-0 bg-[#2D6A4F] text-white transition-colors duration-200 hover:bg-[#52B788]"
+              >
+                <Facebook size={22} aria-hidden="true" />
+              </a>
             </div>
           </div>
 
