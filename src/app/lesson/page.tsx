@@ -18,6 +18,9 @@ import { ecoFacts, type EcoFact } from "@/data/ecoFacts";
 import { getCertificateForMilestone, type CertificateDefinition } from "@/lib/certificates";
 import { playSound } from "@/lib/sounds/play-sound";
 import { PetWidget } from "@/components/PetWidget";
+import { PracticeProgressBar } from "@/components/lesson/PracticeProgressBar";
+import { SetPracticeGoalControl } from "@/components/lesson/SetPracticeGoalControl";
+import { DEFAULT_PRACTICE_GOAL, effectivePracticeGoal } from "@/lib/lesson-practice/constants";
 import "../globals.css";
 
 const nunito = Nunito({
@@ -574,6 +577,11 @@ export default function LessonPage() {
   const [customLessonRows, setCustomLessonRows] = useState<CustomLessonRow[]>([]);
   const [customLessonsLoading, setCustomLessonsLoading] = useState(false);
   const [activeCustomLessonId, setActiveCustomLessonId] = useState<string | null>(null);
+  const [practiceCount, setPracticeCount] = useState(0);
+  const [practiceGoal, setPracticeGoal] = useState(DEFAULT_PRACTICE_GOAL);
+  const [allLessonPractice, setAllLessonPractice] = useState<
+    Map<number, { count: number; goal: number }>
+  >(new Map());
 
   // Virtual Pet state (stored in Supabase profiles)
   const [petLoading, setPetLoading] = useState(true);
@@ -723,6 +731,92 @@ export default function LessonPage() {
   useEffect(() => {
     void loadCurrentClass();
   }, []);
+
+  // Load practice count + goal for the current built-in lesson
+  useEffect(() => {
+    if (activeCustomLessonId) return;
+    const loadPractice = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setPracticeCount(0);
+          setPracticeGoal(DEFAULT_PRACTICE_GOAL);
+          return;
+        }
+        const { data, error } = await supabase
+          .from("student_progress")
+          .select("completion_count, practice_goal, completed")
+          .eq("student_id", user.id)
+          .eq("lesson_id", currentLessonId)
+          .maybeSingle();
+        if (error) {
+          setPracticeCount(0);
+          setPracticeGoal(DEFAULT_PRACTICE_GOAL);
+          return;
+        }
+        const row = data as {
+          completion_count?: number | null;
+          practice_goal?: number | null;
+          completed?: boolean | null;
+        } | null;
+        const count = Number(row?.completion_count ?? 0);
+        const legacyCount = row?.completed && count === 0 ? 1 : count;
+        setPracticeCount(Math.max(0, legacyCount));
+        setPracticeGoal(effectivePracticeGoal(row?.practice_goal));
+      } catch {
+        setPracticeCount(0);
+        setPracticeGoal(DEFAULT_PRACTICE_GOAL);
+      }
+    };
+    void loadPractice();
+  }, [currentLessonId, activeCustomLessonId]);
+
+  // Load all lesson practice rows when the lesson map modal opens
+  useEffect(() => {
+    if (!showLessonMap) return;
+    const loadAll = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setAllLessonPractice(new Map());
+          return;
+        }
+        const { data, error } = await supabase
+          .from("student_progress")
+          .select("lesson_id, completion_count, practice_goal, completed")
+          .eq("student_id", user.id);
+        if (error) {
+          setAllLessonPractice(new Map());
+          return;
+        }
+        const map = new Map<number, { count: number; goal: number }>();
+        for (const row of (data ?? []) as Array<{
+          lesson_id: number;
+          completion_count?: number | null;
+          practice_goal?: number | null;
+          completed?: boolean | null;
+        }>) {
+          const id = Number(row.lesson_id);
+          let count = Number(row.completion_count ?? 0);
+          if (row.completed && count === 0) count = 1;
+          map.set(id, {
+            count: Math.max(0, count),
+            goal: effectivePracticeGoal(row.practice_goal),
+          });
+        }
+        setAllLessonPractice(map);
+      } catch {
+        setAllLessonPractice(new Map());
+      }
+    };
+    void loadAll();
+  }, [showLessonMap]);
 
   useEffect(() => {
     void (async () => {
@@ -1219,29 +1313,31 @@ export default function LessonPage() {
         if (!userData.user) return;
 
         if (!activeCustomLessonId) {
-          // 1) Mark current built-in lesson as completed in student_progress (update if exists, else insert).
-          const existing = await supabase
-            .from("student_progress")
-            .select("id")
-            .eq("student_id", userData.user.id)
-            .eq("lesson_id", currentLessonId)
-            .maybeSingle();
-
-          const payload: Record<string, unknown> = {
-            student_id: userData.user.id,
-            lesson_id: currentLessonId,
-            completed: true,
-            wpm: Number(stats.wpm) || 0,
-            accuracy: Number(stats.accuracy) || 0,
-            completed_at: new Date().toISOString(),
+          const completeRes = await fetch("/api/lesson/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lessonId: currentLessonId,
+              wpm: Number(stats.wpm) || 0,
+              accuracy: Number(stats.accuracy) || 0,
+            }),
+          });
+          const completeData = (await completeRes.json()) as {
+            completionCount?: number;
+            practiceGoal?: number;
+            error?: string;
           };
-
-          if (existing.data?.id) {
-            const { error: updErr } = await supabase.from("student_progress").update(payload).eq("id", existing.data.id);
-            if (updErr) throw updErr;
-          } else {
-            const { error: insErr } = await supabase.from("student_progress").insert([payload]);
-            if (insErr) throw insErr;
+          if (completeRes.ok) {
+            setPracticeCount(completeData.completionCount ?? practiceCount + 1);
+            setPracticeGoal(effectivePracticeGoal(completeData.practiceGoal ?? practiceGoal));
+            setAllLessonPractice((prev) => {
+              const next = new Map(prev);
+              next.set(currentLessonId, {
+                count: completeData.completionCount ?? practiceCount + 1,
+                goal: effectivePracticeGoal(completeData.practiceGoal ?? practiceGoal),
+              });
+              return next;
+            });
           }
         }
 
@@ -1552,6 +1648,9 @@ export default function LessonPage() {
     }
     return ((currentLessonId - 1) / 100) * 100;
   }, [activeCustomLessonId, currentLesson.sentence.length, currentLessonId, userInput.length]);
+
+  const practiceAtGoal = practiceCount >= effectivePracticeGoal(practiceGoal);
+  const practiceRemaining = Math.max(0, effectivePracticeGoal(practiceGoal) - practiceCount);
 
   const lessonKeyIndex = nextLessonKeyIndex(currentLesson.sentence, userInput);
   const guideHighlightKey =
@@ -2561,13 +2660,20 @@ export default function LessonPage() {
           className="mgk-container"
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            flexDirection: "column",
             paddingTop: 8,
             paddingBottom: 8,
             gap: 8,
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
           <div style={{ minWidth: 0, overflow: "hidden" }}>
             <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.75, marginBottom: 3, letterSpacing: "0.02em" }}>
               {activeCustomLessonId ? (
@@ -2599,6 +2705,42 @@ export default function LessonPage() {
               />
             </div>
           </div>
+          </div>
+          {!activeCustomLessonId && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 10px",
+                borderRadius: 10,
+                background: "#F0F9F4",
+                border: "1px solid rgba(82, 183, 136, 0.2)",
+              }}
+            >
+              <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                <PracticeProgressBar count={practiceCount} goal={practiceGoal} />
+              </div>
+              <SetPracticeGoalControl
+                lessonId={currentLessonId}
+                currentGoal={practiceGoal}
+                onGoalSaved={(goal) => {
+                  setPracticeGoal(goal);
+                  setAllLessonPractice((prev) => {
+                    const next = new Map(prev);
+                    const existing = next.get(currentLessonId);
+                    next.set(currentLessonId, {
+                      count: existing?.count ?? practiceCount,
+                      goal,
+                    });
+                    return next;
+                  });
+                }}
+                compact
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -3113,6 +3255,46 @@ export default function LessonPage() {
               ))}
             </div>
 
+            {!activeCustomLessonId && (
+              <div
+                style={{
+                  position: "relative",
+                  marginBottom: 12,
+                  padding: "10px 12px",
+                  borderRadius: 14,
+                  background: practiceAtGoal ? "linear-gradient(135deg, #FFF8E1 0%, #E8F5EE 100%)" : "#F0F9F4",
+                  border: practiceAtGoal ? "1px solid rgba(242, 183, 5, 0.45)" : "1px solid rgba(82, 183, 136, 0.35)",
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ marginBottom: 8 }}>
+                  <PracticeProgressBar count={practiceCount} goal={practiceGoal} />
+                </div>
+                <p style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 800, color: "#1B4332", lineHeight: 1.45 }}>
+                  {practiceAtGoal
+                    ? `Amazing! You've hit your goal of ${effectivePracticeGoal(practiceGoal)} for this lesson! 🎉 Keep going or try a new lesson.`
+                    : `Great job! You've practiced this ${practiceCount} ${practiceCount === 1 ? "time" : "times"}. Do it ${practiceRemaining} more ${practiceRemaining === 1 ? "time" : "times"} to hit your goal of ${effectivePracticeGoal(practiceGoal)} and really build your speed! 🌿`}
+                </p>
+                <SetPracticeGoalControl
+                  lessonId={currentLessonId}
+                  currentGoal={practiceGoal}
+                  onGoalSaved={(goal) => {
+                    setPracticeGoal(goal);
+                    setAllLessonPractice((prev) => {
+                      const next = new Map(prev);
+                      const existing = next.get(currentLessonId);
+                      next.set(currentLessonId, {
+                        count: existing?.count ?? practiceCount,
+                        goal,
+                      });
+                      return next;
+                    });
+                  }}
+                  compact
+                />
+              </div>
+            )}
+
             {/* Eco fact — slide from bottom */}
             {lessonFact && (
               <div
@@ -3154,40 +3336,83 @@ export default function LessonPage() {
             )}
 
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
-              <button
-                type="button"
-                onClick={handleNextLesson}
-                disabled={currentLessonId === 100}
-                style={{
-                  height: 48,
-                  borderRadius: 999,
-                  border: "none",
-                  background: currentLessonId === 100 ? "#bfc9c4" : "linear-gradient(180deg,#2ECC71,#1A8F4E)",
-                  color: "#fff",
-                  fontSize: 16,
-                  fontWeight: 900,
-                  cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
-                  boxShadow: currentLessonId === 100 ? "none" : "0 6px 0 #0f3d24, 0 14px 28px rgba(26,143,78,0.35)",
-                }}
-              >
-                {currentLessonId === 100 ? "🏆 You've finished all lessons!" : "Next Lesson →"}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                style={{
-                  height: 40,
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.95)",
-                  border: "2px solid rgba(26,47,35,0.18)",
-                  color: "#2d4a3e",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                }}
-              >
-                Try Again
-              </button>
+              {activeCustomLessonId ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    style={{
+                      height: 48,
+                      borderRadius: 999,
+                      border: "none",
+                      background: "linear-gradient(180deg,#52B788,#2D6A4F)",
+                      color: "#fff",
+                      fontSize: 16,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      boxShadow: "0 6px 0 #1B4332, 0 14px 28px rgba(45, 106, 79, 0.35)",
+                    }}
+                  >
+                    Practice again
+                  </button>
+                </>
+              ) : practiceAtGoal ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    style={{
+                      height: 48,
+                      borderRadius: 999,
+                      border: "none",
+                      background: "linear-gradient(180deg,#52B788,#2D6A4F)",
+                      color: "#fff",
+                      fontSize: 16,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      boxShadow: "0 6px 0 #1B4332, 0 14px 28px rgba(45, 106, 79, 0.35)",
+                    }}
+                  >
+                    Practice again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextLesson}
+                    disabled={currentLessonId === 100}
+                    style={{
+                      height: 44,
+                      borderRadius: 999,
+                      border: "none",
+                      background: currentLessonId === 100 ? "#bfc9c4" : "linear-gradient(180deg,#2ECC71,#1A8F4E)",
+                      color: "#fff",
+                      fontSize: 15,
+                      fontWeight: 900,
+                      cursor: currentLessonId === 100 ? "not-allowed" : "pointer",
+                      boxShadow: currentLessonId === 100 ? "none" : "0 4px 0 #0f3d24",
+                    }}
+                  >
+                    {currentLessonId === 100 ? "🏆 You've finished all lessons!" : "Next lesson →"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  style={{
+                    height: 48,
+                    borderRadius: 999,
+                    border: "none",
+                    background: "linear-gradient(180deg,#52B788,#2D6A4F)",
+                    color: "#fff",
+                    fontSize: 16,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    boxShadow: "0 6px 0 #1B4332, 0 14px 28px rgba(45, 106, 79, 0.35)",
+                  }}
+                >
+                  Practice again
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -3270,7 +3495,11 @@ export default function LessonPage() {
                     gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
                     gap: "12px",
                   }}>
-                    {phraseLessons.map((lesson) => (
+                    {phraseLessons.map((lesson) => {
+                      const practice = allLessonPractice.get(lesson.id);
+                      const repCount = practice?.count ?? 0;
+                      const repGoal = practice?.goal ?? DEFAULT_PRACTICE_GOAL;
+                      return (
                       <button
                         key={lesson.id}
                         onClick={() => handleSelectLesson(lesson.id)}
@@ -3310,8 +3539,12 @@ export default function LessonPage() {
                             Goal: {lesson.targetWPM} WPM
                           </div>
                         )}
+                        <div style={{ marginTop: 6 }}>
+                          <PracticeProgressBar count={repCount} goal={repGoal} compact />
+                        </div>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );

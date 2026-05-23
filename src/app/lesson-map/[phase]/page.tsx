@@ -8,6 +8,8 @@ import { ArrowLeft, Lock, Play, Star } from "lucide-react";
 import clsx from "clsx";
 import { lessons } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
+import { PracticeProgressBar } from "@/components/lesson/PracticeProgressBar";
+import { DEFAULT_PRACTICE_GOAL, effectivePracticeGoal } from "@/lib/lesson-practice/constants";
 
 import type { Lesson } from "@/data/lessons";
 
@@ -17,6 +19,8 @@ type ProgressRow = {
   stars?: number | null;
   wpm?: number | null;
   accuracy?: number | string | null;
+  completion_count?: number | null;
+  practice_goal?: number | null;
 };
 
 const phaseInfo = {
@@ -168,13 +172,13 @@ export default function LessonPhaseDetailPage() {
         let rows: ProgressRow[] = [];
         const attempt = await supabase
           .from("student_progress")
-          .select("lesson_id, completed, stars, wpm, accuracy")
+          .select("lesson_id, completed, stars, wpm, accuracy, completion_count, practice_goal")
           .eq("student_id", userData.user.id);
 
         if (attempt.error) {
           const fallback = await supabase
             .from("student_progress")
-            .select("lesson_id, completed, stars")
+            .select("lesson_id, completed, stars, completion_count, practice_goal")
             .eq("student_id", userData.user.id);
           if (fallback.error) throw fallback.error;
           rows = (fallback.data as unknown as ProgressRow[] | null) ?? [];
@@ -326,6 +330,9 @@ export default function LessonPhaseDetailPage() {
                   row,
                 });
                 const starsEarned = Math.min(3, Math.max(0, Math.round(num(row?.stars))));
+                let repCount = num(row?.completion_count);
+                if (row?.completed && repCount === 0) repCount = 1;
+                const repGoal = effectivePracticeGoal(row?.practice_goal ?? DEFAULT_PRACTICE_GOAL);
 
                 const baseCard =
                   "rounded-md border border-black/5 bg-white p-4 text-center shadow-sm transition-shadow hover:shadow-lg";
@@ -351,6 +358,10 @@ export default function LessonPhaseDetailPage() {
                     </div>
                     <div className="mb-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-gray-900">
                       {lesson.title}
+                    </div>
+
+                    <div className="mb-2 flex justify-center">
+                      <PracticeProgressBar count={repCount} goal={repGoal} compact />
                     </div>
 
                     <div className="flex min-h-[28px] items-center justify-center gap-1 text-xs font-semibold">
