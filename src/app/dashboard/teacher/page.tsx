@@ -149,7 +149,7 @@ export default function TeacherDashboard() {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
   const [enrolledStudents, setEnrolledStudents] = useState<
-    Array<{ id: string; full_name: string | null; email: string | null }>
+    Array<{ id: string; full_name: string | null; email: string | null; login_code: string | null }>
   >([]);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
@@ -272,11 +272,25 @@ export default function TeacherDashboard() {
     setStudentsError("");
     try {
       const enrollments = await fetchClassEnrollments(classId);
+      const codesRes = await fetch(`/api/teacher/classes/${classId}/student-codes`, {
+        credentials: "include",
+      });
+      const codesJson = (await codesRes.json()) as {
+        students?: Array<{ student_auth_user_id: string; login_code: string | null }>;
+        error?: string;
+      };
+      if (!codesRes.ok) {
+        throw new Error(codesJson.error ?? "Failed to load login codes.");
+      }
+      const codeByAuth = new Map(
+        (codesJson.students ?? []).map((s) => [s.student_auth_user_id, s.login_code])
+      );
       setEnrolledStudents(
         enrollments.map((e) => ({
           id: e.student_auth_user_id,
           full_name: e.display_name,
           email: null,
+          login_code: codeByAuth.get(e.student_auth_user_id) ?? null,
         }))
       );
     } catch (err) {
@@ -285,6 +299,27 @@ export default function TeacherDashboard() {
     } finally {
       setStudentsLoading(false);
     }
+  };
+
+  const copyAllStudentCodes = async () => {
+    if (enrolledStudents.length === 0) {
+      showToast("error", "No students to copy.");
+      return;
+    }
+    const text = enrolledStudents
+      .map((s) => `${(s.full_name || "Student").trim()}\t${s.login_code ?? ""}`)
+      .join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("success", "Codes copied to clipboard.");
+    } catch {
+      showToast("error", "Could not copy codes.");
+    }
+  };
+
+  const openPrintStudentCodes = () => {
+    if (!selectedClassId) return;
+    window.open(`/print/class-codes/${selectedClassId}`, "_blank", "noopener,noreferrer");
   };
 
   useEffect(() => {
@@ -1047,14 +1082,39 @@ export default function TeacherDashboard() {
                         Enrolled students
                       </h3>
                       {selectedClassId ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="bg-[#52B788] font-semibold hover:bg-[#40916C]"
-                          onClick={() => setShowBulkUpload(true)}
-                        >
-                          Bulk add students
-                        </Button>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                          {enrolledStudents.length > 0 ? (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                                onClick={() => void copyAllStudentCodes()}
+                              >
+                                <Copy className="mr-1 h-3.5 w-3.5" aria-hidden />
+                                Copy all codes
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                                onClick={openPrintStudentCodes}
+                              >
+                                Print codes
+                              </Button>
+                            </>
+                          ) : null}
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="bg-[#52B788] font-semibold hover:bg-[#40916C]"
+                            onClick={() => setShowBulkUpload(true)}
+                          >
+                            Bulk add students
+                          </Button>
+                        </div>
                       ) : null}
                     </div>
                     {studentsError ? (
@@ -1100,6 +1160,7 @@ export default function TeacherDashboard() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Student</TableHead>
+                            <TableHead>Login code</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead className="text-right">Report</TableHead>
                           </TableRow>
@@ -1108,6 +1169,11 @@ export default function TeacherDashboard() {
                           {enrolledStudents.map((s) => (
                             <TableRow key={s.id}>
                               <TableCell className="font-medium">{s.full_name || s.id}</TableCell>
+                              <TableCell
+                                className="font-mono text-sm font-bold tracking-wider text-[#1B4332]"
+                              >
+                                {s.login_code ?? "—"}
+                              </TableCell>
                               <TableCell className="text-muted-foreground">{s.email || "—"}</TableCell>
                               <TableCell className="text-right">
                                 <Button

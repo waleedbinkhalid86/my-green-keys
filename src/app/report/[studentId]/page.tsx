@@ -59,48 +59,11 @@ type GameRow = {
   created_at?: string | null;
 };
 
-async function canAccessStudentReport(
-  supabase: ReturnType<typeof createClient>,
-  viewerId: string,
-  studentId: string
-): Promise<boolean> {
-  if (viewerId === studentId) return true;
-
-  const { data: childByAuth } = await supabase
-    .from("children")
-    .select("id")
-    .eq("parent_id", viewerId)
-    .eq("auth_user_id", studentId)
-    .maybeSingle();
-  if (childByAuth) return true;
-
-  const { data: classes } = await supabase.from("classes").select("id").eq("teacher_id", viewerId);
-  const classIds = (classes as { id: string }[] | null)?.map((c) => c.id) ?? [];
-  if (classIds.length > 0) {
-    const { data: en } = await supabase
-      .from("class_enrollments")
-      .select("student_auth_user_id")
-      .eq("student_auth_user_id", studentId)
-      .in("class_id", classIds)
-      .limit(1)
-      .maybeSingle();
-    if (en) return true;
-  }
-
-  const { data: prof } = await supabase.from("profiles").select("email").eq("id", studentId).maybeSingle();
-  const email = ((prof as { email?: string } | null)?.email ?? "").trim().toLowerCase();
-  if (email) {
-    const { data: child } = await supabase
-      .from("children")
-      .select("id")
-      .eq("parent_id", viewerId)
-      .ilike("username", email)
-      .maybeSingle();
-    if (child) return true;
-  }
-
-  return false;
-}
+type ReportIdentity = {
+  full_name: string;
+  age: number | null;
+  class_name: string | null;
+};
 
 function actionLabel(actionType: string): string {
   const map: Record<string, string> = {
@@ -161,6 +124,7 @@ export default function StudentReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [identity, setIdentity] = useState<ReportIdentity | null>(null);
   const [progressRows, setProgressRows] = useState<ProgressRow[]>([]);
   const [certs, setCerts] = useState<CertRow[]>([]);
   const [ecoPhotos, setEcoPhotos] = useState<EcoPhotoRow[]>([]);
@@ -186,11 +150,20 @@ export default function StudentReportPage() {
         return;
       }
 
-      const ok = await canAccessStudentReport(supabase, userData.user.id, studentId);
-      if (!ok) {
+      const idRes = await fetch(`/api/report/${studentId}/identity`, { credentials: "include" });
+      if (idRes.status === 401) {
+        setError("You must be logged in to view this report.");
+        return;
+      }
+      if (idRes.status === 403) {
         setError("You do not have permission to view this student’s report.");
         return;
       }
+      if (!idRes.ok) {
+        const idErr = (await idRes.json()) as { error?: string };
+        throw new Error(idErr.error ?? "Failed to load student details.");
+      }
+      setIdentity((await idRes.json()) as ReportIdentity);
 
       const { data: prof, error: pErr } = await supabase
         .from("profiles")
@@ -238,6 +211,7 @@ export default function StudentReportPage() {
       setGameRows((gameData as GameRow[] | null) ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load report.");
+      setIdentity(null);
       setProfile(null);
       setProgressRows([]);
       setCerts([]);
@@ -411,12 +385,14 @@ export default function StudentReportPage() {
     lessonsInPeriod,
   ]);
 
+  const studentDisplayName = identity?.full_name?.trim() || profile?.full_name?.trim() || "This student";
+
   const summary = useMemo(() => {
-    const name = profile?.full_name?.trim() || "This student";
+    const name = studentDisplayName;
     const pet = profile?.pet_name ? ` ${name.split(" ")[0] || name}’s companion ${profile.pet_name} is cheering them on.` : "";
     return `${name} has completed ${lessonsDoneTotal} of ${REPORT_TOTAL_LESSONS} core lessons (${lessonPct}% of the programme). During ${periodLabel.toLowerCase()}, they finished ${lessonsInPeriod} lesson(s) with ${accuracyPeriod}% average accuracy when logging timed results.${pet}`;
   }, [
-    profile,
+    studentDisplayName,
     lessonsDoneTotal,
     lessonPct,
     periodLabel,
@@ -438,7 +414,13 @@ export default function StudentReportPage() {
 
   const reportDateStr = formatDate(now);
   const schoolDisplayName = branding.name.trim() || "Your school";
-  const classLine = profile?.school_name?.trim() || "—";
+  const classLine = identity?.class_name?.trim() || "—";
+  const ageLine =
+    identity?.age != null
+      ? `${identity.age}`
+      : profile?.age != null
+        ? `${profile.age}`
+        : "—";
 
   const persistBranding = (next: ReportSchoolBranding) => {
     setBranding(next);
@@ -576,7 +558,7 @@ export default function StudentReportPage() {
               <div className="mt-6 grid gap-3 border-t border-dashed border-primary/25 pt-6 sm:grid-cols-2">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Student</p>
-                  <p className="font-heading text-xl font-bold text-[#1a2f23]">{profile?.full_name?.trim() || "Student"}</p>
+                  <p className="font-heading text-xl font-bold text-[#1a2f23]">{studentDisplayName}</p>
                 </div>
                 <div className="sm:text-right">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Report date &amp; period</p>
@@ -588,7 +570,7 @@ export default function StudentReportPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Age</p>
-                  <p className="text-sm font-semibold">{profile?.age != null ? `${profile.age}` : "—"}</p>
+                  <p className="text-sm font-semibold">{ageLine}</p>
                 </div>
                 <div className="sm:text-right">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Class / cohort</p>
