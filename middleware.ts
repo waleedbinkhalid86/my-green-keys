@@ -1,7 +1,20 @@
 import { updateSession } from '@/lib/supabase/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const protectedRoutes = ['/lesson', '/dashboard', '/games', '/report'];
+/** Kid/student app areas — unauthenticated users go to /kid-login. */
+const kidProtectedRoutes = [
+  '/lesson',
+  '/lesson-map',
+  '/games',
+  '/report',
+  '/home',
+  '/brain-sprint',
+  '/ranger',
+];
+
+/** Parent/teacher dashboards — unauthenticated users go to /login. */
+const adultProtectedRoutes = ['/dashboard'];
+
 const authRoutes = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
@@ -10,8 +23,10 @@ export async function middleware(request: NextRequest) {
   // Parse the pathname
   const pathname = request.nextUrl.pathname;
 
-  // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  const isKidProtectedRoute = kidProtectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isAdultProtectedRoute = adultProtectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
@@ -20,9 +35,11 @@ export async function middleware(request: NextRequest) {
   const hasSession = !!user;
 
   // Redirect logic
-  if (isProtectedRoute && !hasSession) {
-    // Redirect to login if accessing protected route without session
-    const redirectResponse = NextResponse.redirect(new URL('/login', request.url));
+  if ((isKidProtectedRoute || isAdultProtectedRoute) && !hasSession) {
+    const loginPath = isKidProtectedRoute ? '/kid-login' : '/login';
+    const redirectResponse = NextResponse.redirect(
+      new URL(loginPath, request.url)
+    );
     // Preserve any refreshed cookies on redirect.
     response.cookies.getAll().forEach((c) => {
       redirectResponse.cookies.set(c.name, c.value, c);

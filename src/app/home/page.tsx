@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SwitchStudentButton } from "@/components/kid-login/SwitchStudentButton";
 
 const PAGE_BG = "#F0F9F4";
 const dottedBg: React.CSSProperties = {
@@ -79,7 +80,7 @@ export default function KidHomePage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.replace("/");
+        router.replace("/kid-login");
         return;
       }
 
@@ -145,6 +146,15 @@ export default function KidHomePage() {
       }}
     >
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: 12,
+          }}
+        >
+          <SwitchStudentButton />
+        </div>
         {/* Welcome banner */}
         <div className="relative mx-auto h-[200px] w-full max-w-[1200px] overflow-hidden rounded-2xl shadow-[0_8px_28px_rgba(27,67,50,0.12)] md:h-[320px]">
           <Image

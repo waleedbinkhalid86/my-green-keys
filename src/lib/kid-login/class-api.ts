@@ -81,6 +81,14 @@ export async function fetchEnrollmentCountsByClassIds(
   return counts;
 }
 
+type JoinClassApiResponse = {
+  class_id: string;
+  auth_user_id: string;
+  internal_email: string;
+  internal_password: string;
+  error?: string;
+};
+
 // Student joins class with code + their name (PUBLIC, no auth needed)
 // This is called from the /kid-login page
 export async function joinClassWithCode(input: {
@@ -89,66 +97,35 @@ export async function joinClassWithCode(input: {
 }): Promise<{ class_id: string; auth_user_id: string }> {
   const supabase = createClient();
 
-  // Step 1: Look up class by code
-  const { data: classData, error: classError } = await supabase
-    .from("classes")
-    .select("id, school_name")
-    .eq("class_code", input.class_code.toUpperCase())
-    .is("archived_at", null)
-    .maybeSingle();
-
-  if (classError || !classData) {
-    throw new Error("Class not found. Check the code with your teacher.");
-  }
-
-  // Step 2: Create student account (no parent session to preserve here — kid is logging in fresh)
-  const internal_email = `child-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}@mygreenkeys.kids`;
-  const internal_password = (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, "").slice(0, 32);
-
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email: internal_email,
-    password: internal_password,
-    options: {
-      data: {
-        is_internal_kid_account: true,
-        display_name: input.display_name,
-        joined_via: "class_code",
-      },
-    },
+  const res = await fetch("/api/kid-login/join-class", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      class_code: input.class_code,
+      display_name: input.display_name,
+    }),
   });
 
-  if (signUpError || !signUpData.user) {
-    throw new Error("Failed to create your account: " + (signUpError?.message ?? ""));
+  const data = (await res.json()) as JoinClassApiResponse;
+
+  if (!res.ok) {
+    throw new Error(data.error ?? "Couldn't enroll you in the class. Try again.");
   }
 
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: signUpData.user.id,
-    full_name: input.display_name,
-    email: internal_email,
-    account_type: "student",
-    school_name: classData.school_name,
-    eco_points: 0,
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: data.internal_email,
+    password: data.internal_password,
   });
 
-  if (profileError) {
-    throw new Error("Failed to create your profile: " + profileError.message);
-  }
-
-  // Step 3: Create enrollment
-  const { error: enrollError } = await supabase.from("class_enrollments").insert({
-    class_id: classData.id,
-    student_auth_user_id: signUpData.user.id,
-    display_name: input.display_name,
-  });
-
-  if (enrollError) {
-    console.error("[ClassJoin] enrollment failed:", enrollError);
-    throw new Error("Couldn't enroll you in the class. Try again.");
+  if (signInError) {
+    throw new Error(
+      "Account created but sign-in failed. Ask your teacher for your 6-character login code."
+    );
   }
 
   return {
-    class_id: classData.id,
-    auth_user_id: signUpData.user.id,
+    class_id: data.class_id,
+    auth_user_id: data.auth_user_id,
   };
 }
 
