@@ -553,6 +553,10 @@ export default function LessonPage() {
     startTime: null,
   });
   const [isComplete, setIsComplete] = useState(false);
+  const [completionOverlayVariant, setCompletionOverlayVariant] = useState<"celebration" | "keepGoing">("keepGoing");
+  const [overlayPracticeCount, setOverlayPracticeCount] = useState<number | null>(null);
+  const [overlayPracticeGoal, setOverlayPracticeGoal] = useState<number | null>(null);
+  const [goalCelebrationSeen, setGoalCelebrationSeen] = useState(false);
   const [stars, setStars] = useState(0);
   const [shakeKey, setShakeKey] = useState<string | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
@@ -596,6 +600,9 @@ export default function LessonPage() {
   const [wordFlash, setWordFlash] = useState(false);
   const [pressedVKey, setPressedVKey] = useState<string | null>(null);
   const pressedVKeyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const practiceCountRef = useRef(0);
+  const practiceGoalRef = useRef(DEFAULT_PRACTICE_GOAL);
+  const goalCelebrationSeenRef = useRef(false);
   const [ecoDisplay, setEcoDisplay] = useState(0);
 
   // Onboarding tutorial (3-step, first login only)
@@ -1135,9 +1142,25 @@ export default function LessonPage() {
     });
     setEcoDisplay(0);
     setIsComplete(false);
+    setCompletionOverlayVariant("keepGoing");
+    setOverlayPracticeCount(null);
+    setOverlayPracticeGoal(null);
+    setGoalCelebrationSeen(false);
     setStars(0);
     setShowKeyboardInstruction(true);
   }, [currentLessonId, activeCustomLessonId]);
+
+  useEffect(() => {
+    practiceCountRef.current = practiceCount;
+  }, [practiceCount]);
+
+  useEffect(() => {
+    practiceGoalRef.current = practiceGoal;
+  }, [practiceGoal]);
+
+  useEffect(() => {
+    goalCelebrationSeenRef.current = goalCelebrationSeen;
+  }, [goalCelebrationSeen]);
 
   // Calculate WPM and accuracy against the sentence
   useEffect(() => {
@@ -1245,6 +1268,15 @@ export default function LessonPage() {
     // Check if lesson complete
     if (value === currentLesson.sentence) {
       playSound("complete");
+      const optimisticNextCount = practiceCountRef.current + 1;
+      const optimisticGoal = effectivePracticeGoal(practiceGoalRef.current);
+      const optimisticJustHitGoal =
+        !goalCelebrationSeenRef.current &&
+        practiceCountRef.current < optimisticGoal &&
+        optimisticNextCount >= optimisticGoal;
+      setOverlayPracticeCount(optimisticNextCount);
+      setOverlayPracticeGoal(optimisticGoal);
+      setCompletionOverlayVariant(optimisticJustHitGoal ? "celebration" : "keepGoing");
       setIsComplete(true);
       // Calculate stars
       let earnedStars = 1;
@@ -1328,13 +1360,24 @@ export default function LessonPage() {
             error?: string;
           };
           if (completeRes.ok) {
-            setPracticeCount(completeData.completionCount ?? practiceCount + 1);
-            setPracticeGoal(effectivePracticeGoal(completeData.practiceGoal ?? practiceGoal));
+            const nextCount = completeData.completionCount ?? practiceCountRef.current + 1;
+            const nextGoal = effectivePracticeGoal(completeData.practiceGoal ?? practiceGoalRef.current);
+            const justHitGoal =
+              !goalCelebrationSeenRef.current &&
+              practiceCountRef.current < nextGoal &&
+              nextCount >= nextGoal;
+
+            setPracticeCount(nextCount);
+            setPracticeGoal(nextGoal);
+            setOverlayPracticeCount(nextCount);
+            setOverlayPracticeGoal(nextGoal);
+            setCompletionOverlayVariant(justHitGoal ? "celebration" : "keepGoing");
+            if (justHitGoal) setGoalCelebrationSeen(true);
             setAllLessonPractice((prev) => {
               const next = new Map(prev);
               next.set(currentLessonId, {
-                count: completeData.completionCount ?? practiceCount + 1,
-                goal: effectivePracticeGoal(completeData.practiceGoal ?? practiceGoal),
+                count: nextCount,
+                goal: nextGoal,
               });
               return next;
             });
@@ -3131,19 +3174,21 @@ export default function LessonPage() {
             overflow: "hidden",
           }}
         >
-          <div className="lesson-complete-confetti" aria-hidden>
-            {Array.from({ length: 42 }).map((_, i) => (
-              <span
-                key={i}
-                className={`confetti-bit confetti-${i % 3}`}
-                style={{
-                  left: `${(i * 17 + 7) % 100}%`,
-                  animationDelay: `${(i % 12) * 0.08}s`,
-                  animationDuration: `${2.2 + (i % 5) * 0.35}s`,
-                }}
-              />
-            ))}
-          </div>
+          {completionOverlayVariant === "celebration" ? (
+            <div className="lesson-complete-confetti" aria-hidden>
+              {Array.from({ length: 42 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`confetti-bit confetti-${i % 3}`}
+                  style={{
+                    left: `${(i * 17 + 7) % 100}%`,
+                    animationDelay: `${(i % 12) * 0.08}s`,
+                    animationDuration: `${2.2 + (i % 5) * 0.35}s`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
 
           <div
             className="lesson-complete-panel"
@@ -3172,49 +3217,75 @@ export default function LessonPage() {
               }}
             />
 
-            <h2
-              style={{
-                position: "relative",
-                fontSize: "clamp(22px, 4.5vw, 30px)",
-                fontWeight: 800,
-                color: "#14532d",
-                margin: "0 0 4px",
-              }}
-            >
-              Lesson complete!
-            </h2>
-            <div style={{ position: "relative", fontSize: 14, fontWeight: 800, color: "#3d5c4a", marginBottom: 12 }}>
-              You helped the planet with every keystroke.
-            </div>
+            {(() => {
+              const shownCount = overlayPracticeCount ?? practiceCount;
+              const shownGoal = effectivePracticeGoal(overlayPracticeGoal ?? practiceGoal);
+              const beforeGoal = shownCount < shownGoal;
+              return (
+                <>
+                  <h2
+                    style={{
+                      position: "relative",
+                      fontSize: "clamp(22px, 4.5vw, 30px)",
+                      fontWeight: 800,
+                      color: "#14532d",
+                      margin: "0 0 4px",
+                    }}
+                  >
+                    {completionOverlayVariant === "celebration"
+                      ? "Lesson complete!"
+                      : beforeGoal
+                        ? `Nice! ${shownCount} of ${shownGoal} done.`
+                        : `You've passed your goal! ${shownCount} of ${shownGoal} done.`}
+                  </h2>
+                  <div
+                    style={{
+                      position: "relative",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: "#3d5c4a",
+                      marginBottom: 12,
+                    }}
+                  >
+                    {completionOverlayVariant === "celebration"
+                      ? "You helped the planet with every keystroke."
+                      : beforeGoal
+                        ? "Practice again to reach your goal."
+                        : "Keep practicing or move on to the next lesson."}
+                  </div>
+                </>
+              );
+            })()}
 
-            {/* Stars — stagger in */}
-            <div
-              style={{
-                position: "relative",
-                display: "flex",
-                justifyContent: "center",
-                gap: 8,
-                marginBottom: 12,
-                minHeight: 44,
-                alignItems: "center",
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="complete-star"
-                  style={{
-                    fontSize: 40,
-                    lineHeight: 1,
-                    color: i < stars ? "#F1C40F" : "rgba(0,0,0,0.12)",
-                    animationDelay: `${0.12 + i * 0.16}s`,
-                    textShadow: i < stars ? "0 4px 0 rgba(180,130,0,0.35)" : "none",
-                  }}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
+            {completionOverlayVariant === "celebration" ? (
+              <div
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginBottom: 12,
+                  minHeight: 44,
+                  alignItems: "center",
+                }}
+              >
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="complete-star"
+                    style={{
+                      fontSize: 40,
+                      lineHeight: 1,
+                      color: i < stars ? "#F1C40F" : "rgba(0,0,0,0.12)",
+                      animationDelay: `${0.12 + i * 0.16}s`,
+                      textShadow: i < stars ? "0 4px 0 rgba(180,130,0,0.35)" : "none",
+                    }}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            ) : null}
 
             {/* Stats */}
             <div
@@ -3262,18 +3333,30 @@ export default function LessonPage() {
                   marginBottom: 12,
                   padding: "10px 12px",
                   borderRadius: 14,
-                  background: practiceAtGoal ? "linear-gradient(135deg, #FFF8E1 0%, #E8F5EE 100%)" : "#F0F9F4",
-                  border: practiceAtGoal ? "1px solid rgba(242, 183, 5, 0.45)" : "1px solid rgba(82, 183, 136, 0.35)",
+                  background:
+                    effectivePracticeGoal(overlayPracticeGoal ?? practiceGoal) <= (overlayPracticeCount ?? practiceCount)
+                      ? "linear-gradient(135deg, #FFF8E1 0%, #E8F5EE 100%)"
+                      : "#F0F9F4",
+                  border:
+                    effectivePracticeGoal(overlayPracticeGoal ?? practiceGoal) <= (overlayPracticeCount ?? practiceCount)
+                      ? "1px solid rgba(242, 183, 5, 0.45)"
+                      : "1px solid rgba(82, 183, 136, 0.35)",
                   textAlign: "left",
                 }}
               >
                 <div style={{ marginBottom: 8 }}>
-                  <PracticeProgressBar count={practiceCount} goal={practiceGoal} />
+                  <PracticeProgressBar count={overlayPracticeCount ?? practiceCount} goal={overlayPracticeGoal ?? practiceGoal} />
                 </div>
                 <p style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 800, color: "#1B4332", lineHeight: 1.45 }}>
-                  {practiceAtGoal
-                    ? `Amazing! You've hit your goal of ${effectivePracticeGoal(practiceGoal)} for this lesson! 🎉 Keep going or try a new lesson.`
-                    : `Great job! You've practiced this ${practiceCount} ${practiceCount === 1 ? "time" : "times"}. Do it ${practiceRemaining} more ${practiceRemaining === 1 ? "time" : "times"} to hit your goal of ${effectivePracticeGoal(practiceGoal)} and really build your speed! 🌿`}
+                  {(() => {
+                    const shownCount = overlayPracticeCount ?? practiceCount;
+                    const shownGoal = effectivePracticeGoal(overlayPracticeGoal ?? practiceGoal);
+                    const remaining = Math.max(0, shownGoal - shownCount);
+                    const atOrPastGoal = shownCount >= shownGoal;
+                    return atOrPastGoal
+                      ? `Goal reached: ${shownCount} of ${shownGoal}. Keep going or try a new lesson.`
+                      : `Progress: ${shownCount} of ${shownGoal}. Do it ${remaining} more ${remaining === 1 ? "time" : "times"} to hit your goal.`;
+                  })()}
                 </p>
                 <SetPracticeGoalControl
                   lessonId={currentLessonId}
@@ -3356,7 +3439,7 @@ export default function LessonPage() {
                     Practice again
                   </button>
                 </>
-              ) : practiceAtGoal ? (
+              ) : (overlayPracticeCount ?? practiceCount) >= effectivePracticeGoal(overlayPracticeGoal ?? practiceGoal) ? (
                 <>
                   <button
                     type="button"
