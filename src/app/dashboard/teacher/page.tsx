@@ -153,18 +153,16 @@ export default function TeacherDashboard() {
   >([]);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
-  const leaderboardData = [
-    { rank: 1, name: "Sarah Ahmed", wpm: 42, accuracy: 96, lessons: 28, ecoPoints: 420, streak: 7, badge: "trophy" as const },
-    { rank: 2, name: "Omar Khan", wpm: 38, accuracy: 94, lessons: 25, ecoPoints: 380, streak: 5, badge: "star" as const },
-    { rank: 3, name: "Fatima Ali", wpm: 35, accuracy: 91, lessons: 22, ecoPoints: 340, streak: 4, badge: "leaf" as const },
-    { rank: 4, name: "Zahra Hassan", wpm: 33, accuracy: 90, lessons: 20, ecoPoints: 310, streak: 3, badge: "" as const },
-    { rank: 5, name: "Amir Ibrahim", wpm: 31, accuracy: 88, lessons: 19, ecoPoints: 290, streak: 2, badge: "" as const },
-    { rank: 6, name: "Noor Rashid", wpm: 29, accuracy: 87, lessons: 18, ecoPoints: 260, streak: 2, badge: "" as const },
-    { rank: 7, name: "Hana Karim", wpm: 28, accuracy: 86, lessons: 17, ecoPoints: 240, streak: 1, badge: "" as const },
-    { rank: 8, name: "Karim Saleh", wpm: 26, accuracy: 84, lessons: 16, ecoPoints: 220, streak: 1, badge: "" as const },
-    { rank: 9, name: "Layla Ahmed", wpm: 25, accuracy: 83, lessons: 15, ecoPoints: 200, streak: 0, badge: "" as const },
-    { rank: 10, name: "Hassan Ali", wpm: 24, accuracy: 82, lessons: 14, ecoPoints: 180, streak: 0, badge: "" as const },
-  ];
+  type LeaderboardRow = {
+    rank: number;
+    studentId: string;
+    name: string;
+    avgWpm: number;
+    avgAccuracy: number;
+    lessonsCompleted: number;
+  };
+  const [leaderboardRows, setLeaderboardRows] = useState<LeaderboardRow[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
   const allStudentsData = [
     { id: 1, name: "Sarah Ahmed", gender: "F", age: 10, wpm: 42, accuracy: 96, lessons: 28, lastActive: "10 mins ago", status: "active" },
@@ -354,6 +352,32 @@ export default function TeacherDashboard() {
   useEffect(() => {
     startTransition(() => {
       void loadEnrolledStudents(selectedClassId);
+    });
+  }, [selectedClassId]);
+
+  const loadLeaderboard = async (classId: string) => {
+    if (!classId) {
+      setLeaderboardRows([]);
+      return;
+    }
+    setLeaderboardLoading(true);
+    try {
+      const res = await fetch(`/api/teacher/classes/${classId}/leaderboard`, {
+        credentials: "include",
+      });
+      const json = (await res.json()) as { students?: LeaderboardRow[]; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Failed to load leaderboard");
+      setLeaderboardRows(json.students ?? []);
+    } catch {
+      setLeaderboardRows([]);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    startTransition(() => {
+      void loadLeaderboard(selectedClassId);
     });
   }, [selectedClassId]);
 
@@ -1210,98 +1234,116 @@ export default function TeacherDashboard() {
                   marginBottom: "20px",
                 }}
               >
-                <h2 style={{ ...SECTION_H2, marginBottom: 0 }}>Student leaderboard</h2>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                  <button
-                    type="button"
-                    className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "9999px",
-                      border: "1px solid #E5E7EB",
-                      background: "#FFFFFF",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Export report
-                  </button>
-                  <button
-                    type="button"
-                    className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "9999px",
-                      border: "1px solid #E5E7EB",
-                      background: "#FFFFFF",
-                      cursor: "pointer",
-                    }}
-                  >
-                    View full leaderboard
-                  </button>
+                <div>
+                  <h2 style={{ ...SECTION_H2, marginBottom: 2 }}>Student leaderboard</h2>
+                  {activeClassLabel && (
+                    <p style={{ fontSize: "13px", color: "#52B788", fontWeight: 600, margin: 0 }}>
+                      {activeClassLabel}
+                    </p>
+                  )}
                 </div>
-              </div>
-
-              {leaderboardData.slice(0, 5).map((student) => (
-                <div
-                  key={student.rank}
-                  className="transition-all duration-200 hover:bg-[#E8F5EE]"
+                <button
+                  type="button"
+                  className="text-sm font-bold text-[#1B4332] transition-colors hover:bg-[#F3F4F6]"
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "16px",
-                    borderRadius: "12px",
-                    marginBottom: "8px",
-                    background: "#F9FAFB",
+                    padding: "8px 16px",
+                    borderRadius: "9999px",
+                    border: "1px solid #E5E7EB",
+                    background: "#FFFFFF",
+                    cursor: "pointer",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
-                    <div style={rankCircleStyle(student.rank)}>{student.rank}</div>
+                  Export report
+                </button>
+              </div>
+
+              {!selectedClassId ? (
+                <p style={{ fontSize: "14px", color: "#9CA3AF", textAlign: "center", padding: "32px 0" }}>
+                  Select a class above to view its leaderboard.
+                </p>
+              ) : leaderboardLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {[1, 2, 3].map((i) => (
                     <div
+                      key={i}
                       style={{
-                        width: "44px",
-                        height: "44px",
-                        borderRadius: "50%",
-                        background: "rgba(82, 183, 136, 0.2)",
-                        color: "#1B4332",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        flexShrink: 0,
+                        height: "76px",
+                        borderRadius: "12px",
+                        background: "linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)",
+                        backgroundSize: "200% 100%",
+                        animation: "shimmer 1.4s infinite",
                       }}
-                    >
-                      {initials(student.name)}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <p className="truncate text-[15px] font-bold text-[#1B4332]">{student.name}</p>
-                      <p style={{ fontSize: "13px", color: "#6B7280" }}>
-                        Accuracy {student.accuracy}% · Lessons {student.lessons}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontSize: "22px", fontWeight: 700, color: "#1B4332", lineHeight: 1.1 }}>
-                        {student.wpm}
-                      </p>
-                      <p style={{ fontSize: "11px", color: "#6B7280", fontWeight: 600 }}>WPM</p>
-                    </div>
-                    <div style={{ width: "28px", display: "flex", justifyContent: "center" }}>
-                      {student.badge === "trophy" ? (
-                        <Trophy className="size-6" style={{ color: "#F59E0B" }} strokeWidth={2.25} aria-label="Trophy" />
-                      ) : student.badge === "star" ? (
-                        <Star className="size-6" style={{ color: "#6B7280" }} strokeWidth={2.25} aria-label="Star" />
-                      ) : student.badge === "leaf" ? (
-                        <Leaf className="size-6" style={{ color: "#16A34A" }} strokeWidth={2.25} aria-label="Eco badge" />
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </div>
-                  </div>
+                    />
+                  ))}
                 </div>
-              ))}
+              ) : leaderboardRows.length === 0 ? (
+                <p style={{ fontSize: "14px", color: "#9CA3AF", textAlign: "center", padding: "32px 0" }}>
+                  No students enrolled in this class yet.
+                </p>
+              ) : (
+                leaderboardRows.map((student) => (
+                  <div
+                    key={student.studentId}
+                    className="transition-all duration-200 hover:bg-[#E8F5EE]"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px",
+                      borderRadius: "12px",
+                      marginBottom: "8px",
+                      background: "#F9FAFB",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+                      <div style={rankCircleStyle(student.rank)}>{student.rank}</div>
+                      <div
+                        style={{
+                          width: "44px",
+                          height: "44px",
+                          borderRadius: "50%",
+                          background: "rgba(82, 183, 136, 0.2)",
+                          color: "#1B4332",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {initials(student.name)}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p className="truncate text-[15px] font-bold text-[#1B4332]">{student.name}</p>
+                        <p style={{ fontSize: "13px", color: "#6B7280" }}>
+                          {student.avgAccuracy > 0 ? `Accuracy ${student.avgAccuracy}%` : "No lessons yet"}
+                          {student.lessonsCompleted > 0 && ` · Lessons ${student.lessonsCompleted}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: "22px", fontWeight: 700, color: "#1B4332", lineHeight: 1.1 }}>
+                          {student.avgWpm > 0 ? student.avgWpm : "—"}
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#6B7280", fontWeight: 600 }}>WPM</p>
+                      </div>
+                      <div style={{ width: "28px", display: "flex", justifyContent: "center" }}>
+                        {student.rank === 1 ? (
+                          <Trophy className="size-6" style={{ color: "#F59E0B" }} strokeWidth={2.25} aria-label="Top student" />
+                        ) : student.rank === 2 ? (
+                          <Star className="size-6" style={{ color: "#6B7280" }} strokeWidth={2.25} aria-label="Second place" />
+                        ) : student.rank === 3 ? (
+                          <Leaf className="size-6" style={{ color: "#16A34A" }} strokeWidth={2.25} aria-label="Third place" />
+                        ) : (
+                          <span style={{ color: "#D1D5DB" }}>—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </section>
 
             <section id="teacher-students" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
