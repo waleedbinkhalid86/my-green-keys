@@ -77,7 +77,7 @@ export default function SiteFooter() {
           <div>
             <h3 className="mb-4 text-sm font-semibold text-white">Company</h3>
             <nav className="flex flex-col">
-              <FooterLink href="/">Story</FooterLink>
+              <FooterLink href="/story">Story</FooterLink>
               <a
                 href="mailto:mygreenkeys26@gmail.com"
                 className="mb-3 block text-sm text-gray-400 transition-colors hover:text-white last:mb-0"

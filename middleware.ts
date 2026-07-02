@@ -17,11 +17,17 @@ const adultProtectedRoutes = ['/dashboard'];
 
 const authRoutes = ['/login', '/signup'];
 
-export async function middleware(request: NextRequest) {
-  const { response, user } = await updateSession(request);
+/** Public marketing/legal pages — never need the Supabase session check. */
+const publicRoutes = ['/', '/pricing', '/schools', '/story', '/privacy', '/terms', '/refund'];
 
-  // Parse the pathname
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  if (publicRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  const { response, user } = await updateSession(request);
 
   const isKidProtectedRoute = kidProtectedRoutes.some((route) =>
     pathname.startsWith(route)

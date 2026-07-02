@@ -92,7 +92,7 @@ const WHAT_SCHOOLS_GET = [
 const HOW_IT_WORKS = [
   "Start with a free pilot — one class, up to 30 students",
   "We onboard your teacher in 30 minutes (WhatsApp or Zoom)",
-  "After 2 weeks, decide if you'd like to expand",
+  "Check progress after 2 weeks — the pilot runs a full term, cancel anytime",
 ] as const;
 
 const WHO_ITS_FOR = [
@@ -279,7 +279,11 @@ export default function SchoolsPage() {
                 margin: "0 auto",
               }}
             >
-              5 pilot spots open. Free for one full term.
+              5 pilot spots open. Free pilot for one full term.
+              <br />
+              <span style={{ fontSize: "0.65em", fontWeight: 600 }}>
+                Check progress after 2 weeks — cancel anytime.
+              </span>
             </div>
           </section>
 

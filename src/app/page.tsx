@@ -913,8 +913,8 @@ export default function HomePage() {
               {(
                 [
                   {
-                    title: "Free 30-day pilot for schools",
-                    desc: "Test My Green Keys with your classroom. Full access, no commitment.",
+                    title: "Free pilot for one full term",
+                    desc: "Check progress after 2 weeks — cancel anytime.",
                     Icon: School,
                   },
                   {

@@ -1,8 +1,4 @@
-"use client";
-
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
 import {
   Ban,
   CheckCircle,
@@ -14,12 +10,26 @@ import {
   Shield,
   Sprout,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { redeemPromoCode } from "@/lib/promo/redeem";
-import { getPaddle, onPaddleEvent } from "@/lib/paddle";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/Toast";
 import { testimonials } from "@/data/testimonials";
+import {
+  PricingToggleProvider,
+  PricingToggle,
+  FamilyPrice,
+} from "@/components/pricing/PricingToggleProvider";
+import {
+  CheckoutProvider,
+  CheckoutErrorBanner,
+  CheckoutButton,
+} from "@/components/pricing/CheckoutProvider";
+import { PromoCodeBox } from "@/components/pricing/PromoCodeBox";
+import { ScrollToFamilyPlan } from "@/components/pricing/ScrollToFamilyPlan";
+import {
+  EnterpriseSalesLink,
+  FinalCtaOutlineLink,
+  FinalCtaPrimaryLink,
+  PrimaryLinkCta,
+} from "@/components/pricing/HoverLinks";
 
 const FAQ_ITEMS = [
   {
@@ -44,45 +54,87 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is there a free trial for schools?",
-    a: "Yes! Contact us for a 30-day free school trial with up to 30 students.",
+    a: "Yes! Free pilot for one full term, up to 30 students. Check progress after 2 weeks — cancel anytime.",
   },
 ];
 
 type Cell = "yes" | "no" | string;
 
-const COMPARISON_GROUPS: { category: string; rows: { feature: string; free: Cell; family: Cell; school: Cell }[] }[] =
-  [
-    {
-      category: "Learning",
-      rows: [
-        { feature: "Typing lessons", free: "10 included", family: "Unlimited", school: "Unlimited" },
-        { feature: "Learning modules", free: "1 preview", family: "All 4 modules", school: "All 4 modules" },
-        { feature: "Custom lesson text", free: "no", family: "yes", school: "yes" },
-        { feature: "WPM & accuracy tracking", free: "yes", family: "yes", school: "yes" },
-      ],
-    },
-    {
-      category: "Family & engagement",
-      rows: [
-        { feature: "Parent dashboard", free: "no", family: "yes", school: "yes" },
-        { feature: "Child profiles", free: "1", family: "Up to 3", school: "Up to 200 students" },
-        { feature: "Badges, streaks & rewards", free: "no", family: "yes", school: "yes" },
-        { feature: "Eco photo rewards", free: "no", family: "yes", school: "yes" },
-        { feature: "Weekly progress reports", free: "no", family: "yes", school: "yes" },
-      ],
-    },
-    {
-      category: "School & classroom",
-      rows: [
-        { feature: "Teacher dashboard", free: "no", family: "no", school: "yes" },
-        { feature: "Class leaderboard", free: "no", family: "no", school: "yes" },
-        { feature: "School branding", free: "no", family: "no", school: "yes" },
-        { feature: "Lesson library", free: "no", family: "no", school: "yes" },
-        { feature: "Admin dashboard", free: "no", family: "no", school: "yes" },
-        { feature: "Priority support", free: "no", family: "no", school: "yes" },
-      ],
-    },
-  ];
+const COMPARISON_GROUPS: {
+  category: string;
+  rows: { feature: string; free: Cell; family: Cell; school: Cell }[];
+}[] = [
+  {
+    category: "Learning",
+    rows: [
+      {
+        feature: "Typing lessons",
+        free: "10 included",
+        family: "Unlimited",
+        school: "Unlimited",
+      },
+      {
+        feature: "Learning modules",
+        free: "1 preview",
+        family: "All 4 modules",
+        school: "All 4 modules",
+      },
+      {
+        feature: "Custom lesson text",
+        free: "no",
+        family: "yes",
+        school: "yes",
+      },
+      {
+        feature: "WPM & accuracy tracking",
+        free: "yes",
+        family: "yes",
+        school: "yes",
+      },
+    ],
+  },
+  {
+    category: "Family & engagement",
+    rows: [
+      { feature: "Parent dashboard", free: "no", family: "yes", school: "yes" },
+      {
+        feature: "Child profiles",
+        free: "1",
+        family: "Up to 3",
+        school: "Up to 200 students",
+      },
+      {
+        feature: "Badges, streaks & rewards",
+        free: "no",
+        family: "yes",
+        school: "yes",
+      },
+      {
+        feature: "Eco photo rewards",
+        free: "no",
+        family: "yes",
+        school: "yes",
+      },
+      {
+        feature: "Weekly progress reports",
+        free: "no",
+        family: "yes",
+        school: "yes",
+      },
+    ],
+  },
+  {
+    category: "School & classroom",
+    rows: [
+      { feature: "Teacher dashboard", free: "no", family: "no", school: "yes" },
+      { feature: "Class leaderboard", free: "no", family: "no", school: "yes" },
+      { feature: "School branding", free: "no", family: "no", school: "yes" },
+      { feature: "Lesson library", free: "no", family: "no", school: "yes" },
+      { feature: "Admin dashboard", free: "no", family: "no", school: "yes" },
+      { feature: "Priority support", free: "no", family: "no", school: "yes" },
+    ],
+  },
+];
 
 const FREE_FEATURES = [
   "10 full typing lessons",
@@ -147,32 +199,10 @@ const TRUST_SIGNALS = [
   { Icon: Ban, label: "No Ads" },
 ] as const;
 
-function splitPrice(price: string) {
+function LightCardPrice({ price }: { price: string }) {
   const [dollarsRaw, centsRaw] = price.split(".");
   const dollars = dollarsRaw || "0";
   const cents = (centsRaw || "00").padEnd(2, "0").slice(0, 2);
-  return { dollars, cents };
-}
-
-function GradientPrice({
-  price,
-  className,
-}: {
-  price: string;
-  className?: string;
-}) {
-  const { dollars, cents } = splitPrice(price);
-  return (
-    <div className={cn("flex items-baseline justify-center", className)}>
-      <span className="text-6xl font-bold text-white">${dollars}</span>
-      <span className="text-3xl font-bold text-white">.{cents}</span>
-      <span className="ml-2 text-lg text-white/80">/month</span>
-    </div>
-  );
-}
-
-function LightCardPrice({ price }: { price: string }) {
-  const { dollars, cents } = splitPrice(price);
   return (
     <div className="flex items-baseline">
       <span className="text-6xl font-bold text-[#1B4332]">${dollars}</span>
@@ -185,257 +215,52 @@ function LightCardPrice({ price }: { price: string }) {
 function CompareCell({ value }: { value: Cell }) {
   if (value === "yes") {
     return (
-      <span className="inline-flex justify-center text-[#52B788]" aria-label="Included">
-        <CheckCircle2 className="h-5 w-5 stroke-[2.25]" strokeLinecap="round" strokeLinejoin="round" />
+      <span
+        className="inline-flex justify-center text-[#52B788]"
+        aria-label="Included"
+      >
+        <CheckCircle2
+          className="h-5 w-5 stroke-[2.25]"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </span>
     );
   }
   if (value === "no") {
     return (
       <span className="inline-flex justify-center text-gray-300" aria-hidden>
-        <Minus className="h-5 w-5 stroke-[2.25]" strokeLinecap="round" strokeLinejoin="round" />
+        <Minus
+          className="h-5 w-5 stroke-[2.25]"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </span>
     );
   }
   return <span className="text-sm text-gray-700">{value}</span>;
 }
 
-function PricingToggle({
-  isYearly,
-  onChange,
-}: {
-  isYearly: boolean;
-  onChange: (next: boolean) => void;
-}) {
+function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <div className="flex items-center justify-center">
-      <div className="inline-flex items-center gap-1 rounded-full border border-[#D1E8DC] bg-white p-1 shadow-sm">
-        <button
-          type="button"
-          onClick={() => onChange(false)}
-          className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-            !isYearly ? "bg-[#1B4332] text-white" : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]"
-          )}
-          aria-pressed={!isYearly}
-        >
-          Monthly
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(true)}
-          className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-            isYearly ? "bg-[#1B4332] text-white" : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]"
-          )}
-          aria-pressed={isYearly}
-        >
-          <span className="inline-flex items-center gap-2">
-            Yearly
-            <span className="rounded-full bg-[#E8F5EE] px-2 py-0.5 text-xs font-semibold text-[#1B4332]">
-              Save 20%
-            </span>
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const primaryCardCtaBaseStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  padding: "16px 24px",
-  borderRadius: "9999px",
-  fontSize: "16px",
-  fontWeight: "700",
-  background: "#FFFFFF",
-  color: "#1B4332",
-  border: "none",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-  marginTop: "8px",
-  marginBottom: "8px",
-};
-
-function PrimaryCardCta({
-  children,
-  disabled,
-  onClick,
-  href,
-}: {
-  children: React.ReactNode;
-  disabled?: boolean;
-  onClick?: () => void;
-  href?: string;
-}) {
-  const [hover, setHover] = useState(false);
-  const interactive = !disabled;
-  const style: React.CSSProperties = {
-    ...primaryCardCtaBaseStyle,
-    textDecoration: "none",
-    opacity: disabled ? 0.6 : 1,
-    cursor: disabled ? "not-allowed" : "pointer",
-    transform: interactive && hover ? "scale(1.03)" : "scale(1)",
-    boxShadow:
-      interactive && hover
-        ? "0 8px 22px rgba(0,0,0,0.16)"
-        : "0 4px 12px rgba(0,0,0,0.1)",
-  };
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        style={style}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      style={style}
-      disabled={disabled}
-      onClick={onClick}
-      onMouseEnter={() => interactive && setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {children}
-    </button>
-  );
-}
-
-function EnterpriseSalesLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const [hover, setHover] = useState(false);
-  return (
-    <a
-      href={href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        padding: "16px 24px",
-        borderRadius: "9999px",
-        fontSize: "16px",
-        fontWeight: "700",
-        background: hover ? "#1B4332" : "transparent",
-        color: hover ? "#FFFFFF" : "#1B4332",
-        border: "2px solid #1B4332",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        marginTop: "32px",
-        textDecoration: "none",
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {children}
-    </a>
-  );
-}
-
-function FinalCtaPrimaryLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      style={{
-        padding: "18px 40px",
-        borderRadius: "9999px",
-        fontSize: "18px",
-        fontWeight: "700",
-        background: "#FFFFFF",
-        color: "#1B4332",
-        border: "none",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-        minWidth: "180px",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textDecoration: "none",
-      }}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function FinalCtaOutlineLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const [hover, setHover] = useState(false);
-  return (
-    <a
-      href={href}
-      style={{
-        padding: "18px 40px",
-        borderRadius: "9999px",
-        fontSize: "18px",
-        fontWeight: "700",
-        background: hover ? "#FFFFFF" : "transparent",
-        color: hover ? "#1B4332" : "#FFFFFF",
-        border: "2px solid #FFFFFF",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        minWidth: "180px",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textDecoration: "none",
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      {children}
-    </a>
-  );
-}
-
-function FaqItem({
-  question,
-  answer,
-  isOpen,
-  onToggle,
-}: {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="mb-3 rounded-2xl border border-gray-100 bg-white px-6 py-5 shadow-sm transition-shadow hover:shadow-md">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between gap-4 text-left"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-      >
-        <span className="text-base font-bold text-[#1B4332] md:text-lg">{question}</span>
+    <details className="group mb-3 rounded-2xl border border-gray-100 bg-white px-6 py-5 shadow-sm transition-shadow hover:shadow-md">
+      <summary className="flex w-full cursor-pointer list-none items-center justify-between gap-4 text-left [&::-webkit-details-marker]:hidden">
+        <span className="text-base font-bold text-[#1B4332] md:text-lg">
+          {question}
+        </span>
         <ChevronDown
-          className="shrink-0"
+          className="shrink-0 transition-transform duration-200 group-open:rotate-180"
           width={24}
           height={24}
           strokeWidth={2.25}
-          style={{
-            color: "#52B788",
-            transition: "transform 0.2s ease",
-            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-          }}
+          style={{ color: "#52B788" }}
           aria-hidden
         />
-      </button>
-      {isOpen ? (
-        <p className="mt-3 border-t border-gray-100 pt-3 text-sm leading-relaxed text-[#4A6355]">{answer}</p>
-      ) : null}
-    </div>
+      </summary>
+      <p className="mt-3 border-t border-gray-100 pt-3 text-sm leading-relaxed text-[#4A6355]">
+        {answer}
+      </p>
+    </details>
   );
 }
 
@@ -448,173 +273,28 @@ const secondaryCardBase =
 const tierEyebrow =
   "mb-3 text-center text-xs font-bold uppercase tracking-widest text-white/80";
 
-const tierEyebrowMuted = "mb-3 text-center text-xs font-bold uppercase tracking-widest text-[#4A6355]";
+const tierEyebrowMuted =
+  "mb-3 text-center text-xs font-bold uppercase tracking-widest text-[#4A6355]";
 
-function PricingPageContent() {
-  const router = useRouter();
-  const { showToast } = useToast();
-  const searchParams = useSearchParams();
-  const source = searchParams.get("source");
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ source?: string }>;
+}) {
+  const { source } = await searchParams;
   const ecoGardenExpired = source === "eco_garden_expired";
-  const familyPlanRef = useRef<HTMLDivElement | null>(null);
-  const [isYearly, setIsYearly] = useState(false);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoRedeemError, setPromoRedeemError] = useState<string | null>(null);
-  const [redeemBusy, setRedeemBusy] = useState(false);
-  const [checkoutError, setCheckoutError] = useState("");
-  const [checkoutBusy, setCheckoutBusy] = useState(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-  const [authReady, setAuthReady] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const priceIds = useMemo(() => {
-    const family = process.env.NEXT_PUBLIC_PADDLE_FAMILY_PRICE_ID || "";
-    const schoolStarter = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_STARTER_PRICE_ID || "";
-    const schoolGrowth = process.env.NEXT_PUBLIC_PADDLE_SCHOOL_GROWTH_PRICE_ID || "";
-    return { family, schoolStarter, schoolGrowth };
-  }, []);
-
-  useEffect(() => {
-    const supabase = createClient();
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session?.user);
-      setAuthReady(true);
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session?.user);
-      setAuthReady(true);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onPaddleEvent(async (event) => {
-      if (event?.name !== "checkout.completed") return;
-      const payload = event.data as { transaction_id?: string };
-      const transactionId = payload?.transaction_id;
-      if (!transactionId) return;
-
-      try {
-        const res = await fetch("/api/paddle/complete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactionId }),
-        });
-        const json = (await res.json()) as { error?: string; redirectTo?: string };
-        if (!res.ok) throw new Error(json?.error || "Failed to finalize purchase");
-        router.push(json.redirectTo || "/dashboard/parent");
-      } catch (err) {
-        setCheckoutError(err instanceof Error ? err.message : "Failed to finalize purchase");
-      }
-    });
-    return unsub;
-  }, [router]);
-
-  const openCheckout = async (planType: "family" | "school_starter" | "school_growth") => {
-    setCheckoutError("");
-    setCheckoutBusy(true);
-    try {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!user) {
-        router.push("/signup");
-        return;
-      }
-
-      const priceId =
-        planType === "family"
-          ? priceIds.family
-          : planType === "school_starter"
-            ? priceIds.schoolStarter
-            : priceIds.schoolGrowth;
-
-      if (!priceId) {
-        throw new Error("Missing Paddle price ID configuration for this plan.");
-      }
-
-      const checkoutRes = await fetch("/api/paddle/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, planType }),
-      });
-      const checkoutJson = (await checkoutRes.json()) as { error?: string; transactionId?: string };
-      if (!checkoutRes.ok) {
-        throw new Error(checkoutJson?.error || "Failed to start checkout");
-      }
-
-      const transactionId = checkoutJson.transactionId;
-      if (!transactionId) {
-        throw new Error("Checkout did not return a transaction ID.");
-      }
-
-      const paddle = await getPaddle();
-      if (!paddle) {
-        throw new Error("Failed to initialize Paddle.");
-      }
-
-      paddle.Checkout.open({
-        transactionId,
-        settings: {
-          displayMode: "overlay",
-          theme: "light",
-          locale: "en",
-        },
-      });
-    } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : "Failed to start checkout");
-    } finally {
-      setCheckoutBusy(false);
-    }
-  };
-
-  const handleRedeemPromo = async () => {
-    setPromoRedeemError(null);
-    setRedeemBusy(true);
-    try {
-      const result = await redeemPromoCode(promoCode);
-      if (!result.success) {
-        setPromoRedeemError(result.message);
-        return;
-      }
-      const expiresLabel = result.expires_at
-        ? new Date(result.expires_at).toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" })
-        : "the date shown in your account";
-      showToast(
-        "success",
-        `🎉 Code redeemed! You have 3 months of free access until ${expiresLabel}.`
-      );
-      router.push("/dashboard/parent");
-    } catch {
-      setPromoRedeemError("Something went wrong. Please try again.");
-    } finally {
-      setRedeemBusy(false);
-    }
-  };
-
-  const familyDisplayPrice = isYearly ? "7.99" : "9.99";
-  const schoolDisplayPrice = "149.00";
-  const schoolGrowthDisplayPrice = "299.00";
-
-  useEffect(() => {
-    if (!ecoGardenExpired || !familyPlanRef.current) return;
-    const t = window.setTimeout(() => {
-      familyPlanRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
-    return () => window.clearTimeout(t);
-  }, [ecoGardenExpired]);
 
   return (
     <div
       className="min-h-screen antialiased text-gray-900"
       style={{
         backgroundColor: "#FAFAF7",
-        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+        backgroundImage:
+          "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}
     >
+      <ScrollToFamilyPlan enabled={ecoGardenExpired} />
       <div
         style={{
           maxWidth: "1280px",
@@ -625,492 +305,456 @@ function PricingPageContent() {
           paddingBottom: "60px",
         }}
       >
-      {/* Hero */}
-      <section style={{ marginBottom: "80px" }} className="pb-12 pt-20 text-center md:pb-16 md:pt-28">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h1 className="mb-6 text-4xl font-bold leading-tight text-[#1B4332] md:text-5xl lg:text-6xl">
-            Pricing that grows with you
-          </h1>
-          <p className="mb-8 text-lg text-[#4A6355] md:text-xl">
-            Free forever for trying out. Upgrade when ready. No hidden fees.
-          </p>
-          <div className="mb-12 flex justify-center md:mb-16">
-            <PricingToggle isYearly={isYearly} onChange={setIsYearly} />
-          </div>
-        </div>
-      </section>
-
-      {/* Main pricing cards */}
-      <section style={{ marginBottom: "80px" }} className="pb-16 md:pb-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          {ecoGardenExpired ? (
-            <div
-              className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-center sm:text-left"
-              role="status"
+        <CheckoutProvider>
+          <PricingToggleProvider>
+            {/* Hero */}
+            <section
+              style={{ marginBottom: "80px" }}
+              className="pb-12 pt-20 text-center md:pb-16 md:pt-28"
             >
-              <Sprout className="mx-auto h-8 w-8 shrink-0 text-[#52B788] sm:mx-0" strokeWidth={2} aria-hidden />
-              <p className="text-base font-semibold text-[#1B4332]">
-                Your garden is waiting. Upgrade to keep your plants growing.
-              </p>
-            </div>
-          ) : null}
-          {checkoutError ? (
-            <div
-              className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
-              role="alert"
-            >
-              {checkoutError}
-            </div>
-          ) : null}
-
-          {/* Free-access promo codes (e.g. GoGreen) — redeem above paid tiers */}
-          <div
-            className="mb-10 rounded-2xl border p-6 shadow-md sm:p-8"
-            style={{
-              background: "linear-gradient(145deg, #F0F9F4 0%, #FFFFFF 55%)",
-              borderColor: "#2D6A4F",
-              boxShadow: "0 8px 28px rgba(27, 67, 50, 0.08)",
-            }}
-          >
-            <h2 className="mb-1 text-xl font-bold" style={{ color: "#1B4332" }}>
-              Have a promo code?
-            </h2>
-            <p className="mb-4 text-sm" style={{ color: "#2D6A4F" }}>
-              Enter your code for complimentary full access for a limited time. One redemption per account.
-            </p>
-            {!authReady ? (
-              <p className="text-sm font-medium" style={{ color: "#4A6355" }}>
-                Loading…
-              </p>
-            ) : isLoggedIn ? (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="E.G. GOGREEN"
-                  autoComplete="off"
-                  spellCheck={false}
-                  disabled={redeemBusy}
-                  className="min-w-0 flex-1 rounded-xl border-2 outline-none transition-colors focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/25 disabled:opacity-60"
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "15px",
-                    fontWeight: 600,
-                    letterSpacing: "0.04em",
-                    borderColor: "#D1E8DC",
-                    color: "#1B4332",
-                    backgroundColor: "#FFFFFF",
-                  }}
-                />
-                <button
-                  type="button"
-                  disabled={redeemBusy || !promoCode.trim()}
-                  onClick={() => void handleRedeemPromo()}
-                  style={{
-                    padding: "14px 32px",
-                    borderRadius: "12px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    background: redeemBusy || !promoCode.trim() ? "#94D2B8" : "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: redeemBusy || !promoCode.trim() ? "not-allowed" : "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {redeemBusy ? "Redeeming…" : "Redeem"}
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Link
-                  href="/signup"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "14px 32px",
-                    borderRadius: "12px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    background: "linear-gradient(135deg, #52B788 0%, #2D6A4F 100%)",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
-                    textDecoration: "none",
-                    width: "100%",
-                  }}
-                >
-                  Sign up to redeem a promo code
-                </Link>
-                <p className="text-sm" style={{ color: "#4A6355" }}>
-                  Already have an account?{" "}
-                  <Link href="/login" className="font-semibold underline" style={{ color: "#2D6A4F" }}>
-                    Log in to redeem
-                  </Link>
-                  .
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+                <h1 className="mb-6 text-4xl font-bold leading-tight text-[#1B4332] md:text-5xl lg:text-6xl">
+                  Pricing that grows with you
+                </h1>
+                <p className="mb-8 text-lg text-[#4A6355] md:text-xl">
+                  Free forever for trying out. Upgrade when ready. No hidden
+                  fees.
                 </p>
-              </div>
-            )}
-            {promoRedeemError ? (
-              <p
-                className="mt-3 rounded-xl border px-3 py-2 text-sm font-medium"
-                style={{
-                  borderColor: "#FECACA",
-                  backgroundColor: "#FEF2F2",
-                  color: "#B91C1C",
-                }}
-                role="alert"
-              >
-                {promoRedeemError}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {/* Free */}
-            <div
-              className={cn(
-                primaryCardBase,
-                "bg-gradient-to-br from-[#52B788] to-[#40916C] text-white"
-              )}
-            >
-              <p className={tierEyebrow}>FREE</p>
-              <div className="mt-4 flex justify-center">
-                <span className="text-6xl font-bold text-white">$0</span>
-              </div>
-              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
-                For families wanting to try Green Keys for an unlimited period of time
-              </p>
-              <PrimaryCardCta href="/signup">Start free</PrimaryCardCta>
-              <div className="my-6 border-t border-white/20" />
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
-              <ul className="flex flex-1 flex-col gap-2.5">
-                {FREE_FEATURES.map((t) => (
-                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
-                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Family — Most Popular */}
-            <div
-              ref={familyPlanRef}
-              id="pricing-family-plan"
-              className={cn(
-                primaryCardBase,
-                "bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white",
-                ecoGardenExpired && "ring-2 ring-amber-400 ring-offset-2 ring-offset-[#FAFAF7]"
-              )}
-            >
-              <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
-                MOST POPULAR
-              </span>
-              <p className={tierEyebrow}>FAMILY</p>
-              <div className="mt-4">
-                <GradientPrice price={familyDisplayPrice} />
-              </div>
-              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
-                For families who want unlimited lessons and full features
-              </p>
-              <PrimaryCardCta disabled={checkoutBusy} onClick={() => void openCheckout("family")}>
-                {checkoutBusy ? "Loading…" : "Choose Family"}
-              </PrimaryCardCta>
-              <div className="my-6 border-t border-white/20" />
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
-              <ul className="flex flex-1 flex-col gap-2.5">
-                {FAMILY_FEATURES.map((t) => (
-                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
-                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* School */}
-            <div
-              className={cn(
-                primaryCardBase,
-                "bg-gradient-to-br from-[#0E7490] to-[#0891B2] text-white"
-              )}
-            >
-              <p className={tierEyebrow}>SCHOOL</p>
-              <div className="mt-4">
-                <GradientPrice price={schoolDisplayPrice} />
-              </div>
-              <p className="mt-4 text-center text-base leading-relaxed text-white/95">
-                For classrooms and teachers managing students at scale
-              </p>
-              <PrimaryCardCta disabled={checkoutBusy} onClick={() => void openCheckout("school_starter")}>
-                {checkoutBusy ? "Loading…" : "Choose School"}
-              </PrimaryCardCta>
-              <div className="my-6 border-t border-white/20" />
-              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">What&apos;s included:</p>
-              <ul className="flex flex-1 flex-col gap-2.5">
-                {SCHOOL_STARTER_FEATURES.filter((t) => t !== "Everything in Family").map((t) => (
-                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/95">
-                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
-            {TRUST_SIGNALS.map((s) => (
-              <div key={s.label} className="inline-flex items-center gap-2">
-                <s.Icon className="h-4 w-4 text-[#52B788]" strokeWidth={2.25} aria-hidden />
-                <span>{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* For larger schools */}
-      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">For larger schools</h2>
-            <p className="text-[#4A6355]">Scale with confidence</p>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className={secondaryCardBase}>
-                <p className={tierEyebrowMuted}>SCHOOL GROWTH</p>
-                <div className="mt-4">
-                  <LightCardPrice price={schoolGrowthDisplayPrice} />
+                <div className="mb-12 flex justify-center md:mb-16">
+                  <PricingToggle />
                 </div>
-                <div className="mt-4 flex flex-wrap items-end gap-2">
-                  <span className="text-4xl font-bold text-[#1B4332]">200</span>
-                  <span className="text-sm font-medium text-[#4A6355]">students</span>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-[#4A6355]">For schools scaling their program</p>
-                <button
-                  type="button"
-                  disabled={checkoutBusy}
-                  onClick={() => void openCheckout("school_growth")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%",
-                    padding: "16px 24px",
-                    borderRadius: "9999px",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: checkoutBusy ? "not-allowed" : "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.3)",
-                    marginTop: "32px",
-                    opacity: checkoutBusy ? 0.6 : 1,
-                  }}
-                >
-                  {checkoutBusy ? "Loading…" : "Choose Growth"}
-                </button>
-                <div className="my-6 border-t border-[#D1E8DC]" />
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">What&apos;s included:</p>
-                <ul className="space-y-2.5">
-                  {SCHOOL_GROWTH_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2.5 text-sm text-[#1B4332]">
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]" aria-hidden />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
+            </section>
 
-              <div className={secondaryCardBase}>
-                <p className={tierEyebrowMuted}>ENTERPRISE</p>
-                <div className="mt-4">
-                  <span className="text-6xl font-bold text-[#1B4332]">Custom</span>
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-[#4A6355]">Districts & multi-campus schools</p>
-                <EnterpriseSalesLink href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry">
-                  Contact enterprise sales
-                </EnterpriseSalesLink>
-                <div className="my-6 border-t border-[#D1E8DC]" />
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">What&apos;s included:</p>
-                <ul className="space-y-2.5">
-                  {ENTERPRISE_FEATURES.map((t) => (
-                    <li key={t} className="flex items-start gap-2.5 text-sm text-[#1B4332]">
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]" aria-hidden />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-          </div>
-        </div>
-      </section>
+            {/* Main pricing cards */}
+            <section
+              style={{ marginBottom: "80px" }}
+              className="pb-16 md:pb-24"
+            >
+              <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+                {ecoGardenExpired ? (
+                  <div
+                    className="mb-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-center sm:text-left"
+                    role="status"
+                  >
+                    <Sprout
+                      className="mx-auto h-8 w-8 shrink-0 text-[#52B788] sm:mx-0"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    <p className="text-base font-semibold text-[#1B4332]">
+                      Your garden is waiting. Upgrade to keep your plants
+                      growing.
+                    </p>
+                  </div>
+                ) : null}
 
-      {testimonials.length > 0 ? (
-        <section className="py-12 md:py-16">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">What educators are saying</h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {testimonials.slice(0, 2).map((t) => (
-                <div key={t.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <Quote className="mb-3 h-6 w-6 text-[#52B788]" />
-                  <p className="mb-4 text-[#4A6355]">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="text-sm">
-                    <div className="font-semibold text-[#1B4332]">{t.author}</div>
-                    <div className="text-[#4A6355]">
-                      {t.role}
-                      {t.organization ? ` • ${t.organization}` : null}
+                <CheckoutErrorBanner />
+
+                {/* Free-access promo codes (e.g. GoGreen) — redeem above paid tiers */}
+                <PromoCodeBox />
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {/* Free */}
+                  <div
+                    className={cn(
+                      primaryCardBase,
+                      "bg-gradient-to-br from-[#52B788] to-[#40916C] text-white",
+                    )}
+                  >
+                    <p className={tierEyebrow}>FREE</p>
+                    <div className="mt-4 flex justify-center">
+                      <span className="text-6xl font-bold text-white">$0</span>
                     </div>
+                    <p className="mt-4 text-center text-base leading-relaxed text-white/95">
+                      For families wanting to try Green Keys for an unlimited
+                      period of time
+                    </p>
+                    <PrimaryLinkCta href="/signup">Start free</PrimaryLinkCta>
+                    <div className="my-6 border-t border-white/20" />
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">
+                      What&apos;s included:
+                    </p>
+                    <ul className="flex flex-1 flex-col gap-2.5">
+                      {FREE_FEATURES.map((t) => (
+                        <li
+                          key={t}
+                          className="flex items-start gap-2.5 text-sm text-white/95"
+                        >
+                          <CheckCircle
+                            className="mt-0.5 h-4 w-4 shrink-0 text-white"
+                            aria-hidden
+                          />
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Family — Most Popular */}
+                  <div
+                    id="pricing-family-plan"
+                    className={cn(
+                      primaryCardBase,
+                      "bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white",
+                      ecoGardenExpired &&
+                        "ring-2 ring-amber-400 ring-offset-2 ring-offset-[#FAFAF7]",
+                    )}
+                  >
+                    <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
+                      MOST POPULAR
+                    </span>
+                    <p className={tierEyebrow}>FAMILY</p>
+                    <div className="mt-4">
+                      <FamilyPrice />
+                    </div>
+                    <p className="mt-4 text-center text-base leading-relaxed text-white/95">
+                      For families who want unlimited lessons and full features
+                    </p>
+                    <CheckoutButton planType="family">
+                      Choose Family
+                    </CheckoutButton>
+                    <div className="my-6 border-t border-white/20" />
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">
+                      What&apos;s included:
+                    </p>
+                    <ul className="flex flex-1 flex-col gap-2.5">
+                      {FAMILY_FEATURES.map((t) => (
+                        <li
+                          key={t}
+                          className="flex items-start gap-2.5 text-sm text-white/95"
+                        >
+                          <CheckCircle
+                            className="mt-0.5 h-4 w-4 shrink-0 text-white"
+                            aria-hidden
+                          />
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* School */}
+                  <div
+                    className={cn(
+                      primaryCardBase,
+                      "bg-gradient-to-br from-[#0E7490] to-[#0891B2] text-white",
+                    )}
+                  >
+                    <p className={tierEyebrow}>SCHOOL</p>
+                    <div className="mt-4">
+                      <LightCardPrice price="149.00" />
+                    </div>
+                    <p className="mt-4 text-center text-base leading-relaxed text-white/95">
+                      For classrooms and teachers managing students at scale
+                    </p>
+                    <CheckoutButton planType="school_starter">
+                      Choose School
+                    </CheckoutButton>
+                    <div className="my-6 border-t border-white/20" />
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-white/80">
+                      What&apos;s included:
+                    </p>
+                    <ul className="flex flex-1 flex-col gap-2.5">
+                      {SCHOOL_STARTER_FEATURES.filter(
+                        (t) => t !== "Everything in Family",
+                      ).map((t) => (
+                        <li
+                          key={t}
+                          className="flex items-start gap-2.5 text-sm text-white/95"
+                        >
+                          <CheckCircle
+                            className="mt-0.5 h-4 w-4 shrink-0 text-white"
+                            aria-hidden
+                          />
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
+
+                <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
+                  {TRUST_SIGNALS.map((s) => (
+                    <div
+                      key={s.label}
+                      className="inline-flex items-center gap-2"
+                    >
+                      <s.Icon
+                        className="h-4 w-4 text-[#52B788]"
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </PricingToggleProvider>
+
+          {/* For larger schools */}
+          <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
+            <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-12 text-center">
+                <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">
+                  For larger schools
+                </h2>
+                <p className="text-[#4A6355]">Scale with confidence</p>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className={secondaryCardBase}>
+                  <p className={tierEyebrowMuted}>SCHOOL GROWTH</p>
+                  <div className="mt-4">
+                    <LightCardPrice price="299.00" />
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-end gap-2">
+                    <span className="text-4xl font-bold text-[#1B4332]">
+                      200
+                    </span>
+                    <span className="text-sm font-medium text-[#4A6355]">
+                      students
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-[#4A6355]">
+                    For schools scaling their program
+                  </p>
+                  <CheckoutButton planType="school_growth" variant="growth">
+                    Choose Growth
+                  </CheckoutButton>
+                  <div className="my-6 border-t border-[#D1E8DC]" />
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">
+                    What&apos;s included:
+                  </p>
+                  <ul className="space-y-2.5">
+                    {SCHOOL_GROWTH_FEATURES.map((t) => (
+                      <li
+                        key={t}
+                        className="flex items-start gap-2.5 text-sm text-[#1B4332]"
+                      >
+                        <CheckCircle
+                          className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]"
+                          aria-hidden
+                        />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className={secondaryCardBase}>
+                  <p className={tierEyebrowMuted}>ENTERPRISE</p>
+                  <div className="mt-4">
+                    <span className="text-6xl font-bold text-[#1B4332]">
+                      Custom
+                    </span>
+                  </div>
+                  <p className="mt-4 text-sm leading-relaxed text-[#4A6355]">
+                    Districts & multi-campus schools
+                  </p>
+                  <EnterpriseSalesLink href="mailto:sales@mygreenkeys.com?subject=Enterprise%20plan%20inquiry">
+                    Contact enterprise sales
+                  </EnterpriseSalesLink>
+                  <div className="my-6 border-t border-[#D1E8DC]" />
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#4A6355]">
+                    What&apos;s included:
+                  </p>
+                  <ul className="space-y-2.5">
+                    {ENTERPRISE_FEATURES.map((t) => (
+                      <li
+                        key={t}
+                        className="flex items-start gap-2.5 text-sm text-[#1B4332]"
+                      >
+                        <CheckCircle
+                          className="mt-0.5 h-4 w-4 shrink-0 text-[#52B788]"
+                          aria-hidden
+                        />
+                        <span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        </CheckoutProvider>
+
+        {testimonials.length > 0 ? (
+          <section className="py-12 md:py-16">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+              <h3 className="mb-8 text-center text-2xl font-bold text-[#1B4332]">
+                What educators are saying
+              </h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {testimonials.slice(0, 2).map((t) => (
+                  <div
+                    key={t.id}
+                    className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+                  >
+                    <Quote className="mb-3 h-6 w-6 text-[#52B788]" />
+                    <p className="mb-4 text-[#4A6355]">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                    <div className="text-sm">
+                      <div className="font-semibold text-[#1B4332]">
+                        {t.author}
+                      </div>
+                      <div className="text-[#4A6355]">
+                        {t.role}
+                        {t.organization ? ` • ${t.organization}` : null}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {/* Feature comparison */}
+        <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 text-center">
+              <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">
+                Compare every feature
+              </h2>
+              <p className="text-[#4A6355]">Side-by-side feature breakdown</p>
+            </div>
+
+            <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-6 shadow-xl md:p-10">
+              <div className="min-w-[720px] overflow-hidden rounded-2xl">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="rounded-t-2xl bg-[#1B4332] text-white">
+                      <th className="pl-6 pr-4 py-4 text-xs font-bold uppercase tracking-wider">
+                        Feature
+                      </th>
+                      <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">
+                        Free
+                      </th>
+                      <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">
+                        Family
+                      </th>
+                      <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">
+                        School
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-100 transition-colors hover:bg-gray-50">
+                      <td className="pl-6 pr-4 py-3 font-medium text-gray-700">
+                        Price (monthly)
+                      </td>
+                      <td className="px-6 py-3 text-center text-sm text-gray-700">
+                        $0
+                      </td>
+                      <td className="bg-[#F0F9F4] px-6 py-3 text-center text-sm text-gray-700">
+                        $9.99/mo
+                      </td>
+                      <td className="px-6 py-3 text-center text-sm text-gray-700">
+                        $149/mo (Starter)
+                      </td>
+                    </tr>
+                    {COMPARISON_GROUPS.map((group) => (
+                      <React.Fragment key={group.category}>
+                        <tr className="bg-[#F8FAF5]">
+                          <td
+                            colSpan={4}
+                            className="pl-6 py-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#1B4332]"
+                          >
+                            {group.category.toUpperCase()}
+                          </td>
+                        </tr>
+                        {group.rows.map((row) => (
+                          <tr
+                            key={row.feature}
+                            className="border-b border-gray-100 transition-colors hover:bg-gray-50"
+                          >
+                            <td className="pl-6 pr-4 py-3 font-medium text-gray-700">
+                              {row.feature}
+                            </td>
+                            <td className="px-6 py-3 text-center">
+                              <CompareCell value={row.free} />
+                            </td>
+                            <td className="bg-[#F0F9F4] px-6 py-3 text-center">
+                              <CompareCell value={row.family} />
+                            </td>
+                            <td className="px-6 py-3 text-center">
+                              <CompareCell value={row.school} />
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-6 text-center text-sm text-[#4A6355]">
+                School Growth (up to 200 students) is{" "}
+                <strong className="font-semibold text-[#1B4332]">
+                  $299/mo
+                </strong>
+                .
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 text-center">
+              <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">
+                Frequently asked questions
+              </h2>
+              <p className="text-[#4A6355]">
+                Everything you need to know before you subscribe
+              </p>
+            </div>
+            <div>
+              {FAQ_ITEMS.slice(0, 6).map((faq) => (
+                <FaqItem key={faq.q} question={faq.q} answer={faq.a} />
               ))}
             </div>
           </div>
         </section>
-      ) : null}
 
-      {/* Feature comparison */}
-      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Compare every feature</h2>
-            <p className="text-[#4A6355]">Side-by-side feature breakdown</p>
-          </div>
-
-          <div className="overflow-x-auto rounded-3xl border border-gray-100 bg-white p-6 shadow-xl md:p-10">
-            <div className="min-w-[720px] overflow-hidden rounded-2xl">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="rounded-t-2xl bg-[#1B4332] text-white">
-                    <th className="pl-6 pr-4 py-4 text-xs font-bold uppercase tracking-wider">Feature</th>
-                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Free</th>
-                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Family</th>
-                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">School</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                    <td className="pl-6 pr-4 py-3 font-medium text-gray-700">Price (monthly)</td>
-                    <td className="px-6 py-3 text-center text-sm text-gray-700">$0</td>
-                    <td className="bg-[#F0F9F4] px-6 py-3 text-center text-sm text-gray-700">$9.99/mo</td>
-                    <td className="px-6 py-3 text-center text-sm text-gray-700">$149/mo (Starter)</td>
-                  </tr>
-                  {COMPARISON_GROUPS.map((group) => (
-                    <React.Fragment key={group.category}>
-                      <tr className="bg-[#F8FAF5]">
-                        <td
-                          colSpan={4}
-                          className="pl-6 py-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#1B4332]"
-                        >
-                          {group.category.toUpperCase()}
-                        </td>
-                      </tr>
-                      {group.rows.map((row) => (
-                        <tr key={row.feature} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                          <td className="pl-6 pr-4 py-3 font-medium text-gray-700">{row.feature}</td>
-                          <td className="px-6 py-3 text-center">
-                            <CompareCell value={row.free} />
-                          </td>
-                          <td className="bg-[#F0F9F4] px-6 py-3 text-center">
-                            <CompareCell value={row.family} />
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <CompareCell value={row.school} />
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-6 text-center text-sm text-[#4A6355]">
-              School Growth (up to 200 students) is <strong className="font-semibold text-[#1B4332]">$299/mo</strong>.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section style={{ marginBottom: "80px" }} className="py-16 md:py-24">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-3 text-3xl font-bold text-[#1B4332] md:text-4xl">Frequently asked questions</h2>
-            <p className="text-[#4A6355]">Everything you need to know before you subscribe</p>
-          </div>
-          <div>
-            {FAQ_ITEMS.slice(0, 6).map((faq, idx) => (
-              <FaqItem
-                key={faq.q}
-                question={faq.q}
-                answer={faq.a}
-                isOpen={openFaqIndex === idx}
-                onToggle={() => setOpenFaqIndex((prev) => (prev === idx ? null : idx))}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section style={{ marginBottom: "0" }} className="pb-20 md:pb-28">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div
-            className="rounded-3xl p-12 text-center md:p-16"
-            style={{
-              background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)",
-            }}
-          >
-            <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">Ready to start?</h2>
-            <p className="mb-8 text-lg text-white/90">Free forever for the first 10 lessons. No credit card.</p>
+        {/* Final CTA */}
+        <section style={{ marginBottom: "0" }} className="pb-20 md:pb-28">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div
+              className="rounded-3xl p-12 text-center md:p-16"
               style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "16px",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                marginTop: "24px",
+                background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)",
               }}
             >
-              <FinalCtaPrimaryLink href="/signup">Start Free</FinalCtaPrimaryLink>
-              <FinalCtaOutlineLink href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry">
-                Talk to Sales
-              </FinalCtaOutlineLink>
+              <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">
+                Ready to start?
+              </h2>
+              <p className="mb-8 text-lg text-white/90">
+                Free forever for the first 10 lessons. No credit card.
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: "16px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  marginTop: "24px",
+                }}
+              >
+                <FinalCtaPrimaryLink href="/signup">
+                  Start Free
+                </FinalCtaPrimaryLink>
+                <FinalCtaOutlineLink href="mailto:sales@mygreenkeys.com?subject=Sales%20inquiry">
+                  Talk to Sales
+                </FinalCtaOutlineLink>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       </div>
     </div>
-  );
-}
-
-export default function PricingPage() {
-  return (
-    <Suspense
-      fallback={
-        <div
-          className="min-h-screen antialiased"
-          style={{
-            fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif",
-            backgroundColor: "#FAFAF7",
-            backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-      }
-    >
-      <PricingPageContent />
-    </Suspense>
   );
 }
