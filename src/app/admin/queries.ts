@@ -28,11 +28,49 @@ export type AdminDashboardData = {
     totalClasses: string;
     goGreenRedeemed: string;
     goGreenToPaid: string;
+    kidCodeLoginsThisWeek: string;
   };
-  lastSignups: AdminRow[] | null;
   lastLogins: AdminRow[] | null;
   goGreenRedemptions: AdminRow[] | null;
   goGreenRedemptionsEmpty: boolean;
+  activationFunnel: ActivationFunnel | null;
+  engagement: EngagementData | null;
+  signupsDetailed: SignupDetailRow[] | null;
+  teacherClasses: TeacherClassRow[] | null;
+};
+
+export type SignupDetailRow = {
+  id: string;
+  name: string;
+  type: string;
+  signedUpAt: string | null;
+  lastActiveAt: string | null;
+  lessonsDone: number;
+};
+
+export type TeacherClassRow = {
+  id: string;
+  className: string;
+  teacherName: string;
+  studentCount: number;
+  classCode: string;
+  createdAt: string | null;
+};
+
+export type ActivationFunnel = {
+  cohortDays: number;
+  signups: number;
+  started: number;
+  completed: number;
+  day1: { eligible: number; returned: number };
+  day7: { eligible: number; returned: number };
+};
+
+export type EngagementData = {
+  lessonsPerDay: { date: string; count: number }[];
+  brainSprint: { total: number; last7Days: number };
+  habitQuest: { activeCount: number; completedCount: number };
+  games: { total: number; last7Days: number | null; byGame: { name: string; count: number }[] };
 };
 
 function isPaidPlan(planType: string | null | undefined): boolean {
@@ -49,6 +87,327 @@ function sevenDaysAgoIso(): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() - 7);
   return d.toISOString();
+}
+
+const ACTIVATION_COHORT_DAYS = 30;
+
+function daysAgoIso(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString();
+}
+
+/** Midnight UTC (ms since epoch) of the calendar day an ISO timestamp falls on. */
+function utcMidnightMs(iso: string): number {
+  const d = new Date(iso);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+/** Whole calendar days between two ISO timestamps (UTC), b - a. */
+function calendarDayOffset(fromIso: string, toIso: string): number {
+  return Math.round((utcMidnightMs(toIso) - utcMidnightMs(fromIso)) / 86_400_000);
+}
+
+async function fetchActivationFunnel(
+  admin: ReturnType<typeof createServiceRoleClient>,
+  includeTest: boolean
+): Promise<ActivationFunnel | null> {
+  try {
+    const cohortStart = daysAgoIso(ACTIVATION_COHORT_DAYS);
+    const nowIso = new Date().toISOString();
+
+    const { data: cohort, error: cohortErr } = await applyTestFilter(
+      admin.from("profiles").select("id, created_at"),
+      includeTest
+    )
+      .in("account_type", ["parent", "student"])
+      .gte("created_at", cohortStart);
+    if (cohortErr) throw cohortErr;
+
+    const signupById = new Map(
+      (cohort ?? []).map((row) => [row.id as string, row.created_at as string])
+    );
+    if (signupById.size === 0) {
+      return {
+        cohortDays: ACTIVATION_COHORT_DAYS,
+        signups: 0,
+        started: 0,
+        completed: 0,
+        day1: { eligible: 0, returned: 0 },
+        day7: { eligible: 0, returned: 0 },
+      };
+    }
+
+    const studentIds = Array.from(signupById.keys());
+    const { data: progress, error: progressErr } = await admin
+      .from("student_progress")
+      .select("student_id, completed, completed_at, created_at")
+      .in("student_id", studentIds);
+    if (progressErr) throw progressErr;
+
+    // Per student: whether they've started/completed a lesson, and the set of
+    // calendar-day offsets (from their signup day) on which they had activity.
+    const startedIds = new Set<string>();
+    const completedIds = new Set<string>();
+    const activityDayOffsets = new Map<string, Set<number>>();
+
+    for (const row of progress ?? []) {
+      const studentId = row.student_id as string;
+      const signupIso = signupById.get(studentId);
+      if (!signupIso) continue;
+
+      startedIds.add(studentId);
+      if (row.completed) completedIds.add(studentId);
+
+      const activityIso = (row.completed_at as string | null) ?? (row.created_at as string | null);
+      if (!activityIso) continue;
+      const offset = calendarDayOffset(signupIso, activityIso);
+      if (!activityDayOffsets.has(studentId)) activityDayOffsets.set(studentId, new Set());
+      activityDayOffsets.get(studentId)!.add(offset);
+    }
+
+    let day1Eligible = 0;
+    let day1Returned = 0;
+    let day7Eligible = 0;
+    let day7Returned = 0;
+
+    for (const [studentId, signupIso] of signupById) {
+      const daysSinceSignup = calendarDayOffset(signupIso, nowIso);
+      const offsets = activityDayOffsets.get(studentId);
+
+      if (daysSinceSignup >= 1) {
+        day1Eligible += 1;
+        if (offsets?.has(1)) day1Returned += 1;
+      }
+      if (daysSinceSignup >= 7) {
+        day7Eligible += 1;
+        if (offsets?.has(7)) day7Returned += 1;
+      }
+    }
+
+    return {
+      cohortDays: ACTIVATION_COHORT_DAYS,
+      signups: signupById.size,
+      started: startedIds.size,
+      completed: completedIds.size,
+      day1: { eligible: day1Eligible, returned: day1Returned },
+      day7: { eligible: day7Eligible, returned: day7Returned },
+    };
+  } catch {
+    return null;
+  }
+}
+
+const ENGAGEMENT_WINDOW_DAYS = 30;
+
+function utcDateKey(iso: string): string {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+async function fetchEngagementData(
+  admin: ReturnType<typeof createServiceRoleClient>,
+  includeTest: boolean
+): Promise<EngagementData | null> {
+  try {
+    const nonTestIds = await fetchNonTestProfileIds(admin, includeTest);
+    const passes = (id: string) => userPassesTestFilter(id, nonTestIds);
+
+    const windowStart = daysAgoIso(ENGAGEMENT_WINDOW_DAYS);
+    const sevenDaysAgo = sevenDaysAgoIso();
+
+    const [progressRes, brainSprintRes, questRes, gameRes] = await Promise.all([
+      admin
+        .from("student_progress")
+        .select("student_id, completed_at")
+        .eq("completed", true)
+        .gte("completed_at", windowStart),
+      admin.from("brain_sprint_progress").select("user_id, is_completed, first_completed_at"),
+      admin.from("quests").select("parent_id, status"),
+      admin.from("game_scores").select("student_id, game_name, created_at"),
+    ]);
+
+    if (progressRes.error) throw progressRes.error;
+    if (brainSprintRes.error) throw brainSprintRes.error;
+    if (questRes.error) throw questRes.error;
+
+    // lessons per day, last N days (zero-filled)
+    const dayBuckets = new Map<string, number>();
+    for (let i = ENGAGEMENT_WINDOW_DAYS - 1; i >= 0; i--) {
+      dayBuckets.set(utcDateKey(daysAgoIso(i)), 0);
+    }
+    for (const row of progressRes.data ?? []) {
+      const studentId = row.student_id as string;
+      if (!passes(studentId)) continue;
+      const completedAt = row.completed_at as string | null;
+      if (!completedAt) continue;
+      const key = utcDateKey(completedAt);
+      if (dayBuckets.has(key)) dayBuckets.set(key, (dayBuckets.get(key) ?? 0) + 1);
+    }
+    const lessonsPerDay = Array.from(dayBuckets, ([date, count]) => ({ date, count }));
+
+    // brain sprint completions
+    let bsTotal = 0;
+    let bsLast7 = 0;
+    for (const row of brainSprintRes.data ?? []) {
+      if (!row.is_completed) continue;
+      if (!passes(row.user_id as string)) continue;
+      bsTotal += 1;
+      const firstCompleted = row.first_completed_at as string | null;
+      if (firstCompleted && firstCompleted >= sevenDaysAgo) bsLast7 += 1;
+    }
+
+    // habit quest streaks
+    let hqActive = 0;
+    let hqCompleted = 0;
+    for (const row of questRes.data ?? []) {
+      if (!passes(row.parent_id as string)) continue;
+      if (row.status === "active") hqActive += 1;
+      if (row.status === "completed") hqCompleted += 1;
+    }
+
+    // games played (created_at may not exist on this table; degrade gracefully)
+    let gamesTotal = 0;
+    let gamesLast7: number | null = 0;
+    const byGameCounts = new Map<string, number>();
+    if (gameRes.error) {
+      gamesLast7 = null;
+      const fallback = await admin.from("game_scores").select("student_id, game_name");
+      if (!fallback.error) {
+        for (const row of fallback.data ?? []) {
+          if (!passes(row.student_id as string)) continue;
+          gamesTotal += 1;
+          const name = (row.game_name as string) || "Unknown";
+          byGameCounts.set(name, (byGameCounts.get(name) ?? 0) + 1);
+        }
+      }
+    } else {
+      for (const row of gameRes.data ?? []) {
+        if (!passes(row.student_id as string)) continue;
+        gamesTotal += 1;
+        const name = (row.game_name as string) || "Unknown";
+        byGameCounts.set(name, (byGameCounts.get(name) ?? 0) + 1);
+        const createdAt = row.created_at as string | null | undefined;
+        if (createdAt && createdAt >= sevenDaysAgo) gamesLast7 = (gamesLast7 ?? 0) + 1;
+      }
+    }
+
+    return {
+      lessonsPerDay,
+      brainSprint: { total: bsTotal, last7Days: bsLast7 },
+      habitQuest: { activeCount: hqActive, completedCount: hqCompleted },
+      games: {
+        total: gamesTotal,
+        last7Days: gamesLast7,
+        byGame: Array.from(byGameCounts, ([name, count]) => ({ name, count })).sort(
+          (a, b) => b.count - a.count
+        ),
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSignupsDetailed(
+  admin: ReturnType<typeof createServiceRoleClient>,
+  includeTest: boolean
+): Promise<SignupDetailRow[] | null> {
+  try {
+    const { data: profiles, error } = await applyTestFilter(
+      admin.from("profiles").select("id, full_name, email, created_at, account_type"),
+      includeTest
+    )
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+
+    const rows = profiles ?? [];
+    if (rows.length === 0) return [];
+
+    const ids = rows.map((r) => r.id as string);
+    const [users, progressRes] = await Promise.all([
+      listAllAuthUsers(admin),
+      admin.from("student_progress").select("student_id, lesson_id").eq("completed", true).in("student_id", ids),
+    ]);
+    if (progressRes.error) throw progressRes.error;
+
+    const lastActiveById = new Map(users.map((u) => [u.id, u.last_sign_in_at ?? null] as const));
+
+    const lessonsById = new Map<string, Set<number | string>>();
+    for (const row of progressRes.data ?? []) {
+      const id = row.student_id as string;
+      if (!lessonsById.has(id)) lessonsById.set(id, new Set());
+      lessonsById.get(id)!.add(row.lesson_id as number | string);
+    }
+
+    return rows.map((row) => ({
+      id: row.id as string,
+      name: displayName(row.full_name, undefined, "—"),
+      type: formatAccountType(row.account_type),
+      signedUpAt: row.created_at as string | null,
+      lastActiveAt: lastActiveById.get(row.id as string) ?? null,
+      lessonsDone: lessonsById.get(row.id as string)?.size ?? 0,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTeacherClasses(
+  admin: ReturnType<typeof createServiceRoleClient>,
+  includeTest: boolean
+): Promise<TeacherClassRow[] | null> {
+  try {
+    const { data: classes, error } = await admin
+      .from("classes")
+      .select("id, name, class_code, teacher_id, created_at")
+      .is("archived_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) throw error;
+
+    const rows = classes ?? [];
+    if (rows.length === 0) return [];
+
+    const teacherIds = Array.from(new Set(rows.map((r) => r.teacher_id as string)));
+    const classIds = rows.map((r) => r.id as string);
+
+    const [teachersRes, enrollmentsRes] = await Promise.all([
+      applyTestFilter(
+        admin.from("profiles").select("id, full_name, email").in("id", teacherIds),
+        includeTest
+      ),
+      admin.from("class_enrollments").select("class_id").in("class_id", classIds),
+    ]);
+    if (teachersRes.error) throw teachersRes.error;
+    if (enrollmentsRes.error) throw enrollmentsRes.error;
+
+    const teacherById = new Map(
+      (teachersRes.data ?? []).map((t) => [t.id as string, t] as const)
+    );
+
+    const countByClass = new Map<string, number>();
+    for (const row of enrollmentsRes.data ?? []) {
+      const id = row.class_id as string;
+      countByClass.set(id, (countByClass.get(id) ?? 0) + 1);
+    }
+
+    return rows
+      .filter((row) => teacherById.has(row.teacher_id as string))
+      .map((row) => {
+        const teacher = teacherById.get(row.teacher_id as string);
+        return {
+          id: row.id as string,
+          className: (row.name as string) || "—",
+          teacherName: displayName(teacher?.full_name as string | null, undefined, "—"),
+          studentCount: countByClass.get(row.id as string) ?? 0,
+          classCode: (row.class_code as string) || "—",
+          createdAt: row.created_at as string | null,
+        };
+      });
+  } catch {
+    return null;
+  }
 }
 
 export function formatRelativeTime(iso: string | null | undefined): string {
@@ -183,9 +542,13 @@ export async function fetchAdminDashboardData(
     totalClasses,
     goGreenRedeemed,
     goGreenToPaid,
-    lastSignups,
+    kidCodeLoginsThisWeek,
     lastLogins,
     goGreenRedemptions,
+    activationFunnel,
+    engagement,
+    signupsDetailed,
+    teacherClasses,
   ] = await Promise.all([
     safeCount(async () => {
       const { count, error } = await applyTestFilter(
@@ -302,27 +665,24 @@ export async function fetchAdminDashboardData(
       }
       return `${paidRedeemers.size} of ${totalRedemptions}`;
     }),
-    (async (): Promise<AdminRow[] | null> => {
-      try {
-        const { data, error } = await applyTestFilter(
-          admin
-            .from("profiles")
-            .select("full_name, email, created_at, account_type"),
-          includeTest
-        )
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (error) throw error;
-        return (data ?? []).map((row) => ({
-          name: displayName(row.full_name, undefined, "—"),
-          email: row.email?.trim() || "—",
-          time: row.created_at,
-          type: formatAccountType(row.account_type),
-        }));
-      } catch {
-        return null;
-      }
-    })(),
+    safeCount(async () => {
+      const { data: childRows, error: childErr } = await admin
+        .from("children")
+        .select("auth_user_id")
+        .not("auth_user_id", "is", null);
+      if (childErr) throw childErr;
+      const kidAuthIds = new Set((childRows ?? []).map((r) => r.auth_user_id as string));
+      if (kidAuthIds.size === 0) return 0;
+
+      const users = await listAllAuthUsers(admin);
+      const sevenDaysAgoMs = new Date(sevenDaysAgo).getTime();
+      return users.filter(
+        (u) =>
+          kidAuthIds.has(u.id) &&
+          u.last_sign_in_at &&
+          new Date(u.last_sign_in_at).getTime() >= sevenDaysAgoMs
+      ).length;
+    }),
     (async (): Promise<AdminRow[] | null> => {
       try {
         const [users, profilesResult] = await Promise.all([
@@ -404,6 +764,10 @@ export async function fetchAdminDashboardData(
         return null;
       }
     })(),
+    fetchActivationFunnel(admin, includeTest),
+    fetchEngagementData(admin, includeTest),
+    fetchSignupsDetailed(admin, includeTest),
+    fetchTeacherClasses(admin, includeTest),
   ]);
 
   return {
@@ -418,10 +782,14 @@ export async function fetchAdminDashboardData(
       totalClasses,
       goGreenRedeemed,
       goGreenToPaid,
+      kidCodeLoginsThisWeek,
     },
-    lastSignups,
     lastLogins,
     goGreenRedemptions,
     goGreenRedemptionsEmpty: goGreenRedemptions !== null && goGreenRedemptions.length === 0,
+    activationFunnel,
+    engagement,
+    signupsDetailed,
+    teacherClasses,
   };
 }
