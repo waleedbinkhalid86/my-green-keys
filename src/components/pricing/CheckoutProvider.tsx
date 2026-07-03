@@ -172,8 +172,8 @@ const primaryCardCtaBaseStyle: React.CSSProperties = {
   cursor: "pointer",
   transition: "all 0.2s ease",
   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-  marginTop: "8px",
-  marginBottom: "8px",
+  marginTop: "24px",
+  marginBottom: "16px",
 };
 
 const growthCtaBaseStyle: React.CSSProperties = {

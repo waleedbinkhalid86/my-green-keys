@@ -31,10 +31,10 @@ export default function SiteFooter() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                COPPA Compliant
+                Privacy-First
               </span>
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                GDPR Safe
+                EU Hosted
               </span>
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
                 Ad-Free

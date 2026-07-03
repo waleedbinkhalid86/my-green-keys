@@ -193,8 +193,8 @@ const ENTERPRISE_FEATURES = [
 ];
 
 const TRUST_SIGNALS = [
-  { Icon: Lock, label: "COPPA" },
-  { Icon: Shield, label: "GDPR" },
+  { Icon: Lock, label: "Privacy-First" },
+  { Icon: Shield, label: "EU Hosted" },
   { Icon: Lock, label: "SSL" },
   { Icon: Ban, label: "No Ads" },
 ] as const;
@@ -208,6 +208,19 @@ function LightCardPrice({ price }: { price: string }) {
       <span className="text-6xl font-bold text-[#1B4332]">${dollars}</span>
       <span className="text-3xl font-bold text-[#1B4332]">.{cents}</span>
       <span className="ml-2 text-lg text-[#4A6355]">/month</span>
+    </div>
+  );
+}
+
+function DarkCardPrice({ price }: { price: string }) {
+  const [dollarsRaw, centsRaw] = price.split(".");
+  const dollars = dollarsRaw || "0";
+  const cents = (centsRaw || "00").padEnd(2, "0").slice(0, 2);
+  return (
+    <div className="flex items-baseline justify-center">
+      <span className="text-6xl font-bold text-white">${dollars}</span>
+      <span className="text-3xl font-bold text-white">.{cents}</span>
+      <span className="ml-2 text-lg text-white/80">/month</span>
     </div>
   );
 }
@@ -354,7 +367,7 @@ export default async function PricingPage({
                 {/* Free-access promo codes (e.g. GoGreen) — redeem above paid tiers */}
                 <PromoCodeBox />
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
                   {/* Free */}
                   <div
                     className={cn(
@@ -438,12 +451,15 @@ export default async function PricingPage({
                   <div
                     className={cn(
                       primaryCardBase,
-                      "bg-gradient-to-br from-[#0E7490] to-[#0891B2] text-white",
+                      "bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white",
                     )}
                   >
+                    <span className="mb-3 self-center rounded-full bg-[#F2B705] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1B4332] shadow-lg">
+                      For schools
+                    </span>
                     <p className={tierEyebrow}>SCHOOL</p>
                     <div className="mt-4">
-                      <LightCardPrice price="149.00" />
+                      <DarkCardPrice price="149.00" />
                     </div>
                     <p className="mt-4 text-center text-base leading-relaxed text-white/95">
                       For classrooms and teachers managing students at scale
@@ -474,11 +490,20 @@ export default async function PricingPage({
                   </div>
                 </div>
 
-                <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-[#4A6355] md:mt-20">
+                <div className="mx-auto mt-16 max-w-2xl rounded-2xl border border-[#D1E8DC] bg-white/70 px-6 py-5 text-center md:mt-20">
+                  <p className="text-base font-semibold text-[#1B4332]">
+                    Trusted by families and schools across Pakistan
+                  </p>
+                  <p className="mt-1 text-sm text-[#4A6355]">
+                    Join families building daily learning habits.
+                  </p>
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs text-[#4A6355]">
                   {TRUST_SIGNALS.map((s) => (
                     <div
                       key={s.label}
-                      className="inline-flex items-center gap-2"
+                      className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1.5 shadow-sm"
                     >
                       <s.Icon
                         className="h-4 w-4 text-[#52B788]"
@@ -544,7 +569,7 @@ export default async function PricingPage({
 
                 <div className={secondaryCardBase}>
                   <p className={tierEyebrowMuted}>ENTERPRISE</p>
-                  <div className="mt-4">
+                  <div className="mt-4 flex items-baseline">
                     <span className="text-6xl font-bold text-[#1B4332]">
                       Custom
                     </span>

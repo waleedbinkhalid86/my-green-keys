@@ -33,16 +33,19 @@ function usePricingToggle() {
 export function PricingToggle() {
   const { isYearly, setIsYearly } = usePricingToggle();
   return (
-    <div className="flex items-center justify-center">
-      <div className="inline-flex items-center gap-1 rounded-full border border-[#D1E8DC] bg-white p-1 shadow-sm">
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative flex w-full max-w-[280px] items-center rounded-full border border-[#D1E8DC] bg-white p-1 shadow-sm">
+        <span
+          className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#1B4332] transition-transform duration-300 ease-out"
+          style={{ transform: isYearly ? "translateX(100%)" : "translateX(0)" }}
+          aria-hidden="true"
+        />
         <button
           type="button"
           onClick={() => setIsYearly(false)}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-            !isYearly
-              ? "bg-[#1B4332] text-white"
-              : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]",
+            "relative z-10 flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
+            !isYearly ? "text-white" : "text-[#4A6355] hover:text-[#1B4332]",
           )}
           aria-pressed={!isYearly}
         >
@@ -52,21 +55,17 @@ export function PricingToggle() {
           type="button"
           onClick={() => setIsYearly(true)}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-            isYearly
-              ? "bg-[#1B4332] text-white"
-              : "bg-transparent text-[#4A6355] hover:bg-[#F0F9F4]",
+            "relative z-10 flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
+            isYearly ? "text-white" : "text-[#4A6355] hover:text-[#1B4332]",
           )}
           aria-pressed={isYearly}
         >
-          <span className="inline-flex items-center gap-2">
-            Yearly
-            <span className="rounded-full bg-[#E8F5EE] px-2 py-0.5 text-xs font-semibold text-[#1B4332]">
-              Save 20%
-            </span>
-          </span>
+          Yearly
         </button>
       </div>
+      <span className="rounded-full bg-[#E8F5EE] px-3 py-1 text-xs font-semibold text-[#1B4332]">
+        Save 20% with yearly billing
+      </span>
     </div>
   );
 }

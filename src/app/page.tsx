@@ -635,7 +635,7 @@ export default function HomePage() {
               Privacy and safety built in
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
-              {["COPPA Compliant", "GDPR Safe", "Ad-Free"].map((b) => (
+              {["Privacy-First", "EU Hosted", "Ad-Free"].map((b) => (
                 <span
                   key={b}
                   style={{
