@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(grep -E \"teacher\\\\\\\\\\\\\\\\page\\\\.tsx|custom-lessons-api|family-resolver|lessons\\\\\\\\\\\\\\\\assign\")",
+      "Bash(grep -E \"teacher\\\\\\\\\\\\\\\\page\\\\.tsx|lessons\\\\\\\\\\\\\\\\assign\\\\\\\\\\\\\\\\route|custom-lessons-api|family-resolver\")"
+    ]
+  }
+}

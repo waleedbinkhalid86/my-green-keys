@@ -54,6 +54,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BulkStudentUploadModal } from "@/components/teacher/BulkStudentUploadModal";
+import { fetchTeacherCreatedLessons, type CustomLessonRow } from "@/lib/lessons/custom-lessons-api";
 const TEACHER_SIDEBAR = [
   { href: "#teacher-overview", label: "Overview", Icon: LayoutDashboard },
   { href: "#teacher-classes", label: "My Classes", Icon: GraduationCap },
@@ -123,6 +124,11 @@ export default function TeacherDashboard() {
   const [difficulty, setDifficulty] = useState("Beginner");
   const [assignTo, setAssignTo] = useState("class");
   const [schedule, setSchedule] = useState("now");
+  const [lessonAssignStudentId, setLessonAssignStudentId] = useState("");
+  const [lessonAssigning, setLessonAssigning] = useState(false);
+  const [teacherLessons, setTeacherLessons] = useState<CustomLessonRow[]>([]);
+  const [teacherLessonsLoading, setTeacherLessonsLoading] = useState(true);
+  const [lessonDeletingKey, setLessonDeletingKey] = useState<string | null>(null);
   const [searchStudent, setSearchStudent] = useState("");
   const [studentPage, setStudentPage] = useState(1);
   const [hash, setHash] = useState("");
@@ -183,11 +189,42 @@ export default function TeacherDashboard() {
     { id: 5, studentName: "Amir", action: "Composting", Icon: Leaf, time: "4 days ago" },
   ];
 
-  const savedLessons = [
-    { id: 1, name: "The Water Cycle", createdAt: "Mar 15", uses: 3 },
-    { id: 2, name: "Solar Energy Facts", createdAt: "Mar 10", uses: 5 },
-    { id: 3, name: "Biodiversity Story", createdAt: "Feb 28", uses: 2 },
-  ];
+  // custom_lessons has one row per assigned student (no batch id), so an
+  // "assignment" is inferred by grouping rows with identical text and a
+  // created_at rounded to the same minute (the assign API writes a shared
+  // timestamp for a batch insert).
+  type GroupedLesson = {
+    key: string;
+    title: string;
+    content: string;
+    difficulty: string;
+    createdAt: string;
+    studentCount: number;
+    ids: string[];
+  };
+  const groupedLessons: GroupedLesson[] = (() => {
+    const map = new Map<string, GroupedLesson>();
+    for (const row of teacherLessons) {
+      const minuteKey = row.created_at ? row.created_at.slice(0, 16) : "unknown";
+      const key = `${row.title ?? ""}|${row.content ?? ""}|${row.difficulty ?? ""}|${minuteKey}`;
+      const existing = map.get(key);
+      if (existing) {
+        existing.studentCount += 1;
+        existing.ids.push(row.id);
+      } else {
+        map.set(key, {
+          key,
+          title: row.title || "Untitled lesson",
+          content: row.content ?? "",
+          difficulty: row.difficulty || "Beginner",
+          createdAt: row.created_at ?? "",
+          studentCount: 1,
+          ids: [row.id],
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  })();
 
   const filteredStudents = allStudentsData.filter((s) =>
     s.name.toLowerCase().includes(searchStudent.toLowerCase())
@@ -325,6 +362,103 @@ export default function TeacherDashboard() {
       void loadClasses();
     });
   }, []);
+
+  const loadTeacherLessons = async () => {
+    setTeacherLessonsLoading(true);
+    try {
+      const rows = await fetchTeacherCreatedLessons();
+      setTeacherLessons(rows);
+    } finally {
+      setTeacherLessonsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    startTransition(() => {
+      void loadTeacherLessons();
+    });
+  }, []);
+
+  const handleAssignLesson = async () => {
+    const name = lessonName.trim();
+    const text = assignmentText.trim();
+    if (!name || !text) {
+      showToast("error", "Add a lesson name and lesson text.");
+      return;
+    }
+    if (!selectedClassId) {
+      showToast("error", "Select a class first.");
+      return;
+    }
+    if (assignTo === "individual" && !lessonAssignStudentId) {
+      showToast("error", "Pick a student to assign this lesson to.");
+      return;
+    }
+    setLessonAssigning(true);
+    try {
+      const res = await fetch("/api/teacher/lessons/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          classId: selectedClassId,
+          title: name,
+          content: text,
+          difficulty,
+          assignTo,
+          studentAuthUserId: assignTo === "individual" ? lessonAssignStudentId : undefined,
+        }),
+      });
+      const json = (await res.json()) as { assignedCount?: number; error?: string };
+      if (!res.ok) {
+        throw new Error(json.error ?? "Failed to assign lesson.");
+      }
+      const count = json.assignedCount ?? 0;
+      showToast("success", `Lesson assigned to ${count} ${count === 1 ? "student" : "students"}.`);
+      setLessonName("");
+      setAssignmentText("");
+      setLessonAssignStudentId("");
+      await loadTeacherLessons();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to assign lesson.");
+    } finally {
+      setLessonAssigning(false);
+    }
+  };
+
+  const handleReuseLesson = (lesson: GroupedLesson) => {
+    setLessonName(lesson.title);
+    setAssignmentText(lesson.content.slice(0, 1000));
+    setDifficulty(lesson.difficulty);
+    showToast("info", "Lesson loaded into the form. Pick a class or student, then assign.");
+    document.getElementById("lesson-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const handleDeleteLesson = async (lesson: GroupedLesson) => {
+    const confirmed = window.confirm(
+      `Delete this lesson for ${lesson.studentCount} ${lesson.studentCount === 1 ? "student" : "students"}?`
+    );
+    if (!confirmed) return;
+    setLessonDeletingKey(lesson.key);
+    try {
+      const res = await fetch("/api/teacher/lessons/assign", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ids: lesson.ids }),
+      });
+      const json = (await res.json()) as { deletedCount?: number; error?: string };
+      if (!res.ok) {
+        throw new Error(json.error ?? "Failed to delete lesson.");
+      }
+      showToast("success", "Lesson deleted.");
+      await loadTeacherLessons();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to delete lesson.");
+    } finally {
+      setLessonDeletingKey(null);
+    }
+  };
 
   useEffect(() => {
     startTransition(() => {
@@ -1574,24 +1708,62 @@ export default function TeacherDashboard() {
                     <option value="individual">Specific student</option>
                   </select>
                 </div>
+                {assignTo === "individual" ? (
+                  <div>
+                    <span style={FORM_LABEL}>Student</span>
+                    <select
+                      style={FORM_CONTROL}
+                      value={lessonAssignStudentId}
+                      onChange={(e) => setLessonAssignStudentId(e.target.value)}
+                    >
+                      <option value="">Select a student…</option>
+                      {enrolledStudents.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.full_name || "Student"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
                 <div>
                   <span style={FORM_LABEL}>Schedule</span>
                   <select style={FORM_CONTROL} value={schedule} onChange={(e) => setSchedule(e.target.value)}>
                     <option value="now">Now</option>
-                    <option value="later">Later</option>
+                    <option value="later" disabled>
+                      Later (coming soon)
+                    </option>
                   </select>
                 </div>
               </div>
-              <button type="button" style={PRIMARY_CTA}>
-                Assign lesson
+              <p style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
+                {selectedClassId
+                  ? `Assigning to: ${activeClassLabel}`
+                  : "Select a class above to assign a lesson."}
+              </p>
+              <button
+                type="button"
+                style={{
+                  ...PRIMARY_CTA,
+                  opacity: lessonAssigning || !selectedClassId ? 0.6 : 1,
+                  cursor: lessonAssigning || !selectedClassId ? "not-allowed" : "pointer",
+                }}
+                disabled={lessonAssigning || !selectedClassId}
+                onClick={() => void handleAssignLesson()}
+              >
+                {lessonAssigning ? "Assigning…" : "Assign lesson"}
               </button>
             </section>
 
             <section style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>
               <h2 style={SECTION_H2}>Saved lesson library</h2>
-              {savedLessons.map((lesson) => (
+              {teacherLessonsLoading ? (
+                <p style={{ fontSize: "14px", color: "#6B7280" }}>Loading saved lessons…</p>
+              ) : groupedLessons.length === 0 ? (
+                <p style={{ fontSize: "14px", color: "#6B7280" }}>No lessons assigned yet.</p>
+              ) : (
+                groupedLessons.map((lesson) => (
                 <div
-                  key={lesson.id}
+                  key={lesson.key}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -1605,9 +1777,10 @@ export default function TeacherDashboard() {
                   }}
                 >
                   <div>
-                    <p className="text-[15px] font-bold text-[#1B4332]">{lesson.name}</p>
+                    <p className="text-[15px] font-bold text-[#1B4332]">{lesson.title}</p>
                     <p style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
-                      Created {lesson.createdAt} · Used {lesson.uses}×
+                      {lesson.difficulty} · Assigned to {lesson.studentCount}{" "}
+                      {lesson.studentCount === 1 ? "student" : "students"}
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: "10px" }}>
@@ -1623,19 +1796,28 @@ export default function TeacherDashboard() {
                         fontWeight: 700,
                         cursor: "pointer",
                       }}
+                      onClick={() => handleReuseLesson(lesson)}
                     >
                       Reuse
                     </button>
                     <button
                       type="button"
-                      className="text-sm font-bold text-red-600 underline-offset-2 hover:underline"
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: "8px" }}
+                      className="text-sm font-bold text-red-600 underline-offset-2 hover:underline disabled:opacity-60 disabled:no-underline"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: lessonDeletingKey === lesson.key ? "not-allowed" : "pointer",
+                        padding: "8px",
+                      }}
+                      disabled={lessonDeletingKey === lesson.key}
+                      onClick={() => void handleDeleteLesson(lesson)}
                     >
-                      Delete
+                      {lessonDeletingKey === lesson.key ? "Deleting…" : "Delete"}
                     </button>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </section>
 
             <section id="teacher-eco-feed" style={{ ...SECTION_CARD, ...SCROLL_SECTION }}>

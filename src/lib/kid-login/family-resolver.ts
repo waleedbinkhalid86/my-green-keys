@@ -9,7 +9,7 @@ export async function getFamilyOwnerId(currentUserId: string): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("children")
-    .select("parent_id")
+    .select("parent_id, teacher_id")
     .eq("auth_user_id", currentUserId)
     .maybeSingle();
 
@@ -17,8 +17,9 @@ export async function getFamilyOwnerId(currentUserId: string): Promise<string> {
     console.error("[family-resolver] getFamilyOwnerId:", error);
     return currentUserId;
   }
-  const pid = (data as { parent_id?: string } | null)?.parent_id;
-  if (pid) return String(pid);
+  const row = data as { parent_id?: string | null; teacher_id?: string | null } | null;
+  if (row?.parent_id) return String(row.parent_id);
+  if (row?.teacher_id) return String(row.teacher_id);
   return currentUserId;
 }
 
