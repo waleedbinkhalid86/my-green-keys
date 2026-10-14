@@ -1,80 +1,118 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-const CLASS_CODE_LENGTH = 8;
-
-export type KioskClassInfo = {
-  class_id: string;
-  class_name: string;
-};
+import {
+  kioskRosterId,
+  verifyKioskTokenSignature,
+} from "@/lib/kid-login/kiosk-token";
 
 export type KioskRosterStudent = {
-  student_id: string;
+  /** Opaque per-roster id; never the raw auth user id. */
+  rid: string;
   display_name: string;
   pet_type: "panda" | "turtle" | null;
 };
 
-export async function resolveKioskClassByCode(
-  admin: SupabaseClient,
-  classCodeRaw: string
-): Promise<KioskClassInfo> {
-  const class_code = classCodeRaw.replace(/\s/g, "").toUpperCase();
-  if (class_code.length !== CLASS_CODE_LENGTH) {
-    throw new Error("Invalid class code");
+export type KioskDevice = {
+  classId: string;
+  className: string;
+  version: number;
+  jti: string;
+};
+
+export class KioskLookupError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "KioskLookupError";
   }
-
-  const { data, error } = await admin
-    .from("classes")
-    .select("id, name")
-    .eq("class_code", class_code)
-    .is("archived_at", null)
-    .maybeSingle();
-
-  if (error || !data) {
-    throw new Error("Class not found. Check the code with your teacher.");
-  }
-
-  return { class_id: data.id, class_name: data.name };
 }
 
-export async function fetchKioskRoster(
+/** Loads a class's current kiosk version. Throws KioskLookupError on DB errors (e.g. missing migration). */
+export async function fetchKioskClass(
   admin: SupabaseClient,
   classId: string
-): Promise<{ class_name: string; students: KioskRosterStudent[] }> {
-  const { data: classRow, error: classError } = await admin
+): Promise<{ id: string; name: string; kiosk_token_version: number } | null> {
+  const { data, error } = await admin
     .from("classes")
-    .select("id, name")
+    .select("id, name, kiosk_token_version")
     .eq("id", classId)
     .is("archived_at", null)
     .maybeSingle();
 
-  if (classError || !classRow) {
-    throw new Error("Class not found");
+  if (error) {
+    throw new KioskLookupError(error.message);
   }
+  if (!data || typeof data.kiosk_token_version !== "number") return null;
+  return {
+    id: data.id as string,
+    name: data.name as string,
+    kiosk_token_version: data.kiosk_token_version,
+  };
+}
 
-  const { data: enrollments, error: enrollError } = await admin
+/** Full device check: signature, expiry, class not archived, version not revoked. */
+export async function resolveKioskDevice(
+  admin: SupabaseClient,
+  secret: string,
+  token: string | undefined | null
+): Promise<KioskDevice | null> {
+  const payload = verifyKioskTokenSignature(secret, token);
+  if (!payload) return null;
+
+  const classRow = await fetchKioskClass(admin, payload.cid);
+  if (!classRow || classRow.kiosk_token_version !== payload.kv) return null;
+
+  return {
+    classId: classRow.id,
+    className: classRow.name,
+    version: classRow.kiosk_token_version,
+    jti: payload.jti,
+  };
+}
+
+type EnrolledStudent = {
+  studentAuthUserId: string;
+  enrollmentName: string;
+};
+
+async function fetchEnrolledStudents(
+  admin: SupabaseClient,
+  classId: string
+): Promise<EnrolledStudent[]> {
+  const { data, error } = await admin
     .from("class_enrollments")
     .select("student_auth_user_id, display_name")
     .eq("class_id", classId)
     .order("display_name", { ascending: true });
 
-  if (enrollError) {
-    throw new Error(enrollError.message);
+  if (error) {
+    throw new KioskLookupError(error.message);
   }
 
-  const rows = enrollments ?? [];
+  return (data ?? []).map((row) => ({
+    studentAuthUserId: row.student_auth_user_id as string,
+    enrollmentName: ((row.display_name as string | null) ?? "").trim(),
+  }));
+}
+
+export async function fetchKioskRoster(
+  admin: SupabaseClient,
+  secret: string,
+  device: KioskDevice
+): Promise<{ class_name: string; students: KioskRosterStudent[] }> {
+  const rows = await fetchEnrolledStudents(admin, device.classId);
   if (rows.length === 0) {
-    return { class_name: classRow.name, students: [] };
+    return { class_name: device.className, students: [] };
   }
-
-  const studentIds = rows.map((r) => r.student_auth_user_id as string);
 
   const { data: profiles, error: profileError } = await admin
     .from("profiles")
     .select("id, full_name, pet_type")
-    .in("id", studentIds);
+    .in(
+      "id",
+      rows.map((r) => r.studentAuthUserId)
+    );
 
   if (profileError) {
-    throw new Error(profileError.message);
+    throw new KioskLookupError(profileError.message);
   }
 
   const profileById = new Map(
@@ -88,61 +126,72 @@ export async function fetchKioskRoster(
   );
 
   const students: KioskRosterStudent[] = rows.map((row) => {
-    const studentId = row.student_auth_user_id as string;
-    const profile = profileById.get(studentId);
-    const enrollmentName = (row.display_name as string)?.trim() || "";
+    const profile = profileById.get(row.studentAuthUserId);
     const profileName = profile?.full_name?.trim() || "";
-    const display_name = enrollmentName || profileName || "Student";
+    const display_name = row.enrollmentName || profileName || "Student";
 
     const rawPet = profile?.pet_type;
     const pet_type =
       rawPet === "panda" || rawPet === "turtle" ? rawPet : null;
 
-    return { student_id: studentId, display_name, pet_type };
+    return {
+      rid: kioskRosterId(secret, {
+        classId: device.classId,
+        version: device.version,
+        studentAuthUserId: row.studentAuthUserId,
+      }),
+      display_name,
+      pet_type,
+    };
   });
 
-  return { class_name: classRow.name, students };
+  return { class_name: device.className, students };
 }
 
-export type KioskSignInCredentials = {
+export type KioskStudentCredentials = {
+  login_code: string;
   internal_email: string;
   internal_password: string;
 };
 
-/** Verifies enrollment, loads child credentials server-side only. */
-export async function resolveKioskStudentCredentials(
+/** Maps an opaque roster id back to an enrolled child's credentials. Server-side only. */
+export async function resolveKioskStudentByRosterId(
   admin: SupabaseClient,
-  input: { class_id: string; student_auth_user_id: string }
-): Promise<KioskSignInCredentials> {
-  const { class_id, student_auth_user_id } = input;
+  secret: string,
+  device: KioskDevice,
+  rid: string
+): Promise<KioskStudentCredentials | null> {
+  const rows = await fetchEnrolledStudents(admin, device.classId);
+  const match = rows.find(
+    (row) =>
+      kioskRosterId(secret, {
+        classId: device.classId,
+        version: device.version,
+        studentAuthUserId: row.studentAuthUserId,
+      }) === rid
+  );
+  if (!match) return null;
 
-  const { data: enrollment, error: enrollError } = await admin
-    .from("class_enrollments")
-    .select("id")
-    .eq("class_id", class_id)
-    .eq("student_auth_user_id", student_auth_user_id)
-    .maybeSingle();
-
-  if (enrollError || !enrollment) {
-    throw new Error("Student not in this class");
-  }
-
-  const { data: child, error: childError } = await admin
+  const { data: child, error } = await admin
     .from("children")
-    .select("internal_email, internal_password, auth_user_id")
-    .eq("auth_user_id", student_auth_user_id)
+    .select("auth_user_id, login_code, internal_email, internal_password")
+    .eq("auth_user_id", match.studentAuthUserId)
     .maybeSingle();
 
+  if (error) {
+    throw new KioskLookupError(error.message);
+  }
   if (
-    childError ||
-    !child?.internal_email ||
-    !child?.internal_password ||
-    child.auth_user_id !== student_auth_user_id
+    !child?.login_code ||
+    !child.internal_email ||
+    !child.internal_password ||
+    child.auth_user_id !== match.studentAuthUserId
   ) {
-    throw new Error("Could not sign in this student");
+    return null;
   }
 
   return {
+    login_code: child.login_code as string,
     internal_email: child.internal_email as string,
     internal_password: child.internal_password as string,
   };

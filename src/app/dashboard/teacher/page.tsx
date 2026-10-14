@@ -54,6 +54,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BulkStudentUploadModal } from "@/components/teacher/BulkStudentUploadModal";
+import { writeKioskDeviceToStorage } from "@/lib/kid-login/kiosk-storage";
 import { fetchTeacherCreatedLessons, type CustomLessonRow } from "@/lib/lessons/custom-lessons-api";
 const TEACHER_SIDEBAR = [
   { href: "#teacher-overview", label: "Overview", Icon: LayoutDashboard },
@@ -158,6 +159,7 @@ export default function TeacherDashboard() {
     Array<{ id: string; full_name: string | null; email: string | null; login_code: string | null }>
   >([]);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [kioskBusy, setKioskBusy] = useState(false);
 
   type LeaderboardRow = {
     rank: number;
@@ -355,6 +357,66 @@ export default function TeacherDashboard() {
   const openPrintStudentCodes = () => {
     if (!selectedClassId) return;
     window.open(`/print/class-codes/${selectedClassId}`, "_blank", "noopener,noreferrer");
+  };
+
+  const setUpThisDeviceAsKiosk = async () => {
+    if (!selectedClassId) return;
+    const label = classes.find((c) => c.id === selectedClassId)?.name?.trim() || "this class";
+    if (
+      !window.confirm(
+        `Set up this device as a class kiosk for ${label}?\n\nYou will be signed out on this device only. Students will tap their name and type their own code to log in.`
+      )
+    ) {
+      return;
+    }
+    setKioskBusy(true);
+    try {
+      const res = await fetch("/api/kid-login/kiosk/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ class_id: selectedClassId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { class_name?: string; error?: string };
+      if (!res.ok || !data.class_name) {
+        showToast("error", data.error ?? "Could not set up this device.");
+        return;
+      }
+      writeKioskDeviceToStorage(data.class_name);
+      window.location.href = "/kid-login";
+    } catch {
+      showToast("error", "Could not set up this device.");
+    } finally {
+      setKioskBusy(false);
+    }
+  };
+
+  const resetKioskDevices = async () => {
+    if (!selectedClassId) return;
+    if (
+      !window.confirm(
+        "Reset all kiosk devices for this class? Every tablet set up for this class will stop showing the class list until you set it up again."
+      )
+    ) {
+      return;
+    }
+    setKioskBusy(true);
+    try {
+      const res = await fetch(`/api/teacher/classes/${selectedClassId}/kiosk/reset`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        showToast("error", data.error ?? "Could not reset kiosk devices.");
+        return;
+      }
+      showToast("success", "Kiosk devices reset for this class.");
+    } catch {
+      showToast("error", "Could not reset kiosk devices.");
+    } finally {
+      setKioskBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -1264,6 +1326,26 @@ export default function TeacherDashboard() {
                               </Button>
                             </>
                           ) : null}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                            disabled={kioskBusy}
+                            onClick={() => void setUpThisDeviceAsKiosk()}
+                          >
+                            Set up this device as kiosk
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-primary/40 font-semibold text-primary hover:bg-primary/10"
+                            disabled={kioskBusy}
+                            onClick={() => void resetKioskDevices()}
+                          >
+                            Reset kiosk devices
+                          </Button>
                           <Button
                             type="button"
                             size="sm"

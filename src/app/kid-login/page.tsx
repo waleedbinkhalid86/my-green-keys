@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { joinClassWithCode } from "@/lib/kid-login/class-api";
 import type { KioskRosterStudent } from "@/lib/kid-login/kiosk-server";
 import {
-  clearKioskClassFromStorage,
-  readKioskClassFromStorage,
-  writeKioskClassToStorage,
+  clearKioskFromStorage,
+  markKioskNeedsSetup,
+  readKioskStateFromStorage,
+  writeKioskClassNameToStorage,
 } from "@/lib/kid-login/kiosk-storage";
 import { KioskRoster } from "@/components/kid-login/KioskRoster";
 
@@ -21,6 +22,12 @@ const TEACHER_CLASS_CODE_LENGTH = 8;
 
 const KID_ERROR =
   "Hmm, that code didn't work. Check it with your parent or teacher.";
+
+const KIOSK_CODE_ERROR =
+  "That code didn't match. Try again or ask your teacher.";
+
+const KIOSK_NEEDS_SETUP_MESSAGE =
+  "Ask your teacher to set up this tablet again.";
 
 const GLASS_CARD: React.CSSProperties = {
   width: "100%",
@@ -132,69 +139,88 @@ export default function KidLoginPage() {
   const [displayName, setDisplayName] = useState("");
   const [step, setStep] = useState<Step>("code");
   const [pendingClassCode, setPendingClassCode] = useState("");
-  const [kioskSetupCode, setKioskSetupCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [kioskHydrated, setKioskHydrated] = useState(false);
-  const [kioskClassId, setKioskClassId] = useState<string | null>(null);
+  const [isKiosk, setIsKiosk] = useState(false);
+  const [kioskNeedsSetup, setKioskNeedsSetup] = useState(false);
   const [kioskClassName, setKioskClassName] = useState<string | null>(null);
   const [forceCodeEntry, setForceCodeEntry] = useState(false);
   const [rosterStudents, setRosterStudents] = useState<KioskRosterStudent[]>([]);
   const [rosterLoading, setRosterLoading] = useState(false);
-  const [signingInId, setSigningInId] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<KioskRosterStudent | null>(null);
+  const [kioskCode, setKioskCode] = useState("");
+  const [kioskSigningIn, setKioskSigningIn] = useState(false);
 
   useEffect(() => {
-    const { classId, className } = readKioskClassFromStorage();
-    setKioskClassId(classId);
-    setKioskClassName(className);
+    const state = readKioskStateFromStorage();
+    setIsKiosk(state.isKiosk);
+    setKioskNeedsSetup(state.needsSetup);
+    setKioskClassName(state.className);
     setKioskHydrated(true);
   }, []);
 
   const showRoster =
     kioskHydrated &&
-    !!kioskClassId &&
+    isKiosk &&
     !forceCodeEntry &&
     step === "code";
 
-  const loadRoster = useCallback(async (classId: string) => {
+  const showNeedsSetup =
+    kioskHydrated && !isKiosk && kioskNeedsSetup && step === "code";
+
+  const handleKioskReset = useCallback(() => {
+    markKioskNeedsSetup();
+    setIsKiosk(false);
+    setKioskNeedsSetup(true);
+    setKioskClassName(null);
+    setRosterStudents([]);
+    setSelectedStudent(null);
+    setKioskCode("");
+    setForceCodeEntry(false);
+    setError("");
+  }, []);
+
+  const loadRoster = useCallback(async () => {
     setRosterLoading(true);
     setError("");
     try {
-      const res = await fetch(
-        `/api/kid-login/kiosk/roster?class_id=${encodeURIComponent(classId)}`
-      );
-      const data = (await res.json()) as {
+      const res = await fetch("/api/kid-login/kiosk/roster", {
+        credentials: "same-origin",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
         students?: KioskRosterStudent[];
         class_name?: string;
         error?: string;
+        code?: string;
       };
+      if (res.status === 401 && data.code === "kiosk_reset") {
+        handleKioskReset();
+        return;
+      }
       if (!res.ok) {
-        setError(data.error ?? KID_ERROR);
+        setError(data.error ?? "Couldn't load your class. Try again.");
         setRosterStudents([]);
         return;
       }
       setRosterStudents(data.students ?? []);
       if (data.class_name) {
         setKioskClassName(data.class_name);
-        try {
-          writeKioskClassToStorage(classId, data.class_name);
-        } catch {
-          /* ignore */
-        }
+        writeKioskClassNameToStorage(data.class_name);
       }
     } catch {
       setError("Couldn't load your class. Try again.");
     } finally {
       setRosterLoading(false);
     }
-  }, []);
+  }, [handleKioskReset]);
 
   useEffect(() => {
-    if (showRoster && kioskClassId) {
-      void loadRoster(kioskClassId);
+    if (showRoster) {
+      void loadRoster();
     }
-  }, [showRoster, kioskClassId, loadRoster]);
+  }, [showRoster, loadRoster]);
 
   const onCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError("");
@@ -204,11 +230,6 @@ export default function KidLoginPage() {
   const onDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError("");
     setDisplayName(e.target.value);
-  };
-
-  const onKioskSetupCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError("");
-    setKioskSetupCode(normalizeKidInput(e.target.value));
   };
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
@@ -295,49 +316,25 @@ export default function KidLoginPage() {
     }
   };
 
-  const handleKioskSetupSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSelectStudent = (student: KioskRosterStudent) => {
+    setSelectedStudent(student);
+    setKioskCode("");
     setError("");
-    const normalized = normalizeKidInput(kioskSetupCode);
-    if (normalized.length !== TEACHER_CLASS_CODE_LENGTH) {
-      setError("Enter the 8-character class code from your teacher.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/kid-login/kiosk/setup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ class_code: normalized }),
-      });
-      const data = (await res.json()) as {
-        class_id?: string;
-        class_name?: string;
-        error?: string;
-      };
-
-      if (!res.ok || !data.class_id || !data.class_name) {
-        setError(data.error ?? KID_ERROR);
-        return;
-      }
-
-      writeKioskClassToStorage(data.class_id, data.class_name);
-      setKioskClassId(data.class_id);
-      setKioskClassName(data.class_name);
-      setForceCodeEntry(false);
-      setStep("code");
-      setKioskSetupCode("");
-    } catch {
-      setError(KID_ERROR);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleRosterTap = async (studentId: string) => {
-    if (!kioskClassId) return;
-    setSigningInId(studentId);
+  const handleCancelKioskCode = () => {
+    setSelectedStudent(null);
+    setKioskCode("");
+    setError("");
+  };
+
+  const handleKioskCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    const loginCode = normalizeKidInput(kioskCode);
+    if (loginCode.length !== PARENT_KID_CODE_LENGTH) return;
+
+    setKioskSigningIn(true);
     setError("");
     try {
       const supabase = createClient();
@@ -346,25 +343,34 @@ export default function KidLoginPage() {
       const res = await fetch("/api/kid-login/kiosk/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          class_id: kioskClassId,
-          student_auth_user_id: studentId,
-        }),
+        credentials: "same-origin",
+        body: JSON.stringify({ rid: selectedStudent.rid, login_code: loginCode }),
       });
 
       if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        setError(data.error ?? KID_ERROR);
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          code?: string;
+        };
+        if (res.status === 401 && data.code === "kiosk_reset") {
+          handleKioskReset();
+          return;
+        }
+        if (res.status === 429 || res.status === 503) {
+          setError(data.error ?? KIOSK_CODE_ERROR);
+        } else {
+          setError(KIOSK_CODE_ERROR);
+        }
+        setKioskCode("");
         return;
       }
 
       await syncLessonUserProfileCacheFromServer();
       await redirectAfterStudentSession();
     } catch {
-      setError(KID_ERROR);
+      setError(KIOSK_CODE_ERROR);
     } finally {
-      setSigningInId(null);
+      setKioskSigningIn(false);
     }
   };
 
@@ -375,14 +381,38 @@ export default function KidLoginPage() {
     setError("");
   };
 
-  const handleChangeClass = () => {
-    clearKioskClassFromStorage();
-    setKioskClassId(null);
+  const handleResetTablet = async () => {
+    if (
+      !window.confirm(
+        "Reset this tablet? Students won't see the class list here until a teacher sets it up again."
+      )
+    ) {
+      return;
+    }
+    try {
+      await fetch("/api/kid-login/kiosk/setup", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+    } catch {
+      /* cookie clear is best effort; storage is cleared below */
+    }
+    clearKioskFromStorage();
+    setIsKiosk(false);
+    setKioskNeedsSetup(false);
     setKioskClassName(null);
     setRosterStudents([]);
+    setSelectedStudent(null);
+    setKioskCode("");
     setForceCodeEntry(false);
     setError("");
     setStep("code");
+  };
+
+  const dismissNeedsSetup = () => {
+    clearKioskFromStorage();
+    setKioskNeedsSetup(false);
+    setError("");
   };
 
   const cardMaxWidth = showRoster ? 720 : 420;
@@ -405,15 +435,70 @@ export default function KidLoginPage() {
             className={kioskClassName ?? "Your class"}
             students={rosterStudents}
             loading={rosterLoading}
-            signingInId={signingInId}
             error={error}
-            onSelectStudent={handleRosterTap}
-            onChangeClass={handleChangeClass}
+            selectedStudent={selectedStudent}
+            code={kioskCode}
+            codeLength={PARENT_KID_CODE_LENGTH}
+            signingIn={kioskSigningIn}
+            onSelectStudent={handleSelectStudent}
+            onCodeChange={(value) => {
+              setError("");
+              setKioskCode(normalizeKidInput(value).slice(0, PARENT_KID_CODE_LENGTH));
+            }}
+            onSubmitCode={handleKioskCodeSubmit}
+            onCancelCode={handleCancelKioskCode}
+            onResetTablet={() => void handleResetTablet()}
             onUseCodeInstead={() => {
               setForceCodeEntry(true);
+              setSelectedStudent(null);
+              setKioskCode("");
               setError("");
             }}
           />
+        ) : showNeedsSetup ? (
+          <div style={{ textAlign: "center" }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "1.5rem",
+                fontWeight: 800,
+                color: "#fff",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              This tablet needs setting up
+            </h1>
+            <p
+              role="alert"
+              style={{
+                margin: "12px 0 0",
+                fontSize: "1rem",
+                color: "rgba(255, 255, 255, 0.9)",
+                lineHeight: 1.5,
+              }}
+            >
+              {KIOSK_NEEDS_SETUP_MESSAGE}
+            </p>
+            <button
+              type="button"
+              onClick={dismissNeedsSetup}
+              style={{
+                marginTop: 24,
+                width: "100%",
+                padding: "14px 18px",
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "#fff",
+                border: "none",
+                borderRadius: 9999,
+                cursor: "pointer",
+                background: `linear-gradient(135deg, ${ACCENT} 0%, #40916C 100%)`,
+                boxShadow: "0 4px 18px rgba(82, 183, 136, 0.45)",
+              }}
+            >
+              Log in with my code
+            </button>
+          </div>
         ) : (
           <>
             <h1
@@ -442,7 +527,7 @@ export default function KidLoginPage() {
               {step === "code"
                 ? "Enter the code from your parent or teacher."
                 : step === "kiosk-setup"
-                  ? "Teachers: enter your 8-character class code once. This device will show your class roster for tap-to-login."
+                  ? "Teachers: log in on this tablet, open your class in My classes, and tap \"Set up this device as kiosk\". Students then tap their name and type their own code."
                   : "Almost there! What should we call you in class?"}
             </p>
 
@@ -528,7 +613,6 @@ export default function KidLoginPage() {
                   onClick={() => {
                     setStep("kiosk-setup");
                     setError("");
-                    setKioskSetupCode("");
                   }}
                   disabled={loading}
                   style={{
@@ -546,7 +630,7 @@ export default function KidLoginPage() {
                 >
                   Set up this class computer
                 </button>
-                {kioskClassId ? (
+                {isKiosk ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -573,89 +657,32 @@ export default function KidLoginPage() {
                 ) : null}
               </form>
             ) : step === "kiosk-setup" ? (
-              <form onSubmit={handleKioskSetupSubmit} style={{ marginTop: 28 }}>
-                <label
-                  htmlFor="kiosk-class-code"
+              <div style={{ marginTop: 28 }}>
+                <Link
+                  href="/login"
                   style={{
                     display: "block",
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                    color: "rgba(255, 255, 255, 0.9)",
-                    marginBottom: 8,
-                  }}
-                >
-                  Class code
-                </label>
-                <input
-                  id="kiosk-class-code"
-                  type="text"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  value={kioskSetupCode}
-                  onChange={onKioskSetupCodeChange}
-                  disabled={loading}
-                  placeholder="8-character code"
-                  style={{
-                    width: "100%",
                     boxSizing: "border-box",
-                    fontSize: "1.35rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.12em",
-                    textAlign: "center",
-                    padding: "16px 14px",
-                    borderRadius: 14,
-                    border: "2px solid rgba(255, 255, 255, 0.35)",
-                    background: "rgba(255, 255, 255, 0.92)",
-                    color: BG_DEEP,
-                    outline: "none",
-                  }}
-                />
-                {error ? (
-                  <p
-                    role="alert"
-                    style={{
-                      margin: "14px 0 0",
-                      fontSize: "0.88rem",
-                      color: "#ffd6d6",
-                      lineHeight: 1.4,
-                      textAlign: "center",
-                    }}
-                  >
-                    {error}
-                  </p>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={
-                    loading ||
-                    normalizeKidInput(kioskSetupCode).length !==
-                      TEACHER_CLASS_CODE_LENGTH
-                  }
-                  style={{
-                    marginTop: 22,
                     width: "100%",
                     padding: "14px 18px",
                     fontSize: "1rem",
                     fontWeight: 700,
                     color: "#fff",
-                    border: "none",
+                    textAlign: "center",
+                    textDecoration: "none",
                     borderRadius: 9999,
-                    cursor: loading ? "not-allowed" : "pointer",
-                    opacity: loading ? 0.55 : 1,
                     background: `linear-gradient(135deg, ${ACCENT} 0%, #40916C 100%)`,
                     boxShadow: "0 4px 18px rgba(82, 183, 136, 0.45)",
                   }}
                 >
-                  {loading ? "Saving…" : "Save for this device"}
-                </button>
+                  Teacher log in
+                </Link>
                 <button
                   type="button"
                   onClick={() => {
                     setStep("code");
                     setError("");
                   }}
-                  disabled={loading}
                   style={{
                     marginTop: 14,
                     width: "100%",
@@ -665,14 +692,14 @@ export default function KidLoginPage() {
                     color: "rgba(255, 255, 255, 0.9)",
                     background: "transparent",
                     border: "none",
-                    cursor: loading ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                     textDecoration: "underline",
                     textUnderlineOffset: 3,
                   }}
                 >
                   Back
                 </button>
-              </form>
+              </div>
             ) : (
               <form onSubmit={handleClassJoinSubmit} style={{ marginTop: 28 }}>
                 <p

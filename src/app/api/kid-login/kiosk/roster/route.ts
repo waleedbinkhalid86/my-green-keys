@@ -1,22 +1,42 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { fetchKioskRoster } from "@/lib/kid-login/kiosk-server";
+import { fetchKioskRoster, resolveKioskDevice } from "@/lib/kid-login/kiosk-server";
+import {
+  getKioskSecret,
+  KIOSK_COOKIE_NAME,
+  KIOSK_COOKIE_PATH,
+} from "@/lib/kid-login/kiosk-token";
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const class_id = searchParams.get("class_id")?.trim() ?? "";
+const UNAVAILABLE_ERROR = "Couldn't load your class right now. Please try again soon.";
+const RESET_ERROR = "Ask your teacher to set up this tablet again.";
 
-  if (!class_id) {
-    return NextResponse.json({ error: "class_id is required" }, { status: 400 });
+/** Roster for a set-up kiosk device. Requires the signed device cookie; no other input is accepted. */
+export async function GET() {
+  let secret: string;
+  let admin: ReturnType<typeof createServiceRoleClient>;
+  try {
+    secret = getKioskSecret();
+    admin = createServiceRoleClient();
+  } catch (err) {
+    console.error("[kid-login/kiosk/roster] refusing request:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: UNAVAILABLE_ERROR }, { status: 503 });
   }
 
+  const cookieStore = await cookies();
+  const token = cookieStore.get(KIOSK_COOKIE_NAME)?.value;
+
   try {
-    const admin = createServiceRoleClient();
-    const roster = await fetchKioskRoster(admin, class_id);
+    const device = await resolveKioskDevice(admin, secret, token);
+    if (!device) {
+      if (token) cookieStore.delete({ name: KIOSK_COOKIE_NAME, path: KIOSK_COOKIE_PATH });
+      return NextResponse.json({ error: RESET_ERROR, code: "kiosk_reset" }, { status: 401 });
+    }
+
+    const roster = await fetchKioskRoster(admin, secret, device);
     return NextResponse.json(roster);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Roster failed";
-    const status = message.includes("not found") ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
+    console.error("[kid-login/kiosk/roster] lookup failed:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: UNAVAILABLE_ERROR }, { status: 503 });
   }
 }

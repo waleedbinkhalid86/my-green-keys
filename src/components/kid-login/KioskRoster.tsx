@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type React from "react";
 import type { KioskRosterStudent } from "@/lib/kid-login/kiosk-server";
 
 const TILE_COLORS = ["#52B788", "#40916C", "#74C69D", "#2D6A4F", "#F2B705"];
@@ -18,14 +19,71 @@ function tileAccentColor(name: string): string {
   return TILE_COLORS[hash]!;
 }
 
+const LINK_BUTTON: React.CSSProperties = {
+  fontSize: "0.85rem",
+  fontWeight: 600,
+  color: "rgba(255, 255, 255, 0.9)",
+  background: "transparent",
+  border: "none",
+  cursor: "pointer",
+  textDecoration: "underline",
+  textUnderlineOffset: 3,
+};
+
+function StudentAvatar({
+  student,
+  size,
+}: {
+  student: KioskRosterStudent;
+  size: number;
+}) {
+  if (student.pet_type) {
+    return (
+      <Image
+        src={`/images/pets/pet-${student.pet_type}-happy.png`}
+        alt=""
+        width={size}
+        height={size}
+        style={{ objectFit: "contain" }}
+      />
+    );
+  }
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: tileAccentColor(student.display_name),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: size >= 90 ? "2.6rem" : "2rem",
+        fontWeight: 800,
+        color: "#fff",
+        boxShadow: "inset 0 -3px 0 rgba(0,0,0,0.12)",
+      }}
+    >
+      {firstInitial(student.display_name)}
+    </div>
+  );
+}
+
 type KioskRosterProps = {
   className: string;
   students: KioskRosterStudent[];
   loading: boolean;
-  signingInId: string | null;
   error: string;
-  onSelectStudent: (studentId: string) => void;
-  onChangeClass: () => void;
+  selectedStudent: KioskRosterStudent | null;
+  code: string;
+  codeLength: number;
+  signingIn: boolean;
+  onSelectStudent: (student: KioskRosterStudent) => void;
+  onCodeChange: (value: string) => void;
+  onSubmitCode: (e: React.FormEvent) => void;
+  onCancelCode: () => void;
+  onResetTablet: () => void;
   onUseCodeInstead: () => void;
 };
 
@@ -33,12 +91,136 @@ export function KioskRoster({
   className: classLabel,
   students,
   loading,
-  signingInId,
   error,
+  selectedStudent,
+  code,
+  codeLength,
+  signingIn,
   onSelectStudent,
-  onChangeClass,
+  onCodeChange,
+  onSubmitCode,
+  onCancelCode,
+  onResetTablet,
   onUseCodeInstead,
 }: KioskRosterProps) {
+  if (selectedStudent) {
+    const ready = code.length === codeLength && !signingIn;
+    return (
+      <form
+        onSubmit={onSubmitCode}
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <StudentAvatar student={selectedStudent} size={96} />
+        <h1
+          style={{
+            margin: "14px 0 0",
+            fontSize: "1.65rem",
+            fontWeight: 800,
+            color: "#fff",
+            textAlign: "center",
+            letterSpacing: "-0.02em",
+            wordBreak: "break-word",
+          }}
+        >
+          Hi, {selectedStudent.display_name}
+        </h1>
+        <label
+          htmlFor="kiosk-kid-code"
+          style={{
+            margin: "10px 0 18px",
+            fontSize: "1rem",
+            color: "rgba(255, 255, 255, 0.9)",
+            textAlign: "center",
+          }}
+        >
+          Type your 6-letter code
+        </label>
+        <input
+          id="kiosk-kid-code"
+          type="text"
+          autoComplete="off"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+          autoFocus
+          maxLength={codeLength}
+          value={code}
+          onChange={(e) => onCodeChange(e.target.value)}
+          disabled={signingIn}
+          placeholder="••••••"
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            fontSize: "2.4rem",
+            fontWeight: 800,
+            letterSpacing: "0.3em",
+            textAlign: "center",
+            padding: "18px 14px",
+            borderRadius: 18,
+            border: "2px solid rgba(255, 255, 255, 0.45)",
+            background: "rgba(255, 255, 255, 0.95)",
+            color: "#1B4332",
+            outline: "none",
+          }}
+        />
+        {error ? (
+          <p
+            role="alert"
+            style={{
+              margin: "14px 0 0",
+              fontSize: "0.92rem",
+              color: "#ffd6d6",
+              lineHeight: 1.4,
+              textAlign: "center",
+            }}
+          >
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={!ready}
+          style={{
+            marginTop: 22,
+            width: "100%",
+            padding: "16px 18px",
+            fontSize: "1.15rem",
+            fontWeight: 800,
+            color: "#fff",
+            border: "none",
+            borderRadius: 9999,
+            cursor: ready ? "pointer" : "not-allowed",
+            opacity: ready ? 1 : 0.55,
+            background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
+            boxShadow: "0 4px 18px rgba(82, 183, 136, 0.45)",
+          }}
+        >
+          {signingIn ? "Signing in…" : "Go"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelCode}
+          disabled={signingIn}
+          style={{
+            ...LINK_BUTTON,
+            marginTop: 16,
+            fontSize: "0.95rem",
+            cursor: signingIn ? "not-allowed" : "pointer",
+          }}
+        >
+          That&apos;s not me
+        </button>
+      </form>
+    );
+  }
+
   return (
     <div style={{ width: "100%" }}>
       <h1
@@ -87,7 +269,7 @@ export function KioskRoster({
           }}
         >
           No students in this class yet. Ask your teacher to add the roster, or
-          join with your class code below.
+          log in with your code below.
         </p>
       ) : (
         <div
@@ -98,75 +280,40 @@ export function KioskRoster({
             gap: 14,
           }}
         >
-          {students.map((student) => {
-            const busy = signingInId === student.student_id;
-            const disabled = !!signingInId;
-            return (
-              <button
-                key={student.student_id}
-                type="button"
-                disabled={disabled}
-                onClick={() => onSelectStudent(student.student_id)}
+          {students.map((student) => (
+            <button
+              key={student.rid}
+              type="button"
+              onClick={() => onSelectStudent(student)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 10,
+                padding: "18px 12px 16px",
+                borderRadius: 18,
+                border: "2px solid rgba(255, 255, 255, 0.35)",
+                background: "rgba(255, 255, 255, 0.14)",
+                cursor: "pointer",
+                transition: "transform 0.15s ease, background 0.15s ease",
+                boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+              }}
+            >
+              <StudentAvatar student={student} size={72} />
+              <span
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "18px 12px 16px",
-                  borderRadius: 18,
-                  border: "2px solid rgba(255, 255, 255, 0.35)",
-                  background: busy
-                    ? "rgba(82, 183, 136, 0.35)"
-                    : "rgba(255, 255, 255, 0.14)",
-                  cursor: disabled ? "not-allowed" : "pointer",
-                  opacity: disabled && !busy ? 0.6 : 1,
-                  transition: "transform 0.15s ease, background 0.15s ease",
-                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textAlign: "center",
+                  lineHeight: 1.25,
+                  wordBreak: "break-word",
                 }}
               >
-                {student.pet_type ? (
-                  <Image
-                    src={`/images/pets/pet-${student.pet_type}-happy.png`}
-                    alt=""
-                    width={72}
-                    height={72}
-                    style={{ objectFit: "contain" }}
-                  />
-                ) : (
-                  <div
-                    aria-hidden
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: "50%",
-                      background: tileAccentColor(student.display_name),
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "2rem",
-                      fontWeight: 800,
-                      color: "#fff",
-                      boxShadow: "inset 0 -3px 0 rgba(0,0,0,0.12)",
-                    }}
-                  >
-                    {firstInitial(student.display_name)}
-                  </div>
-                )}
-                <span
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: "#fff",
-                    textAlign: "center",
-                    lineHeight: 1.25,
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {busy ? "Signing in…" : student.display_name}
-                </span>
-              </button>
-            );
-          })}
+                {student.display_name}
+              </span>
+            </button>
+          ))}
         </div>
       )}
 
@@ -194,39 +341,19 @@ export function KioskRoster({
           alignItems: "center",
         }}
       >
-        <button
-          type="button"
-          onClick={onChangeClass}
-          disabled={!!signingInId}
-          style={{
-            fontSize: "0.85rem",
-            fontWeight: 600,
-            color: "rgba(255, 255, 255, 0.9)",
-            background: "transparent",
-            border: "none",
-            cursor: signingInId ? "not-allowed" : "pointer",
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
-          }}
-        >
-          Not your class? Change class
+        <button type="button" onClick={onUseCodeInstead} style={LINK_BUTTON}>
+          Log in with code instead
         </button>
         <button
           type="button"
-          onClick={onUseCodeInstead}
-          disabled={!!signingInId}
+          onClick={onResetTablet}
           style={{
-            fontSize: "0.85rem",
-            fontWeight: 600,
-            color: "rgba(255, 255, 255, 0.9)",
-            background: "transparent",
-            border: "none",
-            cursor: signingInId ? "not-allowed" : "pointer",
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
+            ...LINK_BUTTON,
+            fontSize: "0.78rem",
+            color: "rgba(255, 255, 255, 0.65)",
           }}
         >
-          Log in with code instead
+          Teacher: reset this tablet
         </button>
       </div>
     </div>
