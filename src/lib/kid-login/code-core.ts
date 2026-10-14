@@ -5,11 +5,22 @@ export const ALLOWED_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const KID_CODE_LENGTH = 6;
 export const CLASS_CODE_LENGTH = 8;
 
+// Largest multiple of the alphabet size that fits in a byte; bytes at or above
+// it are rejected so every character is equally likely (no modulo bias).
+const UNBIASED_BYTE_LIMIT =
+  256 - (256 % ALLOWED_CODE_CHARS.length);
+
+/** Cryptographically random code (works in browser and Node 20+). */
 export function generateRandomCode(length: number): string {
   let code = "";
-  for (let i = 0; i < length; i++) {
-    const idx = Math.floor(Math.random() * ALLOWED_CODE_CHARS.length);
-    code += ALLOWED_CODE_CHARS[idx];
+  const buf = new Uint8Array(length * 2);
+  while (code.length < length) {
+    crypto.getRandomValues(buf);
+    for (const byte of buf) {
+      if (byte >= UNBIASED_BYTE_LIMIT) continue;
+      code += ALLOWED_CODE_CHARS[byte % ALLOWED_CODE_CHARS.length];
+      if (code.length === length) break;
+    }
   }
   return code;
 }

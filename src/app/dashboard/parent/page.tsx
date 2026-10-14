@@ -758,30 +758,40 @@ export default function ParentDashboard() {
       }
 
       const childName = childForm.name.trim();
-      const loginCode = await generateUniqueKidCode();
       const { auth_user_id, internal_email, internal_password } = await createStudentAccountPreserveSession({
         full_name: childName,
         age,
       });
 
       const usernameTrim = childForm.username.trim();
-      const { error } = await supabase
-        .from("children")
-        .insert({
-          parent_id: userData.user.id,
-          full_name: childName,
-          age,
-          gender: childForm.gender,
-          username: usernameTrim || null,
-          login_code: loginCode,
-          auth_user_id: auth_user_id,
-          internal_email,
-          internal_password,
-          code_created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      if (error) throw error;
+      // Uniqueness is enforced by the UNIQUE constraint; retry with a fresh code on collision.
+      let loginCode = "";
+      let inserted = false;
+      for (let attempt = 0; attempt < 3 && !inserted; attempt++) {
+        loginCode = generateUniqueKidCode();
+        const { error } = await supabase
+          .from("children")
+          .insert({
+            parent_id: userData.user.id,
+            full_name: childName,
+            age,
+            gender: childForm.gender,
+            username: usernameTrim || null,
+            login_code: loginCode,
+            auth_user_id: auth_user_id,
+            internal_email,
+            internal_password,
+            code_created_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+        if (!error) {
+          inserted = true;
+        } else if (error.code !== "23505" || !/login_code/i.test(error.message)) {
+          throw error;
+        }
+      }
+      if (!inserted) throw new Error("Could not generate a unique login code. Please try again.");
 
       setRevealedKidCode({ name: childName, login_code: loginCode });
       setShowKidCodeReveal(true);
@@ -877,6 +887,11 @@ export default function ParentDashboard() {
           code_created_at: new Date().toISOString(),
         })
         .eq("id", customizeChild.id);
+      if (error?.code === "23505") {
+        setCustomizeAvail(false);
+        showToast("error", "That code is already taken. Try another.");
+        return;
+      }
       if (error) throw error;
       showToast("success", `Login code updated to ${normalized}`);
       setCustomizeChild(null);

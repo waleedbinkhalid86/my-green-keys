@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# one-off script output (may contain kid login codes)
+/scripts/output/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

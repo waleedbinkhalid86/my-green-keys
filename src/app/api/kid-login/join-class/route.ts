@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { selfJoinClassWithCode } from "@/lib/kid-login/self-join-class-server";
+import { createClient } from "@/lib/supabase/server";
 
 const CLASS_CODE_LENGTH = 8;
 
@@ -31,11 +32,27 @@ export async function POST(req: Request) {
     const admin = createServiceRoleClient();
     const result = await selfJoinClassWithCode(admin, { class_code, display_name });
 
+    // Sign in server-side so the session arrives as cookies; credentials stay on the server.
+    const supabase = await createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: result.internal_email,
+      password: result.internal_password,
+    });
+
+    if (signInError) {
+      console.error("[kid-login/join-class] sign-in after join failed:", signInError.message);
+      return NextResponse.json(
+        {
+          error:
+            "Account created but sign-in failed. Ask your teacher for your 6-character login code.",
+        },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json({
       class_id: result.class_id,
       auth_user_id: result.auth_user_id,
-      internal_email: result.internal_email,
-      internal_password: result.internal_password,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Join failed";

@@ -1667,14 +1667,23 @@ export default function LessonPage() {
         return;
       }
 
-      const { data: cls, error: clsError } = await supabase
-        .from("classes")
-        .select("id, name, class_code")
-        .eq("class_code", code)
-        .single();
-      if (clsError) throw clsError;
+      const lookupRes = await fetch("/api/classes/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ class_code: code }),
+      });
+      const cls = (await lookupRes.json().catch(() => ({}))) as {
+        id?: string;
+        name?: string;
+        error?: string;
+      };
+      if (!lookupRes.ok || !cls.id) {
+        setJoinClassError(cls.error ?? "Class not found. Check the code with your teacher.");
+        return;
+      }
 
-      const classId = (cls as { id: string }).id;
+      const classId = cls.id;
       const { error: enrollError } = await supabase
         .from("class_enrollments")
         .upsert(
@@ -1690,7 +1699,7 @@ export default function LessonPage() {
         );
       if (enrollError) throw enrollError;
 
-      setJoinClassSuccess(`Joined class: ${(cls as { name?: string }).name || code}`);
+      setJoinClassSuccess(`Joined class: ${cls.name || code}`);
       setShowJoinClassModal(false);
       setClassCode("");
       await loadCurrentClass();

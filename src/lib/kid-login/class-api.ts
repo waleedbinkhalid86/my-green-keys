@@ -14,22 +14,27 @@ export async function createClass(input: {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const class_code = await generateUniqueClassCode();
+  // The browser cannot see other teachers' classes, so uniqueness is enforced by
+  // the UNIQUE constraint: retry with a fresh code on a collision.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const class_code = generateUniqueClassCode();
 
-  const { data, error } = await supabase
-    .from("classes")
-    .insert({
-      teacher_id: user.id,
-      name: input.name,
-      class_code: class_code,
-      school_name: input.school_name ?? null,
-      grade_level: input.grade_level ?? null,
-    })
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("classes")
+      .insert({
+        teacher_id: user.id,
+        name: input.name,
+        class_code: class_code,
+        school_name: input.school_name ?? null,
+        grade_level: input.grade_level ?? null,
+      })
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data as SchoolClass;
+    if (!error) return data as SchoolClass;
+    if (error.code !== "23505") throw error;
+  }
+  throw new Error("Could not generate a unique class code. Please try again.");
 }
 
 // Teacher fetches their classes
@@ -84,22 +89,20 @@ export async function fetchEnrollmentCountsByClassIds(
 type JoinClassApiResponse = {
   class_id: string;
   auth_user_id: string;
-  internal_email: string;
-  internal_password: string;
   error?: string;
 };
 
 // Student joins class with code + their name (PUBLIC, no auth needed)
-// This is called from the /kid-login page
+// This is called from the /kid-login page. The route signs in server-side
+// and sets the session cookie; credentials never reach the browser.
 export async function joinClassWithCode(input: {
   class_code: string;
   display_name: string;
 }): Promise<{ class_id: string; auth_user_id: string }> {
-  const supabase = createClient();
-
   const res = await fetch("/api/kid-login/join-class", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       class_code: input.class_code,
       display_name: input.display_name,
@@ -110,17 +113,6 @@ export async function joinClassWithCode(input: {
 
   if (!res.ok) {
     throw new Error(data.error ?? "Couldn't enroll you in the class. Try again.");
-  }
-
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: data.internal_email,
-    password: data.internal_password,
-  });
-
-  if (signInError) {
-    throw new Error(
-      "Account created but sign-in failed. Ask your teacher for your 6-character login code."
-    );
   }
 
   return {

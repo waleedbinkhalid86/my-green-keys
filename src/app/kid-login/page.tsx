@@ -229,24 +229,20 @@ export default function KidLoginPage() {
         const supabase = createClient();
         await supabase.auth.signOut();
 
-        const { data: child, error: qErr } = await supabase
-          .from("children")
-          .select("internal_email, internal_password")
-          .eq("login_code", normalized)
-          .maybeSingle();
-
-        if (qErr || !child?.internal_email || !child?.internal_password) {
-          setError(KID_ERROR);
-          return;
-        }
-
-        const { error: signErr } = await supabase.auth.signInWithPassword({
-          email: child.internal_email,
-          password: child.internal_password,
+        const res = await fetch("/api/kid-login/exchange", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ login_code: normalized }),
         });
 
-        if (signErr) {
-          setError(KID_ERROR);
+        if (!res.ok) {
+          if (res.status === 429 || res.status === 503) {
+            const data = (await res.json().catch(() => ({}))) as { error?: string };
+            setError(data.error ?? KID_ERROR);
+          } else {
+            setError(KID_ERROR);
+          }
           return;
         }
 
