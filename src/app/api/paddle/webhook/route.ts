@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
+import { ALL_FREE } from "@/lib/access";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 
 const PADDLE_SIGNATURE_HEADER = "paddle-signature";
@@ -73,6 +74,10 @@ function verifySignatureOrThrow(rawBody: string, signatureHeader: string) {
 }
 
 export async function POST(req: Request) {
+  if (ALL_FREE) {
+    return NextResponse.json({ error: "Payments are disabled" }, { status: 404 });
+  }
+
   const signature = req.headers.get(PADDLE_SIGNATURE_HEADER) ?? "";
   const rawBody = await req.text();
 

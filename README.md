@@ -23,21 +23,21 @@ A daily learning platform for kids aged 6–14. Combines typing lessons, math + 
 - **Styling:** Tailwind CSS + inline styles, Forest Canopy palette
 - **Backend:** Supabase (Postgres, Auth, RLS, Storage)
 - **Hosting:** Vercel
-- **Payments:** Paddle
+- **Payments:** Paddle (disabled while `ALL_FREE` is on in `src/lib/access.ts`)
 - **Compliance:** COPPA-aware, GDPR-aware
 
 ## Project status
 
-🚀 Pre-scale, early beta. Live with paying customers.
+🚀 Pre-scale, early beta. Free for every child, parent and school.
 
 Currently focused on:
 - Organic awareness in English-speaking markets
-- B2B outreach to schools
+- School sustainability partnerships
 - Mobile responsiveness + accessibility polish
 
 ## Try it
 
-Parents and teachers: visit [mygreenkeys.com](https://mygreenkeys.com) and use code **GoGreen** for 3 months free (first 30 users only).
+Parents, teachers and schools: visit [mygreenkeys.com](https://mygreenkeys.com) and sign up free. Every feature is included, no credit card needed.
 
 ## Founder
 

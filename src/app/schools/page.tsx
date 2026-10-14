@@ -5,10 +5,10 @@ import { SchoolsContactForm } from "./SchoolsContactForm";
 export const metadata: Metadata = {
   title: {
     absolute:
-      "My Green Keys for Schools — Daily Learning App for Pakistani Classrooms",
+      "School sustainability partnership — My Green Keys for Pakistani classrooms",
   },
   description:
-    "Bring My Green Keys to your school. Typing, math, and habit-building app for ages 6–14. Free pilot for Pakistani schools.",
+    "Join My Green Keys as a sustainability partner school. Free for every teacher and student: typing, math and eco habits for ages 6–14.",
 };
 
 const WHATSAPP_URL =
@@ -85,14 +85,15 @@ const WHAT_SCHOOLS_GET = [
   {
     icon: "🌱",
     title: "Made in Pakistan",
-    body: "Built by a Pakistani educator. EU hosting (GDPR-compliant) for international school chains.",
+    body: "Built by a Pakistani educator. GDPR-aware, with EU hosting for international school chains.",
   },
 ] as const;
 
 const HOW_IT_WORKS = [
-  "Start with a free pilot — one class, up to 30 students",
-  "We onboard your teacher in 30 minutes (WhatsApp or Zoom)",
-  "Check progress after 2 weeks — the pilot runs a full term, cancel anytime",
+  "Your school joins as a sustainability partner, free for every teacher and student",
+  "We onboard your teachers in 30 minutes (WhatsApp or Zoom) and set up your classes",
+  "Students practise typing and build eco habits every day",
+  "Together we build awareness about sustainability in your school community",
 ] as const;
 
 const WHO_ITS_FOR = [
@@ -133,7 +134,7 @@ export default function SchoolsPage() {
                 marginBottom: "11px",
               }}
             >
-              Bring My Green Keys to Your School
+              School sustainability partnership
             </h1>
             <p
               style={{
@@ -144,8 +145,8 @@ export default function SchoolsPage() {
                 margin: "0 auto 20px",
               }}
             >
-              A daily learning app built for ages 6–14. Typing, math, and good habits — built in
-              Pakistan, for Pakistani classrooms.
+              Partner with My Green Keys to help your students learn to type and care for the
+              planet. Free for your school, built in Pakistan for Pakistani classrooms.
             </p>
             <div className="schools-hero-cta">
               <WhatsAppButton />
@@ -157,7 +158,7 @@ export default function SchoolsPage() {
                   ·
                 </span>
                 <a href="#contact" style={textLink}>
-                  Request a pilot
+                  Become a partner school
                 </a>
               </div>
             </div>
@@ -264,7 +265,7 @@ export default function SchoolsPage() {
             </div>
           </section>
 
-          {/* Pilot callout */}
+          {/* Partnership callout */}
           <section style={{ ...section, textAlign: "center" }}>
             <div
               style={{
@@ -279,17 +280,17 @@ export default function SchoolsPage() {
                 margin: "0 auto",
               }}
             >
-              5 pilot spots open. Free pilot for one full term.
+              Partner schools join free, with no time limit.
               <br />
               <span style={{ fontSize: "0.65em", fontWeight: 600 }}>
-                Check progress after 2 weeks — cancel anytime.
+                Learn to type. Help the planet. Together.
               </span>
             </div>
           </section>
 
           {/* Contact */}
           <section id="contact" style={{ ...section, marginBottom: 0 }}>
-            <h2 style={{ ...h2, marginBottom: "20px" }}>Get in touch</h2>
+            <h2 style={{ ...h2, marginBottom: "20px" }}>Become a partner school</h2>
             <div style={{ ...glassCard, maxWidth: "520px", margin: "0 auto" }}>
               <div style={{ marginBottom: "20px" }}>
                 <WhatsAppButton fullWidth />

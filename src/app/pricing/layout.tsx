@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Free for every child",
   description:
-    "Simple plans for families and schools. Free tier available. Try free with code GoGreen — 3 months full access.",
+    "My Green Keys is free for kids, parents and schools. Typing, Brain Sprint, Habit Quest, games and dashboards, with no plans, no trials and no credit card.",
 };
 
 export default function PricingLayout({ children }: Readonly<{ children: React.ReactNode }>) {

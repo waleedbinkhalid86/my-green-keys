@@ -444,7 +444,6 @@ export default function ParentDashboard() {
   const [lessonDifficulty, setLessonDifficulty] = useState("Beginner");
   const [lessonSaving, setLessonSaving] = useState(false);
   const [customLessons, setCustomLessons] = useState<CustomLesson[]>([]);
-  const [promoCode, setPromoCode] = useState("");
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [ecoError, setEcoError] = useState<string>("");
   const [ecoSuccess, setEcoSuccess] = useState<string>("");
@@ -2503,57 +2502,19 @@ export default function ParentDashboard() {
         </section>
 
         <section id="parent-billing" style={{ ...SECTION_CARD, scrollMarginTop: "112px", paddingBottom: "36px" }}>
-          <h2 style={SECTION_H2}>Subscription &amp; billing</h2>
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-xs text-[#6B7280]">Current plan</p>
-              <p className="font-heading text-2xl font-bold text-[#1B4332]">Family plan</p>
-              <p className="text-lg font-bold text-[#52B788]">$9.99/month</p>
-              <p className="text-sm text-[#6B7280]">Next billing date: May 25, 2026</p>
-              <a href="#" className="inline-block text-sm font-medium text-[#1B4332] underline underline-offset-2">
-                Manage subscription
-              </a>
-              <div
-                className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[#15803d]"
-                style={{ background: "#E8F5EE", border: "1px solid #D1E8DC" }}
-              >
-                <CheckCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                Your account is in good standing
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[#4A6355]">Promo code</p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                <Input
-                  placeholder="Enter code"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  className="flex-1 rounded-xl border-2 border-[#E5E7EB] focus-visible:border-[#52B788] focus-visible:ring-2 focus-visible:ring-[#52B788]/20"
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "15px",
-                  }}
-                />
-                <button
-                  type="button"
-                  style={{
-                    padding: "14px 32px",
-                    borderRadius: "12px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    background: "linear-gradient(135deg, #52B788 0%, #40916C 100%)",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 12px rgba(82, 183, 136, 0.25)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Apply
-                </button>
-              </div>
+          <h2 style={SECTION_H2}>Your plan</h2>
+          <div className="space-y-2">
+            <p className="font-heading text-2xl font-bold text-[#1B4332]">Free, full access</p>
+            <p className="text-sm text-[#6B7280]">
+              My Green Keys is free for every family right now. All lessons, games and dashboard
+              features are unlocked for you and your children.
+            </p>
+            <div
+              className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[#15803d]"
+              style={{ background: "#E8F5EE", border: "1px solid #D1E8DC" }}
+            >
+              <CheckCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              No payment details needed
             </div>
           </div>
         </section>

@@ -27,6 +27,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getRangerProfile, type RangerRank } from "@/lib/rangerHelpers";
 import { RankBadge } from "@/components/RankBadge";
 import { getTrialState, type TrialState } from "@/lib/ecoGardenTrial";
+import { ALL_FREE } from "@/lib/access";
 import {
   GAME_LEVELS,
   type GameLevelDefinition,
@@ -266,7 +267,7 @@ export default function GamesHubPage() {
           error: subErr?.message ?? null,
           paidPlanComputed: active && planOk,
         });
-        setPaidPlan(active && planOk);
+        setPaidPlan(ALL_FREE || (active && planOk));
 
         const { data: gardenRow, error: gardenErr } = await supabase
           .from("eco_garden")
@@ -669,7 +670,7 @@ export default function GamesHubPage() {
                   {done}/{nextLessonUnlock} toward your next game unlock
                 </p>
               )}
-              {paidPlan && (
+              {paidPlan && !ALL_FREE && (
                 <p style={{ margin: "12px 0 0", fontSize: 14, color: "#1A8F4E", fontWeight: 700 }}>
                   Family / school plan active—premium games unlock with your subscription.
                 </p>

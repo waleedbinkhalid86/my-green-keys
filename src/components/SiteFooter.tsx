@@ -31,13 +31,13 @@ export default function SiteFooter() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                Privacy-First
+                Privacy-first design for kids
               </span>
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                EU Hosted
+                GDPR-aware · EU hosting
               </span>
               <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                Ad-Free
+                100% Ad-Free
               </span>
             </div>
             <div className="mt-6">
@@ -69,7 +69,7 @@ export default function SiteFooter() {
             <nav className="flex flex-col">
               <FooterLink href="/lesson">Lessons</FooterLink>
               <FooterLink href="/games">Games</FooterLink>
-              <FooterLink href="/pricing">Pricing</FooterLink>
+              <FooterLink href="/pricing">Free access</FooterLink>
               <FooterLink href="/schools">For Schools</FooterLink>
             </nav>
           </div>
@@ -94,7 +94,7 @@ export default function SiteFooter() {
               <FooterLink href="/terms">Terms of Service</FooterLink>
               <FooterLink href="/refund">Refund Policy</FooterLink>
               <FooterLink href="/privacy">Cookies</FooterLink>
-              <FooterLink href="/privacy">COPPA</FooterLink>
+              <FooterLink href="/privacy">Children&apos;s privacy</FooterLink>
             </nav>
           </div>
         </div>

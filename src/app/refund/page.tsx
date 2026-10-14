@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Refund Policy",
-  description: "Our refund policy for paid subscriptions.",
+  description: "My Green Keys is currently free. This policy applies only if paid plans are offered in the future.",
 };
 
 const UPDATED = "May 13, 2026";
@@ -44,6 +44,13 @@ export default function RefundPage() {
       <Container>
         <div className="mgk-section-tight">
           <div className="mgk-card p-6 md:p-8">
+            <H2>Currently free</H2>
+            <P>
+              <strong>My Green Keys is currently free for all users</strong>, so no payments are
+              collected and there is nothing to refund. The rest of this policy applies only if paid
+              subscriptions are offered in the future.
+            </P>
+
             <H2>Eligibility</H2>
             <P>
               If you are not satisfied with a <strong>paid subscription</strong>, you may request a
@@ -67,9 +74,9 @@ export default function RefundPage() {
 
             <H2>Promo codes</H2>
             <P>
-              Promotional access—such as codes like <strong>GoGreen</strong> that unlock a free
-              trial—is provided at no charge. <strong>Free trials are not refundable</strong> because
-              no payment was collected for that promotional access.
+              Promotional access granted through a promo code is provided at no charge.{" "}
+              <strong>Free promotional access is not refundable</strong> because no payment was
+              collected for it.
             </P>
 
             <H2>Subscription cancellation</H2>

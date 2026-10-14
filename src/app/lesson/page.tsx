@@ -4150,6 +4150,9 @@ export default function LessonPage() {
                 disabled={ecoSubmitting}
                 onChange={(e) => setEcoFile(e.target.files?.[0] || null)}
               />
+              <div style={{ marginTop: 6, fontSize: "12px", color: "#2D6A4F" }}>
+                Please do not include faces or personal information in photos.
+              </div>
               {ecoFile && (
                 <div style={{ marginTop: 8, fontSize: "12px", color: "#666" }}>
                   Selected: <strong>{ecoFile.name}</strong>

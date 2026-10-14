@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How My Green Keys protects your family's privacy. COPPA and GDPR compliant.",
+    "How My Green Keys protects your family's privacy, with a privacy-first design for kids and EU hosting.",
 };
 
 const UPDATED = "May 13, 2026";
@@ -43,9 +43,8 @@ export default function PrivacyPage() {
               Privacy Policy
             </h1>
             <p className="mt-4 max-w-[75ch] text-sm leading-7 text-white/75">
-              This Privacy Policy explains how My Green Keys collects and uses information. It
-              includes specific protections for children under 13 (COPPA) and rights for European
-              users (GDPR).
+              This Privacy Policy explains how My Green Keys collects and uses information, including
+              rights for European users (GDPR).
             </p>
             <p className="mt-2 text-xs text-white/55">Last updated: {UPDATED}</p>
           </div>
@@ -71,8 +70,8 @@ export default function PrivacyPage() {
             <H2>2) Summary of key points (plain language)</H2>
             <ul className="mt-3 list-disc pl-6 space-y-2">
               <Li>
-                <strong>Kids’ privacy first:</strong> For children under 13, we require parental
-                consent where COPPA requires it and we limit collection to what’s needed for learning.
+                <strong>Children’s privacy:</strong> My Green Keys is designed with children’s privacy
+                in mind. We collect only a nickname, learning progress and optional eco photos.
               </Li>
               <Li>
                 <strong>GDPR rights:</strong> European users can request access, correction, deletion,
@@ -80,7 +79,8 @@ export default function PrivacyPage() {
               </Li>
               <Li>
                 <strong>Core providers:</strong> We use Supabase for data storage/authentication and
-                Vercel for hosting. Future payments may use Stripe or Paddle.
+                Vercel for hosting. My Green Keys is currently free. If paid plans are introduced in
+                the future, payments will be handled by a third-party payment processor.
               </Li>
               <Li>
                 <strong>Account deletion:</strong> Parents/guardians can request deletion of a child’s
@@ -130,44 +130,30 @@ export default function PrivacyPage() {
               <Li>Maintain, debug, and improve the service.</Li>
               <Li>Respond to support requests and parental/GDPR requests.</Li>
               <Li>
-                If paid plans are enabled, process payments and manage subscriptions through Stripe or
-                Paddle (future).
+                My Green Keys is currently free. If paid plans are introduced in the future, payments
+                will be handled by a third-party payment processor.
               </Li>
             </ul>
 
-            <H2>5) COPPA: Children under 13</H2>
+            <H2>5) Children’s privacy</H2>
             <P>
-              My Green Keys is designed for kids, and we take children’s privacy seriously. For users
-              under 13:
+              My Green Keys is designed with children’s privacy in mind. We collect only a nickname,
+              learning progress and optional eco photos. Parents and teachers can ask us to view,
+              delete or stop collecting a child’s data by emailing{" "}
+              <a
+                href="mailto:hello@mygreenkeys.com"
+                className="font-semibold text-[var(--green)] underline underline-offset-4"
+              >
+                hello@mygreenkeys.com
+              </a>
+              , and we will respond promptly.
             </P>
             <ul className="mt-3 list-disc pl-6 space-y-2">
-              <Li>
-                <strong>Parental consent:</strong> We require verifiable parental consent where COPPA
-                requires it before collecting personal information from a child.
-              </Li>
-              <Li>
-                <strong>Parental rights:</strong> Parents/guardians can review their child’s personal
-                information, request deletion, and refuse further collection or use.
-              </Li>
-              <Li>
-                <strong>Limited collection:</strong> We aim to collect only what’s reasonably necessary
-                for the educational purpose.
-              </Li>
               <Li>
                 <strong>No targeted advertising to kids:</strong> We do not knowingly serve interest-based
                 advertising to children under 13.
               </Li>
             </ul>
-            <P>
-              To make a COPPA request, email{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="font-semibold text-[var(--green)] underline underline-offset-4"
-              >
-                {CONTACT_EMAIL}
-              </a>
-              .
-            </P>
 
             <H2>6) GDPR: European users</H2>
             <H3>Lawful bases</H3>
@@ -209,8 +195,9 @@ export default function PrivacyPage() {
                 <strong>Vercel (hosting):</strong> hosts our website and server infrastructure.
               </Li>
               <Li>
-                <strong>Stripe / Paddle (future payments):</strong> if enabled, processes payments and
-                may collect payment identifiers and billing-related metadata.
+                <strong>Payment processor (future):</strong> My Green Keys is currently free. If paid
+                plans are introduced in the future, payments will be handled by a third-party payment
+                processor.
               </Li>
             </ul>
 

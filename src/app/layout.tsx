@@ -22,7 +22,7 @@ const poppins = Poppins({
 });
 
 const siteDescription =
-  "A daily learning platform for kids 6–14. Typing, math, and eco lessons that build daily habits — not just screen time. Try free.";
+  "A daily learning platform for kids 6–14. Typing, math, and eco lessons that build daily habits — not just screen time. Free for every child.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mygreenkeys.com"),

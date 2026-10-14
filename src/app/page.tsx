@@ -350,7 +350,7 @@ export default function HomePage() {
                 Games
               </a>
               <Link href="/pricing" className="nav-link">
-                Pricing
+                Free access
               </Link>
             </div>
 
@@ -392,7 +392,7 @@ export default function HomePage() {
                 Games
               </a>
               <Link href="/pricing" className={mobileDrawerLinkClass} onClick={() => setMobileMenuOpen(false)}>
-                Pricing
+                Free access
               </Link>
               {authReady && isLoggedIn ? (
                 <div className="px-4 pt-2" onClick={() => setMobileMenuOpen(false)}>
@@ -584,7 +584,7 @@ export default function HomePage() {
             className="inline-block rounded-md bg-black/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm"
             style={{ marginTop: "14px", marginBottom: "14px" }}
           >
-            No credit card required. Free forever.
+            No credit card required. Free for every child.
           </p>
           <p style={{ marginTop: 4, fontSize: "0.95rem", color: "rgba(255,255,255,0.88)" }}>
             Kid with a code from home or school?{" "}
@@ -635,7 +635,7 @@ export default function HomePage() {
               Privacy and safety built in
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
-              {["Privacy-First", "EU Hosted", "Ad-Free"].map((b) => (
+              {["Privacy-first design for kids", "GDPR-aware · EU hosting", "100% Ad-Free"].map((b) => (
                 <span
                   key={b}
                   style={{
@@ -907,19 +907,19 @@ export default function HomePage() {
                 marginBottom: "24px",
               }}
             >
-              Schools and families joining now get founding member benefits
+              Families and schools joining now help shape what we build next
             </p>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3" style={{ marginTop: "12px", marginBottom: "18px" }}>
               {(
                 [
                   {
-                    title: "Free pilot for one full term",
-                    desc: "Check progress after 2 weeks — cancel anytime.",
+                    title: "School sustainability partners",
+                    desc: "Schools join free. We onboard your teachers and build eco awareness together.",
                     Icon: School,
                   },
                   {
-                    title: "Founding family pricing",
-                    desc: "Lock in 50% off the Family Plan for life when you sign up early.",
+                    title: "Free for every child",
+                    desc: "Every lesson, game and dashboard is free for kids, parents and teachers.",
                     Icon: Users,
                   },
                   {
@@ -978,64 +978,33 @@ export default function HomePage() {
                 marginBottom: "18px",
               }}
             >
-              Simple pricing for every family
+              Free for every child
             </h2>
-            <div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto justify-items-center"
-              style={{ marginTop: "12px", marginBottom: "18px" }}
-            >
-              <div className="mgk-card-ds bg-white p-8">
-                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Free</p>
-                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>$0</p>
-                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>10 lessons, progress tracking, kid-safe.</p>
+            <div className="mgk-card-ds bg-white p-8" style={{ maxWidth: 640, margin: "12px auto 18px", border: `2px solid ${PRIMARY}` }}>
+              <p style={{ color: "#64748b", fontWeight: 600, margin: 0, lineHeight: 1.6 }}>
+                Every typing lesson, Brain Sprint, Habit Quest, game, parent dashboard and teacher
+                dashboard is free for kids, parents and schools. No plans, no trials, no credit card.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4" style={{ marginTop: "18px" }}>
                 <Link
                   href="/signup"
-                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                  style={{
-                    ...PRIMARY_CTA_STYLE,
-                    width: "100%",
-                    textDecoration: "none",
-                    marginTop: "14px",
-                    marginBottom: "14px",
-                  }}
+                  className="hover:shadow-2xl hover:scale-105 hover:brightness-110"
+                  style={{ ...PRIMARY_CTA_STYLE, textDecoration: "none" }}
                 >
                   Start free
                 </Link>
-              </div>
-              <div className="mgk-card-ds bg-white p-8" style={{ border: `2px solid ${PRIMARY}` }}>
-                <p style={{ fontWeight: 900, color: PRIMARY, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Family Plan</p>
-                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                  $9.99<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
-                </p>
-                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>Unlimited lessons, parent dashboard, eco rewards.</p>
                 <Link
-                  href="/pricing"
-                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
+                  href="/schools"
+                  className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
+                  style={{ ...SECONDARY_CTA_STYLE, textDecoration: "none" }}
                 >
-                  View Family Plan
-                </Link>
-              </div>
-              <div className="mgk-card-ds bg-white p-8">
-                <p style={{ fontWeight: 900, color: "#64748b", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>School Starter</p>
-                <p style={{ fontSize: "2.5rem", fontWeight: 900, color: DARK, margin: 0 }}>
-                  $149<span style={{ fontSize: "1rem", fontWeight: 700, color: "#64748b" }}>/mo</span>
-                </p>
-                <p style={{ color: "#64748b", fontWeight: 600, marginTop: 12 }}>
-                  Classroom access, teacher dashboard, student progress tracking.
-                </p>
-                <Link
-                  href="/pricing"
-                  className="w-full hover:shadow-2xl hover:scale-105 hover:brightness-110"
-                  style={{ ...PRIMARY_CTA_STYLE, width: "100%", textDecoration: "none", marginTop: "14px", marginBottom: "14px" }}
-                >
-                  View School Plan
+                  Become a school partner
                 </Link>
               </div>
             </div>
             <p style={{ textAlign: "center", marginTop: "14px", marginBottom: "14px" }}>
               <Link href="/pricing" style={{ fontWeight: 800, color: PRIMARY, textDecoration: "none" }} className="hover:underline">
-                See all plans →
+                See everything that&apos;s included →
               </Link>
             </p>
           </Inner>
@@ -1064,11 +1033,11 @@ export default function HomePage() {
                   className="hover:bg-[#1B4332] hover:text-white hover:scale-105"
                   style={SECONDARY_CTA_STYLE}
                 >
-                  View Pricing
+                  What&apos;s included
                 </Link>
               </div>
               <p className="text-sm font-semibold text-gray-500" style={{ marginTop: "14px", marginBottom: "14px" }}>
-                Free forever for first 10 lessons. No credit card.
+                Free for every child. No credit card.
               </p>
             </div>
           </Inner>

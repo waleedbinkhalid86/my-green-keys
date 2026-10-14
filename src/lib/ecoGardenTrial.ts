@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ALL_FREE } from "@/lib/access";
 
 export type TrialStatus =
   | "not_started"
@@ -62,7 +63,7 @@ export async function getTrialState(userId: string, supabase: SupabaseClient): P
 
     if (subErr) throw subErr;
 
-    const hasPaidPlan = (subRows ?? []).some((row: { plan_type?: unknown }) =>
+    const hasPaidPlan = ALL_FREE || (subRows ?? []).some((row: { plan_type?: unknown }) =>
       PAID_PLANS.has(normalizePlanType(row.plan_type)),
     );
 

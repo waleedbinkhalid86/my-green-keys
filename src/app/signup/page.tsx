@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { GraduationCap, School, Users } from "lucide-react";
 import { AuthOrDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { MinimalAuthShell } from "@/components/auth/MinimalAuthShell";
+import { ALL_FREE } from "@/lib/access";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { useToast } from "@/components/ui/Toast";
@@ -754,6 +755,7 @@ export default function SignupPage() {
                 </>
               ) : null}
 
+              {ALL_FREE ? null : (
               <div>
                 <label htmlFor="promoCode" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
                   Promo code (optional)
@@ -773,6 +775,7 @@ export default function SignupPage() {
                   </p>
                 ) : null}
               </div>
+              )}
 
               <button
                 type="submit"

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ALL_FREE } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 
 const PADDLE_VERSION = "1";
@@ -21,6 +22,10 @@ type CheckoutBody = {
 };
 
 export async function POST(req: Request) {
+  if (ALL_FREE) {
+    return NextResponse.json({ error: "Payments are disabled" }, { status: 404 });
+  }
+
   const body = (await req.json()) as Partial<CheckoutBody>;
   if (!body.priceId || !body.planType) {
     return NextResponse.json(

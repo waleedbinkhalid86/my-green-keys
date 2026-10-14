@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Flame, Heart, Lock, RefreshCw, Star } from "lucide-react";
 import { kindWorldScenarios, type KindScenario } from "@/data/kindWorldScenarios";
+import { ALL_FREE } from "@/lib/access";
 import {
   calculateEcoPoints,
   checkAnswer,
@@ -190,7 +191,7 @@ export default function KindWorldGamePage() {
           .trim();
         const subPlan = (sub as { plan_type?: string } | null)?.plan_type ?? null;
         const active = subStatus === "active";
-        const paid = active && hasPaidPlan(subPlan);
+        const paid = ALL_FREE || (active && hasPaidPlan(subPlan));
         setPaidOk(paid);
 
         setAccessOk(n60 >= 60 && paid);

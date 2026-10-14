@@ -59,9 +59,9 @@ export default function TermsPage() {
             </P>
             <ul className="mt-3 list-disc pl-6 space-y-2">
               <Li>
-                <strong>Children under 13 (COPPA):</strong> A parent or legal guardian must provide
-                verifiable parental consent before we create an account for a child under 13 where
-                we collect personal information beyond what is permitted without consent.
+                <strong>Children’s privacy:</strong> My Green Keys is designed with children’s
+                privacy in mind. We collect only a nickname, learning progress and optional eco
+                photos.
               </Li>
               <Li>
                 <strong>Parents/Guardians:</strong> You are responsible for supervising your
@@ -77,11 +77,18 @@ export default function TermsPage() {
               </Li>
             </ul>
 
-            <H2>2) Accounts and parental consent</H2>
+            <H2>2) Children’s privacy</H2>
             <P>
-              When an account is created for a child under 13, we require parental consent and we
-              may ask a parent/guardian to confirm identity or authority in a reasonable way. Parents
-              can review, delete, or restrict further collection or use of their child’s information.
+              My Green Keys is designed with children’s privacy in mind. We collect only a nickname,
+              learning progress and optional eco photos. Parents and teachers can ask us to view,
+              delete or stop collecting a child’s data by emailing{" "}
+              <a
+                href="mailto:hello@mygreenkeys.com"
+                className="font-semibold text-[var(--green)] underline underline-offset-4"
+              >
+                hello@mygreenkeys.com
+              </a>
+              , and we will respond promptly.
             </P>
 
             <H2>3) Acceptable use</H2>
@@ -103,10 +110,13 @@ export default function TermsPage() {
 
             <H2>5) Subscriptions, billing, and future payments</H2>
             <P>
-              Some features may require a paid subscription. Payments may be processed by third-party
-              payment providers such as <strong>Stripe</strong> or <strong>Paddle</strong> in the future.
-              When enabled, additional payment terms may apply at checkout and will be incorporated
-              into these Terms.
+              <strong>My Green Keys is currently free for all users.</strong> No payment is required
+              to use any feature.
+            </P>
+            <P>
+              If paid plans are introduced in the future, payments will be handled by a third-party
+              payment processor. Any additional payment terms will be shown at checkout and will be
+              incorporated into these Terms.
             </P>
 
             <H2>6) Data, cookies, and third-party services</H2>
@@ -138,8 +148,8 @@ export default function TermsPage() {
             <H2>8) Privacy and GDPR</H2>
             <P>
               Our Privacy Policy explains what data we collect, how we use it, and your rights,
-              including GDPR rights for European users and COPPA parental controls for children under
-              13.
+              including GDPR rights for European users and how parents and teachers can ask about a
+              child’s data.
             </P>
 
             <H2>9) Disclaimers</H2>
@@ -164,7 +174,7 @@ export default function TermsPage() {
 
             <H2>12) Contact</H2>
             <P>
-              If you have questions about these Terms, COPPA, or GDPR requests, contact us at{" "}
+              If you have questions about these Terms, children’s privacy, or GDPR requests, contact us at{" "}
               <a
                 href="mailto:mygreenkeys26@gmail.com"
                 className="font-semibold text-[var(--green)] underline underline-offset-4"
