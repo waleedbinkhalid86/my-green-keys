@@ -22,6 +22,12 @@ import { LessonAttemptIndicator } from "@/components/lesson/LessonAttemptIndicat
 import { PracticeProgressBar } from "@/components/lesson/PracticeProgressBar";
 import { SetPracticeGoalControl } from "@/components/lesson/SetPracticeGoalControl";
 import { DEFAULT_PRACTICE_GOAL, effectivePracticeGoal } from "@/lib/lesson-practice/constants";
+import { getGuestAllPractice, getGuestPractice, getGuestStreak, getGuestXp } from "@/lib/guest/guest-store";
+import { applyGuestLessonCompletion, useGuestStatus } from "@/lib/guest/guest-lesson";
+import { GuestLessonSummary } from "@/components/guest/GuestLessonSummary";
+import { GuestSaveProgressCard } from "@/components/guest/GuestSaveProgressCard";
+import { GuestImportCard } from "@/components/guest/GuestImportCard";
+import { safeLocalStorage } from "@/lib/safe-local-storage";
 import "../globals.css";
 
 const nunito = Nunito({
@@ -544,6 +550,10 @@ const CUSTOM_LESSON_PHASE_STRIP: (typeof phases)[number] = {
 };
 
 export default function LessonPage() {
+  // Guest mode: no session → progress lives in the local guest store only.
+  const guestStatus = useGuestStatus();
+  const isGuest = guestStatus === "guest";
+  const [guestSummary, setGuestSummary] = useState<{ awarded: number; totalXp: number; streak: number } | null>(null);
   const [currentLessonId, setCurrentLessonId] = useState(1);
   const [userInput, setUserInput] = useState("");
   const [stats, setStats] = useState<LessonStats>({
@@ -709,8 +719,8 @@ export default function LessonPage() {
 
   // Initialize from localStorage
   useEffect(() => {
-    const savedProfile = localStorage.getItem("userProfile");
-    const savedLessonId = localStorage.getItem("currentLessonId");
+    const savedProfile = safeLocalStorage.getItem("userProfile");
+    const savedLessonId = safeLocalStorage.getItem("currentLessonId");
     const queryLesson =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("lesson")
@@ -726,8 +736,8 @@ export default function LessonPage() {
     if (Number.isFinite(queryLessonId) && queryLessonId >= 1 && queryLessonId <= 100) {
       setActiveCustomLessonId(null);
       setCurrentLessonId(queryLessonId);
-      localStorage.setItem("currentLessonId", String(queryLessonId));
-      localStorage.removeItem("activeCustomLessonId");
+      safeLocalStorage.setItem("currentLessonId", String(queryLessonId));
+      safeLocalStorage.removeItem("activeCustomLessonId");
       return;
     }
 
@@ -748,8 +758,9 @@ export default function LessonPage() {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user) {
-          setPracticeCount(0);
-          setPracticeGoal(DEFAULT_PRACTICE_GOAL);
+          const guest = getGuestPractice(currentLessonId);
+          setPracticeCount(guest.count);
+          setPracticeGoal(guest.goal);
           return;
         }
         const { data, error } = await supabase
@@ -790,7 +801,7 @@ export default function LessonPage() {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user) {
-          setAllLessonPractice(new Map());
+          setAllLessonPractice(getGuestAllPractice());
           return;
         }
         const { data, error } = await supabase
@@ -847,7 +858,7 @@ export default function LessonPage() {
 
   useEffect(() => {
     if (customLessonsLoading) return;
-    const saved = typeof window !== "undefined" ? localStorage.getItem("activeCustomLessonId") : null;
+    const saved = typeof window !== "undefined" ? safeLocalStorage.getItem("activeCustomLessonId") : null;
     if (saved && customLessonRows.some((r) => r.id === saved)) {
       setActiveCustomLessonId(saved);
     }
@@ -860,7 +871,11 @@ export default function LessonPage() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          setProfileDailyStreak(getGuestStreak());
+          setRangerXp(getGuestXp());
+          return;
+        }
         const s = await getCurrentStreak(user.id, supabase);
         if (s) setProfileDailyStreak(s.current_streak);
         const ranger = await getRangerProfile(user.id, supabase);
@@ -891,12 +906,12 @@ export default function LessonPage() {
     try {
       const supabase = createClient();
       const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
       if (!userData.user) {
-        setPetError("You must be logged in to use the virtual pet.");
+        // Guest: no pet and no pet error.
         setShowPetSetup(false);
         return;
       }
+      if (userError) throw userError;
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -1114,14 +1129,14 @@ export default function LessonPage() {
 
   // Save current lesson + custom selection to localStorage
   useEffect(() => {
-    localStorage.setItem("currentLessonId", currentLessonId.toString());
+    safeLocalStorage.setItem("currentLessonId", currentLessonId.toString());
   }, [currentLessonId]);
 
   useEffect(() => {
     if (activeCustomLessonId) {
-      localStorage.setItem("activeCustomLessonId", activeCustomLessonId);
+      safeLocalStorage.setItem("activeCustomLessonId", activeCustomLessonId);
     } else {
-      localStorage.removeItem("activeCustomLessonId");
+      safeLocalStorage.removeItem("activeCustomLessonId");
     }
   }, [activeCustomLessonId]);
 
@@ -1337,8 +1352,39 @@ export default function LessonPage() {
       try {
         const supabase = createClient();
         const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (!userData.user) {
+          // Guest: built-in lessons only, local store only. No quests, certificates or API calls.
+          if (activeCustomLessonId) return;
+          let guestStars = 1;
+          if (stats.accuracy >= 90) guestStars++;
+          if (stats.wpm >= (currentLesson.targetWPM || 20)) guestStars++;
+          const guest = applyGuestLessonCompletion(
+            currentLessonId,
+            Number(stats.wpm) || 0,
+            Number(stats.accuracy) || 0,
+            guestStars
+          );
+          if (!guest.saved) return;
+          setPracticeCount(guest.count);
+          setPracticeGoal(guest.goal);
+          setOverlayPracticeCount(guest.count);
+          setOverlayPracticeGoal(guest.goal);
+          setAllLessonPractice((prev) => {
+            const next = new Map(prev);
+            next.set(currentLessonId, { count: guest.count, goal: guest.goal });
+            return next;
+          });
+          setProfileDailyStreak(guest.streak);
+          setRangerXp(guest.xpAwarded.totalXp);
+          setXpAwarded(guest.xpAwarded);
+          setGuestSummary({
+            awarded: guest.xpAwarded.awarded,
+            totalXp: guest.xpAwarded.totalXp,
+            streak: guest.streak,
+          });
+          return;
+        }
         if (userError) throw userError;
-        if (!userData.user) return;
 
         if (!activeCustomLessonId) {
           const completeRes = await fetch("/api/lesson/complete", {
@@ -1774,7 +1820,7 @@ export default function LessonPage() {
         gender: welcomeData.gender,
       };
       setUserProfile(profile);
-      localStorage.setItem("userProfile", JSON.stringify(profile));
+      safeLocalStorage.setItem("userProfile", JSON.stringify(profile));
       setShowWelcomeModal(false);
     }
   };
@@ -1984,7 +2030,7 @@ export default function LessonPage() {
         </div>
       )}
       {/* ONBOARDING OVERLAY */}
-      {showOnboarding && (
+      {!isGuest && showOnboarding && (
         <div
           style={{
             position: "fixed",
@@ -2296,7 +2342,7 @@ export default function LessonPage() {
       )}
 
       {/* PET SETUP (first time) */}
-      {!showOnboarding && showPetSetup && (
+      {!isGuest && !showOnboarding && showPetSetup && (
         <div
           style={{
             position: "fixed",
@@ -2411,7 +2457,7 @@ export default function LessonPage() {
         </div>
       )}
       {/* JOIN CLASS MODAL */}
-      {showJoinClassModal && (
+      {!isGuest && showJoinClassModal && (
         <div
           style={{
             position: "fixed",
@@ -2665,6 +2711,7 @@ export default function LessonPage() {
             </button>
 
             {/* Pet widget (compact — desktop uses PetWidget on typing card) */}
+            {!isGuest && (
             <div
               className="nav-pet-wrap flex md:hidden"
               style={{ alignItems: "center", gap: 10, paddingLeft: 4 }}
@@ -2714,6 +2761,7 @@ export default function LessonPage() {
                 {petEmoji}
               </div>
             </div>
+            )}
           </div>
         </div>
       </nav>
@@ -2793,6 +2841,7 @@ export default function LessonPage() {
               <div style={{ flex: "1 1 180px", minWidth: 0 }}>
                 <PracticeProgressBar count={practiceCount} goal={practiceGoal} />
               </div>
+              {!isGuest && (
               <SetPracticeGoalControl
                 lessonId={currentLessonId}
                 currentGoal={practiceGoal}
@@ -2810,12 +2859,13 @@ export default function LessonPage() {
                 }}
                 compact
               />
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {(customLessonsLoading || customLessonRows.length > 0) && (
+      {!isGuest && (customLessonsLoading || customLessonRows.length > 0) && (
         <div style={{ background: "#F0F9F4", borderBottom: "1px solid rgba(82, 183, 136, 0.25)" }}>
           <div className="mgk-container" style={{ paddingTop: 10, paddingBottom: 10 }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#1B4332", marginBottom: 8 }}>
@@ -2886,6 +2936,8 @@ export default function LessonPage() {
         </div>
       )}
 
+      {guestStatus === "user" ? <GuestImportCard /> : null}
+
       {/* ECO POINTS COUNTER (subtle, top) */}
       <div
         style={{
@@ -2904,6 +2956,7 @@ export default function LessonPage() {
             </span>{" "}
             eco points
           </div>
+          {!isGuest && (
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             <button
               type="button"
@@ -2948,6 +3001,7 @@ export default function LessonPage() {
               📸 Submit Eco Photo
             </button>
           </div>
+          )}
         </div>
       </div>
 
@@ -3337,6 +3391,14 @@ export default function LessonPage() {
               ))}
             </div>
 
+            {isGuest && guestSummary ? (
+              <GuestLessonSummary
+                awarded={guestSummary.awarded}
+                totalXp={guestSummary.totalXp}
+                streak={guestSummary.streak}
+              />
+            ) : null}
+
             {!activeCustomLessonId && (
               <div
                 style={{
@@ -3369,6 +3431,7 @@ export default function LessonPage() {
                       : `Progress: ${shownCount} of ${shownGoal}. Do it ${remaining} more ${remaining === 1 ? "time" : "times"} to hit your goal.`;
                   })()}
                 </p>
+                {!isGuest && (
                 <SetPracticeGoalControl
                   lessonId={currentLessonId}
                   currentGoal={practiceGoal}
@@ -3386,6 +3449,7 @@ export default function LessonPage() {
                   }}
                   compact
                 />
+                )}
               </div>
             )}
 
@@ -3488,6 +3552,8 @@ export default function LessonPage() {
                 </>
               )}
             </div>
+
+            {isGuest ? <GuestSaveProgressCard /> : null}
           </div>
         </div>
       )}
@@ -3647,7 +3713,7 @@ export default function LessonPage() {
       )}
 
       {/* WELCOME MODAL */}
-      {showWelcomeModal && (
+      {showWelcomeModal && guestStatus === "user" && (
         <div
           style={{
             position: "fixed",
@@ -3949,7 +4015,7 @@ export default function LessonPage() {
       )}
 
       {/* ECO PHOTO UPLOAD MODAL */}
-      {showEcoUploadModal && (
+      {!isGuest && showEcoUploadModal && (
         <div
           style={{
             position: "fixed",

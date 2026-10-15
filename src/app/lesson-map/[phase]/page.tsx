@@ -10,6 +10,7 @@ import { lessons } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { PracticeProgressBar } from "@/components/lesson/PracticeProgressBar";
 import { DEFAULT_PRACTICE_GOAL, effectivePracticeGoal } from "@/lib/lesson-practice/constants";
+import { getGuestProgressRows } from "@/lib/guest/guest-store";
 
 import type { Lesson } from "@/data/lessons";
 
@@ -158,32 +159,28 @@ export default function LessonPhaseDetailPage() {
       try {
         const supabase = createClient();
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!userData.user) {
-          setError("You must be logged in to view phase progress.");
-          setProgressByLesson(new Map());
-          setCurrentLessonId(1);
-          setCompletedInPhase(0);
-          setAvgWpm(0);
-          setAvgAccuracy(0);
-          return;
-        }
 
         let rows: ProgressRow[] = [];
-        const attempt = await supabase
-          .from("student_progress")
-          .select("lesson_id, completed, stars, wpm, accuracy, completion_count, practice_goal")
-          .eq("student_id", userData.user.id);
-
-        if (attempt.error) {
-          const fallback = await supabase
-            .from("student_progress")
-            .select("lesson_id, completed, stars, completion_count, practice_goal")
-            .eq("student_id", userData.user.id);
-          if (fallback.error) throw fallback.error;
-          rows = (fallback.data as unknown as ProgressRow[] | null) ?? [];
+        if (!userData.user) {
+          // Guest: same summary logic below, fed from the local guest store.
+          rows = getGuestProgressRows();
         } else {
-          rows = (attempt.data as unknown as ProgressRow[] | null) ?? [];
+          if (userError) throw userError;
+          const attempt = await supabase
+            .from("student_progress")
+            .select("lesson_id, completed, stars, wpm, accuracy, completion_count, practice_goal")
+            .eq("student_id", userData.user.id);
+
+          if (attempt.error) {
+            const fallback = await supabase
+              .from("student_progress")
+              .select("lesson_id, completed, stars, completion_count, practice_goal")
+              .eq("student_id", userData.user.id);
+            if (fallback.error) throw fallback.error;
+            rows = (fallback.data as unknown as ProgressRow[] | null) ?? [];
+          } else {
+            rows = (attempt.data as unknown as ProgressRow[] | null) ?? [];
+          }
         }
 
         const map = new Map<number, ProgressRow>();

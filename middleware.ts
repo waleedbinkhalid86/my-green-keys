@@ -12,6 +12,18 @@ const kidProtectedRoutes = [
   '/ranger',
 ];
 
+/**
+ * Guest mode (typing lessons only): these kid routes open without a session.
+ * Matched exactly or as a subpath, so /lessonfoo and /lesson-mapx stay protected.
+ */
+const guestAllowedRoutes = ['/lesson', '/lesson-map'];
+
+function isGuestAllowedRoute(pathname: string): boolean {
+  return guestAllowedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
 /** Parent/teacher dashboards — unauthenticated users go to /login. */
 const adultProtectedRoutes = ['/dashboard'];
 
@@ -29,9 +41,9 @@ export async function middleware(request: NextRequest) {
 
   const { response, user } = await updateSession(request);
 
-  const isKidProtectedRoute = kidProtectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isKidProtectedRoute =
+    !isGuestAllowedRoute(pathname) &&
+    kidProtectedRoutes.some((route) => pathname.startsWith(route));
   const isAdultProtectedRoute = adultProtectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

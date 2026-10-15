@@ -488,6 +488,13 @@ export default function HomePage() {
               >
                 Kid login
               </Link>
+              {" · "}
+              <Link
+                href="/lesson"
+                className="font-semibold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white"
+              >
+                Try a lesson
+              </Link>
             </p>
           </Container>
         </div>

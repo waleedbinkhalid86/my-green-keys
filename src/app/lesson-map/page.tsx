@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { lessons } from "@/data/lessons";
 import { createClient } from "@/lib/supabase/client";
 import { CERTIFICATES, formatDate } from "@/lib/certificates";
+import { getGuestProgressRows } from "@/lib/guest/guest-store";
 
 type ProgressRow = {
   lesson_id: number;
@@ -104,6 +105,7 @@ export default function LessonMapPage() {
   const [ecoPointsTotal, setEcoPointsTotal] = useState(0);
   const [certificates, setCertificates] = useState<CertificateRow[]>([]);
   const [certsLoading, setCertsLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -113,15 +115,17 @@ export default function LessonMapPage() {
       try {
         const supabase = createClient();
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
         if (!userData.user) {
-          setError("You must be logged in to view your lesson map.");
-          setCompletedSet(new Set());
-          setStarsTotal(0);
+          // Guest: lessons from the local guest store; no certificates or eco points.
+          const guestRows = getGuestProgressRows();
+          setIsGuest(true);
+          setCompletedSet(new Set(guestRows.map((r) => r.lesson_id)));
+          setStarsTotal(guestRows.reduce((sum, r) => sum + r.stars, 0));
           setEcoPointsTotal(0);
           setCertificates([]);
           return;
         }
+        if (userError) throw userError;
 
         let rows: ProgressRow[] = [];
         const attempt = await supabase
@@ -250,6 +254,7 @@ export default function LessonMapPage() {
               </div>
             </div>
 
+            {!isGuest && (
             <div className="border-t border-gray-200 pt-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -324,6 +329,7 @@ export default function LessonMapPage() {
                 </div>
               ) : null}
             </div>
+            )}
           </div>
         </div>
       </section>
