@@ -5,6 +5,7 @@ const TABS = [
   { key: "dashboard", label: "Dashboard", href: "/admin" },
   { key: "blog", label: "Blog", href: "/admin/blog" },
   { key: "seo", label: "SEO health", href: "/admin/seo" },
+  { key: "inquiries", label: "School inquiries", href: "/admin/inquiries" },
 ] as const;
 
 export default function AdminTabs({ active }: { active: (typeof TABS)[number]["key"] }) {
