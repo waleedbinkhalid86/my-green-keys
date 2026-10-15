@@ -7,10 +7,10 @@ import { Card } from "@/components/marketing/Card";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Our Story — Why I Built My Green Keys",
+    absolute: "Our story: why I built My Green Keys",
   },
   description:
-    "Why Waleed Bin Khalid built My Green Keys: 15 years at DHL Express, a daily habit instead of another app, and learning that builds character.",
+    "Why a founder with sixteen years in logistics built a free typing and eco-learning platform for children.",
 };
 
 const pageBg: CSSProperties = {
@@ -31,7 +31,7 @@ export default function StoryPage() {
       {/* Hero */}
       <Section style={{ paddingBottom: "var(--mgk-space-5)" }}>
         <Container narrow style={{ textAlign: "center" }}>
-          <h1 className="mgk-h1">Why I Built My Green Keys</h1>
+          <h1 className="mgk-h1">Why I built My Green Keys</h1>
           <p className="mgk-lead" style={{ marginTop: 16 }}>
             A note from the founder.
           </p>
@@ -41,54 +41,62 @@ export default function StoryPage() {
       <Section style={{ paddingTop: 0 }}>
         <Container narrow>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--mgk-space-4)" }}>
-            {/* Section 1: DHL */}
+            {/* Section 1: The worry */}
             <Card bodyStyle={cardBody}>
-              <h2 className="mgk-h2">15 years watching the world go digital</h2>
+              <h2 className="mgk-h2">A worry I couldn&apos;t ignore</h2>
               <p className="mgk-body" style={prose}>
-                I spent 15 years at DHL Express, watching entire industries move online —
-                logistics, paperwork, communication, all of it. Every year the world got
-                faster and more digital. And every year, I noticed the same gap back home:
-                Pakistani kids weren&apos;t being prepared for it. Schools focused on exams,
-                not the basic digital skills kids would need for everything else in their
-                lives. Typing, one of the most fundamental skills for using a computer at
-                all, was barely taught anywhere.
+                Every year, the news about our planet gets harder to read. Hotter summers,
+                changing seasons, a future that feels uncertain. I wanted to do something
+                about it, not just worry. But what can one person do about climate change?
               </p>
             </Card>
 
-            {/* Section 2: The insight */}
+            {/* Section 2: What I had to offer */}
             <Card bodyStyle={cardBody}>
-              <h2 className="mgk-h2">Kids don&apos;t need another app. They need a daily habit.</h2>
+              <h2 className="mgk-h2">What I had to offer</h2>
               <p className="mgk-body" style={prose}>
-                I didn&apos;t want to build another app that gets downloaded once and
-                forgotten. I wanted to build a habit. That&apos;s where typing came in — it
-                is, by nature, a skill that only improves with daily practice. You
-                can&apos;t cram it the night before an exam. So typing became the vehicle:
-                a few minutes a day, every day, building a skill kids will use for the rest
-                of their lives — while also opening the door to daily math practice and
-                good habits along the way.
+                I have spent nearly sixteen years in logistics, working with customers every
+                day: solving problems, building trust and helping people get comfortable with
+                technology. Along the way I learned to build software too. Those are the
+                skills I know best, so I asked myself a simple question: how can I use them
+                to give something back to the earth?
+              </p>
+              <p className="mgk-body" style={prose}>
+                The answer was in front of me. The children growing up today are the ones
+                who will make tomorrow better. If we want a greener future, it has to start
+                with them.
               </p>
             </Card>
 
-            {/* Section 3: Why green */}
+            {/* Section 3: Skill and learning */}
             <Card bodyStyle={cardBody}>
-              <h2 className="mgk-h2">Why &quot;green&quot;</h2>
+              <h2 className="mgk-h2">Skill and learning, together</h2>
               <p className="mgk-body" style={prose}>
-                Learning should build character, not just skills. That&apos;s why My Green
-                Keys pairs typing practice with eco lessons — and why real progress in the
-                app leads to real trees being planted. Screen time isn&apos;t something to
-                feel guilty about when it&apos;s building a habit, teaching a skill, and
-                doing something good for the planet at the same time.
+                My Green Keys is built on one idea: a child can build a skill and care for
+                the planet at the same time. Typing is a skill every child needs. So we
+                wrapped it in eco lessons, games and daily habits, and made it free for every
+                child.
+              </p>
+            </Card>
+
+            {/* Section 4: Play your part */}
+            <Card bodyStyle={cardBody}>
+              <h2 className="mgk-h2">Play your part with us</h2>
+              <p className="mgk-body" style={prose}>
+                This is only the beginning. If you run a school, partner with us and bring it
+                to your students. If you are a parent, try it with your child. And join us in
+                taking on environmental challenges together, because every small action
+                counts.
               </p>
             </Card>
 
             {/* Closing */}
             <Card bodyStyle={{ ...cardBody, textAlign: "center" }}>
               <p className="mgk-lead" style={{ lineHeight: 1.75 }}>
-                That&apos;s why I built My Green Keys — for every kid learning to type, and
-                for the planet they&apos;ll inherit.
+                Let&apos;s save planet earth, one key at a time.
               </p>
               <p className="mgk-label" style={{ marginTop: 24, fontSize: "1.0625rem", color: "#1B4332" }}>
-                Waleed Bin Khalid, Founder
+                Waleed Bin Khalid, Founder, My Green Keys
               </p>
               <div className="mgk-btn-row" style={{ marginTop: 32 }}>
                 <PrimaryButton href="/schools">For schools</PrimaryButton>
