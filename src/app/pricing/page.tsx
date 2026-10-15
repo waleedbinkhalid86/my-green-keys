@@ -14,8 +14,11 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import Link from "next/link";
-import { FinalCtaOutlineLink } from "@/components/pricing/HoverLinks";
+import { Container } from "@/components/marketing/Container";
+import { Section } from "@/components/marketing/Section";
+import { PrimaryButton, SecondaryButton } from "@/components/marketing/Buttons";
+import { Card } from "@/components/marketing/Card";
+import { Eyebrow } from "@/components/marketing/Eyebrow";
 
 const INCLUDED = [
   {
@@ -89,256 +92,167 @@ const TRUST_SIGNALS = [
   { Icon: Ban, label: "100% Ad-Free" },
 ] as const;
 
-const container: CSSProperties = {
-  maxWidth: "1120px",
-  margin: "0 auto",
-  padding: "60px 16px",
-};
-
-const primaryCta: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: "180px",
-  padding: "18px 40px",
-  borderRadius: "9999px",
-  background: "#52B788",
-  color: "#FFFFFF",
-  fontSize: "18px",
-  fontWeight: 700,
-  textDecoration: "none",
-  boxShadow: "0 8px 24px rgba(27,67,50,0.18)",
-};
-
-const sectionGap: CSSProperties = { marginBottom: "88px" };
-
-const h2: CSSProperties = {
-  fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
-  fontWeight: 800,
-  color: "#1B4332",
-  textAlign: "center",
-  margin: "0 0 12px",
-};
-
-const lead: CSSProperties = {
-  fontSize: "1.05rem",
-  color: "#2D6A4F",
-  textAlign: "center",
-  maxWidth: "640px",
-  margin: "0 auto",
-  lineHeight: 1.6,
-};
-
-const card: CSSProperties = {
-  background: "rgba(255,255,255,0.85)",
-  backdropFilter: "blur(8px)",
-  border: "1px solid #D8EDE2",
-  borderRadius: "20px",
-  padding: "24px",
-  boxShadow: "0 8px 24px rgba(27,67,50,0.06)",
+const pageBg: CSSProperties = {
+  minHeight: "100vh",
+  backgroundColor: "#FAFAF5",
+  backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
+  backgroundSize: "20px 20px",
 };
 
 export default function PricingPage() {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#FAFAF5",
-        backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
-        backgroundSize: "20px 20px",
-      }}
-    >
-      <div style={container}>
-        {/* Hero */}
-        <section style={{ ...sectionGap, textAlign: "center", paddingTop: "40px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              background: "#F2B705",
-              color: "#1B4332",
-              fontWeight: 800,
-              fontSize: "0.75rem",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              borderRadius: "9999px",
-              padding: "6px 16px",
-              marginBottom: "20px",
-            }}
-          >
-            $0 for everyone
-          </span>
-          <h1
-            style={{
-              fontSize: "clamp(2.25rem, 6vw, 3.5rem)",
-              fontWeight: 800,
-              color: "#1B4332",
-              lineHeight: 1.15,
-              margin: "0 0 20px",
-            }}
-          >
-            Free for every child
-          </h1>
-          <p style={{ ...lead, fontSize: "clamp(1.05rem, 2.5vw, 1.25rem)" }}>
-            Kids, parents and schools get full access to everything My Green Keys offers.
-            No plans, no trials, no credit card.
-          </p>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "16px",
-              justifyContent: "center",
-              marginTop: "32px",
-            }}
-          >
-            <Link href="/signup" style={primaryCta}>Start free</Link>
+    <div style={pageBg}>
+      {/* Hero */}
+      <Section>
+        <Container style={{ textAlign: "center" }}>
+          <div style={{ maxWidth: 720, marginInline: "auto" }}>
+            <Eyebrow style={{ marginBottom: 24 }}>$0 for everyone</Eyebrow>
+            <h1 className="mgk-h1">Free for every child</h1>
+            <p className="mgk-lead" style={{ marginTop: 16 }}>
+              Kids, parents and schools get full access to everything My Green Keys offers.
+              No plans, no trials, no credit card.
+            </p>
+            <div className="mgk-btn-row" style={{ marginTop: 32 }}>
+              <PrimaryButton href="/signup">Start free</PrimaryButton>
+            </div>
+            <div className="mgk-btn-row" style={{ marginTop: 32, gap: 8 }}>
+              {TRUST_SIGNALS.map(({ Icon, label }) => (
+                <span
+                  key={label}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "#fff",
+                    border: "1px solid var(--mgk-border-card)",
+                    borderRadius: 9999,
+                    padding: "8px 16px",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    color: "#1B4332",
+                  }}
+                >
+                  <Icon size={16} strokeWidth={2.25} color="#2D6A4F" aria-hidden />
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "12px",
-              justifyContent: "center",
-              marginTop: "32px",
-            }}
-          >
-            {TRUST_SIGNALS.map(({ Icon, label }) => (
-              <span
-                key={label}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "rgba(255,255,255,0.75)",
-                  border: "1px solid #D8EDE2",
-                  borderRadius: "9999px",
-                  padding: "6px 14px",
-                  fontSize: "0.85rem",
-                  fontWeight: 600,
-                  color: "#2D6A4F",
-                }}
-              >
-                <Icon size={16} strokeWidth={2.25} color="#52B788" aria-hidden />
-                {label}
-              </span>
-            ))}
-          </div>
-        </section>
+        </Container>
+      </Section>
 
-        {/* What's included */}
-        <section style={sectionGap}>
-          <h2 style={h2}>What&apos;s included</h2>
-          <p style={{ ...lead, marginBottom: "40px" }}>
-            Every feature, for every account. Nothing is locked behind a paywall.
-          </p>
+      {/* What's included */}
+      <Section tone="pale">
+        <Container>
+          <div className="mgk-sec-head">
+            <h2 className="mgk-h2">What&apos;s included</h2>
+            <p className="mgk-lead">Every feature, for every account. Nothing is locked behind a paywall.</p>
+          </div>
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "20px",
+              gap: "var(--mgk-space-3)",
             }}
           >
             {INCLUDED.map(({ Icon, title, body }) => (
-              <div key={title} style={card}>
+              <Card key={title}>
                 <div
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "12px",
-                    background: "#F0F9F4",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: "14px",
-                  }}
+                  className="flex h-12 w-12 items-center justify-center rounded-full"
+                  style={{ background: "#F0F9F4", marginBottom: 16 }}
                 >
-                  <Icon size={22} strokeWidth={2.25} color="#2D6A4F" aria-hidden />
+                  <Icon size={24} strokeWidth={2.25} color="#2D6A4F" aria-hidden />
                 </div>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#1B4332", margin: "0 0 6px" }}>
-                  {title}
-                </h3>
-                <p style={{ fontSize: "0.95rem", color: "#2D6A4F", lineHeight: 1.55, margin: 0 }}>
+                <h3 className="mgk-h3">{title}</h3>
+                <p className="mgk-body" style={{ marginTop: 8 }}>
                   {body}
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
-        </section>
+        </Container>
+      </Section>
 
-        {/* School partner */}
-        <section style={sectionGap}>
+      {/* School partner */}
+      <Section>
+        <Container>
           <div
+            className="mgk-on-dark"
             style={{
-              borderRadius: "28px",
-              padding: "clamp(32px, 6vw, 56px)",
+              borderRadius: "var(--mgk-radius-card)",
+              padding: "clamp(32px, 6vw, 48px)",
               background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)",
+              boxShadow: "var(--mgk-shadow-card)",
               color: "#FFFFFF",
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "32px",
+              gap: "var(--mgk-space-4)",
               alignItems: "center",
             }}
           >
             <div>
               <p
+                className="mgk-label"
                 style={{
                   fontSize: "0.75rem",
-                  fontWeight: 800,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
                   color: "#F2B705",
-                  margin: "0 0 12px",
+                  margin: "0 0 16px",
                 }}
               >
                 For schools
               </p>
-              <h2 style={{ ...h2, color: "#FFFFFF", textAlign: "left" }}>Become a school partner</h2>
-              <p style={{ fontSize: "1.05rem", lineHeight: 1.6, color: "rgba(255,255,255,0.9)", margin: 0 }}>
+              <h2 className="mgk-h2">Become a school partner</h2>
+              <p className="mgk-lead" style={{ marginTop: 16 }}>
                 Schools join as sustainability partners, free. We onboard your teachers, your
                 students build typing skills and eco habits every day, and together we grow
                 awareness about caring for the planet.
               </p>
             </div>
             <div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: "12px" }}>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "grid", gap: 16 }}>
                 {[
                   "Free for every teacher and student",
                   "Teacher onboarding and class setup",
                   "Daily typing and eco habit practice",
                   "Progress reports for teachers and parents",
                 ].map((t) => (
-                  <li key={t} style={{ display: "flex", gap: "10px", alignItems: "flex-start", fontSize: "1rem" }}>
-                    <CheckCircle size={20} color="#74C69D" style={{ flexShrink: 0, marginTop: "2px" }} aria-hidden />
+                  <li key={t} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: "1rem" }}>
+                    <CheckCircle size={20} color="#74C69D" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden />
                     <span>{t}</span>
                   </li>
                 ))}
               </ul>
-              <FinalCtaOutlineLink href="/schools">Become a school partner</FinalCtaOutlineLink>
+              <SecondaryButton href="/schools" onDark>
+                Become a school partner
+              </SecondaryButton>
             </div>
           </div>
-        </section>
+        </Container>
+      </Section>
 
-        {/* FAQ */}
-        <section style={sectionGap}>
-          <h2 style={h2}>Frequently asked questions</h2>
-          <div style={{ maxWidth: "760px", margin: "32px auto 0" }}>
+      {/* FAQ */}
+      <Section tone="pale">
+        <Container narrow>
+          <div className="mgk-sec-head">
+            <h2 className="mgk-h2">Frequently asked questions</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {FAQ_ITEMS.map(({ q, a }) => (
-              <details
-                key={q}
-                className="group"
-                style={{ ...card, padding: "20px 24px", marginBottom: "12px" }}
-              >
+              <details key={q} className="group mgk-panel" style={{ display: "block", padding: "16px 24px" }}>
                 <summary
                   className="[&::-webkit-details-marker]:hidden"
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: "16px",
+                    gap: 16,
+                    minHeight: 32,
                     cursor: "pointer",
                     listStyle: "none",
-                    fontSize: "1.05rem",
-                    fontWeight: 700,
+                    fontSize: "1.0625rem",
+                    fontWeight: 600,
                     color: "#1B4332",
                   }}
                 >
@@ -346,19 +260,17 @@ export default function PricingPage() {
                   <ChevronDown
                     size={22}
                     strokeWidth={2.25}
-                    color="#52B788"
+                    color="#2D6A4F"
                     className="shrink-0 transition-transform duration-200 group-open:rotate-180"
                     aria-hidden
                   />
                 </summary>
                 <p
+                  className="mgk-body"
                   style={{
-                    marginTop: "12px",
-                    paddingTop: "12px",
-                    borderTop: "1px solid #E5F2EA",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.6,
-                    color: "#2D6A4F",
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTop: "1px solid var(--mgk-border-card)",
                   }}
                 >
                   {a}
@@ -366,17 +278,21 @@ export default function PricingPage() {
               </details>
             ))}
           </div>
-        </section>
+        </Container>
+      </Section>
 
-        {/* Final CTA */}
-        <section style={{ textAlign: "center", paddingBottom: "40px" }}>
-          <h2 style={h2}>Ready to start?</h2>
-          <p style={{ ...lead, marginBottom: "28px" }}>
-            Learn to type. Help the planet. Free for every child.
-          </p>
-          <Link href="/signup" style={primaryCta}>Create a free account</Link>
-        </section>
-      </div>
+      {/* Final CTA */}
+      <Section>
+        <Container style={{ textAlign: "center" }}>
+          <div className="mgk-sec-head" style={{ marginBottom: 32 }}>
+            <h2 className="mgk-h2">Ready to start?</h2>
+            <p className="mgk-lead">Learn to type. Help the planet. Free for every child.</p>
+          </div>
+          <div className="mgk-btn-row">
+            <PrimaryButton href="/signup">Create a free account</PrimaryButton>
+          </div>
+        </Container>
+      </Section>
     </div>
   );
 }

@@ -1795,6 +1795,8 @@ export default function LessonPage() {
         minHeight: "100vh",
         color: "#2C3E50",
         fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif",
+        // Body is 400 site-wide; keep drill text, keyboard and buttons at 600 for young readers.
+        fontWeight: 600,
       }}
     >
       {/* CERTIFICATE POPUP */}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { PrimaryButton } from "@/components/marketing/Buttons";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  padding: "14px 16px",
+  minHeight: "48px",
+  padding: "12px 16px",
   fontSize: "15px",
   borderRadius: "12px",
   border: "2px solid #D1E8DC",
@@ -31,7 +33,7 @@ export function SchoolsContactForm() {
       style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "24px" }}
     >
       <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, color: "#1B4332" }}>
+        <span style={{ fontSize: "14px", fontWeight: 600, color: "#1B4332" }}>
           Name <span style={{ color: "#2D6A4F" }}>*</span>
         </span>
         <input
@@ -44,7 +46,7 @@ export function SchoolsContactForm() {
         />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, color: "#1B4332" }}>
+        <span style={{ fontSize: "14px", fontWeight: 600, color: "#1B4332" }}>
           School name <span style={{ color: "#2D6A4F" }}>*</span>
         </span>
         <input
@@ -57,7 +59,7 @@ export function SchoolsContactForm() {
         />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, color: "#1B4332" }}>
+        <span style={{ fontSize: "14px", fontWeight: 600, color: "#1B4332" }}>
           Phone <span style={{ color: "#2D6A4F" }}>*</span>
         </span>
         <input
@@ -70,7 +72,7 @@ export function SchoolsContactForm() {
         />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <span style={{ fontSize: "14px", fontWeight: 700, color: "#1B4332" }}>Message</span>
+        <span style={{ fontSize: "14px", fontWeight: 600, color: "#1B4332" }}>Message</span>
         <textarea
           name="message"
           rows={4}
@@ -79,23 +81,9 @@ export function SchoolsContactForm() {
           style={{ ...inputStyle, resize: "vertical", minHeight: "120px" }}
         />
       </label>
-      <button
-        type="submit"
-        style={{
-          padding: "16px 32px",
-          borderRadius: "12px",
-          fontSize: "16px",
-          fontWeight: 700,
-          background: "#1B4332",
-          color: "#FFFFFF",
-          border: "none",
-          cursor: "pointer",
-          width: "100%",
-          marginTop: "8px",
-        }}
-      >
+      <PrimaryButton type="submit" block style={{ marginTop: "8px" }}>
         Send message
-      </button>
+      </PrimaryButton>
     </form>
   );
 }

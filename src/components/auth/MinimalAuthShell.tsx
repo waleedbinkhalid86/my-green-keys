@@ -27,10 +27,10 @@ export function MinimalAuthShell({
   return (
     <div
       className={cn(
-        "min-h-screen bg-[#FAFAFA] font-sans text-gray-900",
+        "min-h-screen bg-[#FAFAF5] font-sans text-[#1B4332]",
         "flex items-center justify-center",
-        // Subtle dot grid pattern (Linear-like)
-        "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px]",
+        // Same dotted background as marketing pages
+        "bg-[radial-gradient(circle,#D1D5DB_1px,transparent_1px)] bg-[size:20px_20px]",
         className
       )}
     >
@@ -51,14 +51,21 @@ export function MinimalAuthShell({
               />
             </div>
 
-            <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">{title}</h1>
-            {subtitle ? <p className="mt-2 text-center text-sm text-gray-500">{subtitle}</p> : null}
+            <h1 className="text-center text-[1.75rem] font-bold leading-tight text-[#1B4332]">{title}</h1>
+            {subtitle ? <p className="mt-2 text-center text-base text-[#2D6A4F]">{subtitle}</p> : null}
 
             <div className="mt-8">{children}</div>
           </div>
 
           {sideImageSrc ? (
-            <div className="relative hidden overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:block">
+            <div
+              className="relative hidden overflow-hidden bg-white lg:block"
+              style={{
+                borderRadius: "var(--mgk-radius-card)",
+                border: "1px solid var(--mgk-border-card)",
+                boxShadow: "var(--mgk-shadow-card)",
+              }}
+            >
               <Image
                 src={sideImageSrc}
                 alt={sideImageAlt ?? ""}
@@ -74,10 +81,10 @@ export function MinimalAuthShell({
               {(sideTitle || sideSubtitle) ? (
                 <div className="absolute inset-x-0 bottom-0 p-6">
                   {sideTitle ? (
-                    <p className="text-base font-extrabold text-[#1A2F23]">{sideTitle}</p>
+                    <p className="text-lg font-bold text-[#1B4332]">{sideTitle}</p>
                   ) : null}
                   {sideSubtitle ? (
-                    <p className="mt-1 text-sm font-semibold text-[#64748b]">{sideSubtitle}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#2D6A4F]">{sideSubtitle}</p>
                   ) : null}
                 </div>
               ) : null}

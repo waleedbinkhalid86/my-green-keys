@@ -11,12 +11,12 @@ import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
 import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
+import { MarketingNav, isMarketingNavPath } from "@/components/marketing/MarketingNav";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup", "/admin", "/kid-login"];
 
 function isHidden(pathname: string): boolean {
   if (!pathname) return true;
-  if (pathname === "/") return true;
   if (HIDE_HEADER_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return true;
   return false;
 }
@@ -30,6 +30,7 @@ export default function ConditionalSiteHeader() {
   const { authReady, isLoggedIn } = useAuthProfileRoute();
 
   if (isHidden(pathname)) return null;
+  if (isMarketingNavPath(pathname)) return <MarketingNav />;
 
   return (
     <>

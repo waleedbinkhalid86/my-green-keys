@@ -39,7 +39,7 @@ const VALID_PROMO_CODES: Record<string, { discount: string; message: string; dis
 };
 
 const selectClassName =
-  "flex w-full rounded-md border border-[#D1E8DC] bg-white px-3 py-2 text-sm text-[#1B2D23] outline-none transition-colors focus:border-[#52B788] focus:ring-1 focus:ring-[#52B788] disabled:cursor-not-allowed disabled:opacity-50";
+  "flex min-h-12 w-full rounded-[12px] border border-[#D1E8DC] bg-white px-3 py-2 text-base text-[#1B2D23] outline-none transition-colors focus:border-[#52B788] focus:ring-1 focus:ring-[#52B788] disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SignupPage() {
   const { showToast } = useToast();
@@ -397,7 +397,7 @@ export default function SignupPage() {
   };
 
   const inputClassName = cn(
-    "w-full rounded-md border border-[#D1E8DC] bg-white px-3 py-2 text-sm text-[#1B2D23] placeholder:text-[#4A6355]/70",
+    "min-h-12 w-full rounded-[12px] border border-[#D1E8DC] bg-white px-3 py-2 text-base text-[#1B2D23] placeholder:text-[#4A6355]/70",
     "focus:border-[#52B788] focus:outline-none focus:ring-1 focus:ring-[#52B788]",
     "disabled:cursor-not-allowed disabled:opacity-50"
   );
@@ -439,7 +439,7 @@ export default function SignupPage() {
           ) : null}
 
           <div className="mb-8 space-y-2">
-            <p className="text-xs font-medium text-[#4A6355]">Account type</p>
+            <p className="text-sm font-semibold text-[#1B4332]">Account type</p>
             <div className="space-y-2">
               {[
                 { type: "student" as const, Icon: GraduationCap, label: "Student", desc: "I want to learn typing" },
@@ -472,7 +472,7 @@ export default function SignupPage() {
           {accountType ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                <label htmlFor="fullName" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                   Full name
                 </label>
                 <input
@@ -491,7 +491,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                   Email
                 </label>
                 <input
@@ -513,7 +513,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label htmlFor="gender" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                <label htmlFor="gender" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                   Gender
                 </label>
                 <select
@@ -534,7 +534,7 @@ export default function SignupPage() {
               {accountType === "student" ? (
                 <>
                   <div>
-                    <label htmlFor="age" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="age" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Age
                     </label>
                     <select
@@ -556,7 +556,7 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="username" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="username" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Username
                     </label>
                     <input
@@ -579,7 +579,7 @@ export default function SignupPage() {
               {accountType === "parent" ? (
                 <>
                   <div>
-                    <label htmlFor="childName" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="childName" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Child’s name
                     </label>
                     <input
@@ -598,7 +598,7 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="childAge" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="childAge" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Child’s age
                     </label>
                     <select
@@ -623,7 +623,7 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="childGender" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="childGender" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Child’s gender
                     </label>
                     <select
@@ -649,7 +649,7 @@ export default function SignupPage() {
               {accountType === "teacher" ? (
                 <>
                   <div>
-                    <label htmlFor="schoolName" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="schoolName" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       School name
                     </label>
                     <input
@@ -668,7 +668,7 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="numStudents" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="numStudents" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Number of students
                     </label>
                     <input
@@ -692,7 +692,7 @@ export default function SignupPage() {
               {!oauthUser ? (
                 <>
                   <div>
-                    <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Password
                     </label>
                     <div className="relative">
@@ -712,7 +712,7 @@ export default function SignupPage() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-[#4A6355] hover:text-[#1B2D23]"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#1B4332] hover:text-[#1B2D23]"
                         onClick={() => setPasswordVisible(!passwordVisible)}
                       >
                         {passwordVisible ? "Hide" : "Show"}
@@ -722,7 +722,7 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                    <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                       Confirm password
                     </label>
                     <div className="relative">
@@ -742,7 +742,7 @@ export default function SignupPage() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-[#4A6355] hover:text-[#1B2D23]"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#1B4332] hover:text-[#1B2D23]"
                         onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
                       >
                         {confirmPasswordVisible ? "Hide" : "Show"}
@@ -757,7 +757,7 @@ export default function SignupPage() {
 
               {ALL_FREE ? null : (
               <div>
-                <label htmlFor="promoCode" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+                <label htmlFor="promoCode" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
                   Promo code (optional)
                 </label>
                 <input
@@ -779,7 +779,7 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full rounded-full bg-[#52B788] py-2.5 text-sm font-semibold text-white hover:bg-[#40916C] disabled:cursor-not-allowed disabled:opacity-60"
+                className="mgk-btn mgk-btn--primary mgk-btn--block"
                 disabled={isLoading || googleLoading}
               >
                 {isLoading

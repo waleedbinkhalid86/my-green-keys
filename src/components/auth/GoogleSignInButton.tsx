@@ -45,9 +45,9 @@ export function AuthOrDivider({
 }) {
   return (
     <div className={cn("my-6 flex items-center gap-3", className)} role="separator" aria-label="Or">
-      <hr className="min-h-px flex-1 border-0 bg-gray-200" />
-      <span className="text-xs font-medium uppercase tracking-wider text-gray-400">OR</span>
-      <hr className="min-h-px flex-1 border-0 bg-gray-200" />
+      <hr className="min-h-px flex-1 border-0 bg-[#D1E8DC]" />
+      <span className="text-xs font-semibold uppercase tracking-wider text-[#2D6A4F]">OR</span>
+      <hr className="min-h-px flex-1 border-0 bg-[#D1E8DC]" />
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function GoogleSignInButton({
       onClick={() => void onClick()}
       disabled={disabled}
       className={cn(
-        "flex w-full items-center justify-start gap-3 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 shadow-none transition-colors hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-60",
+        "flex min-h-12 w-full items-center justify-center gap-3 rounded-[12px] border-2 border-[#D1E8DC] bg-white px-4 py-2.5 text-base font-semibold text-[#1B4332] shadow-none transition-colors hover:bg-[#F0F9F4] disabled:pointer-events-none disabled:opacity-60",
         className
       )}
     >

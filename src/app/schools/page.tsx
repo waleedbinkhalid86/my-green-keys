@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { BarChart3, Sprout, Target } from "lucide-react";
+import { Container } from "@/components/marketing/Container";
+import { Section } from "@/components/marketing/Section";
+import { PrimaryButton } from "@/components/marketing/Buttons";
+import { Card } from "@/components/marketing/Card";
 import { SchoolsContactForm } from "./SchoolsContactForm";
 
 export const metadata: Metadata = {
@@ -16,51 +21,10 @@ const WHATSAPP_URL =
 const EMAIL = "mygreenkeys26@gmail.com";
 
 const pageBg: CSSProperties = {
-  backgroundColor: "#FAFAF7",
+  backgroundColor: "#FAFAF5",
   backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
   backgroundSize: "20px 20px",
   minHeight: "100%",
-};
-
-const section: CSSProperties = {
-  marginBottom: "56px",
-};
-
-const h2: CSSProperties = {
-  fontSize: "clamp(1.5rem, 4vw, 2rem)",
-  fontWeight: 800,
-  color: "#1B4332",
-  marginBottom: "24px",
-  textAlign: "center",
-};
-
-const glassCard: CSSProperties = {
-  background: "linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(240,249,244,0.82) 55%)",
-  border: "1px solid rgba(116, 198, 157, 0.45)",
-  borderRadius: "24px",
-  padding: "28px 24px",
-  boxShadow: "0 8px 32px rgba(27, 67, 50, 0.1)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-};
-
-const whatsappBtn: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "16px 32px",
-  borderRadius: "12px",
-  fontSize: "17px",
-  fontWeight: 700,
-  background: "#52B788",
-  color: "#FFFFFF",
-  textDecoration: "none",
-  border: "none",
-  cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(45, 106, 79, 0.25)",
-  width: "100%",
-  maxWidth: "420px",
-  boxSizing: "border-box",
 };
 
 const textLink: CSSProperties = {
@@ -73,17 +37,17 @@ const textLink: CSSProperties = {
 
 const WHAT_SCHOOLS_GET = [
   {
-    icon: "📊",
+    Icon: BarChart3,
     title: "Teacher dashboard",
     body: "Track every student's progress, time spent, and lessons completed in real time.",
   },
   {
-    icon: "🎯",
+    Icon: Target,
     title: "Daily practice",
     body: "Typing, math, and habit-building in one app. Built so kids want to use it daily.",
   },
   {
-    icon: "🌱",
+    Icon: Sprout,
     title: "Made in Pakistan",
     body: "Built by a Pakistani educator. GDPR-aware, with EU hosting for international school chains.",
   },
@@ -102,273 +66,189 @@ const WHO_ITS_FOR = [
   "Schools that want a single daily-use app, not five different ones",
 ] as const;
 
-function WhatsAppButton({ fullWidth }: { fullWidth?: boolean }) {
+function WhatsAppButton({ block }: { block?: boolean }) {
   return (
-    <a
-      href={WHATSAPP_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        ...whatsappBtn,
-        ...(fullWidth ? { maxWidth: "none", width: "100%" } : {}),
-      }}
-    >
+    <PrimaryButton href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" block={block}>
       Chat on WhatsApp
-    </a>
+    </PrimaryButton>
   );
 }
 
 export default function SchoolsPage() {
   return (
-    <>
-      <div style={pageBg}>
-        <div className="schools-page-inner">
-          {/* Hero */}
-          <section style={{ ...section, paddingTop: "17px", textAlign: "center" }}>
-            <h1
-              style={{
-                fontSize: "clamp(1.75rem, 5vw, 2.75rem)",
-                fontWeight: 800,
-                color: "#1B4332",
-                lineHeight: 1.2,
-                marginBottom: "11px",
-              }}
-            >
-              School sustainability partnership
-            </h1>
-            <p
-              style={{
-                fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-                lineHeight: 1.6,
-                color: "#2D6A4F",
-                maxWidth: "640px",
-                margin: "0 auto 20px",
-              }}
-            >
+    <div style={pageBg}>
+      {/* Hero */}
+      <Section>
+        <Container style={{ textAlign: "center" }}>
+          <div style={{ maxWidth: 720, marginInline: "auto" }}>
+            <h1 className="mgk-h1">School sustainability partnership</h1>
+            <p className="mgk-lead" style={{ marginTop: 16 }}>
               Partner with My Green Keys to help your students learn to type and care for the
               planet. Free for your school, built in Pakistan for Pakistani classrooms.
             </p>
-            <div className="schools-hero-cta">
+            <div className="mgk-btn-row" style={{ marginTop: 32 }}>
               <WhatsAppButton />
-              <div className="schools-hero-links">
-                <a href={`mailto:${EMAIL}`} style={textLink}>
-                  Email us
-                </a>
-                <span style={{ color: "#74C69D", margin: "0 4px" }} aria-hidden>
-                  ·
-                </span>
-                <a href="#contact" style={textLink}>
-                  Become a partner school
-                </a>
-              </div>
             </div>
-          </section>
-
-          {/* What schools get */}
-          <section style={section}>
-            <h2 style={h2}>What schools get</h2>
-            <div className="schools-cards-grid">
-              {WHAT_SCHOOLS_GET.map((card) => (
-                <div key={card.title} style={glassCard}>
-                  <span style={{ fontSize: "2rem", display: "block", marginBottom: "12px" }}>
-                    {card.icon}
-                  </span>
-                  <h3
-                    style={{
-                      fontSize: "1.15rem",
-                      fontWeight: 800,
-                      color: "#1B4332",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    {card.title}
-                  </h3>
-                  <p style={{ fontSize: "15px", lineHeight: 1.65, color: "#2D6A4F", margin: 0 }}>
-                    {card.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* How it works */}
-          <section style={section}>
-            <h2 style={h2}>How it works</h2>
-            <ol
-              className="schools-steps-list"
-              style={{
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-              }}
-            >
-              {HOW_IT_WORKS.map((step, i) => (
-                <li key={step}>
-                  <div style={glassCard} className="schools-step-card">
-                    <span
-                      style={{
-                        flexShrink: 0,
-                        fontSize: "clamp(2.5rem, 8vw, 3.5rem)",
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        color: "#74C69D",
-                        minWidth: "48px",
-                      }}
-                      aria-hidden
-                    >
-                      {i + 1}
-                    </span>
-                    <p
-                      style={{
-                        margin: 0,
-                        paddingTop: "8px",
-                        fontSize: "17px",
-                        lineHeight: 1.55,
-                        fontWeight: 700,
-                        color: "#1B4332",
-                      }}
-                    >
-                      {step}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {/* Who it's for */}
-          <section style={section}>
-            <h2 style={h2}>Who it&apos;s for</h2>
-            <div style={{ ...glassCard, maxWidth: "560px", margin: "0 auto" }}>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: "24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                {WHO_ITS_FOR.map((item) => (
-                  <li
-                    key={item}
-                    style={{
-                      fontSize: "16px",
-                      lineHeight: 1.6,
-                      color: "#2D6A4F",
-                    }}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          {/* Partnership callout */}
-          <section style={{ ...section, textAlign: "center" }}>
-            <div
-              style={{
-                background: "#F2B705",
-                color: "#1B4332",
-                borderRadius: "16px",
-                padding: "28px 24px",
-                fontSize: "clamp(1.15rem, 3vw, 1.35rem)",
-                fontWeight: 800,
-                lineHeight: 1.4,
-                maxWidth: "720px",
-                margin: "0 auto",
-              }}
-            >
-              Partner schools join free, with no time limit.
-              <br />
-              <span style={{ fontSize: "0.65em", fontWeight: 600 }}>
-                Learn to type. Help the planet. Together.
+            <div className="mgk-btn-row" style={{ marginTop: 16, gap: 8 }}>
+              <a href={`mailto:${EMAIL}`} style={textLink}>
+                Email us
+              </a>
+              <span style={{ color: "#74C69D" }} aria-hidden>
+                ·
               </span>
+              <a href="#contact" style={textLink}>
+                Become a partner school
+              </a>
             </div>
-          </section>
+          </div>
+        </Container>
+      </Section>
 
-          {/* Contact */}
-          <section id="contact" style={{ ...section, marginBottom: 0 }}>
-            <h2 style={{ ...h2, marginBottom: "20px" }}>Become a partner school</h2>
-            <div style={{ ...glassCard, maxWidth: "520px", margin: "0 auto" }}>
-              <div style={{ marginBottom: "20px" }}>
-                <WhatsAppButton fullWidth />
-              </div>
-              <p
+      {/* What schools get */}
+      <Section tone="pale">
+        <Container>
+          <div className="mgk-sec-head">
+            <h2 className="mgk-h2">What schools get</h2>
+          </div>
+          <div className="mgk-grid-3">
+            {WHAT_SCHOOLS_GET.map(({ Icon, title, body }) => (
+              <Card key={title}>
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-full"
+                  style={{ background: "#F0F9F4" }}
+                >
+                  <Icon size={24} strokeWidth={2.25} color="#2D6A4F" aria-hidden />
+                </div>
+                <h3 className="mgk-h3" style={{ marginTop: 16 }}>
+                  {title}
+                </h3>
+                <p className="mgk-body" style={{ marginTop: 8 }}>
+                  {body}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* How it works */}
+      <Section>
+        <Container>
+          <div className="mgk-sec-head">
+            <h2 className="mgk-h2">How it works</h2>
+          </div>
+          <ol
+            style={{
+              listStyle: "none",
+              margin: "0 auto",
+              padding: 0,
+              maxWidth: 720,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            {HOW_IT_WORKS.map((step, i) => (
+              <li key={step}>
+                <Card bodyStyle={{ display: "flex", alignItems: "center", gap: 24 }}>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      width: 48,
+                      fontSize: "2.5rem",
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      color: "#52B788",
+                      textAlign: "center",
+                    }}
+                    aria-hidden
+                  >
+                    {i + 1}
+                  </span>
+                  <p className="mgk-label" style={{ margin: 0, fontSize: "1.0625rem", lineHeight: 1.5, color: "#1B4332" }}>
+                    {step}
+                  </p>
+                </Card>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+
+      {/* Who it's for */}
+      <Section tone="pale">
+        <Container>
+          <div className="mgk-sec-head">
+            <h2 className="mgk-h2">Who it&apos;s for</h2>
+          </div>
+          <Card style={{ maxWidth: 560, marginInline: "auto" }}>
+            <ul
+              className="mgk-body"
+              style={{
+                margin: 0,
+                paddingLeft: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                listStyle: "disc",
+              }}
+            >
+              {WHO_ITS_FOR.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Card>
+        </Container>
+      </Section>
+
+      {/* Partnership callout + contact */}
+      <Section id="contact">
+        <Container>
+          <div
+            style={{
+              background: "#F2B705",
+              color: "#1B4332",
+              borderRadius: "var(--mgk-radius-card)",
+              padding: "32px 24px",
+              fontSize: "clamp(1.15rem, 3vw, 1.35rem)",
+              fontWeight: 700,
+              lineHeight: 1.4,
+              maxWidth: 720,
+              margin: "0 auto var(--mgk-space-6)",
+              textAlign: "center",
+            }}
+          >
+            Partner schools join free, with no time limit.
+            <br />
+            <span style={{ fontSize: "0.7em", fontWeight: 600 }}>
+              Learn to type. Help the planet. Together.
+            </span>
+          </div>
+
+          <div className="mgk-sec-head" style={{ marginBottom: 32 }}>
+            <h2 className="mgk-h2">Become a partner school</h2>
+          </div>
+          <Card style={{ maxWidth: 520, marginInline: "auto" }} bodyStyle={{ padding: 32 }}>
+            <WhatsAppButton block />
+            <p className="mgk-body" style={{ textAlign: "center", marginTop: 16 }}>
+              Or email us at{" "}
+              <a
+                href={`mailto:${EMAIL}`}
                 style={{
-                  textAlign: "center",
-                  fontSize: "15px",
-                  color: "#2D6A4F",
-                  margin: "0 0 8px",
+                  color: "#1B4332",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                  overflowWrap: "anywhere",
                 }}
               >
-                Or email us at{" "}
-                <a
-                  href={`mailto:${EMAIL}`}
-                  style={{
-                    color: "#1B4332",
-                    fontWeight: 700,
-                    textDecoration: "underline",
-                    textUnderlineOffset: "3px",
-                  }}
-                >
-                  {EMAIL}
-                </a>
-              </p>
-              <SchoolsContactForm />
-            </div>
-          </section>
-        </div>
-      </div>
-
-      <style>{`
-        .schools-cards-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-        @media (min-width: 768px) {
-          .schools-cards-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-        .schools-hero-links {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          margin-top: 11px;
-        }
-        .schools-steps-list {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .schools-step-card {
-          display: flex;
-          align-items: flex-start;
-          gap: 20px;
-        }
-        .schools-hero-cta {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .schools-page-inner {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 22px 20px 64px;
-          box-sizing: border-box;
-        }
-        @media (min-width: 768px) {
-          .schools-page-inner {
-            padding-left: 32px;
-            padding-right: 32px;
-          }
-        }
-      `}</style>
-    </>
+                {EMAIL}
+              </a>
+            </p>
+            <SchoolsContactForm />
+          </Card>
+        </Container>
+      </Section>
+    </div>
   );
 }

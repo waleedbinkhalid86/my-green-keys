@@ -264,7 +264,7 @@ export default function LoginPage() {
   };
 
   const inputClassName = cn(
-    "w-full rounded-md border border-[#D1E8DC] bg-white px-3 py-2 text-sm text-[#1B2D23] placeholder:text-[#4A6355]/70",
+    "min-h-12 w-full rounded-[12px] border border-[#D1E8DC] bg-white px-3 py-2 text-base text-[#1B2D23] placeholder:text-[#4A6355]/70",
     "focus:border-[#52B788] focus:outline-none focus:ring-1 focus:ring-[#52B788]",
     "disabled:cursor-not-allowed disabled:opacity-50"
   );
@@ -277,7 +277,7 @@ export default function LoginPage() {
         <AuthOrDivider />
 
         <div className="mb-4">
-          <label htmlFor="emailOrUsername" className="mb-1.5 block text-xs font-medium text-[#4A6355]">
+          <label htmlFor="emailOrUsername" className="mb-1.5 block text-sm font-semibold text-[#1B4332]">
             Email
           </label>
           <input
@@ -304,7 +304,7 @@ export default function LoginPage() {
 
         <div className="mb-6">
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <label htmlFor="password" className="text-xs font-medium text-[#4A6355]">
+            <label htmlFor="password" className="text-sm font-semibold text-[#1B4332]">
               Password
             </label>
             <Link href="/forgot-password" className="text-xs font-medium text-[#2D6A4F] hover:text-[#52B788]">
@@ -345,7 +345,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading || googleLoading}
-          className="w-full rounded-full bg-[#52B788] py-2.5 text-sm font-semibold text-white hover:bg-[#40916C] disabled:cursor-not-allowed disabled:opacity-60"
+          className="mgk-btn mgk-btn--primary mgk-btn--block"
         >
           {isLoading ? "Logging in…" : "Log in"}
         </button>
