@@ -106,7 +106,7 @@ export default function PricingPage() {
       <Section>
         <Container style={{ textAlign: "center" }}>
           <div style={{ maxWidth: 720, marginInline: "auto" }}>
-            <Eyebrow style={{ marginBottom: 24 }}>$0 for everyone</Eyebrow>
+            <Eyebrow style={{ marginBottom: 24 }}>Free for everyone</Eyebrow>
             <h1 className="mgk-h1">Free for every child</h1>
             <p className="mgk-lead" style={{ marginTop: 16 }}>
               Kids, parents and schools get full access to everything My Green Keys offers.

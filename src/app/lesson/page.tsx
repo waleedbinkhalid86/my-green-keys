@@ -379,10 +379,9 @@ function EdclubKeyboardSection({
 
       <svg
         width="100%"
-        height="auto"
         viewBox={`0 0 ${geom.vbWidth} ${geom.vbHeight}`}
         preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block", minWidth: geom.vbWidth, minHeight: 195 }}
+        style={{ display: "block", height: "auto", minWidth: geom.vbWidth, minHeight: 195 }}
         aria-hidden
       >
         <rect
@@ -2483,7 +2482,7 @@ export default function LessonPage() {
               <div>
                 <div style={{ fontSize: "22px", fontWeight: 900, color: "#2c3e50" }}>Join Class</div>
                 <div style={{ fontSize: "13px", color: "#666", marginTop: 4 }}>
-                  Enter your 6-character class code (example: GRN42X).
+                  Enter your 8-character class code (example: GRN42XKP).
                 </div>
               </div>
               <button
@@ -2504,8 +2503,8 @@ export default function LessonPage() {
             <input
               value={classCode}
               onChange={(e) => setClassCode(e.target.value.toUpperCase())}
-              placeholder="GRN42X"
-              maxLength={6}
+              placeholder="GRN42XKP"
+              maxLength={8}
               disabled={joinClassLoading}
               style={{
                 width: "100%",
