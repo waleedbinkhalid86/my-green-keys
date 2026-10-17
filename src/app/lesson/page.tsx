@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Nunito } from "next/font/google";
-import { Flame, Shield } from "lucide-react";
+import { Flame, Gamepad2, Map as MapIcon, Shield } from "lucide-react";
 import { lessons, phases, type Lesson } from "@/data/lessons";
 import { fetchCustomLessonsForViewer, type CustomLessonRow } from "@/lib/lessons/custom-lessons-api";
 import { isChildAccount } from "@/lib/kid-login/family-resolver";
@@ -245,6 +245,14 @@ function buildEdclubKeyboardGeometry(): EdclubKbGeom {
 
 const EDCLUB_KB_GEOM = buildEdclubKeyboardGeometry();
 
+/** Phone viewBox: crop the empty side margins so keys scale up to fit narrow screens. */
+const EDCLUB_KB_COMPACT_VIEWBOX = (() => {
+  const g = EDCLUB_KB_GEOM;
+  const minX = Math.min(...g.keys.map((k) => k.x)) - 6;
+  const maxX = Math.max(...g.keys.map((k) => k.x + k.w)) + 6;
+  return { x: minX, width: maxX - minX };
+})();
+
 /** First index where correction is needed, or length of correct prefix for next key. */
 function nextLessonKeyIndex(sentence: string, typed: string): number {
   const n = Math.min(typed.length, sentence.length);
@@ -302,12 +310,119 @@ function EdclubKeyboardSection({
       ? TERRITORY_COLORS.space
       : TERRITORY_COLORS[fingerTypeFromHighlight(highlightKey)] ?? TERRITORY_COLORS.lindex;
 
+  /**
+   * Both SVGs are rendered and CSS media queries show one, so the first paint is already right (no JS flag).
+   * Compact (phones): cropped viewBox fills the container width; larger label units keep labels >= 10px.
+   */
+  const renderKeyboardSvg = (compact: boolean) => {
+    const vbX = compact ? EDCLUB_KB_COMPACT_VIEWBOX.x : 0;
+    const vbW = compact ? EDCLUB_KB_COMPACT_VIEWBOX.width : geom.vbWidth;
+    return (
+      <svg
+        className={compact ? "kb-svg kb-svg--compact" : "kb-svg kb-svg--full"}
+        width="100%"
+        viewBox={`${vbX} 0 ${vbW} ${geom.vbHeight}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={compact ? { height: "auto", width: "100%" } : { height: "auto", minWidth: geom.vbWidth, minHeight: 195 }}
+        aria-hidden
+      >
+        <rect
+          x={vbX + 4}
+          y={geom.keyboardTop - 12}
+          width={vbW - 8}
+          height={geom.vbHeight - geom.keyboardTop + 16}
+          rx={10}
+          fill="#E8EBEF"
+        />
+
+        {geom.keys.map((k) => {
+          const active = k.mapId !== null && hk === k.mapId;
+          const shaking = k.mapId !== null && sk === k.mapId;
+          const pressed = k.mapId !== null && pk === k.mapId;
+          const cx = k.x + k.w / 2;
+          const cy = k.y + k.h / 2;
+          const territory = TERRITORY_COLORS[k.zone] ?? "#EEEEEE";
+          const fill = active ? themeColor : territory;
+          const stroke = active ? themeColor : EDCLUB_KEY_BORDER;
+          const sw = active ? 2.5 : 1;
+          const shadow = active
+            ? `drop-shadow(0 0 10px ${themeColor}99) drop-shadow(0 0 20px ${themeColor}55) drop-shadow(0 1px 0 #6b7280)`
+            : `drop-shadow(0 2px 0 ${EDCLUB_KEY_SHADOW})`;
+          const isLetter =
+            k.mapId !== null && k.mapId !== " " && k.mapId.length === 1 && /[a-z;,\./]/.test(k.mapId);
+          const isLongLabel = k.label.length > 7;
+          // Phone Backspace uses a symbol so it stays >= 10px inside its key.
+          const compactBackspace = compact && k.id === "bksp";
+          const labelSize = compact
+            ? compactBackspace
+              ? 22
+              : isLetter
+                ? 19
+                : 18
+            : isLongLabel
+              ? 9
+              : isLetter
+                ? 12
+                : 11;
+          const labelWeight = isLetter ? 800 : 700;
+          const labelFill = active ? "#ffffff" : EDCLUB_KEY_LABEL;
+          return (
+            <g
+              key={k.id}
+              style={{
+                transformOrigin: `${cx}px ${cy}px`,
+                transform: pressed ? "scale(0.96)" : "scale(1)",
+                transition: "transform 0.08s ease",
+                animation: shaking ? "shakeWrong 0.15s ease" : "none",
+              }}
+            >
+              <rect
+                x={k.x}
+                y={k.y}
+                width={k.w}
+                height={k.h}
+                rx={EDCLUB_KB_RX}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={sw}
+                style={{ filter: shadow }}
+              />
+              {(k.mapId === "f" || k.mapId === "j") && (
+                <rect
+                  x={cx - 2.5}
+                  y={k.y + k.h - 8}
+                  width={5}
+                  height={4}
+                  rx={2}
+                  fill={active ? "rgba(255,255,255,0.85)" : "rgba(51,51,51,0.35)"}
+                />
+              )}
+              <text
+                x={cx}
+                y={cy}
+                className={`${fontClassName}${!compact && isLongLabel ? " kb-label-long" : ""}`}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={labelFill}
+                fontSize={labelSize}
+                fontWeight={labelWeight}
+                aria-label={compactBackspace ? "Backspace" : undefined}
+                style={{ pointerEvents: "none", userSelect: "none" }}
+              >
+                {compactBackspace ? "⌫" : k.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
+
   return (
     <div
-      className={fontClassName}
+      className={`${fontClassName} lesson-keyboard-box`}
       style={{
         background: "#F5F7FA",
-        padding: "12px 14px 14px",
         borderRadius: 14,
         marginBottom: 11,
         marginTop: 0,
@@ -377,88 +492,8 @@ function EdclubKeyboardSection({
         </div>
       )}
 
-      <svg
-        width="100%"
-        viewBox={`0 0 ${geom.vbWidth} ${geom.vbHeight}`}
-        preserveAspectRatio="xMidYMid meet"
-        style={{ display: "block", height: "auto", minWidth: geom.vbWidth, minHeight: 195 }}
-        aria-hidden
-      >
-        <rect
-          x={4}
-          y={geom.keyboardTop - 12}
-          width={geom.vbWidth - 8}
-          height={geom.vbHeight - geom.keyboardTop + 16}
-          rx={10}
-          fill="#E8EBEF"
-        />
-
-        {geom.keys.map((k) => {
-          const active = k.mapId !== null && hk === k.mapId;
-          const shaking = k.mapId !== null && sk === k.mapId;
-          const pressed = k.mapId !== null && pk === k.mapId;
-          const cx = k.x + k.w / 2;
-          const cy = k.y + k.h / 2;
-          const territory = TERRITORY_COLORS[k.zone] ?? "#EEEEEE";
-          const fill = active ? themeColor : territory;
-          const stroke = active ? themeColor : EDCLUB_KEY_BORDER;
-          const sw = active ? 2.5 : 1;
-          const shadow = active
-            ? `drop-shadow(0 0 10px ${themeColor}99) drop-shadow(0 0 20px ${themeColor}55) drop-shadow(0 1px 0 #6b7280)`
-            : `drop-shadow(0 2px 0 ${EDCLUB_KEY_SHADOW})`;
-          const isLetter =
-            k.mapId !== null && k.mapId !== " " && k.mapId.length === 1 && /[a-z;,\./]/.test(k.mapId);
-          const labelSize = k.label.length > 7 ? 9 : isLetter ? 12 : 11;
-          const labelWeight = isLetter ? 800 : 700;
-          const labelFill = active ? "#ffffff" : EDCLUB_KEY_LABEL;
-          return (
-            <g
-              key={k.id}
-              style={{
-                transformOrigin: `${cx}px ${cy}px`,
-                transform: pressed ? "scale(0.96)" : "scale(1)",
-                transition: "transform 0.08s ease",
-                animation: shaking ? "shakeWrong 0.15s ease" : "none",
-              }}
-            >
-              <rect
-                x={k.x}
-                y={k.y}
-                width={k.w}
-                height={k.h}
-                rx={EDCLUB_KB_RX}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={sw}
-                style={{ filter: shadow }}
-              />
-              {(k.mapId === "f" || k.mapId === "j") && (
-                <rect
-                  x={cx - 2.5}
-                  y={k.y + k.h - 8}
-                  width={5}
-                  height={4}
-                  rx={2}
-                  fill={active ? "rgba(255,255,255,0.85)" : "rgba(51,51,51,0.35)"}
-                />
-              )}
-              <text
-                x={cx}
-                y={cy}
-                className={fontClassName}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={labelFill}
-                fontSize={labelSize}
-                fontWeight={labelWeight}
-                style={{ pointerEvents: "none", userSelect: "none" }}
-              >
-                {k.label}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+      {renderKeyboardSvg(false)}
+      {renderKeyboardSvg(true)}
     </div>
   );
 }
@@ -1832,12 +1867,11 @@ export default function LessonPage() {
 
   return (
     <div
-      className={`${nunito.className} antialiased`}
+      className={`${nunito.className} antialiased lesson-root`}
       style={{
         backgroundColor: "#FAFAF7",
         backgroundImage: "radial-gradient(circle, #D1D5DB 1px, transparent 1px)",
         backgroundSize: "20px 20px",
-        minHeight: "100vh",
         color: "#2C3E50",
         fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif",
         // Body is 400 site-wide; keep drill text, keyboard and buttons at 600 for young readers.
@@ -1942,88 +1976,6 @@ export default function LessonPage() {
               >
                 Download PDF
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* DAILY FACT POPUP */}
-      {showDailyFact && dailyFact && (
-        <div
-          style={{
-            position: "fixed",
-            top: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 2600,
-            width: "min(680px, 92vw)",
-          }}
-        >
-          <div
-            className="fact-popup"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(45,106,79,0.95) 0%, rgba(76,175,80,0.92) 60%, rgba(255,235,59,0.75) 100%)",
-              border: "1px solid rgba(255,255,255,0.22)",
-              borderRadius: 18,
-              boxShadow: "0 18px 60px rgba(0,0,0,0.22)",
-              padding: 16,
-              color: "white",
-              position: "relative",
-              overflow: "hidden",
-            }}
-            onClick={() => setShowDailyFact(false)}
-            role="dialog"
-            aria-label="Daily eco fact"
-          >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDailyFact(false);
-              }}
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.25)",
-                background: "rgba(0,0,0,0.18)",
-                color: "white",
-                fontWeight: 900,
-                cursor: "pointer",
-              }}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-
-            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <div style={{ fontSize: 34, lineHeight: 1 }}>{dailyFact.emoji}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 950, fontSize: 14 }}>Did you know? 🌍</div>
-                <div style={{ fontWeight: 900, fontSize: 18, marginTop: 6, lineHeight: 1.25 }}>
-                  {dailyFact.fact}
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-                  <span
-                    style={{
-                      background: "rgba(255,255,255,0.18)",
-                      border: "1px solid rgba(255,255,255,0.22)",
-                      padding: "4px 10px",
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {dailyFact.category}
-                  </span>
-                  <span style={{ fontSize: 12, opacity: 0.9, fontWeight: 800 }}>
-                    Source: {dailyFact.source}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -2568,10 +2520,10 @@ export default function LessonPage() {
         }}
       >
         <div
-          className="mgk-container flex flex-wrap items-center justify-between gap-3 py-3"
+          className="mgk-container lesson-nav-row flex flex-wrap items-center justify-between gap-3 py-3"
         >
           {/* Left: back + brand only (lesson meta lives in strip below) */}
-          <div className="flex min-w-0 shrink-0 items-center gap-3">
+          <div className="lesson-nav-left flex min-w-0 shrink-0 items-center gap-3">
             <button
               type="button"
               onClick={() => window.history.back()}
@@ -2595,8 +2547,8 @@ export default function LessonPage() {
           </div>
 
           {/* Right: stats + actions + pet */}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-3.5 flex-wrap">
-            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <div className="lesson-nav-right flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-3.5 flex-wrap">
+            <div className="lesson-nav-stats" style={{ display: "flex", gap: 14, alignItems: "center" }}>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 16, fontWeight: 950, color: "#2ECC71" }}>{stats.wpm}</div>
                 <div style={{ fontSize: 11, opacity: 0.78, fontWeight: 800 }}>WPM</div>
@@ -2612,11 +2564,13 @@ export default function LessonPage() {
             </div>
 
             {profileDailyStreak > 0 ? (
-              <StreakCounter streak={profileDailyStreak} variant="inline" className="!shadow-none" />
+              <StreakCounter streak={profileDailyStreak} variant="inline" className="lesson-nav-meta !shadow-none" />
             ) : null}
 
             <Link
               href="/streak"
+              className="lesson-nav-action"
+              aria-label="Streak"
               style={{
                 padding: "10px 14px",
                 borderRadius: 50,
@@ -2632,7 +2586,7 @@ export default function LessonPage() {
               }}
             >
               <Flame size={18} aria-hidden />
-              Streak
+              <span className="lesson-nav-label">Streak</span>
             </Link>
 
             <Link
@@ -2664,6 +2618,7 @@ export default function LessonPage() {
             </Link>
 
             <div
+              className="lesson-nav-meta"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -2681,6 +2636,8 @@ export default function LessonPage() {
             <button
               type="button"
               onClick={() => (window.location.href = "/lesson-map")}
+              className="lesson-nav-action"
+              aria-label="Lesson Map"
               style={{
                 padding: "10px 14px",
                 borderRadius: 50,
@@ -2691,11 +2648,14 @@ export default function LessonPage() {
                 cursor: "pointer",
               }}
             >
-              Lesson Map
+              <MapIcon size={18} className="lesson-nav-icon" aria-hidden />
+              <span className="lesson-nav-label">Lesson Map</span>
             </button>
             <button
               type="button"
               onClick={() => (window.location.href = "/games")}
+              className="lesson-nav-action"
+              aria-label="Games"
               style={{
                 padding: "10px 14px",
                 borderRadius: 50,
@@ -2706,13 +2666,14 @@ export default function LessonPage() {
                 cursor: "pointer",
               }}
             >
-              Games
+              <Gamepad2 size={18} className="lesson-nav-icon" aria-hidden />
+              <span className="lesson-nav-label">Games</span>
             </button>
 
             {/* Pet widget (compact — desktop uses PetWidget on typing card) */}
             {!isGuest && (
             <div
-              className="nav-pet-wrap flex md:hidden"
+              className="nav-pet-wrap lesson-nav-meta flex md:hidden"
               style={{ alignItems: "center", gap: 10, paddingLeft: 4 }}
             >
               <div style={{ textAlign: "right" }}>
@@ -2765,6 +2726,82 @@ export default function LessonPage() {
         </div>
       </nav>
 
+      {/* DAILY FACT POPUP */}
+      {showDailyFact && dailyFact && (
+        <div className="fact-popup-wrap">
+          <div
+            className="fact-popup"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(45,106,79,0.95) 0%, rgba(76,175,80,0.92) 60%, rgba(255,235,59,0.75) 100%)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              borderRadius: 18,
+              boxShadow: "0 18px 60px rgba(0,0,0,0.22)",
+              padding: "16px 58px 16px 16px",
+              color: "white",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            onClick={() => setShowDailyFact(false)}
+            role="dialog"
+            aria-label="Daily eco fact"
+          >
+            <button
+              type="button"
+              className="fact-popup-close"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDailyFact(false);
+              }}
+              style={{
+                position: "absolute",
+                top: 6,
+                right: 6,
+                width: 44,
+                height: 44,
+                fontSize: 16,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.25)",
+                background: "rgba(0,0,0,0.18)",
+                color: "white",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ fontSize: 34, lineHeight: 1 }}>{dailyFact.emoji}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 950, fontSize: 14 }}>Did you know? 🌍</div>
+                <div style={{ fontWeight: 900, fontSize: 18, marginTop: 6, lineHeight: 1.25 }}>
+                  {dailyFact.fact}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                  <span
+                    style={{
+                      background: "rgba(255,255,255,0.18)",
+                      border: "1px solid rgba(255,255,255,0.22)",
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {dailyFact.category}
+                  </span>
+                  <span style={{ fontSize: 12, opacity: 0.9, fontWeight: 800 }}>
+                    Source: {dailyFact.source}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* LESSON INFO STRIP (minimal) */}
       <div
         style={{
@@ -2785,6 +2822,7 @@ export default function LessonPage() {
           }}
         >
           <div
+            className="lesson-strip-row"
             style={{
               display: "flex",
               alignItems: "center",
@@ -2792,7 +2830,7 @@ export default function LessonPage() {
               gap: 8,
             }}
           >
-          <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <div className="lesson-strip-title-col" style={{ minWidth: 0, overflow: "hidden" }}>
             <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.75, marginBottom: 3, letterSpacing: "0.02em" }}>
               {activeCustomLessonId ? (
                 <>
@@ -2804,15 +2842,15 @@ export default function LessonPage() {
                 </>
               )}
             </div>
-            <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div className="lesson-strip-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               <span style={{ fontWeight: 950 }}>{currentLesson.title}</span>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
+          <div className="lesson-strip-target" style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 220, justifyContent: "flex-end" }}>
             <span style={{ fontSize: 11, opacity: 0.85 }}>
               Target: <span style={{ fontWeight: 950 }}>{currentLesson.targetWPM || 20} WPM</span>
             </span>
-            <div style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+            <div className="lesson-strip-track" style={{ width: 140, height: 8, borderRadius: 999, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
               <div
                 className="lesson-strip-progress-fill"
                 style={{
@@ -3005,7 +3043,7 @@ export default function LessonPage() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="mgk-container max-w-[1100px] px-2 pt-2">
+      <div className="mgk-container lesson-main max-w-[1100px] px-2 pt-2">
         {/* TYPING AREA */}
         <div
           style={{
@@ -3492,7 +3530,7 @@ export default function LessonPage() {
               </div>
             )}
 
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
+            <div className="lesson-complete-actions" style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
               {activeCustomLessonId ? (
                 <button
                   type="button"
@@ -4429,27 +4467,159 @@ export default function LessonPage() {
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Mobile typing bar + spacing */
-        .lesson-main-pad {
-          padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        /* Dynamic viewport height so the phone's on-screen keyboard doesn't leave a 100vh gap */
+        .lesson-root {
+          min-height: 100vh;
+          min-height: 100dvh;
+        }
+
+        /* Daily fact sits in normal flow under the lesson header at every width: never over it or the typing box */
+        .fact-popup-wrap {
+          position: relative;
+          z-index: 30;
+          max-width: 680px;
+          margin: 8px 16px 0;
+        }
+        @media (min-width: 712px) {
+          .fact-popup-wrap {
+            margin: 8px auto 0;
+          }
+        }
+
+        /* On-screen keyboard: CSS picks the SVG (no JS flag), so the first paint is already the right layout */
+        .lesson-keyboard-box {
+          padding: 12px 14px 14px;
+        }
+        .kb-svg {
+          display: block;
+        }
+        .kb-svg--compact {
+          display: none;
+        }
+        @media (max-width: 1023px) {
+          /* Full keyboard at tablet widths: keep the long "Backspace" label >= 10px on screen */
+          .kb-label-long {
+            font-size: 10px;
+          }
+          /* Room for the fixed bottom progress bar */
+          .lesson-main {
+            padding-bottom: calc(46px + env(safe-area-inset-bottom, 0px));
+          }
         }
         @media (max-width: 767px) {
-          .lesson-main-pad {
-            padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+          .lesson-keyboard-box {
+            padding: 10px 6px 8px;
           }
+          .kb-svg--full {
+            display: none;
+          }
+          .kb-svg--compact {
+            display: block;
+          }
+        }
+
+        @media (max-width: 767px) {
+          /* Lesson header: row 1 = back + brand, icon actions; row 2 = slim stats */
+          .lesson-nav-row {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            column-gap: 8px !important;
+            row-gap: 6px !important;
+          }
+          .lesson-nav-right {
+            display: contents !important;
+          }
+          .lesson-nav-left {
+            order: 1;
+            flex: 1 1 auto;
+          }
+          .lesson-nav-left > button {
+            width: 44px !important;
+            height: 44px !important;
+          }
+          .lesson-nav-action {
+            order: 2;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            padding: 0 !important;
+            gap: 0 !important;
+          }
+          .lesson-nav-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+          }
+          .lesson-nav-row::after {
+            content: "";
+            order: 3;
+            flex-basis: 100%;
+            height: 0;
+          }
+          .lesson-nav-stats {
+            order: 4;
+            gap: 14px !important;
+            margin-right: auto;
+          }
+          .lesson-nav-stats > div {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+          }
+          .lesson-nav-meta {
+            order: 5;
+          }
+
+          /* Lesson title: full width, wraps instead of truncating */
+          .lesson-strip-row {
+            flex-wrap: wrap;
+          }
+          .lesson-strip-title-col {
+            flex: 1 1 100%;
+            overflow: visible !important;
+          }
+          .lesson-strip-title {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            overflow-wrap: anywhere;
+            line-height: 1.25;
+          }
+          .lesson-strip-target {
+            flex: 1 1 100%;
+            min-width: 0 !important;
+            justify-content: flex-start !important;
+          }
+          .lesson-strip-track {
+            flex: 1 1 auto;
+            width: auto !important;
+          }
+
+          /* Typing box stays in normal flow above the keyboard; keep it clear of the sticky header when focused */
           .lesson-typing-input {
-            position: fixed !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 38px !important;
-            z-index: 45 !important;
-            max-width: 100vw !important;
-            margin: 0 !important;
-            border-radius: 18px 18px 0 0 !important;
-            margin-bottom: 0 !important;
-            box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.14) !important;
-            border-bottom: none !important;
+            scroll-margin-top: 120px;
+            scroll-margin-bottom: 16px;
           }
+
+          /* Completion overlay: main buttons pinned in view, summary and save card scroll above/below */
+          .lesson-complete-panel {
+            max-height: min(calc(100dvh - 24px), 640px) !important;
+          }
+          .lesson-complete-actions {
+            position: sticky !important;
+            bottom: -14px;
+            z-index: 2;
+            margin: 0 -18px;
+            padding: 10px 18px 14px;
+            background: linear-gradient(180deg, rgba(255, 254, 245, 0.97) 0%, #fffef5 30%);
+            box-shadow: 0 -10px 18px -14px rgba(27, 67, 50, 0.45);
+          }
+
           .nav-pet-emoji {
             width: 40px !important;
             height: 40px !important;
@@ -4457,6 +4627,9 @@ export default function LessonPage() {
           }
         }
         @media (min-width: 768px) {
+          .lesson-nav-icon {
+            display: none;
+          }
           .nav-pet-emoji {
             width: 50px;
             height: 50px;
