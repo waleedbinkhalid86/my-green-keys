@@ -17,6 +17,13 @@ const NAV_LINKS = [
   { href: "/blog", label: "Blog" },
 ] as const;
 
+/** Homepage: nav sits transparent inside the hero with section anchors. */
+const HOME_NAV_LINKS = [
+  { href: "#how", label: "How it works" },
+  { href: "#schools", label: "Schools" },
+  { href: "/story", label: "Our story" },
+] as const;
+
 /** Paths that show this nav instead of the kid-app header. */
 export const MARKETING_NAV_PATHS = ["/", "/pricing", "/schools", "/story", "/blog"] as const;
 
@@ -35,9 +42,11 @@ export function MarketingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { authReady, isLoggedIn } = useAuthProfileRoute();
   const close = () => setMobileOpen(false);
+  const isHome = pathname === "/";
+  const links = isHome ? HOME_NAV_LINKS : NAV_LINKS;
 
   return (
-    <header className="mgk-mnav">
+    <header className={isHome ? "mgk-mnav mgk-mnav--home" : "mgk-mnav"}>
       <Container>
         <div className="mgk-mnav__bar">
           <SiteBrandLogoLink
@@ -48,7 +57,7 @@ export function MarketingNav() {
           />
 
           <nav className="mgk-mnav__links" aria-label="Main">
-            {NAV_LINKS.map((l) => (
+            {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
@@ -61,7 +70,20 @@ export function MarketingNav() {
           </nav>
 
           <div className="mgk-mnav__actions">
-            {!authReady ? null : isLoggedIn ? (
+            {isHome ? (
+              <>
+                {!authReady ? null : isLoggedIn ? (
+                  <GlobalLogoutButton />
+                ) : (
+                  <Link href="/login" className="mgk-mnav__link">
+                    Log in
+                  </Link>
+                )}
+                <PrimaryButton href="/lesson" onDark>
+                  Try a lesson
+                </PrimaryButton>
+              </>
+            ) : !authReady ? null : isLoggedIn ? (
               <GlobalLogoutButton />
             ) : (
               <>
@@ -79,7 +101,7 @@ export function MarketingNav() {
           </div>
 
           <MobileNavDrawer open={mobileOpen} onOpenChange={setMobileOpen} hamburgerClassName="text-white">
-            {NAV_LINKS.map((l) => (
+            {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
@@ -91,7 +113,22 @@ export function MarketingNav() {
               </Link>
             ))}
             <div className="mt-4 flex flex-col gap-3 border-t border-white/10 px-1 pt-4">
-              {!authReady ? null : isLoggedIn ? (
+              {isHome ? (
+                <>
+                  {!authReady ? null : isLoggedIn ? (
+                    <div className="flex justify-center" onClick={close}>
+                      <GlobalLogoutButton />
+                    </div>
+                  ) : (
+                    <Link href="/login" className={mobileDrawerLinkClass} onClick={close}>
+                      Log in
+                    </Link>
+                  )}
+                  <PrimaryButton href="/lesson" onDark block onClick={close}>
+                    Try a lesson
+                  </PrimaryButton>
+                </>
+              ) : !authReady ? null : isLoggedIn ? (
                 <div className="flex justify-center" onClick={close}>
                   <GlobalLogoutButton />
                 </div>
