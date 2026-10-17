@@ -10,7 +10,7 @@ import { MuteToggle } from "@/components/ui/MuteToggle";
 import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
-import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
+import { MobileNavDrawer, mobileDrawerActionsClass, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
 import { MarketingNav, isMarketingNavPath } from "@/components/marketing/MarketingNav";
 
 const HIDE_HEADER_PREFIXES = ["/login", "/signup", "/admin", "/kid-login"];
@@ -60,7 +60,7 @@ export default function ConditionalSiteHeader() {
               <MuteToggle />
               {authReady ? (
                 isLoggedIn ? (
-                  <GlobalLogoutButton />
+                  <GlobalLogoutButton onDark />
                 ) : (
                   <>
                     <Link
@@ -95,15 +95,13 @@ export default function ConditionalSiteHeader() {
               <Link href="/games" className={mobileDrawerLinkClass} onClick={() => setMobileOpen(false)}>
                 Games
               </Link>
-              <div className="mt-4 flex flex-col items-stretch gap-3 border-t border-white/10 px-1 pt-4">
+              <div className={mobileDrawerActionsClass}>
                 <div className="flex justify-center">
                   <MuteToggle />
                 </div>
                 {authReady ? (
                   isLoggedIn ? (
-                    <div className="flex justify-center">
-                      <GlobalLogoutButton />
-                    </div>
+                    <GlobalLogoutButton onDark block />
                   ) : (
                     <>
                       <Link

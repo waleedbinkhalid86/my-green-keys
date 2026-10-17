@@ -2,37 +2,34 @@
 
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
 
-const BTN: React.CSSProperties = {
-  padding: "8px 16px",
-  borderRadius: 9999,
-  border: "1px solid #2D6A4F",
-  background: "transparent",
-  color: "#2D6A4F",
-  fontWeight: 700,
-  fontSize: 14,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-};
-
-export function GlobalLogoutButton({ className = "" }: { className?: string }) {
+/**
+ * `onDark`: mint border + white text for #1B4332 / #2D6A4F navs.
+ * Default: #2D6A4F border + #1B4332 text for light backgrounds.
+ * `block`: full width, for mobile drawers.
+ */
+export function GlobalLogoutButton({
+  className = "",
+  onDark = false,
+  block = false,
+}: {
+  className?: string;
+  onDark?: boolean;
+  block?: boolean;
+}) {
   const { signOutAndGoHome, logoutBusy } = useAuthProfileRoute();
+  const cls = ["mgk-logout", onDark && "mgk-logout--on-dark", block && "mgk-logout--block", className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <button
       type="button"
-      className={className}
-      style={BTN}
+      className={cls}
       disabled={logoutBusy}
       onClick={() => void signOutAndGoHome()}
-      onMouseEnter={(e) => {
-        if (!logoutBusy) e.currentTarget.style.background = "#F0F9F4";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-      }}
       aria-busy={logoutBusy}
     >
-      {logoutBusy ? "…" : "Log Out"}
+      {logoutBusy ? "…" : "Log out"}
     </button>
   );
 }

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { SiteBrandLogoLink } from "@/components/SiteBrandLogoLink";
 import { GlobalLogoutButton } from "@/components/GlobalLogoutButton";
-import { MobileNavDrawer, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
+import { MobileNavDrawer, mobileDrawerActionsClass, mobileDrawerLinkClass } from "@/components/MobileNavDrawer";
 import { useAuthProfileRoute } from "@/contexts/AuthProfileRouteContext";
 import { Container } from "./Container";
 import { PrimaryButton } from "./Buttons";
@@ -73,7 +73,7 @@ export function MarketingNav() {
             {isHome ? (
               <>
                 {!authReady ? null : isLoggedIn ? (
-                  <GlobalLogoutButton />
+                  <GlobalLogoutButton onDark />
                 ) : (
                   <Link href="/login" className="mgk-mnav__link">
                     Log in
@@ -84,7 +84,7 @@ export function MarketingNav() {
                 </PrimaryButton>
               </>
             ) : !authReady ? null : isLoggedIn ? (
-              <GlobalLogoutButton />
+              <GlobalLogoutButton onDark />
             ) : (
               <>
                 <Link href="/kid-login" className="mgk-mnav__link">
@@ -112,13 +112,11 @@ export function MarketingNav() {
                 {l.label}
               </Link>
             ))}
-            <div className="mt-4 flex flex-col gap-3 border-t border-white/10 px-1 pt-4">
+            <div className={mobileDrawerActionsClass}>
               {isHome ? (
                 <>
                   {!authReady ? null : isLoggedIn ? (
-                    <div className="flex justify-center" onClick={close}>
-                      <GlobalLogoutButton />
-                    </div>
+                    <GlobalLogoutButton onDark block />
                   ) : (
                     <Link href="/login" className={mobileDrawerLinkClass} onClick={close}>
                       Log in
@@ -129,9 +127,7 @@ export function MarketingNav() {
                   </PrimaryButton>
                 </>
               ) : !authReady ? null : isLoggedIn ? (
-                <div className="flex justify-center" onClick={close}>
-                  <GlobalLogoutButton />
-                </div>
+                <GlobalLogoutButton onDark block />
               ) : (
                 <>
                   <Link href="/kid-login" className={mobileDrawerLinkClass} onClick={close}>

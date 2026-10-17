@@ -7,7 +7,10 @@ import { useEffect, useState, type ReactNode } from "react";
 const FOREST_GREEN = "#1B4332";
 
 export const mobileDrawerLinkClass =
-  "flex min-h-12 items-center rounded-md px-4 text-base font-semibold text-white/95 no-underline transition-colors hover:bg-white/10 hover:text-[#52B788]";
+  "mgk-drawer-link flex min-h-12 items-center rounded-md px-4 text-base font-semibold text-white/95 no-underline transition-colors hover:bg-white/10 hover:text-[#52B788]";
+
+/** Wrapper for buttons/actions below the drawer links (divider + spacing). */
+export const mobileDrawerActionsClass = "mgk-drawer-actions";
 
 type MobileNavDrawerProps = {
   open: boolean;
@@ -67,7 +70,7 @@ export function MobileNavDrawer({
               ].join(" ")}
               style={{ background: drawerBackground }}
             >
-              <div className="flex shrink-0 items-center justify-end px-4 pt-4">
+              <div className="mgk-drawer-head">
                 <button
                   type="button"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-md text-white hover:bg-white/10"
@@ -77,7 +80,7 @@ export function MobileNavDrawer({
                   <X className="h-6 w-6" strokeWidth={2} aria-hidden />
                 </button>
               </div>
-              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-8">{children}</nav>
+              <nav className="mgk-drawer-nav">{children}</nav>
             </div>
           </div>,
           document.body,
